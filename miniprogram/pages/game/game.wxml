@@ -1,0 +1,178 @@
+<!--pages/game/game.wxml-->
+<view class="container">
+  <!-- 游戏头部信息 -->
+  <view class="card">
+    <view class="flex-between">
+      <view>
+        <view class="subtitle">第{{currentRound}}回合</view>
+        <view class="text-muted">阶段: {{getPhaseText(currentPhase)}}</view>
+      </view>
+      <view>
+        <button size="mini" class="btn btn-primary" bindtap="viewRole">查看角色</button>
+        <button size="mini" class="btn" style="margin-left: 20rpx; background-color: #f8f9fa;" bindtap="viewGameHistory">历史</button>
+      </view>
+    </view>
+
+    <!-- 任务进度 -->
+    <view style="margin-top: 30rpx;">
+      <view class="flex-between">
+        <view>任务进度:</view>
+        <view>{{countSuccessfulMissions()}}/3 成功</view>
+      </view>
+      <progress percent="{{getMissionProgress()}}" stroke-width="12" activeColor="#2ecc71" backgroundColor="#ecf0f1" />
+    </view>
+  </view>
+
+  <!-- 根据游戏阶段显示不同内容 -->
+  <!-- 角色揭示阶段 -->
+  <view wx:if="{{currentPhase === 'roleReveal'}}" class="card">
+    <view class="subtitle text-center">角色分配完成</view>
+    <view class="text-center" style="padding: 60rpx 0;">
+      <view style="font-size: 48rpx; margin-bottom: 30rpx;">🎭</view>
+      <view style="font-size: 36rpx; font-weight: 600; margin-bottom: 20rpx;">你的角色已分配</view>
+      <view class="text-muted">点击"查看角色"按钮了解你的身份</view>
+      <view class="text-muted">游戏即将开始...</view>
+    </view>
+  </view>
+
+  <!-- 队伍选择阶段 -->
+  <view wx:if="{{currentPhase === 'teamSelection'}}" class="card">
+    <view class="subtitle text-center">选择任务队伍</view>
+    <view class="text-center text-muted mb-3">
+      队长: {{getTeamLeaderName()}} (第{{teamLeaderIndex + 1}}位玩家)
+    </view>
+    <view class="text-center text-muted mb-4">
+      需要选择 {{getRequiredTeamSize()}} 人执行任务
+    </view>
+
+    <!-- 玩家列表 -->
+    <view class="players-list">
+      <view wx:for="{{gameState.players}}" wx:key="openId" class="player-item {{nominatedTeam.includes(item.openId) ? 'selected' : ''}} {{checkIfTeamLeader() ? 'selectable' : ''}}" bindtap="nominatePlayer" data-id="{{item.openId}}">
+        <image src="{{item.avatarUrl}}" class="player-avatar"></image>
+        <view class="player-info">
+          <view class="player-name">{{item.nickName}}</view>
+          <view class="player-status">
+            {{nominatedTeam.includes(item.openId) ? '已选中' : '未选中'}}
+            {{item.openId === userInfo.openId ? '(自己)' : ''}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 队长提示 -->
+    <view wx:if="{{checkIfTeamLeader()}}" class="text-center mt-4">
+      <view class="text-muted">点击玩家头像选择/取消选择</view>
+      <view class="text-muted">已选择 {{nominatedTeam.length}}/{{getRequiredTeamSize()}} 人</view>
+    </view>
+    <view wx:else class="text-center mt-4">
+      <view class="text-muted">等待队长 {{getTeamLeaderName()}} 选择队伍...</view>
+    </view>
+  </view>
+
+  <!-- 队伍投票阶段 -->
+  <view wx:if="{{currentPhase === 'teamVote'}}" class="card">
+    <view class="subtitle text-center">投票是否同意该队伍</view>
+
+    <!-- 被提名队伍 -->
+    <view class="nominated-team">
+      <view class="text-center mb-4">被提名执行任务的队伍:</view>
+      <view class="flex-center" style="flex-wrap: wrap;">
+        <view wx:for="{{getNominatedPlayers()}}" wx:key="openId" class="team-member">
+          <image src="{{item.avatarUrl}}" class="team-member-avatar"></image>
+          <view class="team-member-name">{{item.nickName}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 投票按钮 -->
+    <view class="vote-buttons">
+      <button class="btn btn-success" style="width: 45%;" bindtap="castVote" data-vote="approve">同意</button>
+      <button class="btn btn-danger" style="width: 45%;" bindtap="castVote" data-vote="reject">反对</button>
+    </view>
+
+    <view class="text-center text-muted mt-4">
+      投票进度: {{getVoteCount()}}/{{gameState.players.length || 0}}
+    </view>
+  </view>
+
+  <!-- 任务投票阶段 -->
+  <view wx:if="{{currentPhase === 'missionVote'}}" class="card">
+    <view class="subtitle text-center">执行任务投票</view>
+
+    <view class="text-center mb-4">
+      <view>你被选中执行第{{currentRound}}个任务</view>
+      <view class="text-muted">请选择任务结果:</view>
+    </view>
+
+    <!-- 任务投票按钮 -->
+    <view class="vote-buttons">
+      <button class="btn btn-success" style="width: 45%;" bindtap="castMissionVote" data-vote="success">任务成功</button>
+      <button class="btn btn-danger" style="width: 45%;" bindtap="castMissionVote" data-vote="fail">破坏任务</button>
+    </view>
+
+    <view class="text-center text-muted mt-4">
+      注意: 只有坏人才能选择"破坏任务"
+    </view>
+  </view>
+
+  <!-- 任务结果阶段 -->
+  <view wx:if="{{currentPhase === 'missionResult'}}" class="card">
+    <view class="subtitle text-center">第{{currentRound}}回合结果</view>
+
+    <view class="text-center" style="padding: 40rpx 0;">
+      <view style="font-size: 72rpx; margin-bottom: 30rpx;">
+        {{getLastMissionResult() ? '✅' : '❌'}}
+      </view>
+      <view style="font-size: 48rpx; font-weight: 600; margin-bottom: 20rpx;">
+        {{getLastMissionResult() ? '任务成功' : '任务失败'}}
+      </view>
+      <view class="text-muted">
+        {{getLastMissionResult() ? '好人阵营获得1分' : '坏人阵营获得1分'}}
+      </view>
+    </view>
+
+    <view class="text-center">
+      <view class="text-muted">下一回合即将开始...</view>
+    </view>
+  </view>
+
+  <!-- 游戏结束阶段 -->
+  <view wx:if="{{currentPhase === 'gameEnd'}}" class="card">
+    <view class="subtitle text-center">游戏结束</view>
+
+    <view class="text-center" style="padding: 40rpx 0;">
+      <view style="font-size: 72rpx; margin-bottom: 30rpx;">
+        {{getGameWinner() === 'good' ? '🎉' : '💀'}}
+      </view>
+      <view style="font-size: 48rpx; font-weight: 600; margin-bottom: 20rpx;">
+        {{getGameWinner() === 'good' ? '好人阵营胜利' : '坏人阵营胜利'}}
+      </view>
+      <view class="text-muted">
+        {{getGameWinner() === 'good' ? '成功完成了3个任务' : '任务失败或梅林被刺杀'}}
+      </view>
+    </view>
+
+    <!-- 玩家角色揭示 -->
+    <view class="players-reveal">
+      <view class="text-center mb-4">玩家角色:</view>
+      <view wx:for="{{gameState.players}}" wx:key="openId" class="player-reveal-item {{getPlayerSide(item.role)}}">
+        <image src="{{item.avatarUrl}}" class="player-reveal-avatar"></image>
+        <view class="player-reveal-info">
+          <view class="player-reveal-name">{{item.nickName}}</view>
+          <view class="player-reveal-role">{{getRoleName(item.role)}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="text-center mt-4">
+      <button class="btn btn-primary" bindtap="endGame">返回房间</button>
+    </view>
+  </view>
+
+
+  <!-- 调试按钮（仅开发时显示） -->
+  <view wx:if="{{false}}" class="card">
+    <view class="subtitle">调试</view>
+    <button class="btn btn-danger" bindtap="endGame">结束游戏</button>
+  </view>
+</view>

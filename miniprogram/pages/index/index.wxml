@@ -1,0 +1,54 @@
+<!--pages/index/index.wxml-->
+<view class="page">
+  <view class="logo-section">
+    <view class="logo-icon">
+      <text>🏰</text>
+    </view>
+    <view class="logo-title">AVALON</view>
+    <view class="logo-subtitle">社交推理游戏</view>
+  </view>
+
+  <view class="card user-card">
+    <view wx:if="{{hasUserInfo}}" class="user-info-section">
+      <view class="user-left">
+        <image src="{{userInfo.avatarUrl}}" class="avatar avatar-lg"></image>
+        <view class="user-details">
+          <view class="user-name-row">
+            <view class="user-name">{{customNickName || userInfo.nickName}}</view>
+            <view class="edit-btn" bindtap="showNickNameModal">📝</view>
+          </view>
+          <view class="user-status">在线</view>
+        </view>
+      </view>
+    </view>
+    <button wx:else class="login-btn" bindtap="getUserProfile">
+      授权登录
+    </button>
+  </view>
+
+  <view class="card action-card">
+    <view class="action-title">开始游戏</view>
+
+    <button class="action-btn action-btn-primary" bindtap="createRoom">
+      <text class="btn-icon">🎮</text>
+      创建房间
+    </button>
+
+    <button class="action-btn action-btn-secondary" bindtap="joinRoom">
+      <text class="btn-icon">🚪</text>
+      加入房间
+    </button>
+  </view>
+
+  <view class="card info-card">
+    <view class="info-title">游戏说明</view>
+    <view class="info-item">• 支持5-12人同时游戏</view>
+    <view class="info-item">• 根据线下座位设置玩家号码</view>
+    <view class="info-item">• 自定义板子，由房主配置</view>
+    <view class="info-item">• 首车头、发车顺序均可指定</view>
+  </view>
+
+  <view class="footer">
+    <view class="footer-version">AVALON v1.0.0</view>
+  </view>
+</view>

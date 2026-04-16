@@ -1,0 +1,9 @@
+{
+  "name": "sendMessage",
+  "version": "1.0.0",
+  "description": "发送聊天消息",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

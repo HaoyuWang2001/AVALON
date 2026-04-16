@@ -1,0 +1,9 @@
+{
+  "name": "castVote",
+  "version": "1.0.0",
+  "description": "队伍投票",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

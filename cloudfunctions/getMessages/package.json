@@ -1,0 +1,9 @@
+{
+  "name": "getMessages",
+  "version": "1.0.0",
+  "description": "获取聊天消息",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

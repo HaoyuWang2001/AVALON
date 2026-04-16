@@ -1,0 +1,9 @@
+{
+  "name": "getGameState",
+  "version": "1.0.0",
+  "description": "获取游戏状态",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

@@ -1,0 +1,140 @@
+/* pages/game/game.wxss */
+
+/* 玩家列表样式 */
+.players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.player-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  border-radius: 12rpx;
+  background-color: #f8f9fa;
+  transition: all 0.2s ease;
+}
+
+.player-item.selectable:active {
+  background-color: #e9ecef;
+}
+
+.player-item.selected {
+  background-color: #d1ecf1;
+  border: 2rpx solid #17a2b8;
+}
+
+.player-avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  margin-right: 24rpx;
+}
+
+.player-info {
+  flex: 1;
+}
+
+.player-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.player-status {
+  font-size: 24rpx;
+  color: #6c757d;
+}
+
+/* 队伍成员样式 */
+.team-member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20rpx;
+}
+
+.team-member-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  margin-bottom: 12rpx;
+  border: 4rpx solid #3498db;
+}
+
+.team-member-name {
+  font-size: 28rpx;
+  text-align: center;
+}
+
+/* 投票按钮样式 */
+.vote-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40rpx;
+}
+
+/* 玩家揭示样式 */
+.players-reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.player-reveal-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  border-radius: 12rpx;
+}
+
+.player-reveal-item.good {
+  background-color: rgba(46, 204, 113, 0.1);
+  border-left: 6rpx solid #2ecc71;
+}
+
+.player-reveal-item.evil {
+  background-color: rgba(231, 76, 60, 0.1);
+  border-left: 6rpx solid #e74c3c;
+}
+
+.player-reveal-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  margin-right: 20rpx;
+}
+
+.player-reveal-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-bottom: 4rpx;
+}
+
+.player-reveal-role {
+  font-size: 24rpx;
+  color: #6c757d;
+}
+
+
+/* 工具函数样式 */
+progress {
+  border-radius: 12rpx;
+}
+
+/* 响应式调整 */
+@media (max-width: 600rpx) {
+  .vote-buttons {
+    flex-direction: column;
+    gap: 20rpx;
+  }
+
+  .vote-buttons button {
+    width: 100% !important;
+  }
+
+  .team-member {
+    margin: 10rpx;
+  }
+}
