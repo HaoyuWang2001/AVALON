@@ -115,6 +115,11 @@ app.get('/api/health', async (req, res) => {
   res.json(health);
 });
 
+// 简单的hello测试接口
+app.get('/hello', (req, res) => {
+  res.send('hello');
+});
+
 // 数据库管理端点（仅开发环境）
 if (process.env.NODE_ENV !== 'production') {
   app.get('/api/debug/db/stats', async (req, res) => {
@@ -190,7 +195,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 8086;
+const PORT = process.env.PORT;
 
 // 启动服务器
 async function startServer() {
