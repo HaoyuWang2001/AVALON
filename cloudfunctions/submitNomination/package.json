@@ -1,9 +1,0 @@
-{
-  "name": "submitNomination",
-  "version": "1.0.0",
-  "description": "提交提名",
-  "main": "index.js",
-  "dependencies": {
-    "wx-server-sdk": "latest"
-  }
-}

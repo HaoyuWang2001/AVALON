@@ -4,15 +4,15 @@
 
 ## 项目概述
 
-这是一个基于微信小程序和微信云开发的阿瓦隆(Avalon)桌游平台。使用原生微信小程序框架开发，支持5-10人实时在线游戏，包含角色分配、投票、聊天等功能。
+这是一个基于微信小程序和Express后端的阿瓦隆(Avalon)桌游平台。使用原生微信小程序框架开发，支持5-12人实时在线游戏，包含角色分配、投票、聊天等功能。
 
 ## 开发环境设置
 
 1. **安装微信开发者工具** - 开发与部署的必需工具。
 2. **配置AppID** - 在 `project.config.json` 中配置你的微信小程序AppID。
-3. **配置云环境** - 在 `app.js` 中设置云环境ID (`wx.cloud.init`)。
-4. **部署云函数** - 在微信开发者工具中右键点击 `cloudfunctions` 目录，选择"创建并部署：云端安装依赖"，然后逐个上传云函数。
-5. **创建数据库集合** - 在云开发控制台中创建集合：`rooms`, `games`, `chatMessages`。
+3. **启动后端服务** - 进入 `server` 目录，运行 `npm install` 和 `npm run dev` 启动Express + Socket.io服务器。
+4. **修改API配置** - 在 `miniprogram/services/api.js` 中配置后端API地址（默认指向 `https://haoyu-wang141.top:8086`）。
+5. **前端运行** - 在微信开发者工具中打开 `miniprogram` 目录，点击编译运行。
 
 ## 常见任务
 
@@ -25,10 +25,11 @@
 2. 创建四个文件：`.js`, `.json`, `.wxml`, `.wxss`。
 3. 将页面路径添加到 `app.json` 的 `pages` 数组中。
 
-### 添加新云函数
-1. 在 `cloudfunctions/` 目录下创建新目录（例如 `newFunction/`）。
-2. 创建 `index.js`（入口文件）和 `package.json`（依赖配置）。
-3. 在微信开发者工具中右键点击目录，选择"上传并部署"。
+### 添加新API端点
+1. 在 `server/routes/` 目录下创建新路由文件，或扩展现有路由。
+2. 在路由文件中添加新的端点处理逻辑。
+3. 在 `server/index.js` 中注册路由（如为新文件）。
+4. 在 `miniprogram/services/api.js` 中添加对应的API方法。
 
 ### 测试
 - 未配置自动化测试框架；测试通过模拟器手动进行。
@@ -38,9 +39,9 @@
 
 ### 高层结构
 - **前端**：原生微信小程序（WXML/WXSS/JS）配合WeUI组件库。
-- **后端**：微信云函数（无服务器）和云数据库。
-- **实时更新**：数据库监听器（`db.collection().watch()`）同步客户端间的游戏状态。
-- **服务层**：`services/api.js` 封装云函数调用。
+- **后端**：Express + Socket.io 后端服务，使用内存存储（Map对象）。
+- **实时更新**：Socket.io 实时通信实现玩家状态同步。
+- **服务层**：`services/api.js` 封装HTTP API调用。
 
 ### 关键目录
 - `pages/` - 小程序页面：`index`（首页），`room`（房间页），`game`（游戏页），`user`（用户中心）。

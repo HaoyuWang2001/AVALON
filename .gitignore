@@ -22,3 +22,4 @@ Thumbs.db
 # Project specific
 .claude/
 .project.private.config.json
+.env

@@ -1,9 +1,0 @@
-{
-  "name": "startGame",
-  "version": "1.0.0",
-  "description": "开始游戏",
-  "main": "index.js",
-  "dependencies": {
-    "wx-server-sdk": "latest"
-  }
-}

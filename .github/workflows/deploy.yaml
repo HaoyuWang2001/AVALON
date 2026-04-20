@@ -46,7 +46,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           source: server-app
-          target: /home/AVALON
+          target: /home/lighthouse/AVALON
           overwrite: true
 
       - name: Restart app with PM2
@@ -56,7 +56,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd /home/AVALON
+            cd /home/lighthouse/AVALON
             chmod +x server-app
             npm install -g pm2
             pm2 restart node-backend || pm2 start ./server-app --name "node-backend"

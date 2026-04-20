@@ -1,9 +1,0 @@
-{
-  "name": "castMissionVote",
-  "version": "1.0.0",
-  "description": "任务投票",
-  "main": "index.js",
-  "dependencies": {
-    "wx-server-sdk": "latest"
-  }
-}

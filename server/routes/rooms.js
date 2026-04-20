@@ -200,5 +200,7 @@ router.post('/kickPlayer', (req, res) => {
   res.json({ success: true, room });
 });
 
-module.exports = router;
+  return router;
 }
+
+module.exports = createRouter;

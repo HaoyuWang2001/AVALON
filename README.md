@@ -217,7 +217,6 @@
 E:\AVALON\
 ├── miniprogram/           # 微信小程序前端
 ├── server/               # Express + Socket.io 后端服务
-├── cloudfunctions/       # 旧版微信云开发云函数（已弃用）
 ├── README.md            # 项目说明文档
 └── CLAUDE.md            # 开发指导文档
 ```
@@ -295,13 +294,45 @@ server/
 
 ## 运行指南
 
-### 1. 后端服务部署
+### 1. MySQL数据库部署（新版本）
 
+新版本已集成MySQL数据持久化，需要先设置数据库：
+
+#### 1.1 环境配置
+1. 复制环境变量文件：`cp .env.example .env`
+2. 编辑`.env`文件，配置MySQL连接信息：
+   ```env
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_USER=root
+   DB_PASS=123456
+   DB_NAME=avalon_db
+   ```
+
+#### 1.2 初始化数据库
 ```bash
 # 进入后端目录
 cd server
 
 # 安装依赖
+npm install
+
+# 初始化数据库（需要MySQL服务运行）
+npm run db:init
+```
+
+#### 1.3 数据库管理
+- 数据库初始化脚本：`server/scripts/init-database.js`
+- 数据库DDL文件：`server/database/DDL.sql`
+- 数据库配置：`server/config/db.js`
+
+### 2. 后端服务部署
+
+```bash
+# 进入后端目录
+cd server
+
+# 安装依赖（如果尚未安装）
 npm install
 
 # 开发模式（使用 nodemon 热重载）
@@ -366,61 +397,7 @@ npm start
 4. 在 `miniprogram/services/api.js` 中添加对应的API方法
 5. 重启后端服务使更改生效
 
-### 数据库设计（旧版云开发参考）
 
-> **注意**：以下为旧版微信云开发的数据结构，当前版本使用内存存储（Map对象）。此结构仍可作为数据模型参考。
-
-#### rooms 集合
-```javascript
-{
-  _id: "123456", // 房间号
-  hostOpenId: "xxx", // 房主OpenID
-  players: [{
-    openId: "xxx",
-    nickName: "玩家名",
-    avatarUrl: "头像URL",
-    seatNumber: 1, // 座位号 1-12
-    isHost: false
-  }],
-  readyPlayers: ["openId1", "openId2"],
-  gameStarted: false,
-  createdAt: Date,
-  updatedAt: Date
-}
-```
-
-#### games 集合
-```javascript
-{
-  roomId: "123456",
-  players: [{
-    openId: "xxx",
-    nickName: "玩家名",
-    avatarUrl: "头像URL",
-    seatNumber: 1, // 座位号 1-12
-    role: "merlin",
-    side: "good"
-  }],
-  currentPhase: "teamSelection",
-  currentRound: 1,
-  teamLeaderIndex: 0,
-  nominatedTeam: ["openId1", "openId2"],
-  teamVotes: {
-    "openId1": "approve",
-    "openId2": "reject"
-  },
-  missionVotes: {
-    "openId1": "success",
-    "openId2": "fail"
-  },
-  missionResults: [
-    { round: 1, success: true },
-    { round: 2, success: false }
-  ],
-  createdAt: Date,
-  updatedAt: Date
-}
-```
 
 ## 待完善功能
 

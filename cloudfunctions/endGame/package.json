@@ -1,9 +1,0 @@
-{
-  "name": "endGame",
-  "version": "1.0.0",
-  "description": "结束游戏",
-  "main": "index.js",
-  "dependencies": {
-    "wx-server-sdk": "latest"
-  }
-}
