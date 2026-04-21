@@ -1,5 +1,34 @@
+// 解析命令行参数获取.env文件路径
+function parseEnvFilePath() {
+  const args = process.argv.slice(2);
+  let envFilePath = null;
+  
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--env' || args[i] === '-e') {
+      if (i + 1 < args.length) {
+        envFilePath = args[i + 1];
+        break;
+      }
+    } else if (args[i].startsWith('--env=')) {
+      envFilePath = args[i].substring(6);
+      break;
+    }
+  }
+  
+  if (!envFilePath) {
+    // 默认路径
+    envFilePath = require('path').resolve(__dirname, '../.env');
+    console.log(`ℹ️ 未指定.env文件路径，使用默认路径: ${envFilePath}`);
+  } else {
+    console.log(`ℹ️ 使用指定的.env文件路径: ${envFilePath}`);
+  }
+  
+  return envFilePath;
+}
+
 // 加载环境变量
-require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+const envFilePath = parseEnvFilePath();
+require('dotenv').config({ path: envFilePath });
 
 const express = require('express');
 const http = require('http');

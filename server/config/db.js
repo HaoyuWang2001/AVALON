@@ -1,5 +1,4 @@
 // 数据库配置模块
-require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const mysql = require('mysql2/promise');
 
 // 验证必需的环境变量
