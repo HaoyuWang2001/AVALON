@@ -195,7 +195,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 8082;
 
 // 启动服务器
 async function startServer() {

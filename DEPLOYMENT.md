@@ -44,19 +44,19 @@ cd $AVALON_HOME
 ```bash
 export AVALON_HOME=/home/lighthouse/AVALON
 cd ${AVALON_HOME}
-git clone https://github.com/haoyu-wang141/AVALON.git AVALON_SRC
+git clone https://github.com/haoyu-wang141/AVALON.git AVALON
 ```
 
 #### 2.2 环境变量配置
 ```bash
-cp ${AVALON_HOME}/AVALON_SRC/.env.example ${AVALON_HOME}/.env
+cp ${AVALON_HOME}/AVALON/.env.example ${AVALON_HOME}/.env
 vim .env
 # 进行相应的更改
 ```
 
 #### 2.3 安装依赖
 ```bash
-cd ${AVALON_HOME}/AVALON_SRC/server
+cd ${AVALON_HOME}/AVALON/server
 npm install
 ```
 
@@ -66,88 +66,25 @@ npm install
 
 **创建MySQL数据目录**：
 ```bash
-mkdir -p $AVALON_HOME/mysql
-```
+cd ${AVALON_HOME}
 
-**创建start_mysql.sh启动脚本**：
-```bash
-cat > $AVALON_HOME/start_mysql.sh << 'EOF'
-#!/bin/bash
-# AVALON MySQL容器启动脚本
+cp ${AVALON_HOME}/AVALON/mysql/start-mysql.sh .
+cp ${AVALON_HOME}/AVALON/mysql/stop-mysql.sh .
 
-# 停止并移除已存在的同名容器
-docker stop avalon-mysql 2>/dev/null
-docker rm avalon-mysql 2>/dev/null
-
-# 启动MySQL 8.0容器
-docker run -d \
-  --name avalon-mysql \
-  --restart unless-stopped \
-  -p 3306:3306 \
-  -e MYSQL_ROOT_PASSWORD=<your_root_password_here> \
-  -v $AVALON_HOME/mysql:/var/lib/mysql \
-  -v /etc/localtime:/etc/localtime:ro \
-  mysql:8.0 \
-  --character-set-server=utf8mb4 \
-  --collation-server=utf8mb4_unicode_ci \
-  --default-authentication-plugin=mysql_native_password
-
-echo "✅ MySQL容器已启动，数据存储在: $AVALON_HOME/mysql"
-echo "📊 查看日志: docker logs avalon-mysql"
-EOF
-
-chmod +x $AVALON_HOME/start_mysql.sh
-```
-
-**创建stop_mysql.sh停止脚本**：
-```bash
-cat > $AVALON_HOME/stop_mysql.sh << 'EOF'
-#!/bin/bash
-# AVALON MySQL容器停止脚本
-
-docker stop avalon-mysql
-echo "✅ MySQL容器已停止"
-
-# 可选：移除容器（数据保留在$AVALON_HOME/mysql）
-# docker rm avalon-mysql
-EOF
-
-chmod +x $AVALON_HOME/stop_mysql.sh
+vim start-mysql.sh
+# 进行更改
 ```
 
 **启动MySQL容器**：
 ```bash
-cd $AVALON_HOME
-./start_mysql.sh
-
-# 等待MySQL完全启动
-sleep 10
-
-# 检查容器状态
-docker ps | grep avalon-mysql
-```
-
-**重要**: 请确保以下密码占位符被替换为实际值：
-- `<your_root_password_here>`: MySQL root用户密码（用于Docker容器和管理）
-- `<your_secure_password_here>`: avalon_user用户密码（用于应用程序连接）
-
-#### 3.2 创建数据库和用户
-```bash
-# 连接到MySQL容器创建数据库和用户
-sudo docker exec -i avalon-mysql mysql -u root -p<your_root_password_here> <<EOF
-CREATE DATABASE avalon_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'avalon_user'@'%' IDENTIFIED BY '<your_secure_password_here>';
-GRANT ALL PRIVILEGES ON avalon_db.* TO 'avalon_user'@'%';
-FLUSH PRIVILEGES;
-EOF
-
-echo "✅ 数据库和用户创建完成"
+chmod +x start-mysql.sh stop-mysql.sh
+./start-mysql.sh
 ```
 
 #### 3.3 初始化数据库结构
 ```bash
-# 使用Docker容器中的MySQL初始化数据库结构
-sudo docker exec -i avalon-mysql mysql -u root -p<your_root_password_here> avalon_db < $AVALON_HOME/mysql/DDL.sql
+# 根据DDL.sql初始化数据库结构
+sudo docker exec -i mysql-avalon mysql -u avalon_user -p avalon_db < ${AVALON_HOME}/AVALON/mysql/DDL.sql
 echo "✅ 数据库结构初始化完成"
 ```
 
@@ -155,7 +92,9 @@ echo "✅ 数据库结构初始化完成"
 
 #### 4.1 开发模式测试
 ```bash
+cd ${AVALON_HOME}/AVALON/server
 npm run dev
+
 # 测试接口
 curl http://localhost:8082/hello
 ```
@@ -163,6 +102,8 @@ curl http://localhost:8082/hello
 #### 4.2 生产模式部署
 ```bash
 npm install -g pm2
+
+cd ${AVALON_HOME}/AVALON/server
 pm2 start index.js --name "avalon-server"
 pm2 startup
 pm2 save
@@ -244,10 +185,10 @@ sudo certbot --nginx -d your-domain.com
 mkdir -p $AVALON_HOME/backups
 
 # 备份脚本（手动执行）- 使用Docker容器内的mysqldump
-sudo docker exec avalon-mysql mysqldump -u avalon_user --password=<your_secure_password_here> avalon_db > $AVALON_HOME/backups/avalon_$(date +%Y%m%d).sql
+sudo docker exec mysql-avalon mysqldump -u avalon_user --password=<your_secure_password_here> avalon_db > $AVALON_HOME/backups/avalon_$(date +%Y%m%d).sql
 
 # 定时任务（crontab -e添加）- 使用Docker容器内的mysqldump
-0 2 * * * sudo docker exec avalon-mysql mysqldump -u avalon_user --password=<your_secure_password_here> avalon_db > $AVALON_HOME/backups/avalon_$(date +\%Y\%m\%d).sql 2>/dev/null
+0 2 * * * sudo docker exec mysql-avalon mysqldump -u avalon_user --password=<your_secure_password_here> avalon_db > $AVALON_HOME/backups/avalon_$(date +\%Y\%m\%d).sql 2>/dev/null
 
 # 注意：将 <your_secure_password_here> 替换为实际的avalon_user密码
 ```
@@ -257,11 +198,11 @@ sudo docker exec avalon-mysql mysqldump -u avalon_user --password=<your_secure_p
 ### 数据库连接失败
 ```bash
 # 检查Docker容器状态
-sudo docker ps | grep avalon-mysql
-sudo docker logs avalon-mysql --tail 20
+sudo docker ps | grep mysql-avalon
+sudo docker logs mysql-avalon --tail 20
 
 # 测试数据库连接（使用avalon_user）
-sudo docker exec avalon-mysql mysql -u avalon_user --password=<your_secure_password_here> -e "SELECT 1;"
+sudo docker exec mysql-avalon mysql -u avalon_user --password=<your_secure_password_here> -e "SELECT 1;"
 ```
 
 ### 应用启动失败
@@ -279,5 +220,5 @@ pm2 logs avalon-server --lines 50
 ---
 
 **部署完成！** 访问地址：
-- http://your-server-ip:8082/hello
-- WebSocket连接: ws://your-server-ip:8082
+- http://haoyu-wang141:8082/hello
+- WebSocket连接: ws://haoyu-wang141:8082
