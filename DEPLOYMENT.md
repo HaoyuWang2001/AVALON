@@ -7,9 +7,10 @@
 ### 服务器要求
 - **操作系统**: Ubuntu 20.04+ / CentOS 7+
 - **Node.js**: v22.22.2
-- **MySQL**: 8.0+ 
+- **Docker**: 20.10+
+- **MySQL**: 8.0+ (通过Docker容器)
 - **内存**: 2GB+ RAM
-- **磁盘空间**: 10GB+
+- **磁盘空间**: 10GB+ (包含MySQL数据存储)
 
 ## 部署步骤
 
@@ -22,12 +23,34 @@ sudo apt-get install -y nodejs
 node --version  # 应该显示 v22.22.2
 ```
 
-#### 1.2 安装MySQL
+#### 1.2 使用Docker安装MySQL
 ```bash
-sudo apt install -y mysql-server
-sudo systemctl start mysql
-sudo systemctl enable mysql
-sudo mysql_secure_installation
+# 安装Docker
+sudo apt install -y docker.io docker-compose
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# 创建MySQL数据目录
+mkdir -p /home/lighthouse/AVALON/mysql
+
+# 运行MySQL 8.0容器
+sudo docker run -d \
+  --name avalon-mysql \
+  --restart unless-stopped \
+  -p 3306:3306 \
+  -e MYSQL_ROOT_PASSWORD=your_root_password_here \
+  -v /home/lighthouse/AVALON/mysql:/var/lib/mysql \
+  -v /etc/localtime:/etc/localtime:ro \
+  mysql:8.0 \
+  --character-set-server=utf8mb4 \
+  --collation-server=utf8mb4_unicode_ci \
+  --default-authentication-plugin=mysql_native_password
+
+# 等待MySQL启动
+sleep 10
+
+# 检查容器状态
+sudo docker ps | grep avalon-mysql
 ```
 
 #### 1.3 创建项目目录
@@ -70,19 +93,29 @@ npm install
 
 ### 3. 数据库配置
 
+**重要**: 请确保以下密码占位符被替换为实际值：
+- `your_root_password_here`: MySQL root用户密码（用于Docker容器和管理）
+- `your_secure_password_here`: avalon_user用户密码（用于应用程序连接）
+
 #### 3.1 创建数据库和用户
-```sql
+```bash
+# 连接到MySQL容器创建数据库和用户
+sudo docker exec -i avalon-mysql mysql -u root -pyour_root_password_here <<EOF
 CREATE DATABASE avalon_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'avalon_user'@'localhost' IDENTIFIED BY 'your_secure_password_here';
-GRANT ALL PRIVILEGES ON avalon_db.* TO 'avalon_user'@'localhost';
+CREATE USER 'avalon_user'@'%' IDENTIFIED BY 'your_secure_password_here';
+GRANT ALL PRIVILEGES ON avalon_db.* TO 'avalon_user'@'%';
 FLUSH PRIVILEGES;
+EOF
+
+echo "✅ 数据库和用户创建完成"
 ```
 
 #### 3.2 初始化数据库结构
 ```bash
 cd /home/lighthouse/AVALON/AVALON/server
-# 使用root用户初始化数据库结构
-mysql -u root -p avalon_db < database/DDL.sql
+# 使用Docker容器中的MySQL初始化数据库结构
+sudo docker exec -i avalon-mysql mysql -u root -pyour_root_password_here avalon_db < database/DDL.sql
+echo "✅ 数据库结构初始化完成"
 ```
 
 ### 4. 启动服务
@@ -177,19 +210,25 @@ sudo certbot --nginx -d your-domain.com
 # 创建备份目录
 mkdir -p /home/lighthouse/backups
 
-# 备份脚本（手动执行）
-mysqldump -u avalon_user -p avalon_db > /home/lighthouse/backups/avalon_$(date +%Y%m%d).sql
+# 备份脚本（手动执行）- 使用Docker容器内的mysqldump
+sudo docker exec avalon-mysql mysqldump -u avalon_user --password=your_secure_password_here avalon_db > /home/lighthouse/backups/avalon_$(date +%Y%m%d).sql
 
-# 定时任务（crontab -e添加）
-0 2 * * * mysqldump -u avalon_user -p avalon_db > /home/lighthouse/backups/avalon_$(date +\%Y\%m\%d).sql 2>/dev/null
+# 定时任务（crontab -e添加）- 使用Docker容器内的mysqldump
+0 2 * * * sudo docker exec avalon-mysql mysqldump -u avalon_user --password=your_secure_password_here avalon_db > /home/lighthouse/backups/avalon_$(date +\%Y\%m\%d).sql 2>/dev/null
+
+# 注意：将 your_secure_password_here 替换为实际的avalon_user密码
 ```
 
 ## 故障排除
 
 ### 数据库连接失败
 ```bash
-sudo systemctl status mysql
-mysql -u avalon_user -p -e "SELECT 1;"
+# 检查Docker容器状态
+sudo docker ps | grep avalon-mysql
+sudo docker logs avalon-mysql --tail 20
+
+# 测试数据库连接（使用avalon_user）
+sudo docker exec avalon-mysql mysql -u avalon_user --password=your_secure_password_here -e "SELECT 1;"
 ```
 
 ### 应用启动失败
