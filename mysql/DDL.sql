@@ -309,13 +309,13 @@ ON DUPLICATE KEY UPDATE
 -- =============================================
 -- 完成信息
 -- =============================================
-SELECT '=============================================' AS separator;
-SELECT '✅ AVALON数据库初始化完成' AS message;
-SELECT '=============================================' AS separator;
+SELECT '=============================================';
+SELECT 'AVALON数据库初始化完成';
+SELECT '=============================================';
 
 -- 表统计
 SELECT 
-    CONCAT('📊 表: ', COUNT(*), ' 个') AS summary,
+    CONCAT('表: ', COUNT(*), ' 个') AS summary,
     GROUP_CONCAT(TABLE_NAME ORDER BY TABLE_NAME) AS tables
 FROM information_schema.TABLES 
 WHERE TABLE_SCHEMA = 'avalon_db' 
@@ -323,32 +323,35 @@ WHERE TABLE_SCHEMA = 'avalon_db'
 
 -- 视图统计  
 SELECT 
-    CONCAT('👁  视图: ', COUNT(*), ' 个') AS summary,
+    CONCAT('视图: ', COUNT(*), ' 个') AS summary,
     GROUP_CONCAT(TABLE_NAME ORDER BY TABLE_NAME) AS views
 FROM information_schema.VIEWS 
 WHERE TABLE_SCHEMA = 'avalon_db';
 
 -- 触发器统计
 SELECT 
-    CONCAT('⚡ 触发器: ', COUNT(*), ' 个') AS summary,
+    CONCAT('触发器: ', COUNT(*), ' 个') AS summary,
     GROUP_CONCAT(TRIGGER_NAME ORDER BY TRIGGER_NAME) AS triggers
 FROM information_schema.TRIGGERS 
 WHERE TRIGGER_SCHEMA = 'avalon_db';
 
 -- 存储过程统计
 SELECT 
-    CONCAT('🔄 存储过程: ', COUNT(*), ' 个') AS summary,
+    CONCAT('存储过程: ', COUNT(*), ' 个') AS summary,
     GROUP_CONCAT(ROUTINE_NAME ORDER BY ROUTINE_NAME) AS procedures
 FROM information_schema.ROUTINES 
 WHERE ROUTINE_SCHEMA = 'avalon_db' 
   AND ROUTINE_TYPE = 'PROCEDURE';
 
--- 角色配置表记录数
+-- 角色配置详细信息
+SELECT '角色配置详情 (5-12人标准局):';
 SELECT 
-    CONCAT('🎮 角色配置: ', COUNT(*), ' 条记录 (5-12人)') AS summary,
-    GROUP_CONCAT(CONCAT(player_count, '人') ORDER BY player_count) AS configurations
-FROM role_configurations;
+    CONCAT(player_count, '人: ', description) AS configuration,
+    CONCAT('角色: ', roles) AS roles,
+    CONCAT('队伍: ', team_sizes) AS teams
+FROM role_configurations 
+ORDER BY player_count;
 
-SELECT '=============================================' AS separator;
-SELECT '✅ 数据库初始化验证完成，所有对象创建成功！' AS completion_message;
-SELECT '=============================================' AS separator;
+SELECT '=============================================';
+SELECT '数据库初始化验证完成，所有对象创建成功！';
+SELECT '=============================================';
