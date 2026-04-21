@@ -311,12 +311,12 @@ ON DUPLICATE KEY UPDATE
 -- =============================================
 
 -- 初始化完成标题
-SELECT '=============================================' AS line;
-SELECT 'AVALON数据库初始化完成' AS message;
-SELECT '=============================================' AS line;
+SELECT '=============================================';
+SELECT 'AVALON数据库初始化完成';
+SELECT '=============================================';
 
 -- 数据库对象统计汇总
-SELECT '数据库对象统计:' AS header;
+SELECT '数据库对象统计:';
 SELECT 
     CONCAT('   表: ', COUNT(*), ' 个 (', GROUP_CONCAT(TABLE_NAME ORDER BY TABLE_NAME), ')') AS tables_info
 FROM information_schema.TABLES 
@@ -340,7 +340,7 @@ WHERE ROUTINE_SCHEMA = 'avalon_db'
   AND ROUTINE_TYPE = 'PROCEDURE';
 
 -- 角色配置详细信息
-SELECT '角色配置详情 (5-12人标准局):' AS header;
+SELECT '角色配置详情 (5-12人标准局):';
 SELECT 
     CONCAT('   ', player_count, '人局: ', description) AS config_summary,
     CONCAT('     角色: ', roles) AS roles_detail,
@@ -349,6 +349,6 @@ FROM role_configurations
 ORDER BY player_count;
 
 -- 初始化完成验证
-SELECT '=============================================' AS line;
-SELECT '数据库初始化验证完成，所有对象创建成功！' AS completion;
-SELECT '=============================================' AS line;
+SELECT '=============================================';
+SELECT '数据库初始化验证完成，所有对象创建成功！';
+SELECT '=============================================';
