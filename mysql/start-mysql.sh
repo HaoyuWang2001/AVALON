@@ -32,7 +32,8 @@ docker run -d \
   -e MYSQL_PASSWORD="$AVALON_USER_PASS" \
   mysql:latest \
   --character-set-server=utf8mb4 \
-  --collation-server=utf8mb4_unicode_ci
+  --collation-server=utf8mb4_unicode_ci \
+  --log-bin-trust-function-creators=1
 
 echo "✅ MySQL容器已启动，数据存储在: $DATA_DIR"
 echo "📊 查看日志: docker logs $CONTAINER_NAME"

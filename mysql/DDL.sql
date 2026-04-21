@@ -10,8 +10,7 @@ CREATE DATABASE IF NOT EXISTS avalon_db DEFAULT CHARACTER SET utf8mb4 COLLATE ut
 
 USE avalon_db;
 
--- 允许创建触发器和存储过程（二进制日志启用时需要）
-SET SESSION log_bin_trust_function_creators = 1;
+
 
 -- =============================================
 -- 1. rooms表：存储房间基本信息
