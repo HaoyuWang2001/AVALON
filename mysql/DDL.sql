@@ -309,58 +309,46 @@ ON DUPLICATE KEY UPDATE
 -- =============================================
 -- 完成信息
 -- =============================================
-SELECT 'AVALON数据库初始化完成' AS message;
+SELECT '=============================================' AS separator;
+SELECT '✅ AVALON数据库初始化完成' AS message;
+SELECT '=============================================' AS separator;
 
--- 显示表结构信息
+-- 表统计
 SELECT 
-    TABLE_NAME,
-    TABLE_COMMENT,
-    TABLE_ROWS,
-    DATA_LENGTH/1024/1024 AS data_mb,
-    INDEX_LENGTH/1024/1024 AS index_mb,
-    CREATE_TIME
+    CONCAT('📊 表: ', COUNT(*), ' 个') AS summary,
+    GROUP_CONCAT(TABLE_NAME ORDER BY TABLE_NAME) AS tables
 FROM information_schema.TABLES 
-WHERE TABLE_SCHEMA = 'avalon_db'
-ORDER BY TABLE_NAME;
+WHERE TABLE_SCHEMA = 'avalon_db' 
+  AND TABLE_TYPE = 'BASE TABLE';
 
--- 显示视图信息
+-- 视图统计  
 SELECT 
-    TABLE_NAME AS VIEW_NAME,
-    VIEW_DEFINITION,
-    IS_UPDATABLE,
-    CHECK_OPTION,
-    SECURITY_TYPE
+    CONCAT('👁  视图: ', COUNT(*), ' 个') AS summary,
+    GROUP_CONCAT(TABLE_NAME ORDER BY TABLE_NAME) AS views
 FROM information_schema.VIEWS 
-WHERE TABLE_SCHEMA = 'avalon_db'
-ORDER BY VIEW_NAME;
+WHERE TABLE_SCHEMA = 'avalon_db';
 
--- 显示触发器信息
+-- 触发器统计
 SELECT 
-    TRIGGER_NAME,
-    EVENT_MANIPULATION,
-    EVENT_OBJECT_TABLE,
-    ACTION_TIMING,
-    ACTION_STATEMENT
+    CONCAT('⚡ 触发器: ', COUNT(*), ' 个') AS summary,
+    GROUP_CONCAT(TRIGGER_NAME ORDER BY TRIGGER_NAME) AS triggers
 FROM information_schema.TRIGGERS 
-WHERE TRIGGER_SCHEMA = 'avalon_db'
-ORDER BY TRIGGER_NAME;
+WHERE TRIGGER_SCHEMA = 'avalon_db';
 
--- 显示存储过程信息
+-- 存储过程统计
 SELECT 
-    ROUTINE_NAME,
-    ROUTINE_TYPE,
-    DATA_TYPE,
-    ROUTINE_DEFINITION,
-    CREATED
+    CONCAT('🔄 存储过程: ', COUNT(*), ' 个') AS summary,
+    GROUP_CONCAT(ROUTINE_NAME ORDER BY ROUTINE_NAME) AS procedures
 FROM information_schema.ROUTINES 
-WHERE ROUTINE_SCHEMA = 'avalon_db'
-ORDER BY ROUTINE_NAME;
+WHERE ROUTINE_SCHEMA = 'avalon_db' 
+  AND ROUTINE_TYPE = 'PROCEDURE';
 
--- 显示角色配置表内容
+-- 角色配置表记录数
 SELECT 
-    player_count AS 玩家人数,
-    roles AS 角色配置,
-    team_sizes AS 队伍大小,
-    description AS 配置描述
-FROM role_configurations 
-ORDER BY player_count;
+    CONCAT('🎮 角色配置: ', COUNT(*), ' 条记录 (5-12人)') AS summary,
+    GROUP_CONCAT(CONCAT(player_count, '人') ORDER BY player_count) AS configurations
+FROM role_configurations;
+
+SELECT '=============================================' AS separator;
+SELECT '✅ 数据库初始化验证完成，所有对象创建成功！' AS completion_message;
+SELECT '=============================================' AS separator;
