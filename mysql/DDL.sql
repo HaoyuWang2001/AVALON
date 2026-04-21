@@ -322,3 +322,45 @@ SELECT
 FROM information_schema.TABLES 
 WHERE TABLE_SCHEMA = 'avalon_db'
 ORDER BY TABLE_NAME;
+
+-- 显示视图信息
+SELECT 
+    TABLE_NAME AS VIEW_NAME,
+    VIEW_DEFINITION,
+    IS_UPDATABLE,
+    CHECK_OPTION,
+    SECURITY_TYPE
+FROM information_schema.VIEWS 
+WHERE TABLE_SCHEMA = 'avalon_db'
+ORDER BY VIEW_NAME;
+
+-- 显示触发器信息
+SELECT 
+    TRIGGER_NAME,
+    EVENT_MANIPULATION,
+    EVENT_OBJECT_TABLE,
+    ACTION_TIMING,
+    ACTION_STATEMENT
+FROM information_schema.TRIGGERS 
+WHERE TRIGGER_SCHEMA = 'avalon_db'
+ORDER BY TRIGGER_NAME;
+
+-- 显示存储过程信息
+SELECT 
+    ROUTINE_NAME,
+    ROUTINE_TYPE,
+    DATA_TYPE,
+    ROUTINE_DEFINITION,
+    CREATED
+FROM information_schema.ROUTINES 
+WHERE ROUTINE_SCHEMA = 'avalon_db'
+ORDER BY ROUTINE_NAME;
+
+-- 显示角色配置表内容
+SELECT 
+    player_count AS 玩家人数,
+    roles AS 角色配置,
+    team_sizes AS 队伍大小,
+    description AS 配置描述
+FROM role_configurations 
+ORDER BY player_count;
