@@ -221,7 +221,7 @@ GROUP BY g.room_id, g.current_phase, g.current_round, g.team_leader_index,
 
 -- 清理过期房间的存储过程（30天未更新）
 DELIMITER //
-CREATE PROCEDURE cleanup_old_rooms(IN days_old INT)
+CREATE PROCEDURE IF NOT EXISTS cleanup_old_rooms(IN days_old INT)
 BEGIN
     DECLARE cutoff_date DATETIME;
     SET cutoff_date = DATE_SUB(NOW(), INTERVAL days_old DAY);
@@ -239,26 +239,16 @@ DELIMITER ;
 
 -- 当游戏结束时，自动记录到历史表
 DELIMITER //
-CREATE TRIGGER after_game_end
+CREATE TRIGGER IF NOT EXISTS after_game_end
 AFTER UPDATE ON games
 FOR EACH ROW
 BEGIN
-    IF OLD.current_phase != 'gameEnd' AND NEW.current_phase = 'gameEnd' AND NEW.game_result IS NOT NULL THEN
+    IF OLD.current_phase != 'gameEnd' AND NEW.current_phase = 'gameEnd' THEN
         INSERT INTO game_history (room_id, game_data, winner, player_count)
         SELECT 
             NEW.room_id,
             JSON_OBJECT(
-                'game', JSON_OBJECT(
-                    'room_id', NEW.room_id,
-                    'current_phase', NEW.current_phase,
-                    'current_round', NEW.current_round,
-                    'team_leader_index', NEW.team_leader_index,
-                    'nominated_team', NEW.nominated_team,
-                    'failed_nominations', NEW.failed_nominations,
-                    'game_result', NEW.game_result,
-                    'created_at', NEW.created_at,
-                    'updated_at', NEW.updated_at
-                ),
+                'game', NEW.*,
                 'players', (SELECT JSON_ARRAYAGG(JSON_OBJECT('open_id', open_id, 'role', role, 'side', side)) 
                            FROM game_players WHERE game_id = NEW.room_id),
                 'mission_results', (SELECT JSON_ARRAYAGG(JSON_OBJECT('round', round, 'success', success, 'fail_count', fail_count)) 
@@ -266,7 +256,8 @@ BEGIN
                 'votes', (SELECT COUNT(*) FROM votes WHERE game_id = NEW.room_id)
             ),
             JSON_UNQUOTE(JSON_EXTRACT(NEW.game_result, '$.winner')),
-            (SELECT COUNT(*) FROM game_players WHERE game_id = NEW.room_id);
+            (SELECT COUNT(*) FROM game_players WHERE game_id = NEW.room_id)
+        WHERE NEW.game_result IS NOT NULL;
     END IF;
 END //
 DELIMITER ;
