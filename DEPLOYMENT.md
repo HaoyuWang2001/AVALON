@@ -146,9 +146,8 @@ echo "✅ 数据库和用户创建完成"
 
 #### 3.3 初始化数据库结构
 ```bash
-cd $AVALON_HOME/AVALON_SRC/server
 # 使用Docker容器中的MySQL初始化数据库结构
-sudo docker exec -i avalon-mysql mysql -u root -p<your_root_password_here> avalon_db < database/DDL.sql
+sudo docker exec -i avalon-mysql mysql -u root -p<your_root_password_here> avalon_db < $AVALON_HOME/mysql/DDL.sql
 echo "✅ 数据库结构初始化完成"
 ```
 
