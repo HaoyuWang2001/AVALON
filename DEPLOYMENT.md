@@ -6,7 +6,7 @@
 
 ### 服务器要求
 - **操作系统**: Ubuntu 20.04+ / CentOS 7+
-- **Node.js**: v22.22.2
+- **Node.js**: v20.20.2
 - **Docker**: 20.10+
 - **MySQL**: 8.0+ (通过Docker容器)
 - **内存**: 2GB+ RAM
@@ -16,11 +16,11 @@
 
 ### 1. 服务器环境准备
 
-#### 1.1 安装Node.js 22.22.2
+#### 1.1 安装Node.js 20.20.2
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
-node --version  # 应该显示 v22.22.2
+node --version  # 应该显示 v20.20.2
 ```
 
 #### 1.2 安装docker
@@ -124,14 +124,10 @@ pm2 save
 
 #### 5.2 手动触发部署测试
 ```bash
-cd $AVALON_HOME/AVALON_SRC
+cd $AVALON_HOME/AVALON
 git pull origin main
 cd server
 npm install
-npm install -g pkg
-pkg index.js -t node22-linux-x64 -o ../avalon-server
-cd $AVALON_HOME
-chmod +x avalon-server
 pm2 restart avalon-server
 ```
 

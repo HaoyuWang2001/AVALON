@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js for validation
         uses: actions/setup-node@v4
         with:
-          node-version: 22.22.2
+          node-version: 20.20.2
 
       - name: Validate code
         run: |
@@ -44,39 +44,26 @@ jobs:
             cd server
             sudo npm install
             
-            # 4. Install pkg globally if not present
-            echo "🔧 Installing pkg..."
-            sudo npm install -g pkg
-            
-            # 5. Build binary with Node.js 22.22.2
-            echo "⚙️ Building binary with Node.js 22.22.2..."
-            sudo pkg index.js -t node22-linux-x64 -o /home/lighthouse/AVALON/
-            
-            # 6. Make binary executable
-            echo "🔧 Setting executable permissions..."
-            cd /home/lighthouse/AVALON
-            chmod +x server-app
-            
-            # 7. Install PM2 if not present
+            # 4. Install PM2 if not present
             echo "📦 Installing PM2..."
-            sudo npm install -g pm2
+            npm install -g pm2
             
-            # 8. Restart or start service
+            # 5. Restart or start service
             echo "🔄 Restarting/Starting service..."
-            if pm2 status | grep -q "avalon"; then
-              echo "🔄 Restarting existing avalon service..."
-              pm2 restart avalon
+            if pm2 status | grep -q "avalon-server"; then
+              echo "🔄 Restarting existing avalon-server service..."
+              pm2 restart avalon-server
             else
-              echo "🚀 Starting new avalon service..."
-              pm2 start ./server-app --name "avalon"
+              echo "🚀 Starting new avalon-server service..."
+              pm2 start index.js --name "avalon-server"
             fi
             
-            # 9. Save PM2 configuration
+            # 6. Save PM2 configuration
             echo "💾 Saving PM2 configuration..."
             pm2 save
             
-            # 10. Show service status
+            # 7. Show service status
             echo "📊 Service status:"
-            pm2 status avalon
+            pm2 status avalon-server
             
             echo "✅ Deployment completed successfully!"
