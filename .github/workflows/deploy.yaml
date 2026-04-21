@@ -53,15 +53,15 @@ jobs:
             echo "📦 Installing PM2..."
             npm install -g pm2
             
-            # 5. Restart or start service
+            # 5. Restart or start service with env file parameter
             echo "🔄 Restarting/Starting service..."
             if pm2 status | grep -q "avalon-server"; then
-              echo "🔄 Restarting existing avalon-server service..."
-              pm2 restart avalon-server
-            else
-              echo "🚀 Starting new avalon-server service..."
-              pm2 start index.js --name "avalon-server"
+              echo "🔄 Deleting existing avalon-server service..."
+              pm2 delete avalon-server
             fi
+
+            echo "🚀 Starting avalon-server service with env file..."
+            pm2 start index.js --name "avalon-server" -- --env /home/lighthouse/AVALON/.env
             
             # 6. Save PM2 configuration
             echo "💾 Saving PM2 configuration..."

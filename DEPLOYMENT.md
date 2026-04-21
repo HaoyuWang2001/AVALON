@@ -93,7 +93,10 @@ echo "✅ 数据库结构初始化完成"
 #### 4.1 开发模式测试
 ```bash
 cd ${AVALON_HOME}/AVALON/server
-npm run dev
+# 如果.env文件在${AVALON_HOME}/.env，使用：
+node index.js --env ${AVALON_HOME}/.env
+# 或者使用nodemon（需要先修改package.json中的dev脚本）：
+# npm run dev
 
 # 测试接口
 curl http://localhost:8082/hello
@@ -104,7 +107,7 @@ curl http://localhost:8082/hello
 npm install -g pm2
 
 cd ${AVALON_HOME}/AVALON/server
-pm2 start index.js --name "avalon-server"
+pm2 start index.js --name "avalon-server" -- --env ${AVALON_HOME}/.env
 pm2 startup
 pm2 save
 ```
@@ -128,7 +131,11 @@ cd $AVALON_HOME/AVALON
 git pull origin main
 cd server
 npm install
+# 重启服务（使用现有参数）
 pm2 restart avalon-server
+# 如果.env文件位置更改，需要删除并重新启动：
+# pm2 delete avalon-server
+# pm2 start index.js --name "avalon-server" -- --env $AVALON_HOME/.env
 ```
 
 ### 6. 服务验证
