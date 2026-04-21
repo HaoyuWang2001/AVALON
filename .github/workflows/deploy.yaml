@@ -1,63 +1,86 @@
-name: Build & Deploy to AVALON
+name: Deploy AVALON to Server
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js for validation
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22.22.2
 
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: server/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('server/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      - name: Validate code
+        run: |
+          cd server
+          node -c index.js
+          echo "✅ Code syntax validation passed"
 
-      - name: Install dependencies
-        run: cd server && npm install
-
-      - name: Install pkg
-        run: npm install -g pkg
-
-      # 修复这里：node18 而不是 node20
-      - name: Build Linux binary
-        run: cd server && pkg index.js -t node18-linux-x64 -o ../server-app
-
-      - name: Verify binary
-        run: ls -la server-app && file server-app
-
-      - name: Upload binary to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: 22
-          source: server-app
-          target: /home/lighthouse/AVALON
-          overwrite: true
-
-      - name: Restart app with PM2
+      - name: Deploy to server and build
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            echo "🚀 Starting deployment process..."
+            
+            # 1. Navigate to code repository
+            cd /home/lighthouse/AVALON/AVALON
+            
+            # 2. Pull latest code
+            echo "📥 Pulling latest code..."
+            git pull origin main
+            
+            # 3. Install/update dependencies
+            echo "📦 Installing dependencies..."
+            cd server
+            npm install
+            
+            # 4. Install pkg globally if not present
+            echo "🔧 Installing pkg..."
+            npm install -g pkg
+            
+            # 5. Build binary with Node.js 22.22.2
+            echo "⚙️ Building binary with Node.js 22.22.2..."
+            pkg index.js -t node22-linux-x64 -o ../../server-app
+            
+            # 6. Copy binary to deployment directory
+            echo "📁 Copying binary to deployment directory..."
+            cp ../../server-app /home/lighthouse/AVALON/
+            
+            # 7. Make binary executable
+            echo "🔧 Setting executable permissions..."
             cd /home/lighthouse/AVALON
             chmod +x server-app
+            
+            # 8. Install PM2 if not present
+            echo "📦 Installing PM2..."
             npm install -g pm2
-            pm2 restart node-backend || pm2 start ./server-app --name "node-backend"
+            
+            # 9. Restart or start service
+            echo "🔄 Restarting/Starting service..."
+            if pm2 status | grep -q "node-backend"; then
+              echo "🔄 Restarting existing node-backend service..."
+              pm2 restart node-backend
+            else
+              echo "🚀 Starting new node-backend service..."
+              pm2 start ./server-app --name "node-backend"
+            fi
+            
+            # 10. Save PM2 configuration
+            echo "💾 Saving PM2 configuration..."
             pm2 save
+            
+            # 11. Show service status
+            echo "📊 Service status:"
+            pm2 status node-backend
+            
+            echo "✅ Deployment completed successfully!"
