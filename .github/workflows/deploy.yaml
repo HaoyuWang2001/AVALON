@@ -39,6 +39,11 @@ jobs:
             echo "📥 Pulling latest code..."
             git pull origin main
             
+            # 激活NVM环境
+            echo "🔧 激活NVM环境..."
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            
             # 3. Install/update dependencies
             echo "📦 Installing dependencies..."
             cd server
