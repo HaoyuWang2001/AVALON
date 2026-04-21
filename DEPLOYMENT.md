@@ -84,7 +84,7 @@ chmod +x start-mysql.sh stop-mysql.sh
 #### 3.3 初始化数据库结构
 ```bash
 # 根据DDL.sql初始化数据库结构
-sudo docker exec -i mysql-avalon mysql -u avalon_user -p avalon_db < ${AVALON_HOME}/AVALON/mysql/DDL.sql
+sudo docker exec -i mysql-avalon mysql -u avalon_user -p<密码> avalon_db < ${AVALON_HOME}/AVALON/mysql/DDL.sql
 echo "✅ 数据库结构初始化完成"
 ```
 

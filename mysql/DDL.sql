@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS messages (
 -- =============================================
 CREATE TABLE IF NOT EXISTS game_history (
     id INT AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
-    room_id VARCHAR(6) NOT NULL COMMENT '房间ID',
+    room_id VARCHAR(6) NULL COMMENT '房间ID',
     game_data JSON NOT NULL COMMENT '完整游戏数据快照',
     winner VARCHAR(10) NOT NULL COMMENT '胜利阵营: good/evil',
     player_count INT NOT NULL COMMENT '玩家数量',
