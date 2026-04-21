@@ -42,45 +42,41 @@ jobs:
             # 3. Install/update dependencies
             echo "📦 Installing dependencies..."
             cd server
-            npm install
+            sudo npm install
             
             # 4. Install pkg globally if not present
             echo "🔧 Installing pkg..."
-            npm install -g pkg
+            sudo npm install -g pkg
             
             # 5. Build binary with Node.js 22.22.2
             echo "⚙️ Building binary with Node.js 22.22.2..."
-            pkg index.js -t node22-linux-x64 -o ../../server-app
+            sudo pkg index.js -t node22-linux-x64 -o /home/lighthouse/AVALON/
             
-            # 6. Copy binary to deployment directory
-            echo "📁 Copying binary to deployment directory..."
-            cp ../../server-app /home/lighthouse/AVALON/
-            
-            # 7. Make binary executable
+            # 6. Make binary executable
             echo "🔧 Setting executable permissions..."
             cd /home/lighthouse/AVALON
             chmod +x server-app
             
-            # 8. Install PM2 if not present
+            # 7. Install PM2 if not present
             echo "📦 Installing PM2..."
-            npm install -g pm2
+            sudo npm install -g pm2
             
-            # 9. Restart or start service
+            # 8. Restart or start service
             echo "🔄 Restarting/Starting service..."
-            if pm2 status | grep -q "node-backend"; then
-              echo "🔄 Restarting existing node-backend service..."
-              pm2 restart node-backend
+            if pm2 status | grep -q "avalon"; then
+              echo "🔄 Restarting existing avalon service..."
+              pm2 restart avalon
             else
-              echo "🚀 Starting new node-backend service..."
-              pm2 start ./server-app --name "node-backend"
+              echo "🚀 Starting new avalon service..."
+              pm2 start ./server-app --name "avalon"
             fi
             
-            # 10. Save PM2 configuration
+            # 9. Save PM2 configuration
             echo "💾 Saving PM2 configuration..."
             pm2 save
             
-            # 11. Show service status
+            # 10. Show service status
             echo "📊 Service status:"
-            pm2 status node-backend
+            pm2 status avalon
             
             echo "✅ Deployment completed successfully!"
