@@ -232,7 +232,7 @@ miniprogram/
 ├── app.wxss            # 全局样式
 ├── project.config.json # 微信开发者工具配置
 ├── services/
-│   └── api.js          # API服务层，指向 https://haoyu-wang141.top:8086
+│   └── api.js          # API服务层，指向 https://haoyu-wang141.top:8082
 ├── pages/              # 页面目录
 │   ├── index/          # 首页（创建/加入房间）
 │   ├── room/           # 房间页（玩家列表、座位选择）
@@ -343,8 +343,8 @@ npm start
 ```
 
 **服务启动后：**
-- HTTP API: `http://localhost:8086` 或 `https://haoyu-wang141.top:8086`
-- WebSocket: `ws://localhost:8086` 或 `wss://haoyu-wang141.top:8086`
+- HTTP API: `http://localhost:8082` 或 `https://haoyu-wang141.top:8082`
+- WebSocket: `ws://localhost:8082` 或 `wss://haoyu-wang141.top:8082`
 - 健康检查: `GET /api/health`
 
 ### 2. 前端运行
@@ -355,14 +355,14 @@ npm start
 4. **修改 API 配置**（如需本地测试）：
    ```javascript
    // miniprogram/services/api.js:3
-   const BASE_URL = 'http://localhost:8086/api'; // 本地测试
-   // const BASE_URL = 'https://haoyu-wang141.top:8086/api'; // 生产
+   const BASE_URL = 'http://localhost:8082/api'; // 本地测试
+   // const BASE_URL = 'https://haoyu-wang141.top:8082/api'; // 生产
    ```
 5. **编译运行**：点击"编译"按钮
 
 ### 3. 测试流程
 
-1. **启动后端**：确保服务器在 `8086` 端口运行
+1. **启动后端**：确保服务器在 `8082` 端口运行
 2. **打开前端**：在微信开发者工具中预览
 3. **创建房间**：测试房间创建、加入、座位选择
 4. **开始游戏**：至少5人准备后开始游戏
@@ -411,7 +411,7 @@ npm start
 
 ## 注意事项
 
-1. **后端部署**：如需部署到公网（如 `haoyu-wang141.top:8086`），需要配置SSL证书和域名解析
+1. **后端部署**：如需部署到公网（如 `haoyu-wang141.top:8082`），需要配置SSL证书和域名解析
 2. **前端配置**：微信小程序需配置合法域名（`request` 和 `socket` 域名）
 3. **数据持久化**：当前使用内存存储（Map对象），重启服务器数据丢失
 4. **性能优化**：前端使用轮询（2秒间隔），可考虑改为WebSocket实时更新

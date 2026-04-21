@@ -1,6 +1,6 @@
 // API服务封装
 const app = getApp();
-const BASE_URL = 'https://haoyu-wang141.top:8086/api';
+const BASE_URL = 'https://haoyu-wang141.top:8082/api';
 
 class ApiService {
   constructor() {
@@ -157,7 +157,7 @@ class ApiService {
   }
 
   connectSocket(roomId, playerId) {
-    const socketUrl = 'wss://haoyu-wang141.top:8086';
+    const socketUrl = 'wss://haoyu-wang141.top:8082';
     return wx.connectSocket({
       url: socketUrl,
       method: 'GET'

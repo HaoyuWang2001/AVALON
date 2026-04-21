@@ -11,7 +11,7 @@
 1. **安装微信开发者工具** - 开发与部署的必需工具。
 2. **配置AppID** - 在 `project.config.json` 中配置你的微信小程序AppID。
 3. **启动后端服务** - 进入 `server` 目录，运行 `npm install` 和 `npm run dev` 启动Express + Socket.io服务器。
-4. **修改API配置** - 在 `miniprogram/services/api.js` 中配置后端API地址（默认指向 `https://haoyu-wang141.top:8086`）。
+4. **修改API配置** - 在 `miniprogram/services/api.js` 中配置后端API地址（默认指向 `https://haoyu-wang141.top:8082`）。
 5. **前端运行** - 在微信开发者工具中打开 `miniprogram` 目录，点击编译运行。
 
 ## 常见任务
