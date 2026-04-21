@@ -309,49 +309,46 @@ ON DUPLICATE KEY UPDATE
 -- =============================================
 -- 完成信息
 -- =============================================
-SELECT '=============================================';
-SELECT 'AVALON数据库初始化完成';
-SELECT '=============================================';
 
--- 表统计
+-- 初始化完成标题
+SELECT '=============================================' AS line;
+SELECT 'AVALON数据库初始化完成' AS message;
+SELECT '=============================================' AS line;
+
+-- 数据库对象统计汇总
+SELECT '数据库对象统计:' AS header;
 SELECT 
-    CONCAT('表: ', COUNT(*), ' 个') AS summary,
-    GROUP_CONCAT(TABLE_NAME ORDER BY TABLE_NAME) AS tables
+    CONCAT('   表: ', COUNT(*), ' 个 (', GROUP_CONCAT(TABLE_NAME ORDER BY TABLE_NAME), ')') AS tables_info
 FROM information_schema.TABLES 
 WHERE TABLE_SCHEMA = 'avalon_db' 
   AND TABLE_TYPE = 'BASE TABLE';
 
--- 视图统计  
 SELECT 
-    CONCAT('视图: ', COUNT(*), ' 个') AS summary,
-    GROUP_CONCAT(TABLE_NAME ORDER BY TABLE_NAME) AS views
+    CONCAT('   视图: ', COUNT(*), ' 个 (', GROUP_CONCAT(TABLE_NAME ORDER BY TABLE_NAME), ')') AS views_info
 FROM information_schema.VIEWS 
 WHERE TABLE_SCHEMA = 'avalon_db';
 
--- 触发器统计
 SELECT 
-    CONCAT('触发器: ', COUNT(*), ' 个') AS summary,
-    GROUP_CONCAT(TRIGGER_NAME ORDER BY TRIGGER_NAME) AS triggers
+    CONCAT('   触发器: ', COUNT(*), ' 个 (', GROUP_CONCAT(TRIGGER_NAME ORDER BY TRIGGER_NAME), ')') AS triggers_info
 FROM information_schema.TRIGGERS 
 WHERE TRIGGER_SCHEMA = 'avalon_db';
 
--- 存储过程统计
 SELECT 
-    CONCAT('存储过程: ', COUNT(*), ' 个') AS summary,
-    GROUP_CONCAT(ROUTINE_NAME ORDER BY ROUTINE_NAME) AS procedures
+    CONCAT('   存储过程: ', COUNT(*), ' 个 (', GROUP_CONCAT(ROUTINE_NAME ORDER BY ROUTINE_NAME), ')') AS procedures_info
 FROM information_schema.ROUTINES 
 WHERE ROUTINE_SCHEMA = 'avalon_db' 
   AND ROUTINE_TYPE = 'PROCEDURE';
 
 -- 角色配置详细信息
-SELECT '角色配置详情 (5-12人标准局):';
+SELECT '角色配置详情 (5-12人标准局):' AS header;
 SELECT 
-    CONCAT(player_count, '人: ', description) AS configuration,
-    CONCAT('角色: ', roles) AS roles,
-    CONCAT('队伍: ', team_sizes) AS teams
+    CONCAT('   ', player_count, '人局: ', description) AS config_summary,
+    CONCAT('     角色: ', roles) AS roles_detail,
+    CONCAT('     队伍大小: ', team_sizes) AS teams_detail
 FROM role_configurations 
 ORDER BY player_count;
 
-SELECT '=============================================';
-SELECT '数据库初始化验证完成，所有对象创建成功！';
-SELECT '=============================================';
+-- 初始化完成验证
+SELECT '=============================================' AS line;
+SELECT '数据库初始化验证完成，所有对象创建成功！' AS completion;
+SELECT '=============================================' AS line;
