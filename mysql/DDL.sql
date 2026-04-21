@@ -243,12 +243,22 @@ CREATE TRIGGER after_game_end
 AFTER UPDATE ON games
 FOR EACH ROW
 BEGIN
-    IF OLD.current_phase != 'gameEnd' AND NEW.current_phase = 'gameEnd' THEN
+    IF OLD.current_phase != 'gameEnd' AND NEW.current_phase = 'gameEnd' AND NEW.game_result IS NOT NULL THEN
         INSERT INTO game_history (room_id, game_data, winner, player_count)
         SELECT 
             NEW.room_id,
             JSON_OBJECT(
-                'game', NEW.*,
+                'game', JSON_OBJECT(
+                    'room_id', NEW.room_id,
+                    'current_phase', NEW.current_phase,
+                    'current_round', NEW.current_round,
+                    'team_leader_index', NEW.team_leader_index,
+                    'nominated_team', NEW.nominated_team,
+                    'failed_nominations', NEW.failed_nominations,
+                    'game_result', NEW.game_result,
+                    'created_at', NEW.created_at,
+                    'updated_at', NEW.updated_at
+                ),
                 'players', (SELECT JSON_ARRAYAGG(JSON_OBJECT('open_id', open_id, 'role', role, 'side', side)) 
                            FROM game_players WHERE game_id = NEW.room_id),
                 'mission_results', (SELECT JSON_ARRAYAGG(JSON_OBJECT('round', round, 'success', success, 'fail_count', fail_count)) 
@@ -256,8 +266,7 @@ BEGIN
                 'votes', (SELECT COUNT(*) FROM votes WHERE game_id = NEW.room_id)
             ),
             JSON_UNQUOTE(JSON_EXTRACT(NEW.game_result, '$.winner')),
-            (SELECT COUNT(*) FROM game_players WHERE game_id = NEW.room_id)
-        WHERE NEW.game_result IS NOT NULL;
+            (SELECT COUNT(*) FROM game_players WHERE game_id = NEW.room_id);
     END IF;
 END //
 DELIMITER ;
