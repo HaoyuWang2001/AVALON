@@ -51,7 +51,7 @@ const dbConfig = {
 };
 
 // DDL文件路径
-const ddlFile = path.resolve(__dirname, '../database/DDL.sql');
+const ddlFile = path.resolve(__dirname, '../../mysql/DDL.sql');
 
 /**
  * 读取SQL文件

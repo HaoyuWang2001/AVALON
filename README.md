@@ -302,11 +302,11 @@ server/
 1. 复制环境变量文件：`cp .env.example .env`
 2. 编辑`.env`文件，配置MySQL连接信息：
    ```env
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_USER=root
-   DB_PASS=123456
-   DB_NAME=avalon_db
+    DB_HOST=127.0.0.1
+    DB_PORT=3307
+    DB_USER=avalon_user
+    DB_PASS=<your_secure_password_here>
+    DB_NAME=avalon_db
    ```
 
 #### 1.2 初始化数据库
@@ -319,11 +319,12 @@ npm install
 
 # 初始化数据库（需要MySQL服务运行）
 npm run db:init
+# 或指定自定义.env文件路径: npm run db:init -- --env /path/to/.env
 ```
 
 #### 1.3 数据库管理
 - 数据库初始化脚本：`server/scripts/init-database.js`
-- 数据库DDL文件：`server/database/DDL.sql`
+- 数据库DDL文件：`mysql/DDL.sql`
 - 数据库配置：`server/config/db.js`
 
 ### 2. 后端服务部署
