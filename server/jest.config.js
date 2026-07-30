@@ -15,4 +15,7 @@ module.exports = {
   forceExit: true,
   detectOpenHandles: true,
   testTimeout: 30000,
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov'],
 };

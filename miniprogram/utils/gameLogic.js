@@ -1,7 +1,7 @@
 // 游戏逻辑工具函数
 
 // 计算任务所需队伍人数
-export function getTeamSize(playerCount, round) {
+function getTeamSize(playerCount, round) {
   const teamSizes = {
     5: [2, 3, 2, 3, 3],
     6: [2, 3, 4, 3, 4],
@@ -15,7 +15,7 @@ export function getTeamSize(playerCount, round) {
 }
 
 // 检查任务是否成功
-export function isMissionSuccess(missionVotes, playerCount, round) {
+function isMissionSuccess(missionVotes, playerCount, round) {
   const votes = Object.values(missionVotes || {});
   if (votes.length === 0) return false;
 
@@ -30,7 +30,7 @@ export function isMissionSuccess(missionVotes, playerCount, round) {
 }
 
 // 检查游戏是否结束
-export function isGameOver(missionResults, assassinSuccess) {
+function isGameOver(missionResults, assassinSuccess) {
   const successfulMissions = missionResults.filter(r => r.success).length;
 
   // 好人胜利条件：3个任务成功
@@ -53,7 +53,7 @@ export function isGameOver(missionResults, assassinSuccess) {
 }
 
 // 获取角色可见信息
-export function getRoleVision(playerRole, allPlayers) {
+function getRoleVision(playerRole, allPlayers) {
   const vision = {
     knows: [], // 知道哪些玩家身份
     appearsAs: playerRole, // 在别人眼中是什么
@@ -87,7 +87,7 @@ export function getRoleVision(playerRole, allPlayers) {
 }
 
 // 分配角色
-export function assignRoles(playerCount) {
+function assignRoles(playerCount) {
   const roleConfigs = {
     5: ['merlin', 'percival', 'loyal', 'mordred', 'assassin'],
     6: ['merlin', 'percival', 'loyal', 'loyal', 'mordred', 'assassin'],
@@ -109,7 +109,7 @@ export function assignRoles(playerCount) {
 }
 
 // 获取角色所属阵营
-export function getRoleSide(role) {
+function getRoleSide(role) {
   const goodRoles = ['merlin', 'percival', 'loyal'];
   const evilRoles = ['mordred', 'morgana', 'assassin', 'minion'];
 
@@ -119,7 +119,7 @@ export function getRoleSide(role) {
 }
 
 // 获取角色名称
-export function getRoleName(role) {
+function getRoleName(role) {
   const roleNames = {
     'merlin': '梅林',
     'percival': '派西维尔',
@@ -132,7 +132,7 @@ export function getRoleName(role) {
   return roleNames[role] || '未知';
 }
 
-export default {
+module.exports = {
   getTeamSize,
   isMissionSuccess,
   isGameOver,

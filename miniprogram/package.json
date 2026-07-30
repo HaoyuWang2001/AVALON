@@ -1,0 +1,11 @@
+{
+  "name": "avalon-miniprogram",
+  "version": "1.0.0",
+  "description": "阿瓦隆小程序前端",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}

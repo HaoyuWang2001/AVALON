@@ -1,19 +1,19 @@
 // 游戏常量定义
 
 // 人数范围
-export const PLAYER_COUNTS = {
+const PLAYER_COUNTS = {
   MIN: 5,
   MAX: 12
 };
 
 // 座位号范围
-export const SEAT_NUMBER_RANGE = {
+const SEAT_NUMBER_RANGE = {
   MIN: 1,
   MAX: 12
 };
 
 // 角色定义
-export const ROLES = {
+const ROLES = {
   MERLIN: 'merlin',
   PERCIVAL: 'percival',
   LOYAL: 'loyal',
@@ -27,13 +27,13 @@ export const ROLES = {
 };
 
 // 阵营
-export const SIDES = {
+const SIDES = {
   GOOD: 'good',
   EVIL: 'evil'
 };
 
 // 游戏阶段
-export const GAME_PHASES = {
+const GAME_PHASES = {
   WAITING: 'waiting',
   ROLE_REVEAL: 'roleReveal',
   TEAM_SELECTION: 'teamSelection',
@@ -44,7 +44,7 @@ export const GAME_PHASES = {
 };
 
 // 角色分配配置（玩家人数 -> 角色数组）
-export const ROLE_CONFIGS = {
+const ROLE_CONFIGS = {
   5: [ROLES.MERLIN, ROLES.PERCIVAL, ROLES.LOYAL, ROLES.MORDRED, ROLES.ASSASSIN],
   6: [ROLES.MERLIN, ROLES.PERCIVAL, ROLES.LOYAL, ROLES.LOYAL, ROLES.MORDRED, ROLES.ASSASSIN],
   7: [ROLES.MERLIN, ROLES.PERCIVAL, ROLES.LOYAL, ROLES.LOYAL, ROLES.MORDRED, ROLES.MORGANA, ROLES.ASSASSIN],
@@ -56,7 +56,7 @@ export const ROLE_CONFIGS = {
 };
 
 // 任务队伍人数配置（玩家人数 -> [第1轮, 第2轮, 第3轮, 第4轮, 第5轮]）
-export const TEAM_SIZES = {
+const TEAM_SIZES = {
   5: [2, 3, 2, 3, 3],
   6: [2, 3, 4, 3, 4],
   7: [2, 3, 3, 4, 4],
@@ -68,7 +68,7 @@ export const TEAM_SIZES = {
 };
 
 // 角色中文名称
-export const ROLE_NAMES = {
+const ROLE_NAMES = {
   [ROLES.MERLIN]: '梅林',
   [ROLES.PERCIVAL]: '派西维尔',
   [ROLES.LOYAL]: '忠臣',
@@ -82,7 +82,7 @@ export const ROLE_NAMES = {
 };
 
 // 角色描述
-export const ROLE_DESCRIPTIONS = {
+const ROLE_DESCRIPTIONS = {
   [ROLES.MERLIN]: '知道所有坏人（除莫德雷德），需要隐藏身份',
   [ROLES.PERCIVAL]: '知道梅林和莫甘娜，需要保护梅林',
   [ROLES.LOYAL]: '好人阵营，不知道其他角色身份',
@@ -96,7 +96,7 @@ export const ROLE_DESCRIPTIONS = {
 };
 
 // 工具函数
-export function getRoleSide(role) {
+function getRoleSide(role) {
   const goodRoles = [ROLES.MERLIN, ROLES.PERCIVAL, ROLES.LOYAL, ROLES.LANCELOT, ROLES.LADY_OF_THE_LAKE];
   const evilRoles = [ROLES.MORDRED, ROLES.MORGANA, ROLES.ASSASSIN, ROLES.MINION, ROLES.OBERON];
   if (goodRoles.includes(role)) return SIDES.GOOD;
@@ -104,15 +104,15 @@ export function getRoleSide(role) {
   return SIDES.GOOD;
 }
 
-export function getRoleName(role) {
+function getRoleName(role) {
   return ROLE_NAMES[role] || '未知';
 }
 
-export function getRoleDescription(role) {
+function getRoleDescription(role) {
   return ROLE_DESCRIPTIONS[role] || '角色信息错误';
 }
 
-export default {
+module.exports = {
   PLAYER_COUNTS,
   SEAT_NUMBER_RANGE,
   ROLES,
