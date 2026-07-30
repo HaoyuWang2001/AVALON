@@ -16,8 +16,7 @@
             <view class="edit-btn" bindtap="showNickNameModal">📝</view>
           </view>
           <view class="user-status">在线</view>
-            </view>
-            </scroll-view>
+        </view>
           </view>
     </view>
     <button wx:else class="login-btn" bindtap="getUserProfile">授权登录</button>
@@ -278,6 +277,7 @@
                 <view class="role-check {{merlinCanSee.lancelotBlue ? 'check-on' : ''}}"><text wx:if="{{merlinCanSee.lancelotBlue}}">✓</text></view>
               </view>
             </view>
+            </scroll-view>
           </view>
 
           <view class="config-section">
