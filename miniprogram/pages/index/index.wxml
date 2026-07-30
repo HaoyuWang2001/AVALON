@@ -295,42 +295,42 @@
             <view class="section-title">🔍 梅林能分辨具体身份</view>
             <scroll-view class="role-scroll" scroll-x show-scrollbar="{{false}}">
             <view class="role-scroll-row">
-              <view wx:if="{{merlinCanSee.assassin}}"
+              <view wx:if="{{merlinCanSee.assassin && selectedRoles.assassin}}"
                 class="role-card role-evil {{merlinCanIdentify.assassin ? 'role-selected' : ''}}"
                 data-role="assassin" bindtap="onCanIdentifyToggle">
                 <view class="role-img-placeholder"><text class="role-img-text">🔍</text></view>
                 <text class="role-name">刺客</text>
                 <view class="role-check {{merlinCanIdentify.assassin ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.assassin}}">✓</text></view>
               </view>
-              <view wx:if="{{merlinCanSee.morgana}}"
+              <view wx:if="{{merlinCanSee.morgana && selectedRoles.morgana}}"
                 class="role-card role-evil {{merlinCanIdentify.morgana ? 'role-selected' : ''}}"
                 data-role="morgana" bindtap="onCanIdentifyToggle">
                 <view class="role-img-placeholder"><text class="role-img-text">🔍</text></view>
                 <text class="role-name">莫甘娜</text>
                 <view class="role-check {{merlinCanIdentify.morgana ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.morgana}}">✓</text></view>
               </view>
-              <view wx:if="{{merlinCanSee.oberon}}"
+              <view wx:if="{{merlinCanSee.oberon && selectedRoles.oberon}}"
                 class="role-card role-evil {{merlinCanIdentify.oberon ? 'role-selected' : ''}}"
                 data-role="oberon" bindtap="onCanIdentifyToggle">
                 <view class="role-img-placeholder"><text class="role-img-text">🔍</text></view>
                 <text class="role-name">奥伯伦</text>
                 <view class="role-check {{merlinCanIdentify.oberon ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.oberon}}">✓</text></view>
               </view>
-              <view wx:if="{{merlinCanSee.minion}}"
+              <view wx:if="{{merlinCanSee.minion && selectedRoles.minion}}"
                 class="role-card role-evil {{merlinCanIdentify.minion ? 'role-selected' : ''}}"
                 data-role="minion" bindtap="onCanIdentifyToggle">
                 <view class="role-img-placeholder"><text class="role-img-text">🔍</text></view>
                 <text class="role-name">爪牙</text>
                 <view class="role-check {{merlinCanIdentify.minion ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.minion}}">✓</text></view>
               </view>
-              <view wx:if="{{merlinCanSee.lancelotRed}}"
+              <view wx:if="{{merlinCanSee.lancelotRed && selectedRoles.lancelotRed}}"
                 class="role-card role-evil {{merlinCanIdentify.lancelotRed ? 'role-selected' : ''}}"
                 data-role="lancelotRed" bindtap="onCanIdentifyToggle">
                 <view class="role-img-placeholder"><text class="role-img-text">🔍</text></view>
                 <text class="role-name">红兰</text>
                 <view class="role-check {{merlinCanIdentify.lancelotRed ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.lancelotRed}}">✓</text></view>
               </view>
-              <view wx:if="{{merlinCanSee.lancelotBlue}}"
+              <view wx:if="{{merlinCanSee.lancelotBlue && selectedRoles.lancelotBlue}}"
                 class="role-card role-evil {{merlinCanIdentify.lancelotBlue ? 'role-selected' : ''}}"
                 data-role="lancelotBlue" bindtap="onCanIdentifyToggle">
                 <view class="role-img-placeholder"><text class="role-img-text">🔍</text></view>
