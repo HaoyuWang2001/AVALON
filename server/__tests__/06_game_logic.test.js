@@ -2,39 +2,53 @@ const GameModel = require('../models/GameModel');
 
 describe('06 — Game Logic Unit Tests (no server needed)', () => {
   describe('getRoleConfiguration', () => {
-    it('should return correct roles for 5 players', () => {
+    it('should return correct roles for 5 players (morgana, assassin)', () => {
       const roles = GameModel.getRoleConfiguration(5);
-      expect(roles).toEqual(['merlin', 'percival', 'loyal', 'mordred', 'assassin']);
+      expect(roles).toEqual(['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin']);
     });
 
-    it('should return correct roles for 6 players', () => {
+    it('should return correct roles for 6 players (morgana, assassin)', () => {
       const roles = GameModel.getRoleConfiguration(6);
       expect(roles).toContain('merlin');
-      expect(roles).toContain('mordred');
-      expect(roles.length).toBe(6);
-    });
-
-    it('should return correct roles for 7 players', () => {
-      const roles = GameModel.getRoleConfiguration(7);
       expect(roles).toContain('morgana');
-      expect(roles.length).toBe(7);
+      expect(roles).toContain('assassin');
+      expect(roles.length).toBe(8);
     });
 
-    it('should return correct roles for 10 players', () => {
+    it('should return correct roles for 7 players (adds oberon)', () => {
+      const roles = GameModel.getRoleConfiguration(7);
+      expect(roles).toContain('oberon');
+      expect(roles.length).toBe(9);
+    });
+
+    it('should return correct roles for 10 players (mordred, oberon)', () => {
       const roles = GameModel.getRoleConfiguration(10);
-      expect(roles).toContain('minion');
-      expect(roles.length).toBe(10);
+      expect(roles).toContain('mordred');
+      expect(roles).toContain('oberon');
+      expect(roles.length).toBe(12);
+    });
+
+    it('should include lancelot pair for 11-12 players', () => {
+      const roles11 = GameModel.getRoleConfiguration(11);
+      expect(roles11).toContain('lancelotBlue');
+      expect(roles11).toContain('lancelotRed');
+      expect(roles11.length).toBe(13);
+
+      const roles12 = GameModel.getRoleConfiguration(12);
+      expect(roles12).toContain('lancelotBlue');
+      expect(roles12).toContain('lancelotRed');
+      expect(roles12.length).toBe(14);
     });
 
     it('should default to 5-player config for invalid player count', () => {
       const roles = GameModel.getRoleConfiguration(99);
-      expect(roles.length).toBe(5);
+      expect(roles.length).toBe(7);
     });
 
     it('should return configs for all supported sizes (5-12)', () => {
       for (let n = 5; n <= 12; n++) {
         const roles = GameModel.getRoleConfiguration(n);
-        expect(roles.length).toBe(n);
+        expect(roles.length).toBe(n + 2); // good + evil = player count
       }
     });
 
@@ -43,6 +57,14 @@ describe('06 — Game Logic Unit Tests (no server needed)', () => {
         const roles = GameModel.getRoleConfiguration(n);
         const evilCount = roles.filter(r => GameModel.getRoleSide(r) === 'evil').length;
         expect(evilCount).toBeGreaterThanOrEqual(2);
+      }
+    });
+
+    it('should always include merlin and percival on good side', () => {
+      for (let n = 5; n <= 12; n++) {
+        const roles = GameModel.getRoleConfiguration(n);
+        expect(roles).toContain('merlin');
+        expect(roles).toContain('percival');
       }
     });
   });
@@ -60,12 +82,8 @@ describe('06 — Game Logic Unit Tests (no server needed)', () => {
       expect(GameModel.getRoleSide('loyal')).toBe('good');
     });
 
-    it('should classify lancelot as good', () => {
-      expect(GameModel.getRoleSide('lancelot')).toBe('good');
-    });
-
-    it('should classify ladyOfTheLake as good', () => {
-      expect(GameModel.getRoleSide('ladyOfTheLake')).toBe('good');
+    it('should classify lancelotBlue as good', () => {
+      expect(GameModel.getRoleSide('lancelotBlue')).toBe('good');
     });
 
     it('should classify mordred as evil', () => {
@@ -86,6 +104,10 @@ describe('06 — Game Logic Unit Tests (no server needed)', () => {
 
     it('should classify oberon as evil', () => {
       expect(GameModel.getRoleSide('oberon')).toBe('evil');
+    });
+
+    it('should classify lancelotRed as evil', () => {
+      expect(GameModel.getRoleSide('lancelotRed')).toBe('evil');
     });
 
     it('should default unknown role to good', () => {

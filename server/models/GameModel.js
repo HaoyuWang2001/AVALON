@@ -422,7 +422,7 @@ class GameModel {
         
         // 验证坏人才能投失败票
         if (vote === 'fail') {
-          const isEvil = ['mordred', 'morgana', 'assassin', 'minion', 'oberon'].includes(playerRole);
+          const isEvil = ['mordred', 'morgana', 'assassin', 'minion', 'oberon', 'lancelotRed'].includes(playerRole);
           if (!isEvil) {
             throw new Error('只有坏人才能破坏任务');
           }
@@ -580,14 +580,14 @@ class GameModel {
    */
   static getRoleConfiguration(playerCount) {
     const configs = {
-      5: ['merlin', 'percival', 'loyal', 'mordred', 'assassin'],
-      6: ['merlin', 'percival', 'loyal', 'loyal', 'mordred', 'assassin'],
-      7: ['merlin', 'percival', 'loyal', 'loyal', 'mordred', 'morgana', 'assassin'],
-      8: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'mordred', 'morgana', 'assassin'],
-      9: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'mordred', 'morgana', 'assassin'],
-      10: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'mordred', 'morgana', 'assassin', 'minion'],
-      11: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'mordred', 'morgana', 'assassin', 'minion', 'lancelot'],
-      12: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'mordred', 'morgana', 'assassin', 'minion', 'oberon', 'lancelot']
+      5:  ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin'],
+      6:  ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin'],
+      7:  ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin', 'oberon'],
+      8:  ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin', 'minion'],
+      9:  ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin', 'mordred'],
+      10: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin', 'mordred', 'oberon'],
+      11: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'mordred', 'oberon', 'lancelotBlue', 'lancelotRed'],
+      12: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin', 'mordred', 'oberon', 'lancelotBlue', 'lancelotRed']
     };
     
     return configs[playerCount] || configs[5];
@@ -599,8 +599,8 @@ class GameModel {
    * @returns {string} 'good' 或 'evil'
    */
   static getRoleSide(role) {
-    const goodRoles = ['merlin', 'percival', 'loyal', 'lancelot', 'ladyOfTheLake'];
-    const evilRoles = ['mordred', 'morgana', 'assassin', 'minion', 'oberon'];
+    const goodRoles = ['merlin', 'percival', 'loyal', 'lancelotBlue'];
+    const evilRoles = ['mordred', 'morgana', 'assassin', 'minion', 'oberon', 'lancelotRed'];
     
     if (goodRoles.includes(role)) return 'good';
     if (evilRoles.includes(role)) return 'evil';

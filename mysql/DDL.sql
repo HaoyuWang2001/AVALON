@@ -293,14 +293,14 @@ CREATE TABLE IF NOT EXISTS role_configurations (
 
 -- 插入标准角色配置
 INSERT INTO role_configurations (player_count, roles, team_sizes, description) VALUES
-(5, '["merlin", "percival", "loyal", "mordred", "assassin"]', '[2,3,2,3,3]', '5人标准局'),
-(6, '["merlin", "percival", "loyal", "loyal", "mordred", "assassin"]', '[2,3,4,3,4]', '6人标准局'),
-(7, '["merlin", "percival", "loyal", "loyal", "mordred", "morgana", "assassin"]', '[2,3,3,4,4]', '7人标准局'),
-(8, '["merlin", "percival", "loyal", "loyal", "loyal", "mordred", "morgana", "assassin"]', '[3,4,4,5,5]', '8人标准局'),
-(9, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "mordred", "morgana", "assassin"]', '[3,4,4,5,5]', '9人标准局'),
-(10, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "mordred", "morgana", "assassin", "minion"]', '[3,4,4,5,5]', '10人标准局'),
-(11, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "mordred", "morgana", "assassin", "minion", "lancelot"]', '[3,4,4,5,5]', '11人标准局（含兰斯洛特）'),
-(12, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "mordred", "morgana", "assassin", "minion", "oberon", "lancelot"]', '[4,5,5,6,6]', '12人标准局（含奥伯伦和兰斯洛特）')
+(5, '["merlin", "percival", "loyal", "loyal", "loyal", "morgana", "assassin"]', '[2,3,2,3,3]', '5人推荐局（莫甘娜+刺客）'),
+(6, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin"]', '[2,3,4,3,4]', '6人推荐局（莫甘娜+刺客）'),
+(7, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "oberon"]', '[2,3,3,4,4]', '7人推荐局（莫甘娜+刺客+奥伯伦）'),
+(8, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "minion"]', '[3,4,4,5,5]', '8人推荐局（莫甘娜+刺客+爪牙）'),
+(9, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "mordred"]', '[3,4,4,5,5]', '9人推荐局（莫甘娜+刺客+莫德雷德）'),
+(10, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "mordred", "oberon"]', '[3,4,4,5,5]', '10人推荐局（莫甘娜+刺客+莫德雷德+奥伯伦）'),
+(11, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "loyal", "loyal", "morgana", "mordred", "oberon", "lancelotBlue", "lancelotRed"]', '[3,4,4,5,5]', '11人推荐局（含蓝红兰斯洛特）'),
+(12, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "mordred", "oberon", "lancelotBlue", "lancelotRed"]', '[4,5,5,6,6]', '12人推荐局（含蓝红兰斯洛特）')
 ON DUPLICATE KEY UPDATE 
     roles = VALUES(roles),
     team_sizes = VALUES(team_sizes),
