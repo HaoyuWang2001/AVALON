@@ -206,7 +206,7 @@ async function getStats() {
     const tables = ['rooms', 'players', 'games', 'game_players', 'votes', 'mission_results', 'messages'];
     for (const table of tables) {
       try {
-        const [result] = await query(`SELECT COUNT(*) as count FROM ${table}`);
+        const result = await query(`SELECT COUNT(*) as count FROM ${table}`);
         stats.tables[table] = result[0].count;
       } catch (error) {
         stats.tables[table] = '表不存在';
