@@ -74,7 +74,7 @@ Page({
     ladyOfTheLakeRound: 2,
 
     merlinCanSee: { assassin: true, morgana: true, minion: true, oberon: true, lancelotRed: true, lancelotBlue: false },
-    merlinCanIdentify: {},
+    merlinCanIdentify: { lancelotRed: false, lancelotBlue: false },
 
     speechTimeoutIndex: 0,
     roundTimeoutIndex: 0,
@@ -167,7 +167,10 @@ Page({
       ladyOfTheLake: n >= 10,
       ladyOfTheLakeRound: n >= 10 ? 2 : 2,
       merlinCanSee: { ...canSee },
-      merlinCanIdentify: {},
+      merlinCanIdentify: {
+        lancelotRed: selected.lancelotRed || false,
+        lancelotBlue: selected.lancelotBlue || false
+      },
       speechTimeoutIndex: 0,
       roundTimeoutIndex: 0,
       voteTimeoutIndex: 0,
