@@ -60,7 +60,7 @@
 }
 .close-text { color: white; font-size: 32rpx; font-weight: 700; }
 .config-swiper { flex: 1; overflow: hidden; }
-.config-scroll { height: 100%; padding: 0 32rpx; }
+.config-scroll { height: 100%; padding: 0 32rpx; box-sizing: border-box; overflow-x: hidden; }
 .config-section { background: #FFFFFF; border-radius: 24rpx; padding: 28rpx; margin-bottom: 20rpx; box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.04); }
 .section-title { font-size: 30rpx; font-weight: 700; color: #111827; margin-bottom: 20rpx; display: flex; align-items: center; }
 .section-title::before { content: ''; width: 6rpx; height: 24rpx; background: linear-gradient(180deg, #8B5CF6, #6D28D9); border-radius: 3rpx; margin-right: 12rpx; }
@@ -80,7 +80,8 @@
 .role-scroll { width: 100%; white-space: nowrap; }
 .role-scroll-row { display: inline-flex; gap: 16rpx; padding: 4rpx 0; }
 .role-card {
-  width: 156rpx; padding: 16rpx 10rpx 14rpx; border-radius: 20rpx;
+  flex-shrink: 0; box-sizing: border-box;
+  width: 168rpx; margin: 0; padding: 16rpx 10rpx 14rpx; border-radius: 20rpx;
   background: #F9FAFB; border: 2rpx solid #E5E7EB;
   display: flex; flex-direction: column; align-items: center;
   transition: all 0.2s;
