@@ -188,7 +188,7 @@
             </view>
           </view>
 
-          <view class="config-section">
+          <view class="config-section" hidden="{{!selectedRoles.oberon && !selectedRoles.lancelotRed}}">
             <view class="section-title">💣 坏人强制任务失败</view>
             <view class="rule-row" hidden="{{!selectedRoles.oberon}}">
               <view class="rule-col">
