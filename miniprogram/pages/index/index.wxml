@@ -1,9 +1,7 @@
 <!--pages/index/index.wxml-->
 <view class="page">
   <view class="logo-section">
-    <view class="logo-icon">
-      <text>🏰</text>
-    </view>
+    <view class="logo-icon"><text>🏰</text></view>
     <view class="logo-title">AVALON</view>
     <view class="logo-subtitle">社交推理游戏</view>
   </view>
@@ -21,22 +19,16 @@
         </view>
       </view>
     </view>
-    <button wx:else class="login-btn" bindtap="getUserProfile">
-      授权登录
-    </button>
+    <button wx:else class="login-btn" bindtap="getUserProfile">授权登录</button>
   </view>
 
   <view class="card action-card">
     <view class="action-title">开始游戏</view>
-
-    <button class="action-btn action-btn-primary" bindtap="createRoom">
-      <text class="btn-icon">🎮</text>
-      创建房间
+    <button class="action-btn action-btn-primary" bindtap="showConfig">
+      <text class="btn-icon">🎮</text>创建房间
     </button>
-
     <button class="action-btn action-btn-secondary" bindtap="joinRoom">
-      <text class="btn-icon">🚪</text>
-      加入房间
+      <text class="btn-icon">🚪</text>加入房间
     </button>
   </view>
 
@@ -47,8 +39,348 @@
     <view class="info-item">• 自定义板子，由房主配置</view>
     <view class="info-item">• 首车头、发车顺序均可指定</view>
   </view>
+  <view class="footer"><view class="footer-version">AVALON v1.0.0</view></view>
+</view>
 
-  <view class="footer">
-    <view class="footer-version">AVALON v1.0.0</view>
+<!-- ─────────── Config Modal ─────────── -->
+<view class="config-overlay" wx:if="{{showConfig}}">
+  <view class="config-panel">
+
+    <!-- Close button -->
+    <view class="config-close" bindtap="closeConfig">✕</view>
+
+    <!-- Swiper -->
+    <swiper class="config-swiper" current="{{swiperPage}}" bindchange="onSwiperChange" duration="300">
+      
+      <!-- Page 0: 人数+角色+湖仙 -->
+      <swiper-item>
+        <scroll-view scroll-y class="config-scroll">
+          <view class="config-section">
+            <view class="section-title">🙋 玩家总数</view>
+            <view class="count-row">
+              <view wx:for="{{[5,6,7,8,9,10,11,12]}}" wx:key="*this"
+                class="count-item {{playerCount === item ? 'count-active' : ''}}"
+                data-count="{{item}}" bindtap="onPlayerCountChange">{{item}}</view>
+            </view>
+          </view>
+
+          <view class="config-section">
+            <view class="section-title">🛡️ 好人</view>
+            <view class="role-grid">
+              <!-- 忠臣卡片（固定首位，不可选中） -->
+              <view class="role-card role-loyal">
+                <view class="role-img-placeholder">
+                  <text class="role-img-text">🛡️</text>
+                </view>
+                <text class="role-name">忠臣</text>
+                <text class="loyal-count">×{{loyalCount}}</text>
+              </view>
+              <view wx:for="{{['merlin','percival','lancelotBlue']}}" wx:key="*this"
+                class="role-card role-good {{selectedRoles[item] ? 'role-selected' : ''}}"
+                data-role="{{item}}" bindtap="onRoleToggle">
+                <view class="role-img-placeholder">
+                  <text class="role-img-text">🛡️</text>
+                </view>
+                <text class="role-name">{{item === 'merlin' ? '梅林' : item === 'percival' ? '派西' : '蓝兰'}}</text>
+                <view class="role-check {{selectedRoles[item] ? 'check-on' : ''}}">
+                  <text wx:if="{{selectedRoles[item]}}">✓</text>
+                </view>
+              </view>
+            </view>
+          </view>
+
+          <view class="config-section">
+            <view class="section-title">⚔️ 坏人</view>
+            <view class="role-grid">
+              <view wx:for="{{['morgana','assassin','oberon','mordred','minion','lancelotRed']}}" wx:key="*this"
+                class="role-card role-evil {{selectedRoles[item] ? 'role-selected' : ''}}"
+                data-role="{{item}}" bindtap="onRoleToggle">
+                <view class="role-img-placeholder">
+                  <text class="role-img-text">⚔️</text>
+                </view>
+                <text class="role-name">{{item === 'morgana' ? '莫甘娜' : item === 'assassin' ? '刺客' : item === 'oberon' ? '奥伯伦' : item === 'mordred' ? '莫德雷德' : item === 'minion' ? '爪牙' : '红兰'}}</text>
+                <view class="role-check {{selectedRoles[item] ? 'check-on' : ''}}">
+                  <text wx:if="{{selectedRoles[item]}}">✓</text>
+                </view>
+              </view>
+            </view>
+          </view>
+
+          <view class="role-summary" wx:if="{{roleWarning}}">
+            <text class="role-warning">⚠️ {{roleWarning}}</text>
+          </view>
+          <view class="role-summary">
+            <text class="role-summary-text">好人 {{loyalCount > 0 ? '忠臣×' + loyalCount + ' + ' : ''}}已选 {{goodCount}} 位  |  坏人已选 {{evilCount}} 位  =  共 {{loyalCount + goodCount + evilCount}} / {{playerCount}} 玩家</text>
+          </view>
+
+          <view class="config-section">
+            <view class="section-title">🏞️ 湖中仙女</view>
+            <view class="rule-row">
+              <text class="rule-label">启用湖中仙女</text>
+              <switch checked="{{ladyOfTheLake}}" bindchange="onLadyToggle" color="#8B5CF6"/>
+            </view>
+            <view class="rule-row" wx:if="{{ladyOfTheLake}}">
+              <text class="rule-label">生效轮次</text>
+              <picker class="rule-picker" mode="selector" range="{{[1,2,3,4,5]}}" value="{{ladyOfTheLakeRound - 1}}" bindchange="onLadyRoundChange">
+                <text>第 {{ladyOfTheLakeRound}} 轮后可用</text>
+              </picker>
+            </view>
+          </view>
+          <view style="height:40rpx"></view>
+        </scroll-view>
+      </swiper-item>
+
+      <!-- Page 1: 必须设置项 -->
+      <swiper-item>
+        <scroll-view scroll-y class="config-scroll">
+          <view class="config-section">
+            <view class="section-title">📋 基础规则</view>
+            <view class="rule-row">
+              <view class="rule-col">
+                <text class="rule-label">流车上限</text>
+                <text class="rule-desc">每轮最多流车几次？超过后强制发车</text>
+              </view>
+              <picker class="rule-picker" mode="selector" range="{{[1,2,3,4,5]}}" value="{{rules.maxFailedNominations - 1}}" data-field="maxFailedNominations" bindchange="onRulePicker">
+                <text>{{rules.maxFailedNominations}} 次</text>
+              </picker>
+            </view>
+            <view class="rule-row">
+              <view class="rule-col">
+                <text class="rule-label">坏人互知身份</text>
+                <text class="rule-desc">除奥伯伦外，坏人互相知道对方具体身份</text>
+              </view>
+              <switch checked="{{rules.evilKnowsEachOther}}" data-field="evilKnowsEachOther" bindchange="onRuleToggle" color="#8B5CF6"/>
+            </view>
+            <view class="rule-row">
+              <view class="rule-col">
+                <text class="rule-label">票型公开</text>
+                <text class="rule-desc">组队投票时是否展示每个人的投票结果</text>
+              </view>
+              <view class="segment">
+                <view class="segment-item {{rules.voteVisibility === 'public' ? 'segment-active' : ''}}" data-field="voteVisibility" data-val="public" bindtap="onRuleSegment">公开</view>
+                <view class="segment-item {{rules.voteVisibility === 'anonymous' ? 'segment-active' : ''}}" data-field="voteVisibility" data-val="anonymous" bindtap="onRuleSegment">匿名</view>
+              </view>
+            </view>
+            <view class="rule-row">
+              <view class="rule-col">
+                <text class="rule-label">失败详情</text>
+                <text class="rule-desc">任务失败时显示几票失败 or 仅知成败</text>
+              </view>
+              <view class="segment">
+                <view class="segment-item {{rules.missionFailDetail === 'count' ? 'segment-active' : ''}}" data-field="missionFailDetail" data-val="count" bindtap="onRuleSegment">票数</view>
+                <view class="segment-item {{rules.missionFailDetail === 'binary' ? 'segment-active' : ''}}" data-field="missionFailDetail" data-val="binary" bindtap="onRuleSegment">成败</view>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+      </swiper-item>
+
+      <!-- Page 2: 兰斯洛特配置 (conditional) -->
+      <swiper-item wx:if="{{selectedRoles.lancelotBlue || selectedRoles.lancelotRed}}">
+        <scroll-view scroll-y class="config-scroll">
+          <view class="config-section">
+            <view class="section-title">⚔️ 兰斯洛特配置</view>
+            <view class="rule-row" wx:if="{{selectedRoles.lancelotBlue && selectedRoles.lancelotRed}}">
+              <view class="rule-col">
+                <text class="rule-label">兰斯互知身份</text>
+                <text class="rule-desc">蓝兰与红兰在视野中知道对方身份</text>
+              </view>
+              <switch checked="{{rules.lancelotsKnowEachOther}}" data-field="lancelotsKnowEachOther" bindchange="onRuleToggle" color="#8B5CF6"/>
+            </view>
+            <view class="rule-row">
+              <view class="rule-col">
+                <text class="rule-label">兰斯换身轮次</text>
+                <text class="rule-desc">第几轮起抽取身份转换卡（0=不转换）</text>
+              </view>
+              <picker class="rule-picker" mode="selector" range="{{[0,1,2,3,4,5]}}" value="{{rules.lancelotSwapRound}}" data-field="lancelotSwapRound" bindchange="onRulePicker">
+                <text>{{rules.lancelotSwapRound === 0 ? '不转换' : '第 ' + rules.lancelotSwapRound + ' 轮'}}</text>
+              </picker>
+            </view>
+          </view>
+        </scroll-view>
+      </swiper-item>
+
+      <!-- Page 3: 强制任务失败 (conditional) -->
+      <swiper-item wx:if="{{selectedRoles.oberon || selectedRoles.lancelotRed}}">
+        <scroll-view scroll-y class="config-scroll">
+          <view class="config-section">
+            <view class="section-title">💣 坏人强制任务失败</view>
+            <view class="rule-row" wx:if="{{selectedRoles.oberon}}">
+              <view class="rule-col">
+                <text class="rule-label">奥伯伦必须任务失败</text>
+                <text class="rule-desc">若被选入任务队伍，必须投失败票</text>
+              </view>
+              <switch checked="{{rules.oberonMustFailMission}}" data-field="oberonMustFailMission" bindchange="onRuleToggle" color="#8B5CF6"/>
+            </view>
+            <view class="rule-row" wx:if="{{selectedRoles.lancelotRed}}">
+              <view class="rule-col">
+                <text class="rule-label">红兰必须任务失败</text>
+                <text class="rule-desc">若被选入任务队伍，必须投失败票</text>
+              </view>
+              <switch checked="{{rules.redLancelotMustFailMission}}" data-field="redLancelotMustFailMission" bindchange="onRuleToggle" color="#8B5CF6"/>
+            </view>
+          </view>
+        </scroll-view>
+      </swiper-item>
+
+      <!-- Page 4: 梅林视野 (conditional) -->
+      <swiper-item wx:if="{{selectedRoles.merlin}}">
+        <scroll-view scroll-y class="config-scroll">
+          <view class="config-section">
+            <view class="section-title">👁️ 梅林能看到的人</view>
+            <view class="role-grid">
+              <view wx:if="{{selectedRoles.assassin}}"
+                class="role-card role-evil {{merlinCanSee.assassin ? 'role-selected' : ''}}"
+                data-role="assassin" bindtap="onCanSeeToggle">
+                <view class="role-img-placeholder"><text class="role-img-text">👤</text></view>
+                <text class="role-name">刺客</text>
+                <view class="role-check {{merlinCanSee.assassin ? 'check-on' : ''}}"><text wx:if="{{merlinCanSee.assassin}}">✓</text></view>
+              </view>
+              <view wx:if="{{selectedRoles.morgana}}"
+                class="role-card role-evil {{merlinCanSee.morgana ? 'role-selected' : ''}}"
+                data-role="morgana" bindtap="onCanSeeToggle">
+                <view class="role-img-placeholder"><text class="role-img-text">👤</text></view>
+                <text class="role-name">莫甘娜</text>
+                <view class="role-check {{merlinCanSee.morgana ? 'check-on' : ''}}"><text wx:if="{{merlinCanSee.morgana}}">✓</text></view>
+              </view>
+              <view wx:if="{{selectedRoles.oberon}}"
+                class="role-card role-evil {{merlinCanSee.oberon ? 'role-selected' : ''}}"
+                data-role="oberon" bindtap="onCanSeeToggle">
+                <view class="role-img-placeholder"><text class="role-img-text">👤</text></view>
+                <text class="role-name">奥伯伦</text>
+                <view class="role-check {{merlinCanSee.oberon ? 'check-on' : ''}}"><text wx:if="{{merlinCanSee.oberon}}">✓</text></view>
+              </view>
+              <view wx:if="{{selectedRoles.minion}}"
+                class="role-card role-evil {{merlinCanSee.minion ? 'role-selected' : ''}}"
+                data-role="minion" bindtap="onCanSeeToggle">
+                <view class="role-img-placeholder"><text class="role-img-text">👤</text></view>
+                <text class="role-name">爪牙</text>
+                <view class="role-check {{merlinCanSee.minion ? 'check-on' : ''}}"><text wx:if="{{merlinCanSee.minion}}">✓</text></view>
+              </view>
+              <view wx:if="{{selectedRoles.lancelotRed}}"
+                class="role-card role-evil {{merlinCanSee.lancelotRed ? 'role-selected' : ''}}"
+                data-role="lancelotRed" bindtap="onCanSeeToggle">
+                <view class="role-img-placeholder"><text class="role-img-text">👤</text></view>
+                <text class="role-name">红兰</text>
+                <view class="role-check {{merlinCanSee.lancelotRed ? 'check-on' : ''}}"><text wx:if="{{merlinCanSee.lancelotRed}}">✓</text></view>
+              </view>
+              <view wx:if="{{selectedRoles.lancelotBlue}}"
+                class="role-card role-evil {{merlinCanSee.lancelotBlue ? 'role-selected' : ''}}"
+                data-role="lancelotBlue" bindtap="onCanSeeToggle">
+                <view class="role-img-placeholder"><text class="role-img-text">👤</text></view>
+                <text class="role-name">蓝兰</text>
+                <view class="role-check {{merlinCanSee.lancelotBlue ? 'check-on' : ''}}"><text wx:if="{{merlinCanSee.lancelotBlue}}">✓</text></view>
+              </view>
+            </view>
+          </view>
+
+          <view class="config-section">
+            <view class="section-title">🔍 梅林能分辨具体身份</view>
+            <view class="role-grid">
+              <view wx:if="{{merlinCanSee.assassin}}"
+                class="role-card role-evil {{merlinCanIdentify.assassin ? 'role-selected' : ''}}"
+                data-role="assassin" bindtap="onCanIdentifyToggle">
+                <view class="role-img-placeholder"><text class="role-img-text">🔍</text></view>
+                <text class="role-name">刺客</text>
+                <view class="role-check {{merlinCanIdentify.assassin ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.assassin}}">✓</text></view>
+              </view>
+              <view wx:if="{{merlinCanSee.morgana}}"
+                class="role-card role-evil {{merlinCanIdentify.morgana ? 'role-selected' : ''}}"
+                data-role="morgana" bindtap="onCanIdentifyToggle">
+                <view class="role-img-placeholder"><text class="role-img-text">🔍</text></view>
+                <text class="role-name">莫甘娜</text>
+                <view class="role-check {{merlinCanIdentify.morgana ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.morgana}}">✓</text></view>
+              </view>
+              <view wx:if="{{merlinCanSee.oberon}}"
+                class="role-card role-evil {{merlinCanIdentify.oberon ? 'role-selected' : ''}}"
+                data-role="oberon" bindtap="onCanIdentifyToggle">
+                <view class="role-img-placeholder"><text class="role-img-text">🔍</text></view>
+                <text class="role-name">奥伯伦</text>
+                <view class="role-check {{merlinCanIdentify.oberon ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.oberon}}">✓</text></view>
+              </view>
+              <view wx:if="{{merlinCanSee.minion}}"
+                class="role-card role-evil {{merlinCanIdentify.minion ? 'role-selected' : ''}}"
+                data-role="minion" bindtap="onCanIdentifyToggle">
+                <view class="role-img-placeholder"><text class="role-img-text">🔍</text></view>
+                <text class="role-name">爪牙</text>
+                <view class="role-check {{merlinCanIdentify.minion ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.minion}}">✓</text></view>
+              </view>
+              <view wx:if="{{merlinCanSee.lancelotRed}}"
+                class="role-card role-evil {{merlinCanIdentify.lancelotRed ? 'role-selected' : ''}}"
+                data-role="lancelotRed" bindtap="onCanIdentifyToggle">
+                <view class="role-img-placeholder"><text class="role-img-text">🔍</text></view>
+                <text class="role-name">红兰</text>
+                <view class="role-check {{merlinCanIdentify.lancelotRed ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.lancelotRed}}">✓</text></view>
+              </view>
+              <view wx:if="{{merlinCanSee.lancelotBlue}}"
+                class="role-card role-evil {{merlinCanIdentify.lancelotBlue ? 'role-selected' : ''}}"
+                data-role="lancelotBlue" bindtap="onCanIdentifyToggle">
+                <view class="role-img-placeholder"><text class="role-img-text">🔍</text></view>
+                <text class="role-name">蓝兰</text>
+                <view class="role-check {{merlinCanIdentify.lancelotBlue ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.lancelotBlue}}">✓</text></view>
+              </view>
+            </view>
+          </view>
+          <view style="height:40rpx"></view>
+        </scroll-view>
+      </swiper-item>
+
+      <!-- Page 5: 时间+信息+创建 -->
+      <swiper-item>
+        <scroll-view scroll-y class="config-scroll">
+          <view class="config-section">
+            <view class="section-title">⏱️ 时间限制</view>
+            <view class="rule-row">
+              <text class="rule-label">发言限时</text>
+              <picker class="rule-picker" mode="selector" range="{{['不限','30秒','60秒','90秒','120秒']}}" value="{{speechTimeoutIndex}}" data-field="speechTimeoutIndex" bindchange="onLimitChange">
+                <text>{{['不限','30秒','60秒','90秒','120秒'][speechTimeoutIndex]}}</text>
+              </picker>
+            </view>
+            <view class="rule-row">
+              <text class="rule-label">任务超时</text>
+              <picker class="rule-picker" mode="selector" range="{{['不限','30秒','60秒','90秒','120秒']}}" value="{{roundTimeoutIndex}}" data-field="roundTimeoutIndex" bindchange="onLimitChange">
+                <text>{{['不限','30秒','60秒','90秒','120秒'][roundTimeoutIndex]}}</text>
+              </picker>
+            </view>
+            <view class="rule-row">
+              <text class="rule-label">投票超时</text>
+              <picker class="rule-picker" mode="selector" range="{{['不限','15秒','30秒','45秒','60秒']}}" value="{{voteTimeoutIndex}}" data-field="voteTimeoutIndex" bindchange="onLimitChange">
+                <text>{{['不限','15秒','30秒','45秒','60秒'][voteTimeoutIndex]}}</text>
+              </picker>
+            </view>
+            <view class="rule-hint">
+              💡 若任务或投票超时，未行动视为投出成功票或赞成票（必须出失败票的角色仍会出失败票）。
+            </view>
+          </view>
+
+          <view class="config-section">
+            <view class="section-title">📝 房间信息</view>
+            <view class="meta-row">
+              <text class="rule-label">房间名</text>
+              <input class="meta-input" placeholder="{{customNickName || '房主'}}的房间" value="{{roomName}}" data-field="roomName" bindinput="onMetaInput"/>
+            </view>
+            <view class="meta-row">
+              <text class="rule-label">描述</text>
+              <input class="meta-input" placeholder="欢迎所有玩家" value="{{roomDescription}}" data-field="roomDescription" bindinput="onMetaInput"/>
+            </view>
+          </view>
+
+          <view class="create-section">
+            <button class="create-btn" bindtap="createRoom" disabled="{{roleWarning !== ''}}">🎮 创建房间</button>
+          </view>
+          <view style="height:60rpx"></view>
+        </scroll-view>
+      </swiper-item>
+
+    </swiper>
+
+    <!-- Navigation bar -->
+    <view class="nav-bar">
+      <view class="nav-btn {{logicalPage === 0 ? 'nav-disabled' : ''}}" bindtap="prevPage">◀ 上一步</view>
+      <view class="nav-dots">
+        <view wx:for="{{visiblePages}}" wx:key="*this" class="nav-dot {{index === logicalPage ? 'dot-active' : ''}}"></view>
+      </view>
+      <view class="nav-btn {{logicalPage === visiblePages.length - 1 ? 'nav-disabled' : ''}}" bindtap="nextPage">下一步 ▶</view>
+    </view>
   </view>
 </view>
