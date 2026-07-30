@@ -61,8 +61,7 @@ class MessageModel {
         params.push(beforeTime);
       }
       
-      query += ' ORDER BY created_at DESC LIMIT ?';
-      params.push(limit);
+      query += ` ORDER BY created_at DESC LIMIT ${parseInt(limit)}`;
       
       const messages = await db.query(query, params);
       
@@ -88,8 +87,8 @@ class MessageModel {
          FROM messages 
          WHERE room_id = ?
          ORDER BY created_at DESC
-         LIMIT ?`,
-        [roomId, limit]
+         LIMIT ${parseInt(limit)}`,
+        [roomId]
       );
       
       return messages.reverse(); // 反转顺序，使最早的消息在前
@@ -112,8 +111,8 @@ class MessageModel {
         `SELECT id FROM messages 
          WHERE room_id = ?
          ORDER BY created_at DESC
-         LIMIT 18446744073709551615 OFFSET ?`, -- 使用大数绕过LIMIT限制
-        [roomId, keepCount]
+         LIMIT 18446744073709551615 OFFSET ${parseInt(keepCount)}`,
+        [roomId]
       );
       
       if (messagesToDelete.length === 0) {

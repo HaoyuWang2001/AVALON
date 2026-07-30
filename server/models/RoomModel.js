@@ -396,9 +396,9 @@ class RoomModel {
          LEFT JOIN players p ON r.id = p.room_id
          WHERE r.updated_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
          GROUP BY r.id, r.host_open_id, r.game_started, r.created_at, r.updated_at
-         ORDER BY r.updated_at DESC
-         LIMIT ?`,
-        [limit]
+          ORDER BY r.updated_at DESC
+          LIMIT ${parseInt(limit)}`,
+        []
       );
       
       return rooms;
