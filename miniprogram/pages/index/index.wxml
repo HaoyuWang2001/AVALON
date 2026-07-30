@@ -27,7 +27,7 @@
     <button class="action-btn action-btn-primary" bindtap="showConfig">
       <text class="btn-icon">🎮</text>创建房间
     </button>
-    <button class="action-btn action-btn-secondary" bindtap="joinRoom">
+    <button class="action-btn action-btn-primary" bindtap="joinRoom">
       <text class="btn-icon">🚪</text>加入房间
     </button>
   </view>

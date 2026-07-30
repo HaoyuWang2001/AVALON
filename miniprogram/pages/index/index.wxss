@@ -29,7 +29,7 @@
 .action-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); flex-shrink: 0; }
 .action-title { font-size: 30rpx; font-weight: 700; color: #111827; margin-bottom: 24rpx; display: flex; align-items: center; }
 .action-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, #8B5CF6, #6D28D9); border-radius: 3rpx; margin-right: 14rpx; }
-.action-btn { width: 100%; padding: 22rpx; border-radius: 16rpx; font-size: 32rpx; font-weight: 600; margin-bottom: 14rpx; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.action-btn { width: 100%; padding: 22rpx; border-radius: 16rpx; font-size: 32rpx; font-weight: 600; margin-bottom: 28rpx; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .action-btn:last-child { margin-bottom: 0; }
 .action-btn-primary { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white; box-shadow: 0 6rpx 20rpx rgba(124,58,237,0.3); }
 .action-btn-primary::after { border: none; }
