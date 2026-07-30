@@ -85,7 +85,7 @@ Page({
     voteOptions: VOTE_OPTIONS,
 
     roomName: '',
-    roomDescription: '',
+    roomDescription: 'Welcome Join the Conference!',
     tags: [],
 
     pageCount: 3,
@@ -139,7 +139,11 @@ Page({
   // ─────────── Config Modal ───────────
 
   showConfig() {
-    this.setData({ showConfig: true, logicalPage: 0, swiperPage: this.data.visiblePages[0] || 0 });
+    const name = this.data.customNickName || (this.data.userInfo && this.data.userInfo.nickName) || '房主';
+    this.setData({
+      showConfig: true, logicalPage: 0, swiperPage: this.data.visiblePages[0] || 0,
+      roomName: name + '的房间'
+    });
   },
 
   closeConfig() {
