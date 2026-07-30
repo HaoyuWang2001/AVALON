@@ -191,11 +191,11 @@
       </swiper-item>
 
       <!-- Page 2: 兰斯洛特配置 (conditional) -->
-      <swiper-item wx:if="{{selectedRoles.lancelotBlue || selectedRoles.lancelotRed}}">
+      <swiper-item hidden="{{!selectedRoles.lancelotBlue && !selectedRoles.lancelotRed}}">
         <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
           <view class="config-section">
             <view class="section-title">⚔️ 兰斯洛特配置</view>
-            <view class="rule-row" wx:if="{{selectedRoles.lancelotBlue && selectedRoles.lancelotRed}}">
+            <view class="rule-row" hidden="{{!selectedRoles.lancelotBlue || !selectedRoles.lancelotRed}}">
               <view class="rule-col">
                 <text class="rule-label">兰斯互知身份</text>
                 <text class="rule-desc">蓝兰与红兰在视野中知道对方身份</text>
@@ -216,18 +216,18 @@
       </swiper-item>
 
       <!-- Page 3: 强制任务失败 (conditional) -->
-      <swiper-item wx:if="{{selectedRoles.oberon || selectedRoles.lancelotRed}}">
+      <swiper-item hidden="{{!selectedRoles.oberon && !selectedRoles.lancelotRed}}">
         <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
           <view class="config-section">
             <view class="section-title">💣 坏人强制任务失败</view>
-            <view class="rule-row" wx:if="{{selectedRoles.oberon}}">
+            <view class="rule-row" hidden="{{!selectedRoles.oberon}}">
               <view class="rule-col">
                 <text class="rule-label">奥伯伦必须任务失败</text>
                 <text class="rule-desc">若被选入任务队伍，必须投失败票</text>
               </view>
               <switch checked="{{rules.oberonMustFailMission}}" data-field="oberonMustFailMission" bindchange="onRuleToggle" color="#8B5CF6"/>
             </view>
-            <view class="rule-row" wx:if="{{selectedRoles.lancelotRed}}">
+            <view class="rule-row" hidden="{{!selectedRoles.lancelotRed}}">
               <view class="rule-col">
                 <text class="rule-label">红兰必须任务失败</text>
                 <text class="rule-desc">若被选入任务队伍，必须投失败票</text>
@@ -239,7 +239,7 @@
       </swiper-item>
 
       <!-- Page 4: 梅林视野 (conditional) -->
-      <swiper-item wx:if="{{selectedRoles.merlin}}">
+      <swiper-item hidden="{{!selectedRoles.merlin}}">
         <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
           <view class="config-section">
             <view class="section-title">👁️ 梅林能看到的人</view>
