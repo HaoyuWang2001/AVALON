@@ -24,6 +24,7 @@
 .edit-btn { font-size: 32rpx; margin-left: 16rpx; padding: 8rpx; opacity: 0.7; }
 .user-status { font-size: 24rpx; color: #10B981; margin-top: 4rpx; display: flex; align-items: center; }
 .user-status::before { content: ''; width: 10rpx; height: 10rpx; background: #10B981; border-radius: 50%; margin-right: 8rpx; }
+.user-wx-name { font-size: 22rpx; color: #9CA3AF; margin-top: 4rpx; }
 .login-btn { width: 100%; background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white; border-radius: 16rpx; font-size: 32rpx; font-weight: 600; padding: 24rpx; box-shadow: 0 6rpx 20rpx rgba(124,58,237,0.3); }
 
 .action-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); flex-shrink: 0; }

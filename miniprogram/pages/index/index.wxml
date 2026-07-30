@@ -15,6 +15,7 @@
             <view class="user-name">{{customNickName || userInfo.nickName}}</view>
             <view class="edit-btn" bindtap="showNickNameModal">📝</view>
           </view>
+          <view class="user-wx-name">微信: {{userInfo.nickName}}</view>
           <view class="user-status">在线</view>
         </view>
       </view>
