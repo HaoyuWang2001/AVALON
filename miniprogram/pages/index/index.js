@@ -315,14 +315,12 @@ Page({
   computeVisiblePages() {
     const sel = this.data.selectedRoles;
     const hasLancelot = sel.lancelotBlue || sel.lancelotRed;
-    const hasOberonOrRedLancelot = sel.oberon || sel.lancelotRed;
     const hasMerlin = sel.merlin;
 
-    const pages = [0, 1]; // role picker (0), must-set rules (1)
+    const pages = [0, 1];
     if (hasLancelot) pages.push(2);
-    if (hasOberonOrRedLancelot) pages.push(3);
     if (hasMerlin) pages.push(4);
-    pages.push(5); // limits + meta + create
+    pages.push(5);
 
     this.setData({
       visiblePages: pages,

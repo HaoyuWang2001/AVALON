@@ -17,8 +17,26 @@
           </view>
           <view class="user-status">在线</view>
         </view>
+            </view>
           </view>
-    </view>
+
+          <view class="config-section">
+            <view class="section-title">💣 坏人强制任务失败</view>
+            <view class="rule-row" hidden="{{!selectedRoles.oberon}}">
+              <view class="rule-col">
+                <text class="rule-label">奥伯伦必须任务失败</text>
+                <text class="rule-desc">若被选入任务队伍，必须投失败票</text>
+              </view>
+              <switch checked="{{rules.oberonMustFailMission}}" data-field="oberonMustFailMission" bindchange="onRuleToggle" color="#8B5CF6"/>
+            </view>
+            <view class="rule-row" hidden="{{!selectedRoles.lancelotRed}}">
+              <view class="rule-col">
+                <text class="rule-label">红兰必须任务失败</text>
+                <text class="rule-desc">若被选入任务队伍，必须投失败票</text>
+              </view>
+              <switch checked="{{rules.redLancelotMustFailMission}}" data-field="redLancelotMustFailMission" bindchange="onRuleToggle" color="#8B5CF6"/>
+            </view>
+          </view>
     <button wx:else class="login-btn" bindtap="getUserProfile">授权登录</button>
   </view>
 
@@ -215,28 +233,8 @@
         </scroll-view>
       </swiper-item>
 
-      <!-- Page 3: 强制任务失败 (conditional) -->
-      <swiper-item hidden="{{!selectedRoles.oberon && !selectedRoles.lancelotRed}}">
-        <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
-          <view class="config-section">
-            <view class="section-title">💣 坏人强制任务失败</view>
-            <view class="rule-row" hidden="{{!selectedRoles.oberon}}">
-              <view class="rule-col">
-                <text class="rule-label">奥伯伦必须任务失败</text>
-                <text class="rule-desc">若被选入任务队伍，必须投失败票</text>
-              </view>
-              <switch checked="{{rules.oberonMustFailMission}}" data-field="oberonMustFailMission" bindchange="onRuleToggle" color="#8B5CF6"/>
-            </view>
-            <view class="rule-row" hidden="{{!selectedRoles.lancelotRed}}">
-              <view class="rule-col">
-                <text class="rule-label">红兰必须任务失败</text>
-                <text class="rule-desc">若被选入任务队伍，必须投失败票</text>
-              </view>
-              <switch checked="{{rules.redLancelotMustFailMission}}" data-field="redLancelotMustFailMission" bindchange="onRuleToggle" color="#8B5CF6"/>
-            </view>
-          </view>
-        </scroll-view>
-      </swiper-item>
+      <!-- Page 3: 保留位 -->
+      <swiper-item hidden="{{true}}"></swiper-item>
 
       <!-- Page 4: 梅林视野 (conditional) -->
       <swiper-item hidden="{{!selectedRoles.merlin}}">
