@@ -82,7 +82,8 @@ class RoomModel {
         readyPlayers,
         players: players.map(player => ({
           ...player,
-          isHost: player.isHost === 1 || player.isHost === true
+          isHost: player.isHost === 1 || player.isHost === true,
+          isReady: player.isReady === 1 || player.isReady === true
         }))
       };
     } catch (error) {
