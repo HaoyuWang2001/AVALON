@@ -104,6 +104,7 @@ Page({
   },
 
   onChooseAvatar(e) {
+    if (!e.detail || !e.detail.avatarUrl) return;
     const avatarUrl = e.detail.avatarUrl;
     this.setData({ 'userInfo.avatarUrl': avatarUrl });
     const app = getApp();

@@ -18,8 +18,8 @@
 .user-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); display: flex; align-items: center; flex-shrink: 0; }
 .user-info-section { width: 100%; }
 .user-left { display: flex; align-items: center; width: 100%; }
-.avatar-btn { padding: 0; margin: 0; border: none; background: none; line-height: 1; flex-shrink: 0; display: inline-flex; }
-.avatar-btn::after { border: none; }
+.avatar-btn { padding: 0; margin: 0; width: 100rpx; height: 100rpx; border: none; background: none; line-height: 1; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; overflow: hidden; }
+.avatar-btn::after { border: none; display: none; }
 .user-details { margin-left: 24rpx; flex: 1; min-width: 0; }
 .user-name-input { font-size: 34rpx; font-weight: 700; color: #111827; height: 50rpx; line-height: 50rpx; padding: 0; background: transparent; }
 .user-game-nick { font-size: 34rpx; color: #8B5CF6; margin-top: 2rpx; font-weight: 600; }
