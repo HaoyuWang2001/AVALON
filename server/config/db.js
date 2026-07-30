@@ -167,10 +167,10 @@ async function checkConnection(maxRetries = 3, delayMs = 2000) {
       const connection = await pool.getConnection();
       const [result] = await connection.execute('SELECT 1 AS connected');
       connection.release();
-      if (result[0].connected === 1) {
+      if (result[0].connected == 1) {
         return true;
       }
-      console.warn(`数据库连接检查: 第${attempt}次尝试结果异常`);
+      console.warn(`数据库连接检查: 第${attempt}次尝试结果异常, result=${JSON.stringify(result[0])}`);
     } catch (error) {
       console.warn(`数据库连接检查失败 (第${attempt}/${maxRetries}次): ${error.message}`);
       if (attempt < maxRetries) {
