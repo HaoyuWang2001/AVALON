@@ -47,7 +47,7 @@ Page({
     customNickName: '', showNickNameInput: false,
 
     showConfig: false,
-    playerCount: 8,
+    playerCount: 5,
     logicalPage: 0,
     visiblePages: [0, 1, 5],
     goodCount: 2,
