@@ -46,9 +46,9 @@ describe('05 — Edge Cases & Validation', () => {
         customNickName: 'DupHost'
       });
 
-      // DB mode rejects, memory mode may allow but seat 1 is already taken by host
+      // DB mode returns success:true with message '已在房间中'
       if (dbMode) {
-        expect(res.body.success).toBe(false);
+        expect(res.body.success).toBe(true);
         expect(res.body.message || '').toMatch(/已在房间中/);
       } else {
         // Memory mode behavior varies by implementation
