@@ -57,11 +57,11 @@
         <scroll-view scroll-y class="config-scroll">
           <view class="config-section">
             <view class="section-title">🙋 玩家总数</view>
-            <view class="count-row">
+            <scroll-view class="count-row" scroll-x>
               <view wx:for="{{[5,6,7,8,9,10,11,12]}}" wx:key="*this"
                 class="count-item {{playerCount === item ? 'count-active' : ''}}"
                 data-count="{{item}}" bindtap="onPlayerCountChange">{{item}}</view>
-            </view>
+            </scroll-view>
           </view>
 
           <view class="config-section">
@@ -108,9 +108,6 @@
 
           <view class="role-summary" wx:if="{{roleWarning}}">
             <text class="role-warning">⚠️ {{roleWarning}}</text>
-          </view>
-          <view class="role-summary">
-            <text class="role-summary-text">好人 {{loyalCount > 0 ? '忠臣×' + loyalCount + ' + ' : ''}}已选 {{goodCount}} 位  |  坏人已选 {{evilCount}} 位  =  共 {{loyalCount + goodCount + evilCount}} / {{playerCount}} 玩家</text>
           </view>
 
           <view class="config-section">

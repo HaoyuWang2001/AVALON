@@ -157,8 +157,8 @@ Page({
     this.setData({
       selectedRoles: selected,
       rules: buildDefaultRule(),
-      ladyOfTheLake: false,
-      ladyOfTheLakeRound: 2,
+      ladyOfTheLake: n >= 10,
+      ladyOfTheLakeRound: n >= 10 ? 2 : 2,
       merlinCanSee: { ...canSee },
       merlinCanIdentify: {},
       speechTimeoutIndex: 0,

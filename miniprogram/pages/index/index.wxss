@@ -47,24 +47,25 @@
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: #F5F3FF; z-index: 1000;
 }
-.config-panel { display: flex; flex-direction: column; height: 100%; padding-top: 80rpx; }
+.config-panel { display: flex; flex-direction: column; height: 100%; }
 .config-close {
-  position: absolute; top: 48rpx; right: 32rpx; z-index: 10;
+  position: fixed; top: 24rpx; right: 24rpx; z-index: 20;
   width: 64rpx; height: 64rpx; border-radius: 50%;
-  background: rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center;
-  font-size: 36rpx; color: #6B7280;
+  background: #8B5CF6; display: flex; align-items: center; justify-content: center;
+  font-size: 32rpx; color: white; font-weight: 700;
 }
 .config-swiper { flex: 1; overflow: hidden; }
-.config-scroll { height: 100%; padding: 0 32rpx; }
+.config-scroll { height: 100%; padding: 80rpx 32rpx 0; }
 .config-section { background: #FFFFFF; border-radius: 24rpx; padding: 28rpx; margin-bottom: 20rpx; box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.04); }
 .section-title { font-size: 30rpx; font-weight: 700; color: #111827; margin-bottom: 20rpx; display: flex; align-items: center; }
 .section-title::before { content: ''; width: 6rpx; height: 24rpx; background: linear-gradient(180deg, #8B5CF6, #6D28D9); border-radius: 3rpx; margin-right: 12rpx; }
 
 /* ─────── Count selector ─────── */
-.count-row { display: flex; justify-content: center; gap: 12rpx; flex-wrap: wrap; }
+.count-row { white-space: nowrap; padding: 8rpx 0; }
 .count-item {
+  display: inline-flex; align-items: center; justify-content: center;
   width: 72rpx; height: 72rpx; border-radius: 20rpx;
-  background: #F3F4F6; display: flex; align-items: center; justify-content: center;
+  background: #F3F4F6; margin-right: 12rpx;
   font-size: 32rpx; font-weight: 700; color: #6B7280;
   transition: all 0.2s;
 }
