@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 8082
 
-CMD ["node", "index.js", "--env", "/app/.env"]
+CMD ["node", "index.js"]
