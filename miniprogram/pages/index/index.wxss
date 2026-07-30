@@ -18,9 +18,10 @@
 .user-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); display: flex; align-items: center; flex-shrink: 0; }
 .user-info-section { width: 100%; }
 .user-left { display: flex; align-items: center; width: 100%; }
-.avatar-btn { padding: 0; margin: 0; width: 100rpx; height: 100rpx; min-width: 100rpx; max-width: 100rpx; border: 5rpx solid #8B5CF6; background: none; line-height: 1; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; overflow: hidden; box-sizing: border-box; }
+.avatar-btn { padding: 0; margin: 0; width: 100rpx; height: 100rpx; min-width: 100rpx; max-width: 100rpx; border: 6rpx solid #C4B5FD; background: #F5F3FF; line-height: 1; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; overflow: hidden; box-sizing: border-box; }
 .avatar-btn::after { border: none; display: none; }
-.avatar-btn .avatar { width: 100rpx; height: 100rpx; border: none; }
+.avatar-btn .avatar { width: 100rpx; height: 100rpx; border: none; border-radius: 50%; }
+.avatar-placeholder { width: 100rpx; height: 100rpx; display: flex; align-items: center; justify-content: center; font-size: 48rpx; background: #F5F3FF; }
 .user-details { margin-left: 24rpx; flex: 1; min-width: 0; }
 .user-name-input { font-size: 34rpx; font-weight: 700; color: #111827; height: 50rpx; line-height: 50rpx; padding: 0; background: transparent; }
 .user-game-nick { font-size: 34rpx; color: #8B5CF6; margin-top: 2rpx; font-weight: 600; }
