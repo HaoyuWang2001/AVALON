@@ -135,7 +135,7 @@ Page({
   // ─────────── Config Modal ───────────
 
   showConfig() {
-    this.setData({ showConfig: true });
+    this.setData({ showConfig: true, logicalPage: 0, swiperPage: this.data.visiblePages[0] || 0 });
   },
 
   closeConfig() {
