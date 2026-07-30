@@ -32,6 +32,7 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+    image: avalon-server:prod
     container_name: avalon-server
     restart: always
     ports:

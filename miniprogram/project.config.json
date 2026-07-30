@@ -29,7 +29,8 @@
     "ignore": [],
     "include": []
   },
-  "appid": "touristappid",
+  "appid": "wxb021f21838eb4ced",
   "editorSetting": {},
-  "libVersion": "3.14.3"
+  "libVersion": "3.14.3",
+  "isGameTourist": false
 }

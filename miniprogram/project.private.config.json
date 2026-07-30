@@ -1,6 +1,6 @@
 {
   "libVersion": "3.14.3",
-  "projectname": "AVALON",
+  "projectname": "miniprogram",
   "setting": {
     "urlCheck": true,
     "coverView": true,
