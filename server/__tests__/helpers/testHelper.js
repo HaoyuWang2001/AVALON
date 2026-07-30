@@ -72,10 +72,43 @@ async function apiPost(path, body) {
 // ---- Room workflow helpers ----
 
 async function createRoom(hostId, hostNick) {
+  const defaultConfig = {
+    roles: {
+      good: ['merlin', 'percival', 'loyal', 'loyal', 'loyal'],
+      evil: ['morgana', 'assassin']
+    },
+    rules: {
+      evilKnowsEachOther: true,
+      lancelotsKnowEachOther: true,
+      lancelotSwapRound: 2,
+      ladyOfTheLake: false,
+      ladyOfTheLakeRound: 2,
+      maxFailedNominations: 3,
+      oberonMustFailMission: false,
+      redLancelotMustFailMission: false,
+      voteVisibility: 'anonymous',
+      missionFailDetail: 'count'
+    },
+    limits: {
+      speechTimeout: null,
+      roundTimeout: null,
+      voteTimeout: null
+    },
+    meta: {
+      roomName: 'Test Room',
+      roomDescription: '',
+      tags: []
+    },
+    merlinVision: {
+      canSee: ['assassin', 'morgana', 'minion', 'oberon', 'lancelotRed', 'lancelotBlue'],
+      canIdentify: []
+    }
+  };
   const res = await apiPost('/api/rooms/create', {
     hostOpenId: hostId,
     hostNickName: hostNick || makeNickName(hostId),
-    hostAvatarUrl: ''
+    hostAvatarUrl: '',
+    roomConfig: defaultConfig
   });
   return res.body;
 }

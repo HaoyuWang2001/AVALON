@@ -1,28 +1,89 @@
 // 房间数据模型
 const db = require('../config/db');
 
+const VALID_ROLES = [
+  'merlin', 'percival', 'loyal',
+  'mordred', 'morgana', 'assassin', 'minion', 'oberon',
+  'lancelotBlue', 'lancelotRed'
+];
+
+const REQUIRED_RULES = [
+  'evilKnowsEachOther', 'lancelotsKnowEachOther', 'lancelotSwapRound',
+  'ladyOfTheLake', 'ladyOfTheLakeRound', 'maxFailedNominations',
+  'oberonMustFailMission', 'redLancelotMustFailMission',
+  'voteVisibility', 'missionFailDetail'
+];
+
 class RoomModel {
+  /**
+   * 校验房间配置结构
+   * @param {Object} roomConfig 
+   */
+  static validateRoomConfig(roomConfig) {
+    if (!roomConfig || typeof roomConfig !== 'object') {
+      throw new Error('缺少房间配置');
+    }
+
+    if (!roomConfig.roles || !Array.isArray(roomConfig.roles.good) || !Array.isArray(roomConfig.roles.evil)) {
+      throw new Error('缺少角色配置');
+    }
+
+    const allRoles = [...roomConfig.roles.good, ...roomConfig.roles.evil];
+    if (allRoles.length === 0) {
+      throw new Error('角色配置不能为空');
+    }
+
+    for (const role of allRoles) {
+      if (!VALID_ROLES.includes(role)) {
+        throw new Error(`未知角色: ${role}`);
+      }
+    }
+
+    if (!roomConfig.rules || typeof roomConfig.rules !== 'object') {
+      throw new Error('缺少规则配置');
+    }
+
+    for (const key of REQUIRED_RULES) {
+      if (!(key in roomConfig.rules)) {
+        throw new Error(`规则配置缺少字段: ${key}`);
+      }
+    }
+
+    if (roomConfig.rules.voteVisibility && !['public', 'anonymous'].includes(roomConfig.rules.voteVisibility)) {
+      throw new Error('voteVisibility 必须是 public 或 anonymous');
+    }
+
+    if (roomConfig.rules.missionFailDetail && !['count', 'binary'].includes(roomConfig.rules.missionFailDetail)) {
+      throw new Error('missionFailDetail 必须是 count 或 binary');
+    }
+
+    return true;
+  }
+
   /**
    * 创建房间
    * @param {string} hostOpenId 房主openId
    * @param {string} hostNickName 房主昵称
    * @param {string} hostAvatarUrl 房主头像URL
+   * @param {Object} roomConfig 房间配置
    * @returns {Promise<Object>} 创建的房间信息
    */
-  static async create(hostOpenId, hostNickName = '房主', hostAvatarUrl = '') {
+  static async create(hostOpenId, hostNickName = '房主', hostAvatarUrl = '', roomConfig = null) {
     // 生成6位房间号
     const roomId = Math.floor(100000 + Math.random() * 900000).toString();
     
     try {
+      if (roomConfig) {
+        this.validateRoomConfig(roomConfig);
+      }
+
       await db.transaction(async (connection) => {
-        // 创建房间记录
         await connection.execute(
-          `INSERT INTO rooms (id, host_open_id, game_started, created_at, updated_at) 
-           VALUES (?, ?, FALSE, NOW(), NOW())`,
-          [roomId, hostOpenId]
+          `INSERT INTO rooms (id, host_open_id, game_started, room_config, created_at, updated_at) 
+           VALUES (?, ?, FALSE, ?, NOW(), NOW())`,
+          [roomId, hostOpenId, roomConfig ? JSON.stringify(roomConfig) : null]
         );
         
-        // 创建房主玩家记录
         await connection.execute(
           `INSERT INTO players (room_id, open_id, nick_name, avatar_url, seat_number, is_host, is_ready, created_at) 
            VALUES (?, ?, ?, ?, 1, TRUE, FALSE, NOW())`,
@@ -30,10 +91,38 @@ class RoomModel {
         );
       });
       
-      // 返回完整的房间信息
       return await this.getById(roomId);
     } catch (error) {
       console.error('创建房间失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 更新房间配置
+   * @param {string} roomId 房间ID
+   * @param {Object} roomConfig 新配置
+   */
+  static async updateConfig(roomId, roomConfig) {
+    try {
+      const room = await this.getById(roomId);
+      if (!room) {
+        throw new Error('房间不存在');
+      }
+      if (room.gameStarted) {
+        throw new Error('游戏已开始，无法修改配置');
+      }
+
+      this.validateRoomConfig(roomConfig);
+
+      await db.query(
+        'UPDATE rooms SET room_config = ?, updated_at = NOW() WHERE id = ?',
+        [JSON.stringify(roomConfig), roomId]
+      );
+
+      return await this.getById(roomId);
+    } catch (error) {
+      console.error('更新房间配置失败:', error);
       throw error;
     }
   }
@@ -48,6 +137,7 @@ class RoomModel {
       // 获取房间基本信息
       const rooms = await db.query(
         `SELECT id as _id, host_open_id as hostOpenId, game_started as gameStarted, 
+                room_config as roomConfig,
                 created_at as createdAt, updated_at as updatedAt 
          FROM rooms WHERE id = ?`,
         [roomId]
@@ -58,6 +148,9 @@ class RoomModel {
       }
       
       const room = rooms[0];
+      if (room.roomConfig && typeof room.roomConfig === 'string') {
+        room.roomConfig = JSON.parse(room.roomConfig);
+      }
       
       // 获取房间内的玩家
       const players = await db.query(

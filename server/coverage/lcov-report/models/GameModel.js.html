@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">10.92% </span>
+                <span class="strong">10.75% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>20/183</span>
+                <span class='fraction'>20/186</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">13.88% </span>
+                <span class="strong">12.19% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>10/72</span>
+                <span class='fraction'>10/82</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">9.82% </span>
+                <span class="strong">9.65% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>17/173</span>
+                <span class='fraction'>17/176</span>
             </div>
         
             
@@ -743,7 +743,13 @@
 <a name='L678'></a><a href='#L678'>678</a>
 <a name='L679'></a><a href='#L679'>679</a>
 <a name='L680'></a><a href='#L680'>680</a>
-<a name='L681'></a><a href='#L681'>681</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L681'></a><a href='#L681'>681</a>
+<a name='L682'></a><a href='#L682'>682</a>
+<a name='L683'></a><a href='#L683'>683</a>
+<a name='L684'></a><a href='#L684'>684</a>
+<a name='L685'></a><a href='#L685'>685</a>
+<a name='L686'></a><a href='#L686'>686</a>
+<a name='L687'></a><a href='#L687'>687</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -775,9 +781,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -785,6 +788,10 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -793,7 +800,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1439,12 +1451,12 @@ class GameModel {
 <span class="cstat-no" title="statement not covered" >      await db.transaction(<span class="fstat-no" title="function not covered" >as</span>ync (connection) =&gt; {</span>
         // 1. 获取房间和玩家信息
         const [roomInfo] = <span class="cstat-no" title="statement not covered" >await connection.execute(</span>
-          `SELECT r.host_open_id, COUNT(p.id) as player_count,
+          `SELECT r.host_open_id, r.room_config, COUNT(p.id) as player_count,
                   SUM(CASE WHEN p.is_ready THEN 1 ELSE 0 END) as ready_count
            FROM rooms r
            LEFT JOIN players p ON r.id = p.room_id
            WHERE r.id = ? AND r.game_started = FALSE
-           GROUP BY r.host_open_id
+           GROUP BY r.host_open_id, r.room_config
            FOR UPDATE`,
           [roomId]
         );
@@ -1455,6 +1467,7 @@ class GameModel {
         
         const playerCount = <span class="cstat-no" title="statement not covered" >parseInt(roomInfo[0].player_count);</span>
         const readyCount = <span class="cstat-no" title="statement not covered" >parseInt(roomInfo[0].ready_count);</span>
+        const roomConfig = <span class="cstat-no" title="statement not covered" >roomInfo[0].room_config ? (typeof roomInfo[0].room_config === 'string' ? JSON.parse(roomInfo[0].room_config) : roomInfo[0].room_config) : null;</span>
         
         // 验证游戏开始条件
 <span class="cstat-no" title="statement not covered" >        if (playerCount &lt; 5) {</span>
@@ -1472,8 +1485,13 @@ class GameModel {
           [roomId]
         );
         
-        // 3. 分配角色（简化版，实际应根据配置分配）
-        const roles = <span class="cstat-no" title="statement not covered" >this.getRoleConfiguration(playerCount);</span>
+        // 3. 分配角色
+        let roles;
+<span class="cstat-no" title="statement not covered" >        if (roomConfig &amp;&amp; roomConfig.roles &amp;&amp; roomConfig.roles.good &amp;&amp; roomConfig.roles.evil) {</span>
+<span class="cstat-no" title="statement not covered" >          roles = [...roomConfig.roles.good, ...roomConfig.roles.evil];</span>
+        } else {
+<span class="cstat-no" title="statement not covered" >          roles = this.getRoleConfiguration(playerCount);</span>
+        }
         const shuffledRoles = <span class="cstat-no" title="statement not covered" >this.shuffleArray(roles);</span>
         
         // 4. 创建游戏记录
@@ -2110,7 +2128,7 @@ module.exports = GameModel;</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-30T05:07:41.389Z
+                at 2026-07-30T07:48:24.523Z
             </div>
         <script src="../prettify.js"></script>
         <script>

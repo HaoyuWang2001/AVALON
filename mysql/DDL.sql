@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS rooms (
     id VARCHAR(6) PRIMARY KEY COMMENT '6位房间号',
     host_open_id VARCHAR(255) NOT NULL COMMENT '房主openId',
     game_started BOOLEAN DEFAULT FALSE COMMENT '游戏是否开始',
+    room_config JSON NULL COMMENT '房间自定义配置 {"roles":{...},"rules":{...},"limits":{...},"meta":{...},"merlinVision":{...}}',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_updated_at (updated_at),

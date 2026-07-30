@@ -9,7 +9,21 @@ function createRouter(rooms) {
   }
 
 router.post('/create', (req, res) => {
-  const { hostOpenId, hostNickName, hostAvatarUrl } = req.body;
+  const { hostOpenId, hostNickName, hostAvatarUrl, roomConfig } = req.body;
+
+  if (!hostOpenId) {
+    return res.status(400).json({ success: false, message: '缺少房主信息' });
+  }
+  if (!roomConfig) {
+    return res.status(400).json({ success: false, message: '缺少房间配置' });
+  }
+  if (!roomConfig.roles || !Array.isArray(roomConfig.roles.good) || !Array.isArray(roomConfig.roles.evil)) {
+    return res.status(400).json({ success: false, message: '缺少角色配置' });
+  }
+  if (!roomConfig.rules || typeof roomConfig.rules !== 'object') {
+    return res.status(400).json({ success: false, message: '缺少规则配置' });
+  }
+
   const roomId = generateRoomId();
   
   const room = {
@@ -24,6 +38,7 @@ router.post('/create', (req, res) => {
     }],
     readyPlayers: [],
     gameStarted: false,
+    roomConfig,
     createdAt: new Date(),
     updatedAt: new Date()
   };

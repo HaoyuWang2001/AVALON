@@ -26,13 +26,59 @@ describe('02 — Room Management', () => {
       roomId = result.roomId;
     });
 
-    it('should return 400 when hostOpenId is missing (DB mode) or 200 (memory fallback)', async () => {
+    it('should return 400 when hostOpenId is missing', async () => {
       const res = await require('./helpers/testHelper').apiPost('/api/rooms/create', {});
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when roomConfig is missing', async () => {
+      const res = await require('./helpers/testHelper').apiPost('/api/rooms/create', {
+        hostOpenId: makeUserId(),
+        hostNickName: 'Test'
+      });
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toMatch(/缺少房间配置/);
+    });
+
+    it('should return 400 when roomConfig has invalid role name', async () => {
+      const res = await require('./helpers/testHelper').apiPost('/api/rooms/create', {
+        hostOpenId: makeUserId(),
+        hostNickName: 'Test',
+        roomConfig: {
+          roles: { good: ['merlin'], evil: ['invalid_role'] },
+          rules: {
+            evilKnowsEachOther: true, lancelotsKnowEachOther: true, lancelotSwapRound: 2,
+            ladyOfTheLake: false, ladyOfTheLakeRound: 2, maxFailedNominations: 3,
+            oberonMustFailMission: false, redLancelotMustFailMission: false,
+            voteVisibility: 'anonymous', missionFailDetail: 'count'
+          }
+        }
+      });
       if (dbMode) {
         expect(res.status).toBe(400);
-        expect(res.body.success).toBe(false);
+        expect(res.body.message).toMatch(/未知角色/);
       } else {
-        // Memory mode creates anyway, accept either response
+        // Memory mode doesn't validate role names
+        expect([200, 400]).toContain(res.status);
+      }
+    });
+
+    it('should return 400 when rules are incomplete', async () => {
+      const res = await require('./helpers/testHelper').apiPost('/api/rooms/create', {
+        hostOpenId: makeUserId(),
+        hostNickName: 'Test',
+        roomConfig: {
+          roles: { good: ['merlin'], evil: ['morgana'] },
+          rules: { evilKnowsEachOther: true }
+        }
+      });
+      if (dbMode) {
+        expect(res.status).toBe(400);
+        expect(res.body.message).toMatch(/缺少字段/);
+      } else {
+        // Memory mode doesn't validate rules completeness
         expect([200, 400]).toContain(res.status);
       }
     });

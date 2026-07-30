@@ -14,12 +14,12 @@ class GameModel {
       await db.transaction(async (connection) => {
         // 1. 获取房间和玩家信息
         const [roomInfo] = await connection.execute(
-          `SELECT r.host_open_id, COUNT(p.id) as player_count,
+          `SELECT r.host_open_id, r.room_config, COUNT(p.id) as player_count,
                   SUM(CASE WHEN p.is_ready THEN 1 ELSE 0 END) as ready_count
            FROM rooms r
            LEFT JOIN players p ON r.id = p.room_id
            WHERE r.id = ? AND r.game_started = FALSE
-           GROUP BY r.host_open_id
+           GROUP BY r.host_open_id, r.room_config
            FOR UPDATE`,
           [roomId]
         );
@@ -30,6 +30,7 @@ class GameModel {
         
         const playerCount = parseInt(roomInfo[0].player_count);
         const readyCount = parseInt(roomInfo[0].ready_count);
+        const roomConfig = roomInfo[0].room_config ? (typeof roomInfo[0].room_config === 'string' ? JSON.parse(roomInfo[0].room_config) : roomInfo[0].room_config) : null;
         
         // 验证游戏开始条件
         if (playerCount < 5) {
@@ -47,8 +48,13 @@ class GameModel {
           [roomId]
         );
         
-        // 3. 分配角色（简化版，实际应根据配置分配）
-        const roles = this.getRoleConfiguration(playerCount);
+        // 3. 分配角色
+        let roles;
+        if (roomConfig && roomConfig.roles && roomConfig.roles.good && roomConfig.roles.evil) {
+          roles = [...roomConfig.roles.good, ...roomConfig.roles.evil];
+        } else {
+          roles = this.getRoleConfiguration(playerCount);
+        }
         const shuffledRoles = this.shuffleArray(roles);
         
         // 4. 创建游戏记录

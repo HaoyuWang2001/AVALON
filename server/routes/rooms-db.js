@@ -8,7 +8,7 @@ function createRouter() {
   // 创建房间
   router.post('/create', async (req, res) => {
     try {
-      const { hostOpenId, hostNickName, hostAvatarUrl } = req.body;
+      const { hostOpenId, hostNickName, hostAvatarUrl, roomConfig } = req.body;
       
       if (!hostOpenId) {
         return res.status(400).json({ 
@@ -16,11 +16,19 @@ function createRouter() {
           message: '缺少房主信息' 
         });
       }
+
+      if (!roomConfig) {
+        return res.status(400).json({
+          success: false,
+          message: '缺少房间配置'
+        });
+      }
       
       const room = await RoomModel.create(
         hostOpenId, 
         hostNickName || '房主', 
-        hostAvatarUrl || ''
+        hostAvatarUrl || '',
+        roomConfig
       );
       
       res.json({
@@ -30,6 +38,11 @@ function createRouter() {
       });
     } catch (error) {
       console.error('创建房间API错误:', error);
+
+      if (error.message.includes('缺少') || error.message.includes('未知角色') || error.message.includes('必须是')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
       res.status(500).json({ 
         success: false, 
         message: error.message || '创建房间失败' 
@@ -253,6 +266,33 @@ function createRouter() {
     }
   });
   
+  // 修改房间配置（房主操作，仅游戏未开始时可用）
+  router.put('/:roomId/config', async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const { roomConfig } = req.body;
+
+      if (!roomConfig) {
+        return res.status(400).json({ success: false, message: '缺少房间配置' });
+      }
+
+      const room = await RoomModel.updateConfig(roomId, roomConfig);
+
+      res.json({ success: true, room, message: '配置已更新' });
+    } catch (error) {
+      console.error('修改配置API错误:', error);
+
+      if (error.message.includes('房间不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+      if (error.message.includes('游戏已开始') || error.message.includes('缺少') || error.message.includes('未知角色') || error.message.includes('必须是')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
+      res.status(500).json({ success: false, message: error.message || '修改配置失败' });
+    }
+  });
+
   // 获取活跃房间列表（管理接口）
   router.get('/', async (req, res) => {
     try {
