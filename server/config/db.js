@@ -190,9 +190,8 @@ async function getStats() {
   try {
     const stats = {
       connections: {
-        active: pool ? pool._allConnections.length : 0,
-        idle: pool ? pool._freeConnections.length : 0,
-        total: pool ? pool._allConnections.length + pool._freeConnections.length : 0
+        active: pool ? (pool._allConnections ? pool._allConnections.length : -1) : 0,
+        idle: pool ? (pool._freeConnections ? pool._freeConnections.length : -1) : 0
       },
       config: {
         host: dbConfig.host,
