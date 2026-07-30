@@ -168,10 +168,14 @@ Page({
     def.evil.forEach(r => { selected[r] = true; });
 
     const canSee = { assassin: true, morgana: true, minion: true, oberon: true, lancelotRed: true, lancelotBlue: false };
+    const rules = buildDefaultRule();
+    const hasLancelot = selected.lancelotBlue || selected.lancelotRed;
+    rules.redLancelotMustFailMission = hasLancelot;
+    rules.oberonMustFailMission = !hasLancelot;
 
     this.setData({
       selectedRoles: selected,
-      rules: buildDefaultRule(),
+      rules: rules,
       ladyOfTheLake: n >= 10,
       ladyOfTheLakeRound: n >= 10 ? 2 : 2,
       merlinCanSee: { ...canSee },
