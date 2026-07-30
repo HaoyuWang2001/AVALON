@@ -16,8 +16,9 @@
             <view class="edit-btn" bindtap="showNickNameModal">📝</view>
           </view>
           <view class="user-status">在线</view>
-        </view>
-      </view>
+            </view>
+            </scroll-view>
+          </view>
     </view>
     <button wx:else class="login-btn" bindtap="getUserProfile">授权登录</button>
   </view>
@@ -46,8 +47,12 @@
 <view class="config-overlay" wx:if="{{showConfig}}">
   <view class="config-panel">
 
-    <!-- Close button -->
-    <view class="config-close" bindtap="closeConfig">✕</view>
+    <!-- Top bar -->
+    <view class="top-bar">
+      <view class="config-close" bindtap="closeConfig">
+        <text class="close-text">✕</text>
+      </view>
+    </view>
 
     <!-- Swiper -->
     <swiper class="config-swiper" current="{{swiperPage}}" bindchange="onSwiperChange" duration="300">
@@ -66,8 +71,8 @@
 
           <view class="config-section">
             <view class="section-title">🛡️ 好人</view>
-            <view class="role-grid">
-              <!-- 忠臣卡片（固定首位，不可选中） -->
+            <scroll-view class="role-scroll" scroll-x>
+            <view class="role-scroll-row">
               <view class="role-card role-loyal">
                 <view class="role-img-placeholder">
                   <text class="role-img-text">🛡️</text>
@@ -87,11 +92,13 @@
                 </view>
               </view>
             </view>
+            </scroll-view>
           </view>
 
           <view class="config-section">
             <view class="section-title">⚔️ 坏人</view>
-            <view class="role-grid">
+            <scroll-view class="role-scroll" scroll-x>
+            <view class="role-scroll-row">
               <view wx:for="{{['morgana','assassin','oberon','mordred','minion','lancelotRed']}}" wx:key="*this"
                 class="role-card role-evil {{selectedRoles[item] ? 'role-selected' : ''}}"
                 data-role="{{item}}" bindtap="onRoleToggle">
@@ -104,6 +111,7 @@
                 </view>
               </view>
             </view>
+            </scroll-view>
           </view>
 
           <view class="role-summary" wx:if="{{roleWarning}}">
@@ -225,7 +233,8 @@
         <scroll-view scroll-y class="config-scroll">
           <view class="config-section">
             <view class="section-title">👁️ 梅林能看到的人</view>
-            <view class="role-grid">
+            <scroll-view class="role-scroll" scroll-x>
+            <view class="role-scroll-row">
               <view wx:if="{{selectedRoles.assassin}}"
                 class="role-card role-evil {{merlinCanSee.assassin ? 'role-selected' : ''}}"
                 data-role="assassin" bindtap="onCanSeeToggle">
@@ -273,7 +282,8 @@
 
           <view class="config-section">
             <view class="section-title">🔍 梅林能分辨具体身份</view>
-            <view class="role-grid">
+            <scroll-view class="role-scroll" scroll-x>
+            <view class="role-scroll-row">
               <view wx:if="{{merlinCanSee.assassin}}"
                 class="role-card role-evil {{merlinCanIdentify.assassin ? 'role-selected' : ''}}"
                 data-role="assassin" bindtap="onCanIdentifyToggle">
@@ -317,6 +327,7 @@
                 <view class="role-check {{merlinCanIdentify.lancelotBlue ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.lancelotBlue}}">✓</text></view>
               </view>
             </view>
+            </scroll-view>
           </view>
           <view style="height:40rpx"></view>
         </scroll-view>
