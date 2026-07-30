@@ -277,6 +277,7 @@ startServer();
 
 module.exports = { 
   app, 
+  server,
   io, 
   rooms, 
   games, 

@@ -9,32 +9,50 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
 
-// 解析命令行参数获取.env文件路径
-function parseEnvFilePath() {
+// 解析命令行参数
+function parseArgs() {
   const args = process.argv.slice(2);
   let envFilePath = null;
+  let ifNotExists = false;
+  let force = false;
   
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--env' || args[i] === '-e') {
       if (i + 1 < args.length) {
         envFilePath = args[i + 1];
-        break;
+        i++;
       }
     } else if (args[i].startsWith('--env=')) {
       envFilePath = args[i].substring(6);
-      break;
+    } else if (args[i] === '--if-not-exists') {
+      ifNotExists = true;
+    } else if (args[i] === '--force' || args[i] === '-f') {
+      force = true;
     }
   }
   
   if (!envFilePath) {
-    // 默认路径
     envFilePath = path.resolve(__dirname, '../.env');
     console.log(`ℹ️ 未指定.env文件路径，使用默认路径: ${envFilePath}`);
   } else {
     console.log(`ℹ️ 使用指定的.env文件路径: ${envFilePath}`);
   }
   
-  return envFilePath;
+  return { envFilePath, ifNotExists, force };
+}
+
+// 解析命令行参数获取.env文件路径
+function parseEnvFilePath() {
+  return parseArgs().envFilePath;
+}
+
+// 导出解析结果供main使用
+let cliArgs = null;
+function getCliArgs() {
+  if (!cliArgs) {
+    cliArgs = parseArgs();
+  }
+  return cliArgs;
 }
 
 // 加载环境变量
@@ -294,8 +312,12 @@ async function validateInitialization(connection, databaseName) {
  * 主函数
  */
 async function main() {
+  const args = getCliArgs();
+  
   console.log('=== AVALON 数据库初始化工具 ===');
   console.log('开始时间:', new Date().toLocaleString());
+  if (args.ifNotExists) console.log('模式: --if-not-exists (数据存在时跳过)');
+  if (args.force) console.log('模式: --force (强制重建)');
   console.log('================================\n');
   
   // 读取DDL文件
@@ -315,42 +337,67 @@ async function main() {
     if (exists) {
       console.log(`数据库 ${databaseName} 已存在`);
       
-      // 询问是否备份
-      const readline = require('readline');
-      const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-      });
+      // 检查核心表是否已存在且有数据
+      const tablesWithData = await checkTablesHaveData(connection, databaseName);
       
-      const answer = await new Promise(resolve => {
-        rl.question('是否备份现有数据库? (y/n): ', resolve);
-      });
-      rl.close();
-      
-      if (answer.toLowerCase() === 'y') {
-        await backupDatabase(connection, databaseName);
+      if (tablesWithData && (args.ifNotExists || !args.force)) {
+        console.log('✅ 检测到数据库已有完整表结构和数据，跳过初始化');
+        console.log('   使用 --force 参数强制重建数据库');
+        console.log('   使用 --if-not-exists 参数静默跳过（当前模式）');
+        
+        // 打印现有数据摘要
+        await printDataSummary(connection, databaseName);
+        
+        await connection.end();
+        console.log('\n数据库连接已关闭');
+        return;
       }
       
-      // 询问是否删除重建
-      const rl2 = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-      });
-      
-      const answer2 = await new Promise(resolve => {
-        rl2.question(`是否删除并重建数据库 ${databaseName}? (y/n): `, resolve);
-      });
-      rl2.close();
-      
-      if (answer2.toLowerCase() === 'y') {
-        console.log(`删除数据库 ${databaseName}...`);
+      if (!args.force) {
+        // 交互模式：询问是否备份和重建
+        const readline = require('readline');
+        const rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout
+        });
+        
+        const answer = await new Promise(resolve => {
+          rl.question('是否备份现有数据库? (y/n): ', resolve);
+        });
+        rl.close();
+        
+        if (answer.toLowerCase() === 'y') {
+          await backupDatabase(connection, databaseName);
+        }
+        
+        const rl2 = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout
+        });
+        
+        const answer2 = await new Promise(resolve => {
+          rl2.question(`是否删除并重建数据库 ${databaseName}? (y/n): `, resolve);
+        });
+        rl2.close();
+        
+        if (answer2.toLowerCase() === 'y') {
+          console.log(`删除数据库 ${databaseName}...`);
+          await connection.execute(`DROP DATABASE IF EXISTS \`${databaseName}\``);
+          console.log(`创建数据库 ${databaseName}...`);
+          await connection.execute(
+            `CREATE DATABASE \`${databaseName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
+          );
+        } else {
+          console.log(`使用现有数据库 ${databaseName}`);
+        }
+      } else {
+        // --force 模式：直接删除重建
+        console.log(`强制删除数据库 ${databaseName}...`);
         await connection.execute(`DROP DATABASE IF EXISTS \`${databaseName}\``);
-        console.log(`创建数据库 ${databaseName}...`);
+        console.log(`重建数据库 ${databaseName}...`);
         await connection.execute(
           `CREATE DATABASE \`${databaseName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
         );
-      } else {
-        console.log(`使用现有数据库 ${databaseName}`);
       }
     } else {
       console.log(`创建数据库 ${databaseName}...`);
@@ -387,6 +434,74 @@ async function main() {
     // 关闭连接
     await connection.end();
     console.log('\n数据库连接已关闭');
+  }
+}
+
+/**
+ * 检查核心表是否已存在且包含数据
+ * @param {mysql.Connection} connection 数据库连接
+ * @param {string} databaseName 数据库名
+ * @returns {Promise<boolean>} 表是否存在且有数据
+ */
+async function checkTablesHaveData(connection, databaseName) {
+  try {
+    const coreTables = ['rooms', 'players', 'games', 'game_players', 'votes', 'mission_results', 'messages', 'role_configurations'];
+    
+    for (const table of coreTables) {
+      const [exists] = await connection.execute(
+        `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES 
+         WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?`,
+        [databaseName, table]
+      );
+      
+      if (exists.length === 0) {
+        return false; // 核心表缺失
+      }
+      
+      const [rows] = await connection.execute(
+        `SELECT COUNT(*) as count FROM \`${databaseName}\`.\`${table}\``
+      );
+      
+      // 除了 role_configurations 外，其他表有数据说明不是空库
+      if (table !== 'role_configurations' && rows[0].count > 0) {
+        return true; // 表中有实际数据
+      }
+    }
+    
+    // 检查 role_configurations 是否有数据（初始化标志）
+    const [configRows] = await connection.execute(
+      `SELECT COUNT(*) as count FROM \`${databaseName}\`.role_configurations`
+    );
+    
+    return configRows[0].count > 0;
+  } catch (error) {
+    console.error('检查表数据失败:', error.message);
+    return false;
+  }
+}
+
+/**
+ * 打印现有数据摘要
+ * @param {mysql.Connection} connection 数据库连接
+ * @param {string} databaseName 数据库名
+ */
+async function printDataSummary(connection, databaseName) {
+  try {
+    const tables = ['rooms', 'players', 'games', 'game_players', 'votes', 'mission_results', 'messages', 'game_history'];
+    console.log('\n📊 当前数据库表数据统计:');
+    
+    for (const table of tables) {
+      try {
+        const [rows] = await connection.execute(
+          `SELECT COUNT(*) as count FROM \`${databaseName}\`.\`${table}\``
+        );
+        console.log(`   ${table}: ${rows[0].count} 条记录`);
+      } catch (e) {
+        console.log(`   ${table}: 表不存在`);
+      }
+    }
+  } catch (error) {
+    // 静默处理
   }
 }
 

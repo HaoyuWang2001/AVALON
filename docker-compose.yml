@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-avalon
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-avalon_root_2024}
+      MYSQL_DATABASE: avalon_db
+      MYSQL_USER: avalon_user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-avalon_pass_2024}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --log-bin-trust-function-creators=1
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/DDL.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "avalon_user", "-p${MYSQL_PASSWORD:-avalon_pass_2024}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - avalon-net
+
+  avalon-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: avalon-server
+    restart: always
+    ports:
+      - "8082:8082"
+    environment:
+      PORT: 8082
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: avalon_user
+      DB_PASS: ${MYSQL_PASSWORD:-avalon_pass_2024}
+      DB_NAME: avalon_db
+      DB_POOL_MAX: 10
+      DB_POOL_MIN: 2
+      NODE_ENV: production
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - avalon-net
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  avalon-net:
+    driver: bridge
