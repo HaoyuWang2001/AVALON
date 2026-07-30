@@ -15,7 +15,7 @@
           <view class="user-game-nick">游戏内昵称：{{customNickName || '未设置'}}</view>
           <view class="user-status">在线</view>
         </view>
-        <view class="edit-nick-btn" bindtap="showNickNameModal">更改昵称</view>
+        <view class="edit-nick-btn btn-round" bindtap="showNickNameModal">更改昵称</view>
       </view>
     </view>
     <button wx:else class="login-btn" bindtap="getUserProfile">授权登录</button>
@@ -392,11 +392,11 @@
 
     <!-- Navigation bar -->
     <view class="nav-bar">
-      <view class="nav-btn {{logicalPage === 0 ? 'nav-disabled' : ''}}" bindtap="prevPage">◀ 上一步</view>
+      <view class="nav-btn btn-square {{logicalPage === 0 ? 'nav-disabled' : ''}}" bindtap="prevPage">◀ 上一步</view>
       <view class="nav-dots">
         <view wx:for="{{visiblePages}}" wx:key="*this" class="nav-dot {{index === logicalPage ? 'dot-active' : ''}}"></view>
       </view>
-      <view class="nav-btn {{logicalPage === visiblePages.length - 1 ? 'nav-disabled' : ''}}" bindtap="nextPage">下一步 ▶</view>
+      <view class="nav-btn btn-square {{logicalPage === visiblePages.length - 1 ? 'nav-disabled' : ''}}" bindtap="nextPage">下一步 ▶</view>
     </view>
   </view>
 </view>
