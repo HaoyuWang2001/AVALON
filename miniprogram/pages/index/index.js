@@ -22,7 +22,7 @@ const DEFAULT_CONFIGS = {
   12: { good: ['merlin','percival'], evil: ['morgana','assassin','mordred','oberon','lancelotBlue','lancelotRed'] }
 };
 
-const SPEECH_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒'];
+const SPEECH_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒', '150秒', '180秒'];
 const ROUND_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒'];
 const VOTE_OPTIONS = ['不限', '15秒', '30秒', '45秒', '60秒'];
 
@@ -79,6 +79,10 @@ Page({
     speechTimeoutIndex: 0,
     roundTimeoutIndex: 0,
     voteTimeoutIndex: 0,
+
+    speechOptions: SPEECH_OPTIONS,
+    roundOptions: ROUND_OPTIONS,
+    voteOptions: VOTE_OPTIONS,
 
     roomName: '',
     roomDescription: '',

@@ -351,20 +351,20 @@
             <view class="section-title">⏱️ 时间限制</view>
             <view class="rule-row">
               <text class="rule-label">发言限时</text>
-              <picker class="rule-picker" mode="selector" range="{{['不限','30秒','60秒','90秒','120秒']}}" value="{{speechTimeoutIndex}}" data-field="speechTimeoutIndex" bindchange="onLimitChange">
-                <text>{{['不限','30秒','60秒','90秒','120秒'][speechTimeoutIndex]}}</text>
+              <picker class="rule-picker" mode="selector" range="{{speechOptions}}" value="{{speechTimeoutIndex}}" data-field="speechTimeoutIndex" bindchange="onLimitChange">
+                <text>{{speechOptions[speechTimeoutIndex]}}</text>
               </picker>
             </view>
             <view class="rule-row">
               <text class="rule-label">任务超时</text>
-              <picker class="rule-picker" mode="selector" range="{{['不限','30秒','60秒','90秒','120秒']}}" value="{{roundTimeoutIndex}}" data-field="roundTimeoutIndex" bindchange="onLimitChange">
-                <text>{{['不限','30秒','60秒','90秒','120秒'][roundTimeoutIndex]}}</text>
+              <picker class="rule-picker" mode="selector" range="{{roundOptions}}" value="{{roundTimeoutIndex}}" data-field="roundTimeoutIndex" bindchange="onLimitChange">
+                <text>{{roundOptions[roundTimeoutIndex]}}</text>
               </picker>
             </view>
             <view class="rule-row">
               <text class="rule-label">投票超时</text>
-              <picker class="rule-picker" mode="selector" range="{{['不限','15秒','30秒','45秒','60秒']}}" value="{{voteTimeoutIndex}}" data-field="voteTimeoutIndex" bindchange="onLimitChange">
-                <text>{{['不限','15秒','30秒','45秒','60秒'][voteTimeoutIndex]}}</text>
+              <picker class="rule-picker" mode="selector" range="{{voteOptions}}" value="{{voteTimeoutIndex}}" data-field="voteTimeoutIndex" bindchange="onLimitChange">
+                <text>{{voteOptions[voteTimeoutIndex]}}</text>
               </picker>
             </view>
             <view class="rule-hint">
