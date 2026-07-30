@@ -66,6 +66,17 @@
                 class="count-item {{playerCount === item ? 'count-active' : ''}}"
                 data-count="{{item}}" bindtap="onPlayerCountChange">{{item}}</view>
             </scroll-view>
+
+            <view class="team-sizes">
+              <text class="team-sizes-label">每轮发车人数（固定）</text>
+              <view class="team-sizes-row">
+                <view wx:for="{{teamSizes}}" wx:key="*this" class="team-badge">
+                  <text class="team-badge-round">R{{index + 1}}</text>
+                  <text class="team-badge-count">{{item}}人</text>
+                  <text wx:if="{{index === 3 && playerCount >= 7}}" class="team-badge-note">保护轮</text>
+                </view>
+              </view>
+            </view>
           </view>
 
           <view class="config-section">

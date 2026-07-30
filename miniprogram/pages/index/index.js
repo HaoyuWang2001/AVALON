@@ -26,6 +26,12 @@ const SPEECH_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒'];
 const ROUND_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒'];
 const VOTE_OPTIONS = ['不限', '15秒', '30秒', '45秒', '60秒'];
 
+const TEAM_SIZES = {
+  5: [2,3,2,3,3], 6: [2,3,4,3,4], 7: [2,3,3,4,4],
+  8: [3,4,4,5,5], 9: [3,4,4,5,5], 10: [3,4,4,5,5],
+  11: [3,4,5,6,6], 12: [3,4,5,6,6]
+};
+
 function buildDefaultRule() {
   return {
     evilKnowsEachOther: true, lancelotsKnowEachOther: true, lancelotSwapRound: 2,
@@ -46,6 +52,7 @@ Page({
     visiblePages: [0, 1, 5],
     goodCount: 2,
     evilCount: 2,
+    teamSizes: [3,4,4,5,5],
 
     roleLabel: {
       merlin: '梅林', percival: '派西', loyal: '忠臣',
@@ -286,6 +293,10 @@ Page({
     this.setData({ loyalCount: Math.max(loyal, 0), roleWarning: warning, goodCount, evilCount });
   },
 
+  computeTeamSizes() {
+    this.setData({ teamSizes: TEAM_SIZES[this.data.playerCount] || TEAM_SIZES[5] });
+  },
+
   computeVisiblePages() {
     const sel = this.data.selectedRoles;
     const hasLancelot = sel.lancelotBlue || sel.lancelotRed;
@@ -308,6 +319,7 @@ Page({
 
   computeAll() {
     this.computeLoyalCount();
+    this.computeTeamSizes();
     this.computeVisiblePages();
   },
 
