@@ -46,7 +46,7 @@ class RoomModel {
   static async getById(roomId) {
     try {
       // 获取房间基本信息
-      const [rooms] = await db.query(
+      const rooms = await db.query(
         `SELECT id as _id, host_open_id as hostOpenId, game_started as gameStarted, 
                 created_at as createdAt, updated_at as updatedAt 
          FROM rooms WHERE id = ?`,
@@ -60,7 +60,7 @@ class RoomModel {
       const room = rooms[0];
       
       // 获取房间内的玩家
-      const [players] = await db.query(
+      const players = await db.query(
         `SELECT open_id as openId, nick_name as nickName, avatar_url as avatarUrl, 
                 seat_number as seatNumber, is_host as isHost, is_ready as isReady
          FROM players WHERE room_id = ? ORDER BY seat_number`,
@@ -68,7 +68,7 @@ class RoomModel {
       );
       
       // 获取准备玩家列表
-      const [readyPlayersResult] = await db.query(
+      const readyPlayersResult = await db.query(
         `SELECT open_id FROM players WHERE room_id = ? AND is_ready = TRUE`,
         [roomId]
       );
@@ -365,7 +365,7 @@ class RoomModel {
    */
   static async cleanupOldRooms(hours = 24) {
     try {
-      const [result] = await db.query(
+      const result = await db.query(
         `DELETE FROM rooms 
          WHERE game_started = FALSE 
          AND updated_at < DATE_SUB(NOW(), INTERVAL ? HOUR)`,
@@ -386,7 +386,7 @@ class RoomModel {
    */
   static async getActiveRooms(limit = 50) {
     try {
-      const [rooms] = await db.query(
+      const rooms = await db.query(
         `SELECT r.id as roomId, r.host_open_id as hostOpenId, r.game_started as gameStarted,
                 r.created_at as createdAt, r.updated_at as updatedAt,
                 COUNT(p.id) as playerCount,
@@ -413,12 +413,12 @@ class RoomModel {
    */
   static async getStats() {
     try {
-      const [totalRooms] = await db.query('SELECT COUNT(*) as count FROM rooms');
-      const [activeRooms] = await db.query(
+      const totalRooms = await db.query('SELECT COUNT(*) as count FROM rooms');
+      const activeRooms = await db.query(
         'SELECT COUNT(*) as count FROM rooms WHERE updated_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)'
       );
-      const [totalPlayers] = await db.query('SELECT COUNT(*) as count FROM players');
-      const [roomsByStatus] = await db.query(
+      const totalPlayers = await db.query('SELECT COUNT(*) as count FROM players');
+      const roomsByStatus = await db.query(
         'SELECT game_started, COUNT(*) as count FROM rooms GROUP BY game_started'
       );
       

@@ -117,7 +117,7 @@ class GameModel {
   static async getState(roomId, openId = null) {
     try {
       // 获取游戏基本信息
-      const [games] = await db.query(
+      const games = await db.query(
         `SELECT room_id as roomId, current_phase as currentPhase, current_round as currentRound,
                 team_leader_index as teamLeaderIndex, nominated_team as nominatedTeam,
                 failed_nominations as failedNominations, game_result as gameResult,
@@ -141,7 +141,7 @@ class GameModel {
       }
       
       // 获取游戏玩家
-      const [players] = await db.query(
+      const players = await db.query(
         `SELECT gp.open_id as openId, gp.role, gp.side,
                 p.nick_name as nickName, p.avatar_url as avatarUrl, p.seat_number as seatNumber
          FROM game_players gp
@@ -154,7 +154,7 @@ class GameModel {
       game.players = players;
       
       // 获取当前回合的投票信息
-      const [teamVotes] = await db.query(
+      const teamVotes = await db.query(
         `SELECT open_id, vote_value 
          FROM votes 
          WHERE game_id = ? AND vote_type = 'team' AND round = ?
@@ -162,7 +162,7 @@ class GameModel {
         [roomId, game.currentRound]
       );
       
-      const [missionVotes] = await db.query(
+      const missionVotes = await db.query(
         `SELECT open_id, vote_value 
          FROM votes 
          WHERE game_id = ? AND vote_type = 'mission' AND round = ?
@@ -183,7 +183,7 @@ class GameModel {
       });
       
       // 获取任务结果
-      const [missionResults] = await db.query(
+      const missionResults = await db.query(
         `SELECT round, success, fail_count as failCount, team
          FROM mission_results 
          WHERE game_id = ? 
@@ -649,16 +649,16 @@ class GameModel {
    */
   static async getStats() {
     try {
-      const [totalGames] = await db.query('SELECT COUNT(*) as count FROM games');
-      const [activeGames] = await db.query(
+      const totalGames = await db.query('SELECT COUNT(*) as count FROM games');
+      const activeGames = await db.query(
         `SELECT COUNT(*) as count FROM games g
          JOIN rooms r ON g.room_id = r.id
          WHERE r.updated_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)`
       );
-      const [gamesByPhase] = await db.query(
+      const gamesByPhase = await db.query(
         'SELECT current_phase, COUNT(*) as count FROM games GROUP BY current_phase'
       );
-      const [completedGames] = await db.query(
+      const completedGames = await db.query(
         `SELECT COUNT(*) as count FROM game_history`
       );
       

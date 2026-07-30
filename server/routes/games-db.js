@@ -281,7 +281,7 @@ function createRouter() {
       const { limit = 10 } = req.query;
       
       const db = require('../config/db');
-      const [history] = await db.query(
+      const history = await db.query(
         `SELECT id, room_id as roomId, game_data as gameData, winner, player_count as playerCount,
                 duration_seconds as durationSeconds, created_at as createdAt
          FROM game_history 
@@ -317,7 +317,7 @@ function createRouter() {
       const { limit = 20 } = req.query;
       
       const db = require('../config/db');
-      const [recentGames] = await db.query(
+      const recentGames = await db.query(
         `SELECT gh.id, gh.room_id as roomId, gh.winner, gh.player_count as playerCount,
                 gh.duration_seconds as durationSeconds, gh.created_at as gameEndedAt,
                 r.host_open_id as hostOpenId

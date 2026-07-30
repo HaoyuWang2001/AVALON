@@ -64,7 +64,7 @@ class MessageModel {
       query += ' ORDER BY created_at DESC LIMIT ?';
       params.push(limit);
       
-      const [messages] = await db.query(query, params);
+      const messages = await db.query(query, params);
       
       // 反转顺序，使最早的消息在前
       return messages.reverse();
@@ -82,7 +82,7 @@ class MessageModel {
    */
   static async getLatest(roomId, limit = 20) {
     try {
-      const [messages] = await db.query(
+      const messages = await db.query(
         `SELECT id as _id, room_id as roomId, open_id as openId, 
                 nick_name as nickName, content, type, created_at as createdAt
          FROM messages 
@@ -108,7 +108,7 @@ class MessageModel {
   static async cleanupOldMessages(roomId, keepCount = 200) {
     try {
       // 获取要删除的消息ID
-      const [messagesToDelete] = await db.query(
+      const messagesToDelete = await db.query(
         `SELECT id FROM messages 
          WHERE room_id = ?
          ORDER BY created_at DESC
@@ -142,25 +142,25 @@ class MessageModel {
    */
   static async getStats(roomId) {
     try {
-      const [totalCount] = await db.query(
+      const totalCount = await db.query(
         'SELECT COUNT(*) as count FROM messages WHERE room_id = ?',
         [roomId]
       );
       
-      const [todayCount] = await db.query(
+      const todayCount = await db.query(
         `SELECT COUNT(*) as count FROM messages 
          WHERE room_id = ? AND created_at >= CURDATE()`,
         [roomId]
       );
       
-      const [byType] = await db.query(
+      const byType = await db.query(
         `SELECT type, COUNT(*) as count FROM messages 
          WHERE room_id = ? 
          GROUP BY type`,
         [roomId]
       );
       
-      const [latestMessage] = await db.query(
+      const latestMessage = await db.query(
         `SELECT created_at as latestTime FROM messages 
          WHERE room_id = ? 
          ORDER BY created_at DESC 
@@ -189,12 +189,12 @@ class MessageModel {
    */
   static async getGlobalStats() {
     try {
-      const [totalMessages] = await db.query('SELECT COUNT(*) as count FROM messages');
-      const [activeRooms] = await db.query(
+      const totalMessages = await db.query('SELECT COUNT(*) as count FROM messages');
+      const activeRooms = await db.query(
         `SELECT COUNT(DISTINCT room_id) as count FROM messages 
          WHERE created_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)`
       );
-      const [messagesByHour] = await db.query(
+      const messagesByHour = await db.query(
         `SELECT DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as hour,
                 COUNT(*) as count
          FROM messages 
