@@ -137,7 +137,7 @@
             <view class="rule-row" wx:if="{{ladyOfTheLake}}">
               <text class="rule-label">生效轮次</text>
               <picker class="rule-picker" mode="selector" range="{{[1,2,3,4,5]}}" value="{{ladyOfTheLakeRound - 1}}" bindchange="onLadyRoundChange">
-                <text>第 {{ladyOfTheLakeRound}} 轮后可用</text>
+                <text>第 {{ladyOfTheLakeRound}} 轮发车成功后可用</text>
               </picker>
             </view>
           </view>
