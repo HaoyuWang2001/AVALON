@@ -58,10 +58,10 @@
       
       <!-- Page 0: 人数+角色+湖仙 -->
       <swiper-item>
-        <scroll-view scroll-y class="config-scroll">
+        <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
           <view class="config-section">
             <view class="section-title">🙋 玩家总数</view>
-            <scroll-view class="count-row" scroll-x>
+            <scroll-view class="count-row" scroll-x show-scrollbar="{{false}}">
               <view wx:for="{{[5,6,7,8,9,10,11,12]}}" wx:key="*this"
                 class="count-item {{playerCount === item ? 'count-active' : ''}}"
                 data-count="{{item}}" bindtap="onPlayerCountChange">{{item}}</view>
@@ -81,7 +81,7 @@
 
           <view class="config-section">
             <view class="section-title">🛡️ 好人</view>
-            <scroll-view class="role-scroll" scroll-x>
+            <scroll-view class="role-scroll" scroll-x show-scrollbar="{{false}}">
             <view class="role-scroll-row">
               <view class="role-card role-loyal">
                 <view class="role-img-placeholder">
@@ -107,7 +107,7 @@
 
           <view class="config-section">
             <view class="section-title">⚔️ 坏人</view>
-            <scroll-view class="role-scroll" scroll-x>
+            <scroll-view class="role-scroll" scroll-x show-scrollbar="{{false}}">
             <view class="role-scroll-row">
               <view wx:for="{{['morgana','assassin','oberon','mordred','minion','lancelotRed']}}" wx:key="*this"
                 class="role-card role-evil {{selectedRoles[item] ? 'role-selected' : ''}}"
@@ -147,7 +147,7 @@
 
       <!-- Page 1: 必须设置项 -->
       <swiper-item>
-        <scroll-view scroll-y class="config-scroll">
+        <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
           <view class="config-section">
             <view class="section-title">📋 基础规则</view>
             <view class="rule-row">
@@ -192,7 +192,7 @@
 
       <!-- Page 2: 兰斯洛特配置 (conditional) -->
       <swiper-item wx:if="{{selectedRoles.lancelotBlue || selectedRoles.lancelotRed}}">
-        <scroll-view scroll-y class="config-scroll">
+        <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
           <view class="config-section">
             <view class="section-title">⚔️ 兰斯洛特配置</view>
             <view class="rule-row" wx:if="{{selectedRoles.lancelotBlue && selectedRoles.lancelotRed}}">
@@ -217,7 +217,7 @@
 
       <!-- Page 3: 强制任务失败 (conditional) -->
       <swiper-item wx:if="{{selectedRoles.oberon || selectedRoles.lancelotRed}}">
-        <scroll-view scroll-y class="config-scroll">
+        <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
           <view class="config-section">
             <view class="section-title">💣 坏人强制任务失败</view>
             <view class="rule-row" wx:if="{{selectedRoles.oberon}}">
@@ -240,10 +240,10 @@
 
       <!-- Page 4: 梅林视野 (conditional) -->
       <swiper-item wx:if="{{selectedRoles.merlin}}">
-        <scroll-view scroll-y class="config-scroll">
+        <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
           <view class="config-section">
             <view class="section-title">👁️ 梅林能看到的人</view>
-            <scroll-view class="role-scroll" scroll-x>
+            <scroll-view class="role-scroll" scroll-x show-scrollbar="{{false}}">
             <view class="role-scroll-row">
               <view wx:if="{{selectedRoles.assassin}}"
                 class="role-card role-evil {{merlinCanSee.assassin ? 'role-selected' : ''}}"
@@ -293,7 +293,7 @@
 
           <view class="config-section">
             <view class="section-title">🔍 梅林能分辨具体身份</view>
-            <scroll-view class="role-scroll" scroll-x>
+            <scroll-view class="role-scroll" scroll-x show-scrollbar="{{false}}">
             <view class="role-scroll-row">
               <view wx:if="{{merlinCanSee.assassin}}"
                 class="role-card role-evil {{merlinCanIdentify.assassin ? 'role-selected' : ''}}"
@@ -346,7 +346,7 @@
 
       <!-- Page 5: 时间+信息+创建 -->
       <swiper-item>
-        <scroll-view scroll-y class="config-scroll">
+        <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
           <view class="config-section">
             <view class="section-title">⏱️ 时间限制</view>
             <view class="rule-row">
