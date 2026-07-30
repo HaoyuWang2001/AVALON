@@ -155,20 +155,31 @@ async function closePool() {
 }
 
 /**
- * 检查数据库连接状态
+ * 检查数据库连接状态（带重试）
+ * @param {number} maxRetries 最大重试次数
+ * @param {number} delayMs 重试间隔（毫秒）
  * @returns {Promise<boolean>} 连接是否正常
  */
-async function checkConnection() {
-  try {
-    const pool = getPool();
-    const connection = await pool.getConnection();
-    const [result] = await connection.execute('SELECT 1 AS connected');
-    connection.release();
-    return result[0].connected === 1;
-  } catch (error) {
-    console.error('数据库连接检查失败:', error.message);
-    return false;
+async function checkConnection(maxRetries = 3, delayMs = 2000) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const pool = getPool();
+      const connection = await pool.getConnection();
+      const [result] = await connection.execute('SELECT 1 AS connected');
+      connection.release();
+      if (result[0].connected === 1) {
+        return true;
+      }
+      console.warn(`数据库连接检查: 第${attempt}次尝试结果异常`);
+    } catch (error) {
+      console.warn(`数据库连接检查失败 (第${attempt}/${maxRetries}次): ${error.message}`);
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+    }
   }
+  console.error(`数据库连接检查: 所有${maxRetries}次重试均失败`);
+  return false;
 }
 
 /**
