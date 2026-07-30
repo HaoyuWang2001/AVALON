@@ -153,7 +153,7 @@
             <view class="rule-row">
               <view class="rule-col">
                 <text class="rule-label">流车上限</text>
-                <text class="rule-desc">每轮最多流车几次？超过后强制发车</text>
+                <text class="rule-desc">每轮最多流车 {{rules.maxFailedNominations}} 次，第 {{rules.maxFailedNominations + 1}} 辆车直接发出</text>
               </view>
               <picker class="rule-picker" mode="selector" range="{{[1,2,3,4,5]}}" value="{{rules.maxFailedNominations - 1}}" data-field="maxFailedNominations" bindchange="onRulePicker">
                 <text>{{rules.maxFailedNominations}} 次</text>

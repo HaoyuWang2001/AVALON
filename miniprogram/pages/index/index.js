@@ -37,7 +37,7 @@ function buildDefaultRule() {
     evilKnowsEachOther: true, lancelotsKnowEachOther: true, lancelotSwapRound: 2,
     ladyOfTheLake: false, ladyOfTheLakeRound: 2, maxFailedNominations: 3,
     oberonMustFailMission: false, redLancelotMustFailMission: false,
-    voteVisibility: 'anonymous', missionFailDetail: 'count'
+    voteVisibility: 'public', missionFailDetail: 'count'
   };
 }
 
