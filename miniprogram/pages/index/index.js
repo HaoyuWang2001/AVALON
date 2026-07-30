@@ -43,8 +43,8 @@ function buildDefaultRule() {
 
 Page({
   data: {
-    userInfo: {}, hasUserInfo: false, canIUseGetUserProfile: false,
-    customNickName: '', showNickNameInput: false,
+    userInfo: { avatarUrl: '', nickName: '' },
+    customNickName: '',
 
     showConfig: false,
     playerCount: 5,
@@ -93,30 +93,28 @@ Page({
   },
 
   onLoad() {
-    if (wx.getUserProfile) { this.setData({ canIUseGetUserProfile: true }); }
-    const app = getApp();
-    if (app.globalData.userInfo) {
-      this.setData({ userInfo: app.globalData.userInfo, hasUserInfo: true });
-    } else {
-      app.userInfoReadyCallback = res => {
-        this.setData({ userInfo: res.userInfo, hasUserInfo: true });
-      };
-    }
     const savedNickName = wx.getStorageSync('customNickName');
     if (savedNickName) { this.setData({ customNickName: savedNickName }); }
+    const app = getApp();
+    if (app.globalData.userInfo) {
+      this.setData({ userInfo: app.globalData.userInfo });
+    }
     this.applyDefaultConfig(this.data.playerCount);
     this.computeAll();
   },
 
-  getUserProfile(e) {
-    wx.getUserProfile({
-      desc: '用于展示用户信息',
-      success: (res) => {
-        const app = getApp();
-        app.globalData.userInfo = res.userInfo;
-        this.setData({ userInfo: res.userInfo, hasUserInfo: true });
-      }
-    });
+  onChooseAvatar(e) {
+    const avatarUrl = e.detail.avatarUrl;
+    this.setData({ 'userInfo.avatarUrl': avatarUrl });
+    const app = getApp();
+    app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl };
+  },
+
+  onNickInput(e) {
+    const nickName = e.detail.value;
+    this.setData({ 'userInfo.nickName': nickName });
+    const app = getApp();
+    app.globalData.userInfo = { ...app.globalData.userInfo, nickName };
   },
 
   showNickNameModal() {

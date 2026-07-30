@@ -7,18 +7,19 @@
   </view>
 
   <view class="card user-card">
-    <view wx:if="{{hasUserInfo}}" class="user-info-section">
+    <view class="user-info-section">
       <view class="user-left">
-        <image src="{{userInfo.avatarUrl}}" class="avatar avatar-lg" bindtap="getUserProfile"></image>
+        <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+          <image src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}" class="avatar avatar-lg"></image>
+        </button>
         <view class="user-details">
-          <view class="user-name" bindtap="getUserProfile">{{userInfo.nickName || '点击获取微信信息'}}</view>
+          <input type="nickname" class="user-name-input" value="{{userInfo.nickName}}" placeholder="点击设置微信昵称" bindinput="onNickInput"/>
           <view class="user-game-nick">游戏内昵称：{{customNickName || '未设置'}}</view>
           <view class="user-status">在线</view>
         </view>
         <view class="edit-nick-btn btn-round" bindtap="showNickNameModal">更改昵称</view>
       </view>
     </view>
-    <button wx:else class="login-btn" bindtap="getUserProfile">授权登录</button>
   </view>
 
   <view class="card action-card">
