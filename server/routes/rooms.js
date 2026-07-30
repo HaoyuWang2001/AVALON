@@ -9,7 +9,7 @@ function createRouter(rooms) {
   }
 
 router.post('/create', (req, res) => {
-  const { hostOpenId, hostNickName, hostAvatarUrl, roomConfig } = req.body;
+  const { hostOpenId, hostNickName, hostAvatarUrl, hostWxNickName, roomConfig } = req.body;
 
   if (!hostOpenId) {
     return res.status(400).json({ success: false, message: '缺少房主信息' });
@@ -32,6 +32,7 @@ router.post('/create', (req, res) => {
     players: [{
       openId: hostOpenId,
       nickName: hostNickName || '房主',
+      wxNickName: hostWxNickName || '',
       avatarUrl: hostAvatarUrl || '',
       seatNumber: 1,
       isHost: true

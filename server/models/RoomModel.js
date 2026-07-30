@@ -68,7 +68,7 @@ class RoomModel {
    * @param {Object} roomConfig 房间配置
    * @returns {Promise<Object>} 创建的房间信息
    */
-  static async create(hostOpenId, hostNickName = '房主', hostAvatarUrl = '', roomConfig = null) {
+  static async create(hostOpenId, hostNickName = '房主', hostAvatarUrl = '', roomConfig = null, hostWxNickName = '') {
     // 生成6位房间号
     const roomId = Math.floor(100000 + Math.random() * 900000).toString();
     
@@ -85,9 +85,9 @@ class RoomModel {
         );
         
         await connection.execute(
-          `INSERT INTO players (room_id, open_id, nick_name, avatar_url, seat_number, is_host, is_ready, created_at) 
-           VALUES (?, ?, ?, ?, 1, TRUE, FALSE, NOW())`,
-          [roomId, hostOpenId, hostNickName, hostAvatarUrl]
+          `INSERT INTO players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_host, is_ready, created_at) 
+           VALUES (?, ?, ?, ?, ?, 1, TRUE, FALSE, NOW())`,
+          [roomId, hostOpenId, hostNickName, hostWxNickName, hostAvatarUrl]
         );
       });
       
@@ -154,7 +154,7 @@ class RoomModel {
       
       // 获取房间内的玩家
       const players = await db.query(
-        `SELECT open_id as openId, nick_name as nickName, avatar_url as avatarUrl, 
+        `SELECT open_id as openId, nick_name as nickName, wx_nick_name as wxNickName, avatar_url as avatarUrl, 
                 seat_number as seatNumber, is_host as isHost, is_ready as isReady
          FROM players WHERE room_id = ? ORDER BY seat_number`,
         [roomId]
@@ -199,6 +199,7 @@ class RoomModel {
   static async join(roomId, userInfo, seatNumber, customNickName = '') {
     const openId = userInfo.openId;
     const nickName = customNickName || userInfo.nickName || '匿名玩家';
+    const wxNickName = userInfo.wxNickName || '';
     
     try {
       await db.transaction(async (connection) => {
@@ -248,9 +249,9 @@ class RoomModel {
         
         // 添加玩家
         await connection.execute(
-          `INSERT INTO players (room_id, open_id, nick_name, avatar_url, seat_number, is_host, is_ready, created_at) 
-           VALUES (?, ?, ?, ?, ?, FALSE, FALSE, NOW())`,
-          [roomId, openId, nickName, userInfo.avatarUrl || '', seatNumber]
+          `INSERT INTO players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_host, is_ready, created_at) 
+           VALUES (?, ?, ?, ?, ?, ?, FALSE, FALSE, NOW())`,
+          [roomId, openId, nickName, wxNickName, userInfo.avatarUrl || '', seatNumber]
         );
         
         // 更新房间更新时间

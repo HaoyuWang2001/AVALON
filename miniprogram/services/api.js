@@ -57,6 +57,7 @@ class ApiService {
         userInfo: {
           openId,
           nickName: userInfo.nickName || this.nickName || wx.getStorageSync('customNickName') || '玩家',
+          wxNickName: userInfo.nickName || '',
           avatarUrl: userInfo.avatarUrl || ''
         },
         seatNumber,

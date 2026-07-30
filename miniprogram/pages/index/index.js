@@ -390,6 +390,8 @@ Page({
       data: {
         hostOpenId: this.data.userInfo.openId || getApp().globalData.openId,
         hostNickName: this.data.customNickName || this.data.userInfo.nickName || '房主',
+        hostWxNickName: (this.data.userInfo && this.data.userInfo.nickName) || '',
+        hostAvatarUrl: (this.data.userInfo && this.data.userInfo.avatarUrl) || '',
         roomConfig: config
       }
     }).then(res => {

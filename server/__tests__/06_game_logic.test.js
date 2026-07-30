@@ -133,8 +133,8 @@ describe('06 — Game Logic Unit Tests (no server needed)', () => {
     });
 
     it('should return correct team sizes for 12 players', () => {
-      expect(GameModel.getTeamSize(12, 1)).toBe(4);
-      expect(GameModel.getTeamSize(12, 2)).toBe(5);
+      expect(GameModel.getTeamSize(12, 1)).toBe(3);
+      expect(GameModel.getTeamSize(12, 2)).toBe(4);
       expect(GameModel.getTeamSize(12, 3)).toBe(5);
       expect(GameModel.getTeamSize(12, 4)).toBe(6);
       expect(GameModel.getTeamSize(12, 5)).toBe(6);

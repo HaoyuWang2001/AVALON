@@ -8,7 +8,7 @@ function createRouter() {
   // 创建房间
   router.post('/create', async (req, res) => {
     try {
-      const { hostOpenId, hostNickName, hostAvatarUrl, roomConfig } = req.body;
+      const { hostOpenId, hostNickName, hostAvatarUrl, hostWxNickName, roomConfig } = req.body;
       
       if (!hostOpenId) {
         return res.status(400).json({ 
@@ -28,7 +28,8 @@ function createRouter() {
         hostOpenId, 
         hostNickName || '房主', 
         hostAvatarUrl || '',
-        roomConfig
+        roomConfig,
+        hostWxNickName || ''
       );
       
       res.json({
