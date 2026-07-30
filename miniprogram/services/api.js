@@ -1,6 +1,6 @@
 // API服务封装
 const app = getApp();
-const BASE_URL = 'https://haoyu-wang141.top:8082/api';
+const BASE_URL = 'http://114.132.51.227:8082/api';
 
 class ApiService {
   constructor() {
