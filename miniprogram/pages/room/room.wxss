@@ -95,6 +95,8 @@ page { background: #F3F4F6; }
   border-radius: 12rpx; gap: 12rpx;
 }
 .seat-filled { background: #F9FAFB; }
+.seat-self { padding: 24rpx 16rpx; margin: 0 -4rpx; box-shadow: 0 2rpx 12rpx rgba(139, 92, 246, 0.1); border-radius: 12rpx; }
+.seat-self .seat-action { gap: 16rpx; }
 .seat-empty { background: #FAFAFA; border: 2rpx dashed #E5E7EB; }
 
 .seat-num {

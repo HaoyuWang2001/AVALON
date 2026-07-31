@@ -50,7 +50,7 @@
       <text class="btn-round btn-random-seat {{currentUser && currentUser.seatNumber < 1 ? '' : 'disabled'}}" bindtap="randomTakeSeat">随机入座</text>
     </view>
     <view class="seats-section" wx:if="{{seatedSeats && seatedSeats.length > 0}}">
-      <view wx:for="{{seatedSeats}}" wx:key="number" class="seat-row {{item.occupied ? 'seat-filled' : 'seat-empty'}}">
+      <view wx:for="{{seatedSeats}}" wx:key="number" class="seat-row {{item.occupied ? 'seat-filled' : 'seat-empty'}} {{item.isSelf ? 'seat-self' : ''}}">
         <view class="seat-num">{{item.number}}</view>
         <image wx:if="{{item.occupied}}" src="{{item.player.avatarUrl || '/images/default-avatar.png'}}" class="seat-avatar"></image>
         <view wx:else class="seat-avatar seat-avatar-empty"></view>
