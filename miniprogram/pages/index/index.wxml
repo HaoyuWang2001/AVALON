@@ -21,7 +21,7 @@
           <view class="user-game-nick">游戏内昵称：{{customNickName || '未设置'}}</view>
           <view class="user-status">在线</view>
         </view>
-        <view class="edit-nick-btn btn-round" bindtap="showNickNameModal">改名</view>
+        <view class="edit-nick-btn btn-round" bindtap="showNickNameModal">更改昵称</view>
       </view>
     </view>
   </view>
