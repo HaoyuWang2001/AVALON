@@ -99,16 +99,31 @@ Page({
     if (app.globalData.userInfo) {
       this.setData({ userInfo: app.globalData.userInfo });
     }
+    const savedAvatar = wx.getStorageSync('avatarUrl');
+    if (savedAvatar) {
+      this.setData({ 'userInfo.avatarUrl': savedAvatar });
+      app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: savedAvatar };
+    }
     this.applyDefaultConfig(this.data.playerCount);
     this.computeAll();
   },
 
   onChooseAvatar(e) {
     if (!e.detail || !e.detail.avatarUrl) return;
-    const avatarUrl = e.detail.avatarUrl;
-    this.setData({ 'userInfo.avatarUrl': avatarUrl });
-    const app = getApp();
-    app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl };
+    const tempPath = e.detail.avatarUrl;
+    wx.saveFile({
+      tempFilePath: tempPath,
+      success: (res) => {
+        const savedPath = res.savedFilePath;
+        this.setData({ 'userInfo.avatarUrl': savedPath });
+        wx.setStorageSync('avatarUrl', savedPath);
+        const app = getApp();
+        app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: savedPath };
+      },
+      fail: () => {
+        this.setData({ 'userInfo.avatarUrl': tempPath });
+      }
+    });
   },
 
   onNickInput(e) {
