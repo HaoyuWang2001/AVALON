@@ -86,10 +86,9 @@
       <text class="card-title">等待区 ({{unseatedPlayers.length}})</text>
     </view>
     <view class="waiting-list">
-      <view wx:for="{{unseatedPlayers}}" wx:key="openId" class="waiting-item">
+      <view wx:for="{{unseatedPlayers}}" wx:key="openId" class="waiting-item" bindtap="onWaitingPlayerTap" data-id="{{item.openId}}">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="waiting-avatar"></image>
         <text class="waiting-name">{{item.nickName || item.wxNickName || '玩家'}}</text>
-        <text wx:if="{{isHost}}" class="waiting-kick" bindtap="kickPlayer" data-id="{{item.openId}}">踢出</text>
       </view>
     </view>
   </view>

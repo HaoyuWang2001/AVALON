@@ -201,6 +201,19 @@ Page({
 
   // ─── Kick ───
 
+  onWaitingPlayerTap(e) {
+    if (!this.data.isHost) return;
+    const playerId = e.currentTarget.dataset.id;
+    wx.showActionSheet({
+      itemList: ['踢出房间'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          api.kickPlayer(this.data.roomId, playerId, 'room').catch(() => {});
+        }
+      }
+    });
+  },
+
   kickPlayer(e) {
     const playerId = e.currentTarget.dataset.id;
     wx.showActionSheet({
