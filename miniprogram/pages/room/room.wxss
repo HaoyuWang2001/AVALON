@@ -11,12 +11,19 @@ page { background: #F3F4F6; }
 /* ─── Top Bar ─── */
 .top-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16rpx 24rpx; background: #fff;
+  padding: 24rpx 32rpx; background: #fff;
   position: sticky; top: 0; z-index: 100;
   border-bottom: 1rpx solid #F3F4F6;
+  margin: 0 -20rpx;
 }
-.btn-exit { background: #FEE2E2; color: #DC2626; }
-.btn-collapse { background: #F3F4F6; color: #6B7280; }
+.btn-topbar {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 26rpx; border-radius: 28rpx;
+  padding: 14rpx 32rpx; border: none; line-height: 1.4;
+}
+.btn-topbar-left.btn-disband { background: #FEE2E2; color: #DC2626; }
+.btn-topbar-left.btn-exit { background: #FEE2E2; color: #DC2626; }
+.btn-topbar-right.btn-purple { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
 
 /* ─── Card ─── */
 .card {

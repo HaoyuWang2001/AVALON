@@ -2,8 +2,8 @@
 <view class="container">
   <!-- Top Bar (always visible) -->
   <view class="top-bar">
-    <view class="btn-round btn-exit" bindtap="exitRoom">退出房间</view>
-    <view class="btn-round btn-collapse" bindtap="toggleInfoCard">{{infoCollapsed ? '展开' : '收起'}}</view>
+    <view class="btn-topbar btn-topbar-left {{isHost ? 'btn-disband' : 'btn-exit'}}" bindtap="{{isHost ? 'disbandRoom' : 'exitRoom'}}">{{isHost ? '解散房间' : '退出房间'}}</view>
+    <view class="btn-topbar btn-topbar-right btn-purple" bindtap="toggleInfoCard">{{infoCollapsed ? '展开' : '收起房间'}}</view>
   </view>
 
   <!-- Card 1: Room Info (collapsible) -->
@@ -35,7 +35,6 @@
       <view class="btn-round btn-start-game {{canStartGame ? '' : 'disabled'}}" bindtap="startGame">开始游戏</view>
       <text wx:if="{{!canStartGame && startHint}}" class="start-hint">{{startHint}}</text>
       <view class="host-actions">
-        <view class="btn-round btn-disband" bindtap="disbandRoom">解散房间</view>
         <view class="btn-round btn-purple" bindtap="modifyConfig">修改配置</view>
         <view class="btn-round btn-purple" bindtap="randomShuffleSeats">随机位置</view>
       </view>
