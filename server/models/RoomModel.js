@@ -84,8 +84,8 @@ class RoomModel {
           [roomId, hostOpenId, hostNickName, hostWxNickName, hostAvatarUrl]
         );
         await connection.execute(
-          'UPDATE users SET current_room_id = ?, updated_at = NOW() WHERE open_id = ?',
-          [roomId, hostOpenId]
+          'INSERT INTO users (open_id, current_room_id, updated_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE current_room_id = VALUES(current_room_id), updated_at = NOW()',
+          [hostOpenId, roomId]
         );
       });
       
@@ -216,8 +216,8 @@ class RoomModel {
           [roomId, openId, nickName, wxNickName, userInfo.avatarUrl || '', seat]
         );
         await connection.execute(
-          'UPDATE users SET current_room_id = ?, updated_at = NOW() WHERE open_id = ?',
-          [roomId, openId]
+          'INSERT INTO users (open_id, current_room_id, updated_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE current_room_id = VALUES(current_room_id), updated_at = NOW()',
+          [openId, roomId]
         );
         await connection.execute('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
       });
