@@ -123,8 +123,10 @@ class ApiService {
   }
 
   async randomSeats(roomId) {
+    const openId = this.openId || getApp().globalData.openId;
     return this.request(`/rooms/${roomId}/randomSeats`, {
-      method: 'POST'
+      method: 'POST',
+      data: { openId }
     });
   }
 

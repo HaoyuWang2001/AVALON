@@ -16,6 +16,7 @@ Page({
     gameStarted: false,
     canStartGame: false,
     startHint: '',
+    seatsFull: false,
     infoCollapsed: false,
     spectatorMax: 0
   },
@@ -96,7 +97,8 @@ Page({
           isHost: room.ownerId === app.globalData.openId,
           gameStarted: room.gameStarted || false,
           seatedSeats: seats,
-          spectatorMax: specMax
+          spectatorMax: specMax,
+          seatsFull: seats.length > 0 && seats.every(s => s.occupied)
         });
 
         let canStart = playerCount > 0;
@@ -196,6 +198,10 @@ Page({
   },
 
   randomShuffleSeats() {
+    if (!this.data.seatsFull) {
+      wx.showToast({ title: '上座区未坐满', icon: 'none' });
+      return;
+    }
     api.randomSeats(this.data.roomId).catch(() => {});
   },
 

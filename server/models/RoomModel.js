@@ -420,6 +420,13 @@ class RoomModel {
     if (!room) throw new Error('房间不存在');
     const seated = room.players.filter(p => p.seatNumber >= 1);
     if (seated.length === 0) throw new Error('没有入座玩家');
+
+    let playerCount = 0;
+    if (room.roomConfig && room.roomConfig.roles) {
+      playerCount = (room.roomConfig.roles.good || []).length + (room.roomConfig.roles.evil || []).length;
+    }
+    if (seated.length !== playerCount) throw new Error('上座区未坐满');
+
     const shuffled = [...seated].sort(() => Math.random() - 0.5);
     const seatNumbers = seated.map(p => p.seatNumber).sort((a, b) => a - b);
     for (let i = 0; i < shuffled.length; i++) {

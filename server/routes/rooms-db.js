@@ -393,8 +393,12 @@ function createRouter() {
   router.post('/:roomId/randomSeats', async (req, res) => {
     try {
       const { roomId } = req.params;
-      const room = await RoomModel.randomSeats(roomId);
-      res.json({ success: true, room, message: '座位已随机打乱' });
+      const { openId } = req.body;
+      const room = await RoomModel.getById(roomId);
+      if (!room) return res.status(404).json({ success: false, message: '房间不存在' });
+      if (room.ownerId !== openId) return res.status(403).json({ success: false, message: '仅房主可操作' });
+      const result = await RoomModel.randomSeats(roomId);
+      res.json({ success: true, room: result, message: '座位已随机打乱' });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }

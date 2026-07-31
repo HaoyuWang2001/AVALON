@@ -2,7 +2,6 @@
 
 button { margin: 0; padding: 0; width: auto; }
 button::after { border: none; }
-button.btn-round { width: fit-content; min-width: auto; }
 
 page { background: #F3F4F6; }
 
@@ -16,10 +15,7 @@ page { background: #F3F4F6; }
   border-bottom: 1rpx solid #F3F4F6;
   margin: 0 -20rpx;
 }
-.btn-topbar {
-  display: inline-block; font-weight: 600; font-size: 26rpx; border-radius: 28rpx;
-  padding: 14rpx 32rpx; border: none; line-height: 1.4; text-align: center;
-}
+
 .btn-topbar-left.btn-disband { background: #FEE2E2; color: #DC2626; }
 .btn-topbar-left.btn-exit { background: #FEE2E2; color: #DC2626; }
 .btn-topbar-right.btn-purple { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
@@ -56,7 +52,7 @@ page { background: #F3F4F6; }
 
 /* ─── Round Buttons ─── */
 .btn-round {
-  display: inline-block; font-weight: 600; font-size: 24rpx; border-radius: 28rpx;
+  display: inline-block; font-weight: 600; font-size: 28rpx; border-radius: 28rpx;
   padding: 12rpx 28rpx; margin: 0; border: none; line-height: 1.4;
   text-align: center;
 }
@@ -67,11 +63,12 @@ page { background: #F3F4F6; }
 .btn-share { background: #DBEAFE; color: #2563EB; }
 .btn-purple { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
 .btn-disband { background: #FEE2E2; color: #DC2626; }
+.btn-disabled { background: #E5E7EB; color: #9CA3AF; }
 .btn-cancel { background: #E5E7EB; color: #6B7280; }
 .btn-ready { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
-.btn-random-seat { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; font-size: 22rpx; padding: 8rpx 20rpx; }
-.btn-spectate { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; font-size: 22rpx; padding: 8rpx 20rpx; }
-.btn-enter-waiting { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; font-size: 22rpx; padding: 8rpx 20rpx; }
+.btn-random-seat { font-size: 22rpx; padding: 8rpx 20rpx; }
+.btn-spectate { font-size: 22rpx; padding: 8rpx 20rpx; }
+.btn-enter-waiting { font-size: 22rpx; padding: 8rpx 20rpx; }
 
 /* ─── Card 2: Host Control ─── */
 .host-card { background: #fff; }
@@ -126,21 +123,6 @@ page { background: #F3F4F6; }
 .seat-status.not-ready { color: #F59E0B; }
 
 .seat-action { display: flex; flex-direction: column; gap: 8rpx; flex-shrink: 0; align-items: center; }
-.btn-seat-action {
-  display: inline-block; font-size: 22rpx; font-weight: 600; padding: 10rpx 20rpx;
-  border-radius: 20rpx; text-align: center; line-height: 1.4; white-space: nowrap;
-}
-.btn-seat-action.btn-ready { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
-.btn-seat-action.btn-cancel { background: #E5E7EB; color: #6B7280; }
-.btn-seat-action.btn-leave { background: #FEE2E2; color: #DC2626; }
-.btn-seat-action.btn-take { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
-
-.seat-kick {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 36rpx; height: 36rpx; border-radius: 50%;
-  background: #FEE2E2; color: #DC2626;
-  font-size: 24rpx; font-weight: 700; flex-shrink: 0;
-}
 
 /* ─── Card 4: Waiting Area ─── */
 .waiting-list { display: flex; flex-wrap: wrap; gap: 12rpx; }

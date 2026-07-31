@@ -2,8 +2,8 @@
 <view class="container">
   <!-- Top Bar (always visible) -->
   <view class="top-bar">
-    <text class="btn-topbar btn-topbar-left {{isHost ? 'btn-disband' : 'btn-exit'}}" bindtap="{{isHost ? 'disbandRoom' : 'exitRoom'}}">{{isHost ? '解散房间' : '退出房间'}}</text>
-    <text class="btn-topbar btn-topbar-right btn-purple" bindtap="toggleInfoCard">{{infoCollapsed ? '展开' : '收起房间'}}</text>
+    <text class="btn-round btn-topbar-left {{isHost ? 'btn-disband' : 'btn-exit'}}" bindtap="{{isHost ? 'disbandRoom' : 'exitRoom'}}">{{isHost ? '解散房间' : '退出房间'}}</text>
+    <text class="btn-round btn-topbar-right btn-purple" bindtap="toggleInfoCard">{{infoCollapsed ? '展开' : '收起房间'}}</text>
   </view>
 
   <!-- Card 1: Room Info (collapsible) -->
@@ -12,7 +12,7 @@
       <text class="info-label">会议ID：</text>
       <view class="info-btns">
         <text class="btn-round btn-copy" bindtap="copyRoomId">复制</text>
-        <button class="btn-round btn-share" open-type="share">分享</button>
+        <button class="btn-round btn-share" style="width: fit-content; min-width: auto;" open-type="share">分享</button>
       </view>
     </view>
     <text class="room-id-display">{{roomId}}</text>
@@ -39,7 +39,7 @@
     <view class="host-divider"></view>
     <view class="host-actions">
       <text class="btn-round btn-purple" bindtap="modifyConfig">修改配置</text>
-      <text class="btn-round btn-purple" bindtap="randomShuffleSeats">随机位置</text>
+      <text class="btn-round {{seatsFull ? 'btn-purple' : 'btn-disabled'}}" bindtap="randomShuffleSeats">随机位置</text>
     </view>
   </view>
 
@@ -64,14 +64,14 @@
           <text class="seat-name-empty">空位</text>
         </view>
         <view wx:if="{{item.isSelf && item.occupied}}" class="seat-action">
-          <text class="btn-seat-action {{item.isReady ? 'btn-cancel' : 'btn-ready'}}" catchtap="toggleReady">{{item.isReady ? '取消准备' : '准备游戏'}}</text>
+          <text class="btn-round {{item.isReady ? 'btn-cancel' : 'btn-purple'}}" catchtap="toggleReady">{{item.isReady ? '取消准备' : '准备游戏'}}</text>
         </view>
         <view wx:elif="{{item.occupied}}" class="seat-status {{item.isReady ? 'ready' : 'not-ready'}}">
           <view class="status-dot {{item.isReady ? 'dot-green' : 'dot-yellow'}}"></view>
           <text>{{item.isReady ? '已准备' : '未准备'}}</text>
         </view>
         <view wx:elif="{{!item.occupied}}" class="seat-action">
-          <text wx:if="{{currentUser && currentUser.seatNumber < 1}}" class="btn-seat-action btn-take" catchtap="takeSeat" data-seat="{{item.number}}">入座</text>
+          <text wx:if="{{currentUser && currentUser.seatNumber < 1}}" class="btn-round btn-purple" catchtap="takeSeat" data-seat="{{item.number}}">入座</text>
         </view>
       </view>
     </view>
