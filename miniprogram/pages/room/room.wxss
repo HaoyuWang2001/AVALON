@@ -17,9 +17,8 @@ page { background: #F3F4F6; }
   margin: 0 -20rpx;
 }
 .btn-topbar {
-  display: inline-flex; align-items: center; justify-content: center;
-  font-weight: 600; font-size: 26rpx; border-radius: 28rpx;
-  padding: 14rpx 32rpx; border: none; line-height: 1.4;
+  display: inline-block; font-weight: 600; font-size: 26rpx; border-radius: 28rpx;
+  padding: 14rpx 32rpx; border: none; line-height: 1.4; text-align: center;
 }
 .btn-topbar-left.btn-disband { background: #FEE2E2; color: #DC2626; }
 .btn-topbar-left.btn-exit { background: #FEE2E2; color: #DC2626; }
@@ -57,9 +56,9 @@ page { background: #F3F4F6; }
 
 /* ─── Round Buttons ─── */
 .btn-round {
-  display: inline-flex; align-items: center; justify-content: center;
-  font-weight: 600; font-size: 24rpx; border-radius: 28rpx;
+  display: inline-block; font-weight: 600; font-size: 24rpx; border-radius: 28rpx;
   padding: 12rpx 28rpx; margin: 0; border: none; line-height: 1.4;
+  text-align: center;
 }
 .btn-round::after { border: none; }
 .btn-round[disabled] { opacity: 0.5; }
@@ -67,7 +66,7 @@ page { background: #F3F4F6; }
 .btn-copy { background: #E5E7EB; color: #374151; }
 .btn-share { background: #DBEAFE; color: #2563EB; }
 .btn-purple { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
-.btn-disband { background: #FEE2E2; color: #DC2626; flex: 1; }
+.btn-disband { background: #FEE2E2; color: #DC2626; }
 .btn-cancel { background: #E5E7EB; color: #6B7280; }
 .btn-ready { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; min-width: 240rpx; }
 .btn-random-seat { background: #E5E7EB; color: #374151; font-size: 22rpx; padding: 8rpx 20rpx; }
@@ -82,7 +81,6 @@ page { background: #F3F4F6; }
 .btn-start-game.disabled { background: #E5E7EB; color: #9CA3AF; }
 .start-hint { font-size: 22rpx; color: #8B5CF6; text-align: center; margin-top: -8rpx; }
 .host-actions { display: flex; gap: 12rpx; }
-.host-actions .btn-round { flex: 1; font-size: 24rpx; padding: 14rpx 0; }
 .player-controls { display: flex; justify-content: center; }
 
 /* ─── Card 3: Seats ─── */
@@ -125,9 +123,9 @@ page { background: #F3F4F6; }
 .seat-status.not-ready { color: #F59E0B; }
 
 .seat-kick {
+  display: inline-flex; align-items: center; justify-content: center;
   width: 36rpx; height: 36rpx; border-radius: 50%;
   background: #FEE2E2; color: #DC2626;
-  display: flex; align-items: center; justify-content: center;
   font-size: 24rpx; font-weight: 700; flex-shrink: 0;
 }
 
@@ -139,7 +137,7 @@ page { background: #F3F4F6; }
 }
 .waiting-avatar { width: 48rpx; height: 48rpx; border-radius: 50%; background: #F3F4F6; }
 .waiting-name { font-size: 24rpx; color: #374151; }
-.waiting-kick { font-size: 20rpx; color: #DC2626; padding: 4rpx 12rpx; background: #FEE2E2; border-radius: 6rpx; }
+.waiting-kick { display: inline-block; font-size: 20rpx; color: #DC2626; padding: 4rpx 12rpx; background: #FEE2E2; border-radius: 6rpx; }
 
 /* ─── Card 5: Spectator ─── */
 .spectator-list { display: flex; flex-wrap: wrap; gap: 16rpx; }
