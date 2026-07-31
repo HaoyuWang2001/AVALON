@@ -62,16 +62,18 @@
         </view>
         <view wx:else class="seat-info">
           <text class="seat-name-empty">空位</text>
-          <text wx:if="{{currentUser && currentUser.seatNumber < 1}}" class="btn-take" bindtap="takeSeat" data-seat="{{item.number}}">入座</text>
         </view>
         <view wx:if="{{item.isSelf && item.occupied}}" class="seat-action">
           <text class="btn-seat-action {{item.isReady ? 'btn-cancel' : 'btn-ready'}}" bindtap="toggleReady">{{item.isReady ? '取消准备' : '准备游戏'}}</text>
+          <text class="btn-seat-action btn-leave" bindtap="leaveSeat">离开座位</text>
         </view>
         <view wx:elif="{{item.occupied}}" class="seat-status {{item.isReady ? 'ready' : 'not-ready'}}">
           <view class="status-dot {{item.isReady ? 'dot-green' : 'dot-yellow'}}"></view>
           <text>{{item.isReady ? '已准备' : '未准备'}}</text>
         </view>
-        <view wx:elif="{{!item.occupied}}" class="seat-status"></view>
+        <view wx:elif="{{!item.occupied}}" class="seat-action">
+          <text wx:if="{{currentUser && currentUser.seatNumber < 1}}" class="btn-seat-action btn-take" bindtap="takeSeat" data-seat="{{item.number}}">入座</text>
+        </view>
         <text wx:if="{{isHost && item.occupied && !item.isSelf}}" class="seat-kick" bindtap="kickPlayer" data-id="{{item.player.openId}}">×</text>
       </view>
     </view>

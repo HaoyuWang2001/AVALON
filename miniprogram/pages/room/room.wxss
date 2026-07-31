@@ -115,8 +115,6 @@ page { background: #F3F4F6; }
 .tag { font-size: 20rpx; padding: 2rpx 8rpx; border-radius: 4rpx; }
 .tag-host { background: #DBEAFE; color: #2563EB; }
 
-.btn-take { display: inline-block; margin: 0; font-size: 22rpx; padding: 6rpx 16rpx; border-radius: 8rpx; background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
-
 .seat-status { display: flex; align-items: center; gap: 6rpx; flex-shrink: 0; font-size: 22rpx; }
 .status-dot { width: 14rpx; height: 14rpx; border-radius: 50%; }
 .dot-green { background: #10B981; }
@@ -124,13 +122,15 @@ page { background: #F3F4F6; }
 .seat-status.ready { color: #10B981; }
 .seat-status.not-ready { color: #F59E0B; }
 
-.seat-action { flex-shrink: 0; }
+.seat-action { display: flex; flex-direction: column; gap: 8rpx; flex-shrink: 0; align-items: center; }
 .btn-seat-action {
   display: inline-block; font-size: 22rpx; font-weight: 600; padding: 10rpx 20rpx;
-  border-radius: 20rpx; text-align: center; line-height: 1.4;
+  border-radius: 20rpx; text-align: center; line-height: 1.4; white-space: nowrap;
 }
 .btn-seat-action.btn-ready { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
 .btn-seat-action.btn-cancel { background: #E5E7EB; color: #6B7280; }
+.btn-seat-action.btn-leave { background: #FEE2E2; color: #DC2626; }
+.btn-seat-action.btn-take { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
 
 .seat-kick {
   display: inline-flex; align-items: center; justify-content: center;
