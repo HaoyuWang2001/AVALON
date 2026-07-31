@@ -30,13 +30,13 @@ page { background: #F3F4F6; }
 /* ─── Card 1: Room Info ─── */
 .room-info-card { background: linear-gradient(135deg, #FAF5FF, #F5F3FF); }
 .info-top-row { display: flex; align-items: center; justify-content: space-between; }
-.info-label { font-size: 26rpx; color: #9CA3AF; margin-left: 4rpx; }
+.info-label { font-size: 26rpx; color: #6B7280; margin-left: 4rpx; }
 .info-btns { display: flex; gap: 12rpx; }
 .room-id-display {
   display: block; text-align: center; font-size: 56rpx; font-weight: 800;
   color: #8B5CF6; letter-spacing: 8rpx; margin: 20rpx 0;
   padding-bottom: 24rpx;
-  border-bottom: 1rpx dashed #E5E7EB;
+  border-bottom: 1rpx dashed #D1D5DB;
 }
 .info-stats-row {
   display: flex; align-items: center; justify-content: center; gap: 32rpx;
