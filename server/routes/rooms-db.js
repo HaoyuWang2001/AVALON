@@ -25,7 +25,7 @@ function createRouter() {
         });
       }
 
-      const [existing] = await db.query(
+      const existing = await db.query(
         'SELECT room_id FROM players WHERE open_id = ? LIMIT 1',
         [hostOpenId]
       );
@@ -100,7 +100,7 @@ function createRouter() {
 
       const openId = userInfo.openId;
 
-      const [existing] = await db.query(
+      const existing = await db.query(
         'SELECT room_id FROM players WHERE open_id = ? LIMIT 1',
         [openId]
       );

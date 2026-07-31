@@ -359,8 +359,11 @@ Page({
     this.setData({ allowSpectator: !this.data.allowSpectator });
   },
 
-  onSpectatorLimitChange(e) {
-    this.setData({ maxSpectators: e.detail.value });
+  onSpectatorLimitInput(e) {
+    let val = parseInt(e.detail.value) || 0;
+    if (val < 0) val = 0;
+    if (val > 100) val = 100;
+    this.setData({ maxSpectators: val });
   },
 
   // ─────────── Page 5: Merlin Vision ───────────
