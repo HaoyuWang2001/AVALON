@@ -2,6 +2,46 @@
 const app = getApp();
 const api = require('../../services/api.js');
 
+const GOOD_ROLES = ['merlin', 'percival', 'lancelotBlue'];
+const EVIL_ROLES = ['morgana', 'assassin', 'mordred', 'minion', 'oberon', 'lancelotRed'];
+
+const ROLE_NAMES = {
+  merlin: '梅林', percival: '派西', loyal: '忠臣',
+  lancelotBlue: '蓝兰', lancelotRed: '红兰',
+  morgana: '莫甘娜', assassin: '刺客', mordred: '莫德雷德',
+  minion: '爪牙', oberon: '奥伯伦'
+};
+
+const DEFAULT_CONFIGS = {
+  5:  { good: ['merlin','percival'], evil: ['morgana','assassin'] },
+  6:  { good: ['merlin','percival'], evil: ['morgana','assassin'] },
+  7:  { good: ['merlin','percival'], evil: ['morgana','assassin','oberon'] },
+  8:  { good: ['merlin','percival'], evil: ['morgana','assassin','minion'] },
+  9:  { good: ['merlin','percival'], evil: ['morgana','assassin','mordred'] },
+  10: { good: ['merlin','percival'], evil: ['morgana','assassin','mordred','oberon'] },
+  11: { good: ['merlin','percival'], evil: ['morgana','mordred','oberon','lancelotBlue','lancelotRed'] },
+  12: { good: ['merlin','percival'], evil: ['morgana','assassin','mordred','oberon','lancelotBlue','lancelotRed'] }
+};
+
+const SPEECH_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒', '150秒', '180秒'];
+const ROUND_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒'];
+const VOTE_OPTIONS = ['不限', '15秒', '30秒', '45秒', '60秒'];
+
+const TEAM_SIZES = {
+  5: [2,3,2,3,3], 6: [2,3,4,3,4], 7: [2,3,3,4,4],
+  8: [3,4,4,5,5], 9: [3,4,4,5,5], 10: [3,4,4,5,5],
+  11: [3,4,5,6,6], 12: [3,4,5,6,6]
+};
+
+function buildDefaultRule() {
+  return {
+    evilKnowsEachOther: true, lancelotsKnowEachOther: true, lancelotSwapRound: 2,
+    ladyOfTheLake: false, ladyOfTheLakeRound: 2, maxFailedNominations: 3,
+    oberonMustFailMission: false, redLancelotMustFailMission: false,
+    voteVisibility: 'public', missionFailDetail: 'count'
+  };
+}
+
 Page({
   data: {
     roomId: '',
@@ -18,7 +58,53 @@ Page({
     startHint: '',
     seatsFull: false,
     infoCollapsed: false,
-    spectatorMax: 0
+    spectatorMax: 0,
+
+    showConfig: false,
+    logicalPage: 0,
+    visiblePages: [0, 1, 5],
+    goodCount: 2,
+    evilCount: 2,
+    teamSizes: [3,4,4,5,5],
+
+    selectedRoles: {
+      merlin: true, percival: true, lancelotBlue: false,
+      morgana: true, assassin: true, mordred: false,
+      minion: false, oberon: false, lancelotRed: false
+    },
+    loyalCount: 0,
+    roleWarning: '',
+
+    rules: buildDefaultRule(),
+    ladyOfTheLake: false,
+    ladyOfTheLakeRound: 2,
+
+    merlinCanSee: { assassin: true, morgana: true, minion: true, oberon: true, lancelotRed: true, lancelotBlue: false },
+    merlinCanIdentify: { lancelotRed: false, lancelotBlue: false },
+
+    speechTimeoutIndex: 0,
+    roundTimeoutIndex: 0,
+    voteTimeoutIndex: 0,
+
+    speechOptions: SPEECH_OPTIONS,
+    roundOptions: ROUND_OPTIONS,
+    voteOptions: VOTE_OPTIONS,
+
+    roomName: '',
+    roomDescription: 'Welcome Join the Conference!',
+    tags: [],
+
+    pageCount: 3,
+    swiperPage: 0,
+
+    allowSpectator: true,
+    maxSpectators: 0,
+
+    goodRoleNames: '',
+    evilRoleNames: '',
+    summarySpeech: '',
+    summarySpec: '',
+    summaryLady: ''
   },
 
   onLoad(options) {
@@ -292,13 +378,359 @@ Page({
     });
   },
 
-  // ─── Modify config placeholder ───
+  // ─── Info Card ───
 
   toggleInfoCard() {
     this.setData({ infoCollapsed: !this.data.infoCollapsed });
   },
 
+  // ─────────── Config Modal ───────────
+
+  openConfig() {
+    const room = this.data.roomInfo;
+    if (!room || !room.roomConfig) return;
+    const rc = room.roomConfig;
+
+    const roles = rc.roles || { good: [], evil: [] };
+    const goodLen = (roles.good || []).length;
+    const evilLen = (roles.evil || []).length;
+    const n = goodLen + evilLen;
+
+    const selected = {};
+    GOOD_ROLES.forEach(r => { selected[r] = (roles.good || []).includes(r); });
+    EVIL_ROLES.forEach(r => { selected[r] = (roles.evil || []).includes(r); });
+
+    this.setData({ selectedRoles: selected });
+    this.setData({ playerCount: n || 5 });
+    if (rc.rules) this.setData({ rules: { ...this.data.rules, ...rc.rules } });
+    if (rc.spectator) {
+      this.setData({
+        allowSpectator: rc.spectator.allow !== false,
+        maxSpectators: rc.spectator.max || 0
+      });
+    }
+    if (rc.meta) {
+      this.setData({
+        roomName: rc.meta.roomName || '',
+        roomDescription: rc.meta.roomDescription || ''
+      });
+    }
+    if (rc.limits) {
+      const l = rc.limits;
+      if (l.speechTimeout !== undefined) {
+        const idx = SPEECH_OPTIONS.indexOf(l.speechTimeout === null ? '不限' : l.speechTimeout + '秒');
+        if (idx >= 0) this.setData({ speechTimeoutIndex: idx });
+      }
+      if (l.roundTimeout !== undefined) {
+        const idx = ROUND_OPTIONS.indexOf(l.roundTimeout === null ? '不限' : l.roundTimeout + '秒');
+        if (idx >= 0) this.setData({ roundTimeoutIndex: idx });
+      }
+      if (l.voteTimeout !== undefined) {
+        const idx = VOTE_OPTIONS.indexOf(l.voteTimeout === null ? '不限' : l.voteTimeout + '秒');
+        if (idx >= 0) this.setData({ voteTimeoutIndex: idx });
+      }
+    }
+
+    this.applyDefaultConfig(n);
+    this.computeAll();
+    this.setData({ showConfig: true });
+  },
+
+  closeConfig() {
+    this.setData({ showConfig: false });
+  },
+
   modifyConfig() {
-    wx.showToast({ title: '功能开发中', icon: 'none' });
+    this.openConfig();
+  },
+
+  saveConfig() {
+    const config = this.getRoomConfig();
+    api.updateRoomConfig(this.data.roomId, config).catch(() => {});
+  },
+
+  // ─────────── Page 1: Player Count + Roles ───────────
+
+  onPlayerCountChange(e) {
+    const n = parseInt(e.currentTarget.dataset.count);
+    this.setData({ playerCount: n });
+    this.applyDefaultConfig(n);
+    this.computeAll();
+    this.saveConfig();
+  },
+
+  applyDefaultConfig(n) {
+    const def = DEFAULT_CONFIGS[n] || DEFAULT_CONFIGS[5];
+    const selected = {};
+    GOOD_ROLES.forEach(r => { selected[r] = false; });
+    EVIL_ROLES.forEach(r => { selected[r] = false; });
+    def.good.forEach(r => { if (r !== 'loyal') selected[r] = true; });
+    def.evil.forEach(r => { selected[r] = true; });
+
+    const canSee = { assassin: true, morgana: true, minion: true, oberon: true, lancelotRed: true, lancelotBlue: false };
+    const rules = buildDefaultRule();
+    const hasLancelot = selected.lancelotBlue || selected.lancelotRed;
+    rules.redLancelotMustFailMission = hasLancelot;
+    rules.oberonMustFailMission = !hasLancelot;
+
+    this.setData({
+      selectedRoles: selected,
+      rules: rules,
+      ladyOfTheLake: n >= 10,
+      ladyOfTheLakeRound: n >= 10 ? 2 : 2,
+      merlinCanSee: { ...canSee },
+      merlinCanIdentify: {
+        lancelotRed: selected.lancelotRed || false,
+        lancelotBlue: selected.lancelotBlue || false
+      },
+      speechTimeoutIndex: 0,
+      roundTimeoutIndex: 0,
+      voteTimeoutIndex: 0,
+      goodCount: def.good.filter(r => r !== 'loyal').length + (def.good.includes('loyal') ? 0 : 0),
+      evilCount: def.evil.length,
+    });
+  },
+
+  onRoleToggle(e) {
+    const role = e.currentTarget.dataset.role;
+    const current = this.data.selectedRoles;
+    current[role] = !current[role];
+    this.setData({ selectedRoles: current });
+    this.computeAll();
+    this.saveConfig();
+  },
+
+  // ─────────── Page 2: Must-Set Rules ───────────
+
+  onRuleToggle(e) {
+    const { field } = e.currentTarget.dataset;
+    const rules = this.data.rules;
+    rules[field] = !rules[field];
+    this.setData({ rules });
+    this.saveConfig();
+  },
+
+  onRulePicker(e) {
+    const { field } = e.currentTarget.dataset;
+    const rules = this.data.rules;
+    rules[field] = e.detail.value;
+    this.setData({ rules });
+    this.saveConfig();
+  },
+
+  onRuleSegment(e) {
+    const { field, val } = e.currentTarget.dataset;
+    const rules = this.data.rules;
+    rules[field] = val;
+    this.setData({ rules });
+    this.saveConfig();
+  },
+
+  onLadyToggle() {
+    this.setData({ ladyOfTheLake: !this.data.ladyOfTheLake });
+    this.saveConfig();
+  },
+
+  onLadyRoundChange(e) {
+    this.setData({ ladyOfTheLakeRound: e.detail.value });
+    this.saveConfig();
+  },
+
+  onSpectatorToggle() {
+    this.setData({ allowSpectator: !this.data.allowSpectator });
+    this.saveConfig();
+  },
+
+  onSpectatorLimitInput(e) {
+    let val = parseInt(e.detail.value) || 0;
+    if (val < 0) val = 0;
+    if (val > 100) val = 100;
+    this.setData({ maxSpectators: val });
+    this.saveConfig();
+  },
+
+  // ─────────── Page 5: Merlin Vision ───────────
+
+  onCanSeeToggle(e) {
+    const role = e.currentTarget.dataset.role;
+    const canSee = this.data.merlinCanSee;
+    canSee[role] = !canSee[role];
+    if (!canSee[role]) {
+      const canIdentify = this.data.merlinCanIdentify;
+      delete canIdentify[role];
+      this.setData({ merlinCanIdentify: canIdentify });
+    }
+    this.setData({ merlinCanSee: canSee });
+    this.saveConfig();
+  },
+
+  onCanIdentifyToggle(e) {
+    const role = e.currentTarget.dataset.role;
+    const canIdentify = this.data.merlinCanIdentify;
+    canIdentify[role] = !canIdentify[role];
+    this.setData({ merlinCanIdentify: canIdentify });
+    this.saveConfig();
+  },
+
+  // ─────────── Page 6: Limits + Meta ───────────
+
+  onLimitChange(e) {
+    const { field } = e.currentTarget.dataset;
+    const data = {};
+    data[field] = e.detail.value;
+    this.setData(data);
+    this.saveConfig();
+  },
+
+  onMetaInput(e) {
+    const { field } = e.currentTarget.dataset;
+    const data = {};
+    data[field] = e.detail.value;
+    this.setData(data);
+    this.saveConfig();
+  },
+
+  // ─────────── Navigation ───────────
+
+  prevPage() {
+    const { logicalPage, visiblePages } = this.data;
+    if (logicalPage > 0) {
+      const newPage = logicalPage - 1;
+      this.setData({ logicalPage: newPage, swiperPage: visiblePages[newPage] });
+    }
+  },
+
+  nextPage() {
+    const { logicalPage, visiblePages } = this.data;
+    if (logicalPage < visiblePages.length - 1) {
+      const newPage = logicalPage + 1;
+      this.setData({ logicalPage: newPage, swiperPage: visiblePages[newPage] });
+    }
+  },
+
+  onSwiperChange(e) {
+    const swiperIdx = e.detail.current;
+    const logicalIdx = this.data.visiblePages.indexOf(swiperIdx);
+    if (logicalIdx >= 0) {
+      this.setData({ logicalPage: logicalIdx });
+    }
+  },
+
+  // ─────────── Computations ───────────
+
+  computeLoyalCount() {
+    const sel = this.data.selectedRoles;
+    let goodCount = 0, evilCount = 0;
+    GOOD_ROLES.forEach(r => { if (sel[r]) goodCount++; });
+    EVIL_ROLES.forEach(r => { if (sel[r]) evilCount++; });
+    const loyal = this.data.playerCount - goodCount - evilCount;
+    let warning = '';
+    if (loyal < 0) {
+      warning = `好人+坏人超出总人数 ${Math.abs(loyal)} 位，请减少选择`;
+    }
+    this.setData({ loyalCount: Math.max(loyal, 0), roleWarning: warning, goodCount, evilCount });
+  },
+
+  computeTeamSizes() {
+    this.setData({ teamSizes: TEAM_SIZES[this.data.playerCount] || TEAM_SIZES[5] });
+  },
+
+  computeVisiblePages() {
+    const sel = this.data.selectedRoles;
+    const hasLancelot = sel.lancelotBlue || sel.lancelotRed;
+    const hasMerlin = sel.merlin;
+
+    const pages = [0, 1];
+    if (hasLancelot) pages.push(2);
+    if (hasMerlin) pages.push(4);
+    pages.push(5);
+    pages.push(6);
+
+    this.setData({
+      visiblePages: pages,
+      pageCount: pages.length,
+      logicalPage: Math.min(this.data.logicalPage, pages.length - 1),
+      swiperPage: pages[Math.min(this.data.logicalPage, pages.length - 1)]
+    });
+  },
+
+  computeAll() {
+    this.computeLoyalCount();
+    this.computeTeamSizes();
+    this.computeVisiblePages();
+
+    const sel = this.data.selectedRoles;
+    const good = [];
+    if (sel.merlin) good.push('梅林');
+    if (sel.percival) good.push('派西');
+    if (sel.lancelotBlue) good.push('蓝兰');
+    if (this.data.loyalCount > 0) good.push('忠臣×' + this.data.loyalCount);
+    const evil = [];
+    if (sel.morgana) evil.push('莫甘娜');
+    if (sel.assassin) evil.push('刺客');
+    if (sel.mordred) evil.push('莫德雷德');
+    if (sel.oberon) evil.push('奥伯伦');
+    if (sel.minion) evil.push('爪牙');
+    if (sel.lancelotRed) evil.push('红兰');
+
+    const speech = this.data.speechTimeoutIndex > 0 ? SPEECH_OPTIONS[this.data.speechTimeoutIndex] : '不限';
+    const spec = this.data.allowSpectator ? (this.data.maxSpectators > 0 ? '允许（上限' + this.data.maxSpectators + '人）' : '允许') : '不允许';
+    const lady = this.data.ladyOfTheLake ? '启用（第' + this.data.ladyOfTheLakeRound + '轮）' : '未启用';
+
+    this.setData({
+      goodRoleNames: good.join('、'),
+      evilRoleNames: evil.join('、'),
+      summarySpeech: speech,
+      summarySpec: spec,
+      summaryLady: lady
+    });
+  },
+
+  getMerlinVision() {
+    const canSee = [];
+    const canIdentify = [];
+    Object.keys(this.data.merlinCanSee).forEach(role => {
+      if (this.data.merlinCanSee[role]) canSee.push(role);
+    });
+    Object.keys(this.data.merlinCanIdentify).forEach(role => {
+      if (this.data.merlinCanIdentify[role]) canIdentify.push(role);
+    });
+    return { canSee, canIdentify };
+  },
+
+  getRoomConfig() {
+    const good = [];
+    const evil = [];
+    GOOD_ROLES.forEach(r => { if (this.data.selectedRoles[r]) good.push(r); });
+    EVIL_ROLES.forEach(r => { if (this.data.selectedRoles[r]) evil.push(r); });
+    for (let i = 0; i < this.data.loyalCount; i++) { good.push('loyal'); }
+
+    const limits = {
+      speechTimeout: this.data.speechTimeoutIndex > 0 ? SPEECH_OPTIONS[this.data.speechTimeoutIndex] === '不限' ? null : parseInt(SPEECH_OPTIONS[this.data.speechTimeoutIndex]) : null,
+      roundTimeout: this.data.roundTimeoutIndex > 0 ? ROUND_OPTIONS[this.data.roundTimeoutIndex] === '不限' ? null : parseInt(ROUND_OPTIONS[this.data.roundTimeoutIndex]) : null,
+      voteTimeout: this.data.voteTimeoutIndex > 0 ? VOTE_OPTIONS[this.data.voteTimeoutIndex] === '不限' ? null : parseInt(VOTE_OPTIONS[this.data.voteTimeoutIndex]) : null
+    };
+
+    const meta = {
+      roomName: this.data.roomName || '',
+      roomDescription: this.data.roomDescription || '',
+      tags: this.data.tags || []
+    };
+
+    return {
+      roles: { good, evil },
+      rules: {
+        ...this.data.rules,
+        ladyOfTheLake: this.data.ladyOfTheLake,
+        ladyOfTheLakeRound: this.data.ladyOfTheLakeRound
+      },
+      limits,
+      meta,
+      merlinVision: this.getMerlinVision(),
+      spectator: {
+        allow: this.data.allowSpectator,
+        max: this.data.maxSpectators
+      }
+    };
   }
 });

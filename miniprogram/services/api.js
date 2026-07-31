@@ -149,6 +149,13 @@ class ApiService {
     return this.request(`/players/${openId}/currentRoom`);
   }
 
+  async updateRoomConfig(roomId, roomConfig) {
+    return this.request(`/rooms/${roomId}/config`, {
+      method: 'PUT',
+      data: { roomConfig }
+    });
+  }
+
   async startGame(roomId) {
     return this.request('/games/start', {
       method: 'POST',

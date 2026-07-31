@@ -86,7 +86,7 @@ page { background: #F3F4F6; }
 
 .seats-section { display: flex; flex-direction: column; gap: 10rpx; }
 .seat-row {
-  display: flex; align-items: center; padding: 16rpx 12rpx;
+  display: flex; align-items: center; padding: 24rpx 16rpx;
   border-radius: 12rpx; gap: 12rpx;
 }
 .seat-filled { background: #F9FAFB; }
@@ -137,3 +137,150 @@ page { background: #F3F4F6; }
 .spectator-name { font-size: 22rpx; color: #6B7280; max-width: 100rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .empty-hint { text-align: center; font-size: 24rpx; color: #D1D5DB; padding: 30rpx 0; }
+
+/* ═══════ Config Modal CSS (from index.wxss) ═══════ */
+
+/* ─────── Config Modal ─────── */
+.config-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: #F5F3FF; z-index: 1000;
+}
+.config-panel { display: flex; flex-direction: column; height: 100%; }
+/* ─────── Top bar ─────── */
+.config-top-bar {
+  height: 100rpx; background: #FFFFFF;
+  display: flex; align-items: center; padding: 0 24rpx;
+  flex-shrink: 0; border-bottom: 1rpx solid #F3F4F6;
+}
+.config-close {
+  width: 56rpx; height: 56rpx; border-radius: 12rpx;
+  background: #7C3AED; display: flex; align-items: center; justify-content: center;
+}
+.close-text { color: white; font-size: 32rpx; font-weight: 700; }
+.config-swiper { flex: 1; overflow: hidden; }
+.config-scroll { height: 100%; padding: 24rpx 32rpx 0; box-sizing: border-box; overflow-x: hidden; }
+.config-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.config-section { background: #FFFFFF; border-radius: 24rpx; padding: 28rpx; margin-bottom: 20rpx; box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.04); }
+.section-title { font-size: 30rpx; font-weight: 700; color: #111827; margin-bottom: 20rpx; display: flex; align-items: center; }
+.section-title::before { content: ''; width: 6rpx; height: 24rpx; background: linear-gradient(180deg, #8B5CF6, #6D28D9); border-radius: 3rpx; margin-right: 12rpx; }
+
+/* ─────── Count selector ─────── */
+.count-row { white-space: nowrap; padding: 8rpx 0; }
+.count-item {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 72rpx; height: 72rpx; border-radius: 20rpx;
+  background: #F3F4F6; margin-right: 12rpx;
+  font-size: 32rpx; font-weight: 700; color: #6B7280;
+  transition: all 0.2s;
+}
+.count-active { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white; transform: scale(1.1); box-shadow: 0 6rpx 16rpx rgba(124,58,237,0.3); }
+
+/* ─────── Team sizes badge ─────── */
+.team-sizes { padding: 12rpx 0 0; }
+.team-sizes-label { font-size: 24rpx; color: #9CA3AF; display: block; margin-bottom: 12rpx; }
+.team-sizes-row { display: flex; gap: 12rpx; }
+.team-badge {
+  flex: 1; text-align: center; padding: 12rpx 4rpx;
+  background: #F9FAFB; border-radius: 12rpx; border: 1rpx solid #E5E7EB;
+}
+.team-badge-count { font-size: 28rpx; font-weight: 700; color: #374151; display: block; }
+.team-badge-note { font-size: 18rpx; color: #8B5CF6; display: block; line-height: 1.4; min-height: 30rpx; }
+
+/* ─────── Role scroll ─────── */
+.role-scroll { width: 100%; white-space: nowrap; }
+.role-scroll-row { display: inline-flex; gap: 16rpx; padding: 4rpx 0; }
+.role-card {
+  flex-shrink: 0; box-sizing: border-box;
+  width: 168rpx; margin: 0; padding: 16rpx 10rpx 14rpx; border-radius: 20rpx;
+  background: #F9FAFB; border: 2rpx solid #E5E7EB;
+  display: flex; flex-direction: column; align-items: center;
+  transition: all 0.2s;
+}
+.role-selected { background: #F3E8FF; border-color: #A78BFA; }
+.role-loyal { background: #ECFDF5; border-color: #6EE7B7; }
+.role-img-placeholder {
+  width: 80rpx; height: 80rpx; border-radius: 16rpx;
+  background: linear-gradient(135deg, #EDE9FE, #DDD6FE);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10rpx;
+}
+.role-loyal .role-img-placeholder { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); }
+.role-img-text { font-size: 36rpx; }
+.role-name { font-size: 24rpx; font-weight: 600; color: #374151; margin-bottom: 4rpx; }
+.role-check {
+  width: 32rpx; height: 32rpx; border-radius: 50%;
+  border: 2rpx solid #D1D5DB; display: flex; align-items: center; justify-content: center;
+  font-size: 20rpx; color: transparent; margin-top: 4rpx;
+}
+.check-on { background: #8B5CF6; border-color: #8B5CF6; color: white; }
+.loyal-count { font-size: 28rpx; font-weight: 800; color: #059669; margin-top: 2rpx; }
+
+/* ─────── Role summary ─────── */
+.role-summary { padding: 12rpx 28rpx; text-align: center; }
+.role-summary-text { font-size: 26rpx; color: #6B7280; }
+.role-warning { font-size: 26rpx; color: #EF4444; font-weight: 600; }
+
+/* ─────── Rules ─────── */
+.rule-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20rpx 0; border-bottom: 1rpx solid #F3F4F6;
+}
+.rule-row:last-child { border-bottom: none; }
+.rule-col { flex: 1; margin-right: 20rpx; }
+.rule-label { font-size: 28rpx; font-weight: 600; color: #1F2937; }
+.rule-desc { font-size: 22rpx; color: #9CA3AF; margin-top: 4rpx; display: block; }
+.rule-picker { font-size: 28rpx; color: #8B5CF6; font-weight: 600; }
+.rule-hint {
+  margin-top: 20rpx; padding: 20rpx; background: #FFFBEB; border-radius: 16rpx;
+  font-size: 24rpx; color: #92400E; line-height: 1.6;
+}
+
+/* ─────── Segment control ─────── */
+.segment { display: flex; background: #F3F4F6; border-radius: 12rpx; overflow: hidden; }
+.segment-item {
+  padding: 12rpx 28rpx; font-size: 26rpx; font-weight: 600; color: #6B7280;
+  transition: all 0.2s;
+}
+.segment-active { background: #8B5CF6; color: white; }
+
+/* ─────── Meta ─────── */
+.meta-row { display: flex; align-items: center; padding: 20rpx 0; border-bottom: 1rpx solid #F3F4F6; }
+.meta-row:last-child { border-bottom: none; }
+.meta-input { flex: 1; margin-left: 20rpx; font-size: 28rpx; color: #1F2937; }
+.spectator-input { width: 120rpx; margin-left: 20rpx; font-size: 28rpx; color: #1F2937; text-align: center; }
+.section-icon { width: 36rpx; height: 36rpx; margin-right: 10rpx; vertical-align: middle; }
+.role-img { width: 60rpx; height: 60rpx; }
+
+/* ─────── Config Summary ─────── */
+.summary-card {
+  background: #F9FAFB; border-radius: 16rpx; padding: 20rpx;
+}
+.summary-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14rpx 0; border-bottom: 1rpx solid #E5E7EB;
+}
+.summary-row:last-child { border-bottom: none; }
+.summary-label { font-size: 26rpx; color: #6B7280; flex-shrink: 0; }
+.summary-value { font-size: 26rpx; color: #111827; font-weight: 600; text-align: right; }
+
+/* ─────── Create button ─────── */
+.create-section { padding: 30rpx 0; }
+.create-btn {
+  width: 100%; padding: 28rpx; border-radius: 20rpx;
+  background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;
+  font-size: 34rpx; font-weight: 700; text-align: center;
+  box-shadow: 0 8rpx 24rpx rgba(124,58,237,0.35);
+}
+.create-btn::after { border: none; }
+.create-btn[disabled] { background: #D1D5DB; color: #9CA3AF; box-shadow: none; }
+
+/* ─────── Nav bar ─────── */
+.nav-bar {
+  height: 100rpx; background: #FFFFFF; border-top: 1rpx solid #F3F4F6;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32rpx; flex-shrink: 0;
+}
+.nav-disabled { background: #E5E7EB !important; color: #9CA3AF !important; }
+.nav-dots { display: flex; gap: 12rpx; }
+.nav-dot { width: 12rpx; height: 12rpx; border-radius: 50%; background: #E5E7EB; transition: all 0.2s; }
+.dot-active { background: #8B5CF6; width: 24rpx; border-radius: 6rpx; }
