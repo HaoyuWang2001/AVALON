@@ -5,7 +5,6 @@ const api = require('../../services/api.js');
 Page({
   data: {
     roomId: '',
-    isHost: false,
     playerCount: 0,
     players: [],
     seatedPlayers: [],
@@ -22,23 +21,22 @@ Page({
   },
 
   onLoad(options) {
-    const { roomId, isHost } = options;
+    const { roomId } = options;
     this.setData({
-      roomId: roomId || '',
-      isHost: isHost === 'true'
+      roomId: roomId || ''
     });
     this.initRoomPolling();
   },
 
   onUnload() {
     if (this.roomPolling) clearInterval(this.roomPolling);
-    this.leaveRoom();
+    if (!this.navigatingToGame && !this.leaving) this.leaveRoom();
   },
 
   onShareAppMessage() {
     return {
       title: '加入我的阿瓦隆房间',
-      path: `/pages/room/room?roomId=${this.data.roomId}&isHost=false`
+      path: `/pages/room/room?roomId=${this.data.roomId}`
     };
   },
 
@@ -95,6 +93,7 @@ Page({
           spectatorPlayers: spectatorPlayers,
           readyPlayers: readyPlayers,
           currentUser: currentUser,
+          isHost: room.ownerId === app.globalData.openId,
           gameStarted: room.gameStarted || false,
           seatedSeats: seats,
           spectatorMax: specMax
@@ -113,6 +112,7 @@ Page({
         this.setData({ canStartGame: canStart, startHint: hint });
 
         if (room.gameStarted && !this.data.gameStarted) {
+          this.navigatingToGame = true;
           wx.redirectTo({ url: `/pages/game/game?gameId=${room.activeGameId}&roomId=${this.data.roomId}` });
         }
       } else {
@@ -126,7 +126,6 @@ Page({
 
   takeSeat(e) {
     const seatNum = e.currentTarget.dataset.seat;
-    const userId = app.globalData.openId;
     api.updateSeatNumber(this.data.roomId, seatNum).catch(() => {});
   },
 
@@ -153,13 +152,12 @@ Page({
   // ─── Ready / Start / Disband ───
 
   toggleReady() {
-    const userId = app.globalData.openId;
-    const isReady = this.data.readyPlayers.includes(userId);
+    const isReady = this.data.readyPlayers.includes(app.globalData.openId);
     api.toggleReady(this.data.roomId, !isReady).catch(() => {});
   },
 
   startGame() {
-    const { roomId, seatedSeats, canStartGame } = this.data;
+    const { roomId, canStartGame } = this.data;
     if (!canStartGame) return;
     wx.showModal({
       title: '开始游戏',
@@ -170,8 +168,8 @@ Page({
           api.startGame(roomId).then(result => {
             wx.hideLoading();
             if (result.success) {
-              const gameId = result.gameId;
-              wx.redirectTo({ url: `/pages/game/game?gameId=${gameId}&roomId=${roomId}` });
+              this.navigatingToGame = true;
+              wx.redirectTo({ url: `/pages/game/game?gameId=${result.gameId}&roomId=${roomId}` });
             }
           }).catch(() => {
             wx.hideLoading(); wx.showToast({ title: '开始失败', icon: 'error' });
@@ -187,9 +185,10 @@ Page({
       content: '确定解散房间吗？所有玩家将被移出。',
       success: (res) => {
         if (res.confirm) {
+          this.leaving = true;
           api.disbandRoom(this.data.roomId).then(() => {
             wx.showToast({ title: '已解散', icon: 'success' });
-            wx.navigateBack();
+            wx.reLaunch({ url: '/pages/index/index' });
           }).catch(() => wx.showToast({ title: '解散失败', icon: 'error' }));
         }
       }
@@ -232,11 +231,9 @@ Page({
       content: '确定退出当前房间吗？',
       success: (res) => {
         if (res.confirm) {
-          api.leaveRoom(this.data.roomId).then(() => {
-            wx.reLaunch({ url: '/pages/index/index' });
-          }).catch(() => {
-            wx.reLaunch({ url: '/pages/index/index' });
-          });
+          this.leaving = true;
+          api.leaveRoom(this.data.roomId).catch(() => {});
+          wx.reLaunch({ url: '/pages/index/index' });
         }
       }
     });
