@@ -8,9 +8,9 @@
         <text class="room-id">{{roomId}}</text>
       </view>
       <view class="info-btns">
-        <button class="btn-round btn-copy" bindtap="copyRoomId">复制</button>
+        <view class="btn-round btn-copy" bindtap="copyRoomId">复制</view>
         <button class="btn-round btn-share" open-type="share">分享</button>
-        <button class="btn-round btn-exit" bindtap="exitRoom">退出</button>
+        <view class="btn-round btn-exit" bindtap="exitRoom">退出</view>
       </view>
     </view>
     <view class="info-row stats-row">
@@ -22,18 +22,18 @@
   <!-- Card 2: Control Area -->
   <view class="card control-card" wx:if="{{currentUser && currentUser.seatNumber >= 1}}">
     <view wx:if="{{isHost}}" class="host-controls">
-      <button class="btn-round btn-start-game {{canStartGame ? '' : 'disabled'}}" bindtap="startGame" disabled="{{!canStartGame}}">开始游戏</button>
+      <view class="btn-round btn-start-game {{canStartGame ? '' : 'disabled'}}" bindtap="startGame">开始游戏</view>
       <text wx:if="{{!canStartGame && startHint}}" class="start-hint">{{startHint}}</text>
       <view class="host-actions">
-        <button class="btn-round btn-disband" bindtap="disbandRoom">解散房间</button>
-        <button class="btn-round btn-purple" bindtap="modifyConfig">修改配置</button>
-        <button class="btn-round btn-purple" bindtap="randomShuffleSeats">随机位置</button>
+        <view class="btn-round btn-disband" bindtap="disbandRoom">解散房间</view>
+        <view class="btn-round btn-purple" bindtap="modifyConfig">修改配置</view>
+        <view class="btn-round btn-purple" bindtap="randomShuffleSeats">随机位置</view>
       </view>
     </view>
     <view wx:else class="player-controls">
-      <button class="btn-round {{readyPlayers.indexOf(currentUser.openId) > -1 ? 'btn-cancel' : 'btn-ready'}}" bindtap="toggleReady">
+      <view class="btn-round {{readyPlayers.indexOf(currentUser.openId) > -1 ? 'btn-cancel' : 'btn-ready'}}" bindtap="toggleReady">
         {{readyPlayers.indexOf(currentUser.openId) > -1 ? '取消准备' : '准备游戏'}}
-      </button>
+      </view>
     </view>
   </view>
 
@@ -41,7 +41,7 @@
   <view class="card seating-card">
     <view class="card-header">
       <text class="card-title">上座区</text>
-      <button class="btn-round btn-random-seat" bindtap="randomTakeSeat" disabled="{{!(currentUser && currentUser.seatNumber < 1)}}">随机入座</button>
+      <view class="btn-round btn-random-seat {{currentUser && currentUser.seatNumber < 1 ? '' : 'disabled'}}" bindtap="randomTakeSeat">随机入座</view>
     </view>
     <view class="seats-section" wx:if="{{seatedSeats && seatedSeats.length > 0}}">
       <view wx:for="{{seatedSeats}}" wx:key="number" class="seat-row {{item.occupied ? 'seat-filled' : 'seat-empty'}}">
@@ -56,7 +56,7 @@
         </view>
         <view wx:else class="seat-info">
           <text class="seat-name-empty">空位</text>
-          <button wx:if="{{currentUser && currentUser.seatNumber < 1}}" class="btn-take" bindtap="takeSeat" data-seat="{{item.number}}">入座</button>
+          <view wx:if="{{currentUser && currentUser.seatNumber < 1}}" class="btn-take" bindtap="takeSeat" data-seat="{{item.number}}">入座</view>
         </view>
         <view wx:if="{{item.occupied}}" class="seat-status {{item.isReady ? 'ready' : 'not-ready'}}">
           <view class="status-dot {{item.isReady ? 'dot-green' : 'dot-yellow'}}"></view>
@@ -87,7 +87,7 @@
   <view class="card spectator-card">
     <view class="card-header">
       <text class="card-title">观战区 ({{spectatorPlayers.length}})</text>
-      <button class="btn-round btn-spectate" bindtap="becomeSpectator" wx:if="{{currentUser && currentUser.seatNumber >= 0}}">观战</button>
+      <view class="btn-round btn-spectate" bindtap="becomeSpectator" wx:if="{{currentUser && currentUser.seatNumber >= 0}}">观战</view>
     </view>
     <view wx:if="{{spectatorPlayers.length > 0}}" class="spectator-list">
       <view wx:for="{{spectatorPlayers}}" wx:key="openId" class="spectator-item">

@@ -123,6 +123,7 @@ Page({
   },
 
   randomTakeSeat() {
+    if (!this.data.currentUser || this.data.currentUser.seatNumber >= 1) return;
     const occupiedSeats = new Set(this.data.seatedPlayers.map(p => p.seatNumber));
     const emptySeats = [];
     for (let i = 1; i <= this.data.playerCount; i++) {
@@ -150,7 +151,8 @@ Page({
   },
 
   startGame() {
-    const { roomId, seatedSeats, readyPlayers } = this.data;
+    const { roomId, seatedSeats, readyPlayers, playerCount } = this.data;
+    if (!this.data.canStartGame) return;
     const allSeated = seatedSeats.every(s => s.occupied);
     if (!allSeated) {
       wx.showToast({ title: '所有游戏座位需满员', icon: 'error' });

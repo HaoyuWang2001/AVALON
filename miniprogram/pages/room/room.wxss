@@ -1,5 +1,8 @@
 /* pages/room/room.wxss */
 
+button { margin: 0; padding: 0; width: auto; }
+button::after { border: none; }
+
 page { background: #F3F4F6; }
 
 .container { padding: 20rpx; }
