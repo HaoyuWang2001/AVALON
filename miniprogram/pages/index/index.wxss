@@ -177,6 +177,9 @@
 .meta-row { display: flex; align-items: center; padding: 20rpx 0; border-bottom: 1rpx solid #F3F4F6; }
 .meta-row:last-child { border-bottom: none; }
 .meta-input { flex: 1; margin-left: 20rpx; font-size: 28rpx; color: #1F2937; }
+.spectator-input { width: 120rpx; margin-left: 20rpx; font-size: 28rpx; color: #1F2937; text-align: center; }
+.section-icon { width: 36rpx; height: 36rpx; margin-right: 10rpx; vertical-align: middle; }
+.role-img { width: 60rpx; height: 60rpx; }
 
 /* ─────── Create button ─────── */
 .create-section { padding: 30rpx 0; }

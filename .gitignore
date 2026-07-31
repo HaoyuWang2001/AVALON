@@ -18,6 +18,7 @@ yarn-error.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+*:Zone.Identifier
 
 # Project specific
 .claude/
