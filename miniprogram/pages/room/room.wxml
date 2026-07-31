@@ -47,7 +47,7 @@
   <view class="card seating-card">
     <view class="card-header">
       <text class="card-title">上座区</text>
-      <text class="btn-round btn-random-seat {{currentUser && currentUser.seatNumber < 1 ? '' : 'disabled'}}" bindtap="randomTakeSeat">随机入座</text>
+      <text wx:if="{{currentUser && currentUser.seatNumber < 1}}" class="btn-round btn-purple btn-random-seat" bindtap="randomTakeSeat">随机入座</text>
     </view>
     <view class="seats-section" wx:if="{{seatedSeats && seatedSeats.length > 0}}">
       <view wx:for="{{seatedSeats}}" wx:key="number" class="seat-row {{item.occupied ? 'seat-filled' : 'seat-empty'}} {{item.isSelf ? 'seat-self' : ''}}">
@@ -65,7 +65,6 @@
         </view>
         <view wx:if="{{item.isSelf && item.occupied}}" class="seat-action">
           <text class="btn-seat-action {{item.isReady ? 'btn-cancel' : 'btn-ready'}}" bindtap="toggleReady">{{item.isReady ? '取消准备' : '准备游戏'}}</text>
-          <text class="btn-seat-action btn-leave" bindtap="leaveSeat">离开座位</text>
         </view>
         <view wx:elif="{{item.occupied}}" class="seat-status {{item.isReady ? 'ready' : 'not-ready'}}">
           <view class="status-dot {{item.isReady ? 'dot-green' : 'dot-yellow'}}"></view>
@@ -84,6 +83,7 @@
   <view class="card waiting-card" wx:if="{{unseatedPlayers.length > 0}}">
     <view class="card-header">
       <text class="card-title">等待区 ({{unseatedPlayers.length}})</text>
+      <text wx:if="{{currentUser && currentUser.seatNumber != 0}}" class="btn-round btn-purple btn-enter-waiting" bindtap="leaveSeat">进入等待区</text>
     </view>
     <view class="waiting-list">
       <view wx:for="{{unseatedPlayers}}" wx:key="openId" class="waiting-item" bindtap="onWaitingPlayerTap" data-id="{{item.openId}}">
@@ -97,7 +97,7 @@
   <view class="card spectator-card">
     <view class="card-header">
       <text class="card-title">观战区 ({{spectatorPlayers.length}})</text>
-      <text class="btn-round btn-spectate" bindtap="becomeSpectator" wx:if="{{currentUser && currentUser.seatNumber >= 0}}">观战</text>
+      <text wx:if="{{currentUser && currentUser.seatNumber >= 0}}" class="btn-round btn-purple btn-spectate" bindtap="becomeSpectator">进入观战区</text>
     </view>
     <view wx:if="{{spectatorPlayers.length > 0}}" class="spectator-list">
       <view wx:for="{{spectatorPlayers}}" wx:key="openId" class="spectator-item">
