@@ -14,7 +14,9 @@ Page({
     readyPlayers: [],
     roomInfo: null,
     currentUser: null,
-    gameStarted: false
+    gameStarted: false,
+    canStartGame: false,
+    startHint: ''
   },
 
   onLoad(options) {
@@ -89,6 +91,18 @@ Page({
           gameStarted: room.gameStarted || false,
           seatedSeats: seats
         });
+
+        let canStart = playerCount > 0;
+        let hint = '';
+        if (seats.some(s => !s.occupied)) {
+          canStart = false;
+          hint = '入座区未坐满';
+        } else if (seats.some(s => s.occupied && !s.isReady)) {
+          canStart = false;
+          const unready = seats.filter(s => s.occupied && !s.isReady).map(s => s.number + '号').join('、');
+          hint = unready + ' 未准备';
+        }
+        this.setData({ canStartGame: canStart, startHint: hint });
 
         if (room.gameStarted && !this.data.gameStarted) {
           wx.redirectTo({ url: `/pages/game/game?roomId=${this.data.roomId}` });
@@ -213,9 +227,9 @@ Page({
       success: (res) => {
         if (res.confirm) {
           api.leaveRoom(this.data.roomId).then(() => {
-            wx.navigateBack();
+            wx.reLaunch({ url: '/pages/index/index' });
           }).catch(() => {
-            wx.navigateBack();
+            wx.reLaunch({ url: '/pages/index/index' });
           });
         }
       }

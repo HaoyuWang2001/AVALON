@@ -538,13 +538,14 @@ Page({
         roomConfig: config
       }
     }).then(res => {
-      wx.hideLoading();
       if (res.success) {
         this.setData({ showConfig: false });
         const app = getApp();
         app.globalData.roomId = res.roomId;
-        wx.navigateTo({ url: `/pages/room/room?roomId=${res.roomId}&isHost=true` });
+        wx.hideLoading();
+        wx.redirectTo({ url: `/pages/room/room?roomId=${res.roomId}&isHost=true` });
       } else {
+        wx.hideLoading();
         wx.showToast({ title: res.message || '创建失败', icon: 'error' });
       }
     }).catch(err => {
@@ -575,8 +576,7 @@ Page({
       if (res.success) {
         const app = getApp();
         app.globalData.roomId = roomId;
-        app.globalData.seatNumber = seatNumber;
-        wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}&isHost=false&seatNumber=${seatNumber}` });
+        wx.redirectTo({ url: `/pages/room/room?roomId=${roomId}&isHost=false` });
       }
     });
   }
