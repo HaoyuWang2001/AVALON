@@ -3,6 +3,7 @@ page {
   --primary: #7C3AED;
   --primary-light: #A78BFA;
   --primary-dark: #5B21B6;
+  background-color: #F5F5F5;
   --gradient-start: #8B5CF6;
   --gradient-end: #6D28D9;
   --bg-page: #F9FAFB;
