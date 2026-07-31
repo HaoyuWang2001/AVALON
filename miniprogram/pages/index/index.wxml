@@ -14,11 +14,14 @@
           <button class="avatar-tap" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" binderror="onAvatarError"/>
         </view>
         <view class="user-details">
-          <input type="nickname" class="user-name-input" value="{{userInfo.nickName}}" placeholder="点击设置微信昵称" bindinput="onNickInput"/>
+          <view class="wx-nick-wrap">
+            <view class="user-name-text {{userInfo.nickName ? '' : 'name-placeholder'}}">{{userInfo.nickName || '点击改名'}}</view>
+            <input type="nickname" class="wx-nick-input-overlay" value="{{userInfo.nickName}}" bindinput="onWxNickInput" bindblur="onWxNickBlur"/>
+          </view>
           <view class="user-game-nick">游戏内昵称：{{customNickName || '未设置'}}</view>
           <view class="user-status">在线</view>
         </view>
-        <view class="edit-nick-btn btn-round" bindtap="showNickNameModal">更改昵称</view>
+        <view class="edit-nick-btn btn-round" bindtap="showNickNameModal">改名</view>
       </view>
     </view>
   </view>

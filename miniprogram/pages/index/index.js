@@ -111,6 +111,36 @@ Page({
     }
     this.applyDefaultConfig(this.data.playerCount);
     this.computeAll();
+
+    if (!app.globalData.profileLoaded) {
+      app.globalData.profileLoaded = true;
+      const openId = app.globalData.openId || wx.getStorageSync('openId');
+      if (openId) {
+        api.getUserProfile(openId).then(res => {
+          if (res && res.success && res.user) {
+            const u = res.user;
+            const updates = {};
+            if (u.wxNickName) {
+              updates['userInfo.nickName'] = u.wxNickName;
+              if (app.globalData.userInfo) {
+                app.globalData.userInfo.nickName = u.wxNickName;
+              }
+            }
+            if (u.customNickName) {
+              updates.customNickName = u.customNickName;
+              wx.setStorageSync('customNickName', u.customNickName);
+            }
+            if (u.avatarUrl) {
+              updates['userInfo.avatarUrl'] = u.avatarUrl;
+              wx.setStorageSync('avatarUrl', u.avatarUrl);
+            }
+            if (Object.keys(updates).length > 0) {
+              this.setData(updates);
+            }
+          }
+        }).catch(() => {});
+      }
+    }
   },
 
   onAvatarError() {},
@@ -128,6 +158,10 @@ Page({
         wx.setStorageSync('avatarUrl', savedPath);
         const app = getApp();
         app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: savedPath };
+        const openId = app.globalData.openId;
+        if (openId) {
+          api.updateUserProfile(openId, { avatarUrl: savedPath }).catch(() => {});
+        }
       },
       fail: () => {
         this.setData({ 'userInfo.avatarUrl': tempPath });
@@ -135,12 +169,19 @@ Page({
     });
   },
 
-  onNickInput(e) {
+  onWxNickInput(e) {
     const nickName = e.detail.value;
+    if (!nickName) return;
     this.setData({ 'userInfo.nickName': nickName });
     const app = getApp();
     app.globalData.userInfo = { ...app.globalData.userInfo, nickName };
+    const openId = app.globalData.openId;
+    if (openId) {
+      api.updateUserProfile(openId, { wxNickName: nickName }).catch(() => {});
+    }
   },
+
+  onWxNickBlur() {},
 
   showNickNameModal() {
     const savedNickName = wx.getStorageSync('customNickName') || '';
@@ -153,6 +194,10 @@ Page({
           if (nickName.length > 0 && nickName.length <= 10) {
             wx.setStorageSync('customNickName', nickName);
             this.setData({ customNickName: nickName });
+            const openId = getApp().globalData.openId;
+            if (openId) {
+              api.updateUserProfile(openId, { customNickName: nickName }).catch(() => {});
+            }
           }
         }
       }

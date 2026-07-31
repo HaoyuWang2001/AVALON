@@ -203,7 +203,7 @@ async function getStats() {
     };
 
     // 获取各表记录数
-    const tables = ['rooms', 'players', 'games', 'game_players', 'votes', 'mission_results', 'messages'];
+    const tables = ['users', 'rooms', 'players', 'games', 'game_players', 'votes', 'mission_results', 'messages'];
     for (const table of tables) {
       try {
         const result = await query(`SELECT COUNT(*) as count FROM ${table}`);

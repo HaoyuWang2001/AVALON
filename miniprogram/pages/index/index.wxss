@@ -23,7 +23,10 @@
 .avatar-tap { position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0; padding: 0; margin: 0; background: transparent; }
 .avatar-tap::after { border: none; display: none; }
 .user-details { margin-left: 24rpx; flex: 1; min-width: 0; }
-.user-name-input { font-size: 34rpx; font-weight: 700; color: #111827; height: 50rpx; line-height: 50rpx; padding: 0; background: transparent; }
+.wx-nick-wrap { position: relative; }
+.user-name-text { font-size: 34rpx; font-weight: 700; color: #111827; height: 50rpx; line-height: 50rpx; }
+.name-placeholder { color: #9CA3AF; font-weight: 400; }
+.wx-nick-input-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0; z-index: 1; }
 .user-game-nick { font-size: 34rpx; color: #8B5CF6; margin-top: 2rpx; font-weight: 600; }
 .user-status { font-size: 24rpx; color: #10B981; margin-top: 4rpx; display: flex; align-items: center; }
 .user-status::before { content: ''; width: 10rpx; height: 10rpx; background: #10B981; border-radius: 50%; margin-right: 8rpx; }

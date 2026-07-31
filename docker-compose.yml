@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mysql:
     image: mysql:8.0
-    container_name: mysql-avalon
+    container_name: avalon-mysql
     restart: always
     ports:
       - "3307:3306"
@@ -17,7 +17,7 @@ services:
       - --collation-server=utf8mb4_unicode_ci
       - --log-bin-trust-function-creators=1
     volumes:
-      - mysql_data:/var/lib/mysql
+      - ./data/mysql:/var/lib/mysql
       - ./mysql/DDL.sql:/docker-entrypoint-initdb.d/01-init.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "avalon_user", "-p${MYSQL_PASSWORD:-avalon_pass_2024}"]
@@ -47,15 +47,16 @@ services:
       DB_POOL_MAX: 10
       DB_POOL_MIN: 2
       NODE_ENV: production
+      HTTPS: "true"
+      SSL_CERT_PATH: /app/ssl/haoyu-wang141.top_nginx/haoyu-wang141.top_bundle.pem
+      SSL_KEY_PATH: /app/ssl/haoyu-wang141.top_nginx/haoyu-wang141.top.key
+    volumes:
+      - ./ssl:/app/ssl:ro
     depends_on:
       mysql:
         condition: service_healthy
     networks:
       - avalon-net
-
-volumes:
-  mysql_data:
-    driver: local
 
 networks:
   avalon-net:

@@ -29,6 +29,7 @@ App({
     openId: null,
     userInfo: null,
     roomId: null,
-    gameState: null
+    gameState: null,
+    profileLoaded: false
   }
 });

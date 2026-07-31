@@ -32,14 +32,40 @@ require('dotenv').config({ path: envFilePath });
 
 const express = require('express');
 const http = require('http');
+const https = require('https');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const fs = require('fs');
 
 // 数据库配置
 const db = require('./config/db');
 
 const app = express();
-const server = http.createServer(app);
+
+const useHttps = process.env.HTTPS === 'true';
+let server;
+
+if (useHttps) {
+  const certPath = process.env.SSL_CERT_PATH;
+  const keyPath = process.env.SSL_KEY_PATH;
+  if (!certPath || !keyPath) {
+    console.error('❌ HTTPS=true 但 SSL_CERT_PATH 或 SSL_KEY_PATH 未设置，回退到 HTTP');
+    server = http.createServer(app);
+  } else if (!fs.existsSync(certPath) || !fs.existsSync(keyPath)) {
+    console.error(`❌ SSL 证书文件不存在: ${certPath} 或 ${keyPath}，回退到 HTTP`);
+    server = http.createServer(app);
+  } else {
+    const sslOptions = {
+      cert: fs.readFileSync(certPath),
+      key: fs.readFileSync(keyPath)
+    };
+    server = https.createServer(sslOptions, app);
+    console.log('✅ HTTPS 模式已启用');
+  }
+} else {
+  server = http.createServer(app);
+}
+
 const io = new Server(server, {
   cors: {
     origin: '*',
@@ -85,33 +111,32 @@ const { modelManager } = require('./models');
 
 // 路由设置函数（在数据库初始化后调用）
 function setupRoutes(dbInitialized) {
-  let roomRoutes, gameRoutes, messageRoutes;
+  let roomRoutes, gameRoutes, messageRoutes, userRoutes;
   
   if (dbInitialized) {
     console.log('📊 使用数据库路由');
-    // 使用数据库路由
     roomRoutes = require('./routes/rooms-db')();
     gameRoutes = require('./routes/games-db')();
     messageRoutes = require('./routes/messages-db')();
+    userRoutes = require('./routes/users-db')();
     
-    // 更新模型管理器状态
     modelManager.setDbInitialized(true);
   } else {
     console.log('💾 使用内存路由');
-    // 使用内存路由
     roomRoutes = require('./routes/rooms')(rooms);
     gameRoutes = require('./routes/games')(rooms, games);
     messageRoutes = require('./routes/messages')(messages);
+    userRoutes = require('./routes/users')(new Map());
     
     modelManager.setDbInitialized(false);
   }
   
-  // 注册路由
   app.use('/api/rooms', roomRoutes);
   app.use('/api/games', gameRoutes);
   app.use('/api/messages', messageRoutes);
+  app.use('/api/users', userRoutes);
   
-  return { roomRoutes, gameRoutes, messageRoutes };
+  return { roomRoutes, gameRoutes, messageRoutes, userRoutes };
 }
 
 // 健康检查端点（包含数据库状态）

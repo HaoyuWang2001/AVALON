@@ -2,6 +2,7 @@
 const RoomModel = require('./RoomModel');
 const GameModel = require('./GameModel');
 const MessageModel = require('./MessageModel');
+const UserModel = require('./UserModel');
 
 // 数据库状态管理器
 class ModelManager {
@@ -10,7 +11,8 @@ class ModelManager {
     this.models = {
       room: RoomModel,
       game: GameModel,
-      message: MessageModel
+      message: MessageModel,
+      user: UserModel
     };
   }
   
@@ -48,16 +50,18 @@ class ModelManager {
    */
   async getAllStats() {
     try {
-      const [roomStats, gameStats, messageStats] = await Promise.all([
+      const [roomStats, gameStats, messageStats, userStats] = await Promise.all([
         RoomModel.getStats(),
         GameModel.getStats(),
-        MessageModel.getGlobalStats()
+        MessageModel.getGlobalStats(),
+        UserModel.getStats()
       ]);
       
       return {
         rooms: roomStats,
         games: gameStats,
         messages: messageStats,
+        users: userStats,
         timestamp: new Date().toISOString()
       };
     } catch (error) {
@@ -119,7 +123,8 @@ class ModelManager {
         models: {
           room: 'ready',
           game: 'ready',
-          message: 'ready'
+          message: 'ready',
+          user: 'ready'
         },
         timestamp: new Date().toISOString(),
         status: isConnected ? 'healthy' : 'degraded'
@@ -134,7 +139,8 @@ class ModelManager {
         models: {
           room: 'error',
           game: 'error',
-          message: 'error'
+          message: 'error',
+          user: 'error'
         },
         timestamp: new Date().toISOString(),
         status: 'unhealthy'
@@ -150,6 +156,7 @@ module.exports = {
   RoomModel,
   GameModel,
   MessageModel,
+  UserModel,
   modelManager,
   ModelManager
 };

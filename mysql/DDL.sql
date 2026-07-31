@@ -164,7 +164,19 @@ CREATE TABLE IF NOT EXISTS messages (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天消息表';
 
 -- =============================================
--- 8. 游戏历史记录表（可选）
+-- 8. users表：存储用户资料
+-- =============================================
+CREATE TABLE IF NOT EXISTS users (
+    open_id VARCHAR(64) NOT NULL COMMENT '用户openId',
+    wx_nick_name VARCHAR(100) DEFAULT '' COMMENT '微信昵称',
+    custom_nick_name VARCHAR(50) DEFAULT '' COMMENT '游戏内昵称',
+    avatar_url TEXT COMMENT '头像路径',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (open_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户资料表';
+
+-- =============================================
+-- 9. 游戏历史记录表（可选）
 -- =============================================
 CREATE TABLE IF NOT EXISTS game_history (
     id INT AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
@@ -182,7 +194,7 @@ CREATE TABLE IF NOT EXISTS game_history (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='游戏历史记录表';
 
 -- =============================================
--- 9. 创建必要的视图
+-- 10. 创建必要的视图
 -- =============================================
 
 -- 房间详情视图
@@ -220,7 +232,7 @@ GROUP BY g.room_id, g.current_phase, g.current_round, g.team_leader_index,
          g.failed_nominations, g.created_at, g.updated_at;
 
 -- =============================================
--- 10. 创建存储过程（可选）
+-- 11. 创建存储过程（可选）
 -- =============================================
 
 -- 清理过期房间的存储过程（30天未更新）
@@ -241,7 +253,7 @@ END //
 DELIMITER ;
 
 -- =============================================
--- 11. 创建触发器
+-- 12. 创建触发器
 -- =============================================
 
 -- 当游戏结束时，自动记录到历史表
@@ -282,7 +294,7 @@ END //
 DELIMITER ;
 
 -- =============================================
--- 12. 插入初始数据（角色配置）
+-- 13. 插入初始数据（角色配置）
 -- =============================================
 
 -- 创建角色配置表（用于参考）

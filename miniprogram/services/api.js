@@ -26,6 +26,12 @@ class ApiService {
         },
         ...options
       });
+      if (!res || res.statusCode === 0 || !res.data) {
+        throw new Error((res && res.errMsg) ? res.errMsg : '请求失败：服务器无响应');
+      }
+      if (res.statusCode >= 400) {
+        throw new Error((res.data && res.data.message) || `请求失败: HTTP ${res.statusCode}`);
+      }
       return res.data;
     } catch (err) {
       console.error('API请求失败:', err);
@@ -162,6 +168,17 @@ class ApiService {
     return wx.connectSocket({
       url: socketUrl,
       method: 'GET'
+    });
+  }
+
+  async getUserProfile(openId) {
+    return this.request(`/users/${openId}`);
+  }
+
+  async updateUserProfile(openId, data) {
+    return this.request(`/users/${openId}/profile`, {
+      method: 'POST',
+      data
     });
   }
 }
