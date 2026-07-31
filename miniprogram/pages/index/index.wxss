@@ -20,7 +20,7 @@
 .user-left { display: flex; align-items: center; width: 100%; }
 .avatar-btn { padding: 0; margin: 0; width: 100rpx; height: 100rpx; min-width: 100rpx; max-width: 100rpx; border: 6rpx solid #C4B5FD; background: #F5F3FF; line-height: 1; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; overflow: hidden; box-sizing: border-box; }
 .avatar-btn::after { border: none; display: none; }
-.avatar-img { width: 100rpx; height: 100rpx; border-radius: 50%; }
+.avatar-img { width: 100rpx; height: 100rpx; border-radius: 50%; display: block; }
 .user-details { margin-left: 24rpx; flex: 1; min-width: 0; }
 .user-name-input { font-size: 34rpx; font-weight: 700; color: #111827; height: 50rpx; line-height: 50rpx; padding: 0; background: transparent; }
 .user-game-nick { font-size: 34rpx; color: #8B5CF6; margin-top: 2rpx; font-weight: 600; }
