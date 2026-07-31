@@ -10,8 +10,8 @@
     <view class="user-info-section">
       <view class="user-left">
         <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" size="mini">
-          <image wx:if="{{userInfo.avatarUrl}}" src="{{userInfo.avatarUrl}}" class="avatar avatar-lg"></image>
-          <view wx:else class="avatar-placeholder">👤</view>
+          <image src="{{userInfo.avatarUrl}}" class="avatar avatar-lg" hidden="{{!userInfo.avatarUrl}}"/>
+          <view class="avatar-placeholder" hidden="{{userInfo.avatarUrl}}">👤</view>
         </button>
         <view class="user-details">
           <input type="nickname" class="user-name-input" value="{{userInfo.nickName}}" placeholder="点击设置微信昵称" bindinput="onNickInput"/>
