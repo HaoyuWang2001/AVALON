@@ -172,7 +172,6 @@ class RoomModel {
           ...player,
           isHost: player.openId === room.ownerId,
           isReady: player.isReady === 1 || player.isReady === true
-          isReady: player.isReady === 1 || player.isReady === true
         }))
       };
     } catch (error) {
