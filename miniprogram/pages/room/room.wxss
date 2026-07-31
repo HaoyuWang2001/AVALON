@@ -11,7 +11,7 @@ page { background: #F3F4F6; }
 /* ─── Top Bar ─── */
 .top-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 24rpx 32rpx; background: #fff;
+  padding: 32rpx 32rpx; background: #fff;
   position: sticky; top: 0; z-index: 100;
   border-bottom: 1rpx solid #F3F4F6;
   margin: 0 -20rpx;
@@ -75,7 +75,7 @@ page { background: #F3F4F6; }
 /* ─── Card 2: Host Control ─── */
 .host-card { background: #fff; }
 .btn-host-start {
-  display: block; width: 100%; font-size: 32rpx; font-weight: 700; padding: 22rpx;
+  display: block; font-size: 32rpx; font-weight: 700; padding: 22rpx;
   border-radius: 40rpx; text-align: center; margin-bottom: 12rpx;
   background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff;
 }
