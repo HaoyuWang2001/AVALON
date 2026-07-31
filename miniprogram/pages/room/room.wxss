@@ -28,14 +28,25 @@ page { background: #F3F4F6; }
 }
 
 /* ─── Card 1: Room Info ─── */
+.room-info-card { background: linear-gradient(135deg, #FAF5FF, #F5F3FF); }
 .info-top-row { display: flex; align-items: center; justify-content: space-between; }
-.info-label { font-size: 28rpx; color: #111827; }
+.info-label { font-size: 26rpx; color: #9CA3AF; margin-left: 4rpx; }
 .info-btns { display: flex; gap: 12rpx; }
 .room-id-display {
   display: block; text-align: center; font-size: 56rpx; font-weight: 800;
-  color: #8B5CF6; letter-spacing: 8rpx; margin: 16rpx 0 20rpx;
+  color: #8B5CF6; letter-spacing: 8rpx; margin: 20rpx 0;
+  padding-bottom: 24rpx;
+  border-bottom: 1rpx dashed #E5E7EB;
 }
-.info-stat { display: block; font-size: 26rpx; color: #6B7280; margin-top: 8rpx; }
+.info-stats-row {
+  display: flex; align-items: center; justify-content: center; gap: 32rpx;
+}
+.info-stat-item {
+  display: flex; flex-direction: column; align-items: center; gap: 4rpx;
+}
+.stat-label { font-size: 24rpx; color: #9CA3AF; }
+.stat-value { font-size: 30rpx; color: #111827; font-weight: 700; }
+.stat-divider { width: 1rpx; height: 48rpx; background: #E5E7EB; }
 
 /* ─── Round Buttons ─── */
 .btn-round {

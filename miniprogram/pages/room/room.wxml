@@ -16,8 +16,17 @@
       </view>
     </view>
     <text class="room-id-display">{{roomId}}</text>
-    <text class="info-stat">入座：{{seatedPlayers.length}}/{{playerCount}}</text>
-    <text class="info-stat">观战：{{spectatorPlayers.length}}{{spectatorMax > 0 ? '/' + spectatorMax : ''}}</text>
+    <view class="info-stats-row">
+      <view class="info-stat-item">
+        <text class="stat-label">入座</text>
+        <text class="stat-value">{{seatedPlayers.length}}/{{playerCount}}</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="info-stat-item">
+        <text class="stat-label">观战</text>
+        <text class="stat-value">{{spectatorPlayers.length}}{{spectatorMax > 0 ? '/' + spectatorMax : ''}}</text>
+      </view>
+    </view>
   </view>
 
   <!-- Card 2: Control Area -->
