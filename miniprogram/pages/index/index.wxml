@@ -9,9 +9,11 @@
   <view class="card user-card">
     <view class="user-info-section">
       <view class="user-left">
-        <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" size="mini">
-          <image src="{{userInfo.avatarUrl}}" class="avatar avatar-lg" hidden="{{!userInfo.avatarUrl}}"/>
-          <view class="avatar-placeholder" hidden="{{userInfo.avatarUrl}}">👤</view>
+        <button wx:if="{{userInfo.avatarUrl}}" class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" size="mini">
+          <image src="{{userInfo.avatarUrl}}" class="avatar-img"/>
+        </button>
+        <button wx:else class="avatar-btn avatar-placeholder" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" size="mini">
+          <text class="placeholder-icon">👤</text>
         </button>
         <view class="user-details">
           <input type="nickname" class="user-name-input" value="{{userInfo.nickName}}" placeholder="点击设置微信昵称" bindinput="onNickInput"/>

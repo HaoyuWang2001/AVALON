@@ -102,7 +102,9 @@ Page({
     const savedAvatar = wx.getStorageSync('avatarUrl');
     if (savedAvatar) {
       this.setData({ 'userInfo.avatarUrl': savedAvatar });
-      app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: savedAvatar };
+    }
+    if (app.globalData.userInfo) {
+      app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: savedAvatar || '' };
     }
     this.applyDefaultConfig(this.data.playerCount);
     this.computeAll();
