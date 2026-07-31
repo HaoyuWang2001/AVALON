@@ -94,7 +94,7 @@ Page({
           wx.redirectTo({ url: `/pages/game/game?roomId=${this.data.roomId}` });
         }
       } else {
-        wx.showToast({ title: '房间已解散', icon: 'error' });
+        wx.showToast({ title: '会议已解散', icon: 'error' });
         setTimeout(() => { wx.navigateBack(); }, 1500);
       }
     }).catch(() => {});
@@ -204,6 +204,22 @@ Page({
 
   leaveRoom() {
     api.leaveRoom(this.data.roomId).catch(() => {});
+  },
+
+  exitRoom() {
+    wx.showModal({
+      title: '退出房间',
+      content: '确定退出当前房间吗？',
+      success: (res) => {
+        if (res.confirm) {
+          api.leaveRoom(this.data.roomId).then(() => {
+            wx.navigateBack();
+          }).catch(() => {
+            wx.navigateBack();
+          });
+        }
+      }
+    });
   },
 
   // ─── Modify config placeholder ───

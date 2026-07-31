@@ -128,6 +128,10 @@ class ApiService {
     });
   }
 
+  async getCurrentRoom(openId) {
+    return this.request(`/players/${openId}/currentRoom`);
+  }
+
   async startGame(roomId) {
     return this.request('/games/start', {
       method: 'POST',

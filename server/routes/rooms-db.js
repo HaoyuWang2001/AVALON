@@ -1,6 +1,7 @@
 // 房间管理API路由（数据库版本）
 const express = require('express');
 const { RoomModel } = require('../models');
+const db = require('../config/db');
 
 function createRouter() {
   const router = express.Router();
@@ -21,6 +22,17 @@ function createRouter() {
         return res.status(400).json({
           success: false,
           message: '缺少房间配置'
+        });
+      }
+
+      const [existing] = await db.query(
+        'SELECT room_id FROM players WHERE open_id = ? LIMIT 1',
+        [hostOpenId]
+      );
+      if (existing.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: '你已在其他房间中，请先退出'
         });
       }
       
@@ -85,7 +97,20 @@ function createRouter() {
           message: '缺少必要参数' 
         });
       }
-      
+
+      const openId = userInfo.openId;
+
+      const [existing] = await db.query(
+        'SELECT room_id FROM players WHERE open_id = ? LIMIT 1',
+        [openId]
+      );
+      if (existing.length > 0 && existing[0].room_id !== roomId) {
+        return res.status(400).json({
+          success: false,
+          message: '你已在其他房间中，请先退出'
+        });
+      }
+
       const seat = (seatNumber == null) ? 0 : seatNumber;
       
       const room = await RoomModel.join(

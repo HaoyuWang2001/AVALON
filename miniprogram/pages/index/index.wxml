@@ -26,12 +26,24 @@
     </view>
   </view>
 
+  <view class="card current-room-card" wx:if="{{currentRoom}}">
+    <view class="current-room-info">
+      <text class="current-room-label">您当前处于房间</text>
+      <text class="current-room-id">{{currentRoom.roomId}}</text>
+      <text wx:if="{{currentRoom.gameStarted}}" class="current-room-ingame">游戏中</text>
+    </view>
+    <view class="current-room-btns">
+      <button class="btn-small btn-primary" bindtap="backToRoom">回到房间</button>
+      <button class="btn-small btn-danger" bindtap="exitCurrentRoom">退出房间</button>
+    </view>
+  </view>
+
   <view class="card action-card">
     <view class="action-title">开始游戏</view>
-    <button class="action-btn action-btn-primary" bindtap="showConfig">
-      <text class="btn-icon">🎮</text>开始拉会
+    <button class="action-btn action-btn-primary" bindtap="showConfig" wx:if="{{!currentRoom}}">
+      <text class="btn-icon">🎮</text>召开会议
     </button>
-    <button class="action-btn action-btn-primary" bindtap="joinRoom">
+    <button class="action-btn action-btn-primary" bindtap="joinRoom" wx:if="{{!currentRoom}}">
       <text class="btn-icon">🚪</text>加入会议
     </button>
   </view>
@@ -375,6 +387,20 @@
           </view>
 
           <view class="config-section">
+            <view class="section-title">👁️ 观战设置</view>
+            <view class="rule-row">
+              <text class="rule-label">允许观战</text>
+              <switch checked="{{allowSpectator}}" bindchange="onSpectatorToggle" color="#8B5CF6"/>
+            </view>
+            <view class="rule-row" wx:if="{{allowSpectator}}">
+              <text class="rule-label">观战人数上限</text>
+              <picker class="rule-picker" mode="selector" range="{{[0,1,2,3,4,5,6,7,8,9,10]}}" value="{{maxSpectators}}" bindchange="onSpectatorLimitChange">
+                <text>{{maxSpectators === 0 ? '不限' : maxSpectators + '人'}}</text>
+              </picker>
+            </view>
+          </view>
+
+          <view class="config-section">
             <view class="section-title">📝 会议信息</view>
             <view class="meta-row">
               <text class="rule-label">会议名</text>
@@ -387,7 +413,7 @@
           </view>
 
           <view class="create-section">
-            <button class="create-btn" bindtap="createRoom" disabled="{{roleWarning !== ''}}">🎮 开始拉会</button>
+            <button class="create-btn" bindtap="createRoom" disabled="{{roleWarning !== ''}}">🎮 召开会议</button>
           </view>
           <view style="height:60rpx"></view>
         </scroll-view>

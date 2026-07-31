@@ -112,7 +112,7 @@ const { modelManager } = require('./models');
 
 // 路由设置函数（在数据库初始化后调用）
 function setupRoutes(dbInitialized) {
-  let roomRoutes, gameRoutes, messageRoutes, userRoutes, authRoutes;
+  let roomRoutes, gameRoutes, messageRoutes, userRoutes, authRoutes, playerRoutes;
   
   if (dbInitialized) {
     console.log('📊 使用数据库路由');
@@ -121,6 +121,7 @@ function setupRoutes(dbInitialized) {
     messageRoutes = require('./routes/messages-db')();
     userRoutes = require('./routes/users-db')();
     authRoutes = require('./routes/auth-db')();
+    playerRoutes = require('./routes/players-db')();
     
     modelManager.setDbInitialized(true);
   } else {
@@ -130,6 +131,7 @@ function setupRoutes(dbInitialized) {
     messageRoutes = require('./routes/messages')(messages);
     userRoutes = require('./routes/users')(users);
     authRoutes = require('./routes/auth')(users);
+    playerRoutes = require('./routes/players')(rooms);
     
     modelManager.setDbInitialized(false);
   }
@@ -139,8 +141,9 @@ function setupRoutes(dbInitialized) {
   app.use('/api/messages', messageRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/auth', authRoutes);
+  app.use('/api/players', playerRoutes);
   
-  return { roomRoutes, gameRoutes, messageRoutes, userRoutes, authRoutes };
+  return { roomRoutes, gameRoutes, messageRoutes, userRoutes, authRoutes, playerRoutes };
 }
 
 // 健康检查端点（包含数据库状态）

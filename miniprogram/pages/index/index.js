@@ -46,6 +46,7 @@ Page({
   data: {
     userInfo: { avatarUrl: '', nickName: '' },
     customNickName: '',
+    currentRoom: null,
 
     showConfig: false,
     playerCount: 5,
@@ -90,7 +91,10 @@ Page({
     tags: [],
 
     pageCount: 3,
-    swiperPage: 0
+    swiperPage: 0,
+
+    allowSpectator: true,
+    maxSpectators: 0
   },
 
   onLoad() {
@@ -117,8 +121,51 @@ Page({
     } else {
       app.openIdReadyCallback = () => {
         this.loadUserProfile();
+        this.checkCurrentRoom();
       };
     }
+
+    if (app.globalData.openId) {
+      this.checkCurrentRoom();
+    }
+  },
+
+  checkCurrentRoom() {
+    const openId = getApp().globalData.openId || wx.getStorageSync('openId');
+    if (!openId) return;
+    api.getCurrentRoom(openId).then(res => {
+      if (res && res.success && res.room) {
+        this.setData({ currentRoom: res.room });
+      }
+    }).catch(() => {});
+  },
+
+  backToRoom() {
+    const room = this.data.currentRoom;
+    if (!room) return;
+    if (room.gameStarted) {
+      wx.navigateTo({ url: `/pages/game/game?roomId=${room.roomId}` });
+    } else {
+      wx.navigateTo({ url: `/pages/room/room?roomId=${room.roomId}&isHost=false` });
+    }
+  },
+
+  exitCurrentRoom() {
+    const room = this.data.currentRoom;
+    if (!room) return;
+    wx.showModal({
+      title: '退出房间',
+      content: `确定退出房间 ${room.roomId} 吗？`,
+      success: (res) => {
+        if (res.confirm) {
+          api.leaveRoom(room.roomId).then(() => {
+            this.setData({ currentRoom: null });
+            getApp().globalData.roomId = null;
+            wx.showToast({ title: '已退出', icon: 'success' });
+          }).catch(() => {});
+        }
+      }
+    });
   },
 
   loadUserProfile() {
@@ -307,6 +354,14 @@ Page({
     this.setData({ ladyOfTheLakeRound: e.detail.value });
   },
 
+  onSpectatorToggle() {
+    this.setData({ allowSpectator: !this.data.allowSpectator });
+  },
+
+  onSpectatorLimitChange(e) {
+    this.setData({ maxSpectators: e.detail.value });
+  },
+
   // ─────────── Page 5: Merlin Vision ───────────
 
   onCanSeeToggle(e) {
@@ -455,13 +510,17 @@ Page({
       },
       limits,
       meta,
-      merlinVision: this.getMerlinVision()
+      merlinVision: this.getMerlinVision(),
+      spectator: {
+        allow: this.data.allowSpectator,
+        max: this.data.maxSpectators
+      }
     };
   },
 
   createRoom() {
     const config = this.getRoomConfig();
-    wx.showLoading({ title: '开始拉会中...' });
+    wx.showLoading({ title: '召开会议中...' });
     api.request('/rooms/create', {
       method: 'POST',
       data: {

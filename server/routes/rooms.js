@@ -24,6 +24,12 @@ router.post('/create', (req, res) => {
     return res.status(400).json({ success: false, message: '缺少规则配置' });
   }
 
+  for (const [rid, r] of rooms) {
+    if (r.players.some(p => p.openId === hostOpenId)) {
+      return res.status(400).json({ success: false, message: '你已在其他房间中，请先退出' });
+    }
+  }
+
   const roomId = generateRoomId();
   
   const room = {
@@ -77,7 +83,13 @@ router.post('/join', (req, res) => {
   if (room.gameStarted) {
     return res.status(400).json({ success: false, message: '游戏已开始' });
   }
-  
+
+  for (const [rid, r] of rooms) {
+    if (rid !== roomId && r.players.some(p => p.openId === openId)) {
+      return res.status(400).json({ success: false, message: '你已在其他房间中，请先退出' });
+    }
+  }
+
   if (seat >= 1) {
     const occupiedSeats = room.players.map(p => p.seatNumber);
     if (occupiedSeats.includes(seat)) {

@@ -10,6 +10,7 @@
       <view class="info-btns">
         <button class="btn-small btn-outline" bindtap="copyRoomId">复制</button>
         <button class="btn-small btn-primary" open-type="share">分享</button>
+        <button class="btn-small btn-danger" bindtap="exitRoom">退出房间</button>
       </view>
     </view>
     <view class="info-row stats-row">
