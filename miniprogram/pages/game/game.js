@@ -30,7 +30,6 @@ Page({
     });
 
     this.initGamePolling();
-    this.fetchGameState();
   },
 
   onUnload() {
@@ -42,7 +41,7 @@ Page({
   initGamePolling() {
     this.gamePolling = setInterval(() => {
       this.fetchGameState();
-    }, 2000);
+    }, 1000);
   },
 
   fetchGameState() {

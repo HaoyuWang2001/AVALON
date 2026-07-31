@@ -41,9 +41,15 @@ Page({
     };
   },
 
+  _guard() {
+    if (this._busy) return false;
+    this._busy = true;
+    setTimeout(() => { this._busy = false; }, 500);
+    return true;
+  },
+
   initRoomPolling() {
-    this.fetchRoomInfo();
-    this.roomPolling = setInterval(() => { this.fetchRoomInfo(); }, 2000);
+    this.roomPolling = setInterval(() => { this.fetchRoomInfo(); }, 1000);
   },
 
   fetchRoomInfo() {
@@ -127,11 +133,13 @@ Page({
   // ─── Seat actions ───
 
   takeSeat(e) {
+    if (!this._guard()) return;
     const seatNum = e.currentTarget.dataset.seat;
     api.updateSeatNumber(this.data.roomId, seatNum).catch(() => {});
   },
 
   randomTakeSeat() {
+    if (!this._guard()) return;
     if (!this.data.currentUser || this.data.currentUser.seatNumber >= 1) return;
     const occupiedSeats = new Set(this.data.seatedPlayers.map(p => p.seatNumber));
     const emptySeats = [];
@@ -144,21 +152,25 @@ Page({
   },
 
   leaveSeat() {
+    if (!this._guard()) return;
     api.updateSeatNumber(this.data.roomId, 0).catch(() => {});
   },
 
   becomeSpectator() {
+    if (!this._guard()) return;
     api.updateSeatNumber(this.data.roomId, -1).catch(() => {});
   },
 
   // ─── Ready / Start / Disband ───
 
   toggleReady() {
+    if (!this._guard()) return;
     const isReady = this.data.readyPlayers.includes(app.globalData.openId);
     api.toggleReady(this.data.roomId, !isReady).catch(() => {});
   },
 
   startGame() {
+    if (!this._guard()) return;
     const { roomId, canStartGame } = this.data;
     if (!canStartGame) return;
     wx.showModal({
@@ -182,6 +194,7 @@ Page({
   },
 
   disbandRoom() {
+    if (!this._guard()) return;
     wx.showModal({
       title: '解散房间',
       content: '确定解散房间吗？所有玩家将被移出。',
@@ -198,6 +211,7 @@ Page({
   },
 
   randomShuffleSeats() {
+    if (!this._guard()) return;
     if (!this.data.seatsFull) {
       wx.showToast({ title: '上座区未坐满', icon: 'none' });
       return;
@@ -264,6 +278,7 @@ Page({
   },
 
   exitRoom() {
+    if (!this._guard()) return;
     wx.showModal({
       title: '退出房间',
       content: '确定退出当前房间吗？',

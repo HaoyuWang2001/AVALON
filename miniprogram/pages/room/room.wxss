@@ -66,9 +66,6 @@ page { background: #F3F4F6; }
 .btn-disabled { background: #E5E7EB; color: #9CA3AF; }
 .btn-cancel { background: #E5E7EB; color: #6B7280; }
 .btn-ready { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
-.btn-random-seat { font-size: 22rpx; padding: 8rpx 20rpx; }
-.btn-spectate { font-size: 22rpx; padding: 8rpx 20rpx; }
-.btn-enter-waiting { font-size: 22rpx; padding: 8rpx 20rpx; }
 
 /* ─── Card 2: Host Control ─── */
 .host-card { background: #fff; }
