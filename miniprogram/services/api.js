@@ -8,6 +8,13 @@ class ApiService {
     this.nickName = '';
   }
 
+  login(code) {
+    return this.request('/auth/login', {
+      method: 'POST',
+      data: { code }
+    });
+  }
+
   setOpenId(openId) {
     this.openId = openId;
   }

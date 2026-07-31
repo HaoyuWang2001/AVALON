@@ -49,7 +49,7 @@
   },
   "compileType": "miniprogram",
   "libVersion": "2.19.4",
-  "appid": "wx92233eed902ef252",  // 需要替换为实际AppID
+  "appid": "wxb021f21838eb4ced",
   "projectname": "AVALON",
   "cloudfunctionRoot": "cloudfunctions/",
   "miniprogramRoot": "miniprogram",

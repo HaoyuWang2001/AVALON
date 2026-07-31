@@ -112,35 +112,44 @@ Page({
     this.applyDefaultConfig(this.data.playerCount);
     this.computeAll();
 
-    if (!app.globalData.profileLoaded) {
-      app.globalData.profileLoaded = true;
-      const openId = app.globalData.openId || wx.getStorageSync('openId');
-      if (openId) {
-        api.getUserProfile(openId).then(res => {
-          if (res && res.success && res.user) {
-            const u = res.user;
-            const updates = {};
-            if (u.wxNickName) {
-              updates['userInfo.nickName'] = u.wxNickName;
-              if (app.globalData.userInfo) {
-                app.globalData.userInfo.nickName = u.wxNickName;
-              }
-            }
-            if (u.customNickName) {
-              updates.customNickName = u.customNickName;
-              wx.setStorageSync('customNickName', u.customNickName);
-            }
-            if (u.avatarUrl) {
-              updates['userInfo.avatarUrl'] = u.avatarUrl;
-              wx.setStorageSync('avatarUrl', u.avatarUrl);
-            }
-            if (Object.keys(updates).length > 0) {
-              this.setData(updates);
-            }
-          }
-        }).catch(() => {});
-      }
+    if (app.globalData.openId) {
+      this.loadUserProfile();
+    } else {
+      app.openIdReadyCallback = () => {
+        this.loadUserProfile();
+      };
     }
+  },
+
+  loadUserProfile() {
+    const app = getApp();
+    if (app.globalData.profileLoaded) return;
+    app.globalData.profileLoaded = true;
+    const openId = app.globalData.openId;
+    if (!openId) return;
+    api.getUserProfile(openId).then(res => {
+      if (res && res.success && res.user) {
+        const u = res.user;
+        const updates = {};
+        if (u.wxNickName) {
+          updates['userInfo.nickName'] = u.wxNickName;
+          if (app.globalData.userInfo) {
+            app.globalData.userInfo.nickName = u.wxNickName;
+          }
+        }
+        if (u.customNickName) {
+          updates.customNickName = u.customNickName;
+          wx.setStorageSync('customNickName', u.customNickName);
+        }
+        if (u.avatarUrl) {
+          updates['userInfo.avatarUrl'] = u.avatarUrl;
+          wx.setStorageSync('avatarUrl', u.avatarUrl);
+        }
+        if (Object.keys(updates).length > 0) {
+          this.setData(updates);
+        }
+      }
+    }).catch(() => {});
   },
 
   onAvatarError() {},
