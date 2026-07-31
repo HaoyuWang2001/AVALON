@@ -429,12 +429,21 @@ class RoomModel {
 
     const shuffled = [...seated].sort(() => Math.random() - 0.5);
     const seatNumbers = seated.map(p => p.seatNumber).sort((a, b) => a - b);
-    for (let i = 0; i < shuffled.length; i++) {
-      await db.query(
-        'UPDATE room_players SET seat_number = ? WHERE room_id = ? AND open_id = ?',
-        [seatNumbers[i], roomId, shuffled[i].openId]
-      );
-    }
+
+    await db.transaction(async (connection) => {
+      for (const p of seated) {
+        await connection.execute(
+          'UPDATE room_players SET seat_number = 0 WHERE room_id = ? AND open_id = ?',
+          [roomId, p.openId]
+        );
+      }
+      for (let i = 0; i < shuffled.length; i++) {
+        await connection.execute(
+          'UPDATE room_players SET seat_number = ? WHERE room_id = ? AND open_id = ?',
+          [seatNumbers[i], roomId, shuffled[i].openId]
+        );
+      }
+    });
     await db.query('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
     return await this.getById(roomId);
   }
