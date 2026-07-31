@@ -1,4 +1,5 @@
 {
   "navigationBarTitleText": "AVALON",
+  "enablePullDownRefresh": true,
   "usingComponents": {}
 }

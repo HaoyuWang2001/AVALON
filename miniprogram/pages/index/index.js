@@ -142,6 +142,14 @@ Page({
     }
   },
 
+  onPullDownRefresh() {
+    this.checkCurrentRoom();
+    if (getApp().globalData.openId) {
+      this.loadUserProfile();
+    }
+    wx.stopPullDownRefresh();
+  },
+
   checkCurrentRoom() {
     const openId = getApp().globalData.openId || wx.getStorageSync('openId');
     if (!openId) return;
