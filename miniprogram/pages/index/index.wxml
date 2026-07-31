@@ -11,7 +11,7 @@
       <view class="user-left">
         <view class="avatar-wrap">
           <image src="{{userInfo.avatarUrl}}" class="avatar-img"/>
-          <button class="avatar-tap" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar"/>
+          <button class="avatar-tap" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" binderror="onAvatarError"/>
         </view>
         <view class="user-details">
           <input type="nickname" class="user-name-input" value="{{userInfo.nickName}}" placeholder="点击设置微信昵称" bindinput="onNickInput"/>

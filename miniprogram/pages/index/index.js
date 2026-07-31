@@ -113,13 +113,17 @@ Page({
     this.computeAll();
   },
 
+  onAvatarError() {},
+
   onChooseAvatar(e) {
     if (!e.detail || !e.detail.avatarUrl) return;
     const tempPath = e.detail.avatarUrl;
-    wx.saveFile({
+    const fs = wx.getFileSystemManager();
+    const savedPath = wx.env.USER_DATA_PATH + '/avatar_' + Date.now() + '.jpg';
+    fs.saveFile({
       tempFilePath: tempPath,
-      success: (res) => {
-        const savedPath = res.savedFilePath;
+      filePath: savedPath,
+      success: () => {
         this.setData({ 'userInfo.avatarUrl': savedPath });
         wx.setStorageSync('avatarUrl', savedPath);
         const app = getApp();
