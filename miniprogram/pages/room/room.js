@@ -16,7 +16,9 @@ Page({
     currentUser: null,
     gameStarted: false,
     canStartGame: false,
-    startHint: ''
+    startHint: '',
+    infoCollapsed: false,
+    spectatorMax: 0
   },
 
   onLoad(options) {
@@ -60,6 +62,11 @@ Page({
           playerCount = good.length + evil.length;
         }
 
+        let specMax = 0;
+        if (room.roomConfig && room.roomConfig.spectator) {
+          specMax = room.roomConfig.spectator.max || 0;
+        }
+
         const seatedPlayers = players.filter(p => p.seatNumber >= 1).sort((a, b) => a.seatNumber - b.seatNumber);
         const unseatedPlayers = players.filter(p => p.seatNumber === 0);
         const spectatorPlayers = players.filter(p => p.seatNumber === -1);
@@ -89,7 +96,8 @@ Page({
           readyPlayers: readyPlayers,
           currentUser: currentUser,
           gameStarted: room.gameStarted || false,
-          seatedSeats: seats
+          seatedSeats: seats,
+          spectatorMax: specMax
         });
 
         let canStart = playerCount > 0;
@@ -239,6 +247,10 @@ Page({
   },
 
   // ─── Modify config placeholder ───
+
+  toggleInfoCard() {
+    this.setData({ infoCollapsed: !this.data.infoCollapsed });
+  },
 
   modifyConfig() {
     wx.showToast({ title: '功能开发中', icon: 'none' });

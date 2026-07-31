@@ -5,8 +5,19 @@ button::after { border: none; }
 
 page { background: #F3F4F6; }
 
-.container { padding: 20rpx; }
+.container { padding: 20rpx; padding-top: 0; }
 
+/* ─── Top Bar ─── */
+.top-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16rpx 24rpx; background: #fff;
+  position: sticky; top: 0; z-index: 100;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+.btn-exit { background: #FEE2E2; color: #DC2626; }
+.btn-collapse { background: #F3F4F6; color: #6B7280; }
+
+/* ─── Card ─── */
 .card {
   background: #FFFFFF;
   border-radius: 20rpx;
@@ -16,13 +27,14 @@ page { background: #F3F4F6; }
 }
 
 /* ─── Card 1: Room Info ─── */
-.info-row { display: flex; align-items: center; justify-content: space-between; }
+.info-top-row { display: flex; align-items: center; justify-content: space-between; }
+.info-label { font-size: 28rpx; color: #111827; }
 .info-btns { display: flex; gap: 12rpx; }
-.room-id-area { display: flex; flex-direction: column; }
-.label { font-size: 22rpx; color: #9CA3AF; }
-.room-id { font-size: 44rpx; font-weight: 800; color: #8B5CF6; letter-spacing: 6rpx; }
-.stats-row { margin-top: 20rpx; justify-content: flex-start; gap: 32rpx; }
-.stat { font-size: 26rpx; color: #6B7280; }
+.room-id-display {
+  display: block; text-align: center; font-size: 56rpx; font-weight: 800;
+  color: #8B5CF6; letter-spacing: 8rpx; margin: 16rpx 0 20rpx;
+}
+.info-stat { display: block; font-size: 26rpx; color: #6B7280; margin-top: 8rpx; }
 
 /* ─── Round Buttons ─── */
 .btn-round {
@@ -35,7 +47,6 @@ page { background: #F3F4F6; }
 
 .btn-copy { background: #E5E7EB; color: #374151; }
 .btn-share { background: #DBEAFE; color: #2563EB; }
-.btn-exit { background: #FEE2E2; color: #DC2626; }
 .btn-purple { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
 .btn-disband { background: #FEE2E2; color: #DC2626; flex: 1; }
 .btn-cancel { background: #E5E7EB; color: #6B7280; }
@@ -85,8 +96,7 @@ page { background: #F3F4F6; }
 .tag { font-size: 20rpx; padding: 2rpx 8rpx; border-radius: 4rpx; }
 .tag-host { background: #DBEAFE; color: #2563EB; }
 
-.btn-take { margin: 0; font-size: 22rpx; padding: 6rpx 16rpx; border-radius: 8rpx; background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
-.btn-take::after { border: none; }
+.btn-take { display: inline-block; margin: 0; font-size: 22rpx; padding: 6rpx 16rpx; border-radius: 8rpx; background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
 
 .seat-status { display: flex; align-items: center; gap: 6rpx; flex-shrink: 0; font-size: 22rpx; }
 .status-dot { width: 14rpx; height: 14rpx; border-radius: 50%; }

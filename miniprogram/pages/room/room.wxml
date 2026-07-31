@@ -1,22 +1,23 @@
 <!--pages/room/room.wxml-->
 <view class="container">
-  <!-- Card 1: Room Info -->
-  <view class="card room-info-card">
-    <view class="info-row">
-      <view class="room-id-area">
-        <text class="label">会议ID</text>
-        <text class="room-id">{{roomId}}</text>
-      </view>
+  <!-- Top Bar (always visible) -->
+  <view class="top-bar">
+    <view class="btn-round btn-exit" bindtap="exitRoom">退出房间</view>
+    <view class="btn-round btn-collapse" bindtap="toggleInfoCard">{{infoCollapsed ? '展开' : '收起'}}</view>
+  </view>
+
+  <!-- Card 1: Room Info (collapsible) -->
+  <view class="card room-info-card" wx:if="{{!infoCollapsed}}">
+    <view class="info-top-row">
+      <text class="info-label">会议ID：</text>
       <view class="info-btns">
         <view class="btn-round btn-copy" bindtap="copyRoomId">复制</view>
         <button class="btn-round btn-share" open-type="share">分享</button>
-        <view class="btn-round btn-exit" bindtap="exitRoom">退出</view>
       </view>
     </view>
-    <view class="info-row stats-row">
-      <text class="stat">共 {{players.length}} 人</text>
-      <text class="stat">入座 {{seatedPlayers.length}}/{{playerCount}}</text>
-    </view>
+    <text class="room-id-display">{{roomId}}</text>
+    <text class="info-stat">入座：{{seatedPlayers.length}}/{{playerCount}}</text>
+    <text class="info-stat">观战：{{spectatorPlayers.length}}{{spectatorMax > 0 ? '/' + spectatorMax : ''}}</text>
   </view>
 
   <!-- Card 2: Control Area -->
