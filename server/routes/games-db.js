@@ -19,8 +19,12 @@ function createRouter() {
       
       const game = await GameModel.start(roomId);
       
+      // GameModel.start() now returns { gameId, ... }; fallback for old style
+      const gameId = game.gameId || game.roomId;
+      
       res.json({
         success: true,
+        gameId,
         game
       });
     } catch (error) {
@@ -51,19 +55,19 @@ function createRouter() {
   });
   
   // 获取游戏状态
-  router.get('/:roomId', async (req, res) => {
+  router.get('/:gameId', async (req, res) => {
     try {
-      const { roomId } = req.params;
+      const { gameId } = req.params;
       const { openId } = req.query;
       
-      if (!roomId) {
+      if (!gameId) {
         return res.status(400).json({ 
           success: false, 
-          message: '缺少房间ID' 
+          message: '缺少游戏ID' 
         });
       }
       
-      const result = await GameModel.getState(roomId, openId);
+      const result = await GameModel.getState(gameId, openId);
       
       res.json(result);
     } catch (error) {
@@ -86,16 +90,16 @@ function createRouter() {
   // 提交提名队伍
   router.post('/submitNomination', async (req, res) => {
     try {
-      const { roomId, openId, nominatedTeam } = req.body;
+      const { gameId, openId, nominatedTeam } = req.body;
       
-      if (!roomId || !openId || !nominatedTeam || !Array.isArray(nominatedTeam)) {
+      if (!gameId || !openId || !nominatedTeam || !Array.isArray(nominatedTeam)) {
         return res.status(400).json({ 
           success: false, 
           message: '缺少必要参数' 
         });
       }
       
-      const result = await GameModel.submitNomination(roomId, openId, nominatedTeam);
+      const result = await GameModel.submitNomination(gameId, openId, nominatedTeam);
       
       res.json({ 
         success: true, 
@@ -130,9 +134,9 @@ function createRouter() {
   // 队伍投票
   router.post('/castVote', async (req, res) => {
     try {
-      const { roomId, openId, vote } = req.body;
+      const { gameId, openId, vote } = req.body;
       
-      if (!roomId || !openId || !vote) {
+      if (!gameId || !openId || !vote) {
         return res.status(400).json({ 
           success: false, 
           message: '缺少必要参数' 
@@ -146,7 +150,7 @@ function createRouter() {
         });
       }
       
-      const result = await GameModel.castVote(roomId, openId, vote);
+      const result = await GameModel.castVote(gameId, openId, vote);
       
       res.json({ 
         success: true, 
@@ -180,9 +184,9 @@ function createRouter() {
   // 任务投票
   router.post('/castMissionVote', async (req, res) => {
     try {
-      const { roomId, openId, vote, playerRole } = req.body;
+      const { gameId, openId, vote, playerRole } = req.body;
       
-      if (!roomId || !openId || !vote || !playerRole) {
+      if (!gameId || !openId || !vote || !playerRole) {
         return res.status(400).json({ 
           success: false, 
           message: '缺少必要参数' 
@@ -196,7 +200,7 @@ function createRouter() {
         });
       }
       
-      const result = await GameModel.castMissionVote(roomId, openId, vote, playerRole);
+      const result = await GameModel.castMissionVote(gameId, openId, vote, playerRole);
       
       res.json({ 
         success: true, 
@@ -231,16 +235,16 @@ function createRouter() {
   // 结束游戏
   router.post('/end', async (req, res) => {
     try {
-      const { roomId } = req.body;
+      const { gameId } = req.body;
       
-      if (!roomId) {
+      if (!gameId) {
         return res.status(400).json({ 
           success: false, 
-          message: '缺少房间ID' 
+          message: '缺少游戏ID' 
         });
       }
       
-      const success = await GameModel.end(roomId);
+      const success = await GameModel.end(gameId);
       
       res.json({ 
         success: true,
@@ -284,8 +288,8 @@ function createRouter() {
       const history = await db.query(
         `SELECT id, room_id as roomId, game_data as gameData, winner, player_count as playerCount,
                 duration_seconds as durationSeconds, created_at as createdAt
-         FROM game_history 
-         WHERE room_id = ?
+         FROM games 
+         WHERE room_id = ? AND status = 'ended'
          ORDER BY created_at DESC
          LIMIT ?`,
         [roomId, parseInt(limit)]
@@ -318,12 +322,13 @@ function createRouter() {
       
       const db = require('../config/db');
       const recentGames = await db.query(
-        `SELECT gh.id, gh.room_id as roomId, gh.winner, gh.player_count as playerCount,
-                gh.duration_seconds as durationSeconds, gh.created_at as gameEndedAt,
+        `SELECT g.id, g.room_id as roomId, g.winner, g.player_count as playerCount,
+                g.duration_seconds as durationSeconds, g.created_at as gameEndedAt,
                 r.host_open_id as hostOpenId
-         FROM game_history gh
-         LEFT JOIN rooms r ON gh.room_id = r.id
-         ORDER BY gh.created_at DESC
+         FROM games g
+         LEFT JOIN rooms r ON g.room_id = r.id
+         WHERE g.status = 'ended'
+         ORDER BY g.created_at DESC
          LIMIT ?`,
         [parseInt(limit)]
       );

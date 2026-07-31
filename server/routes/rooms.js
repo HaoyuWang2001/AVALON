@@ -34,14 +34,13 @@ router.post('/create', (req, res) => {
   
   const room = {
     _id: roomId,
-    hostOpenId,
+    ownerId: hostOpenId,
     players: [{
       openId: hostOpenId,
       nickName: hostNickName || '房主',
       wxNickName: hostWxNickName || '',
       avatarUrl: hostAvatarUrl || '',
-      seatNumber: 1,
-      isHost: true
+      seatNumber: 1
     }],
     readyPlayers: [],
     gameStarted: false,
@@ -110,7 +109,6 @@ router.post('/join', (req, res) => {
     wxNickName: userInfo.wxNickName || '',
     avatarUrl: userInfo.avatarUrl || '',
     seatNumber: seat,
-    isHost: false,
     isReady: false
   });
   
@@ -143,9 +141,8 @@ router.post('/leave', (req, res) => {
   
   if (room.players.length === 0) {
     rooms.delete(roomId);
-  } else if (room.hostOpenId === openId && room.players.length > 0) {
-    room.players[0].isHost = true;
-    room.hostOpenId = room.players[0].openId;
+  } else if (room.ownerId === openId && room.players.length > 0) {
+    room.ownerId = room.players[0].openId;
   }
   
   room.updatedAt = new Date();
@@ -236,7 +233,7 @@ router.post('/:roomId/disband', (req, res) => {
   const { openId } = req.body;
   const room = rooms.get(roomId);
   if (!room) return res.status(404).json({ success: false, message: '房间不存在' });
-  if (room.hostOpenId !== openId) return res.status(403).json({ success: false, message: '仅房主可解散房间' });
+  if (room.ownerId !== openId) return res.status(403).json({ success: false, message: '仅房主可解散房间' });
   rooms.delete(roomId);
   res.json({ success: true, message: '房间已解散' });
 });

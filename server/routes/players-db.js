@@ -8,11 +8,10 @@ function createRouter() {
     try {
       const { openId } = req.params;
       const rows = await db.query(
-        `SELECT p.room_id, r.game_started
-         FROM players p
-         JOIN rooms r ON r.id = p.room_id
-         WHERE p.open_id = ?
-         LIMIT 1`,
+        `SELECT u.current_room_id as room_id, r.game_started
+         FROM users u
+         LEFT JOIN rooms r ON u.current_room_id = r.id
+         WHERE u.open_id = ?`,
         [openId]
       );
 

@@ -69,25 +69,23 @@ class RoomModel {
    * @returns {Promise<Object>} 创建的房间信息
    */
   static async create(hostOpenId, hostNickName = '房主', hostAvatarUrl = '', roomConfig = null, hostWxNickName = '') {
-    // 生成6位房间号
     const roomId = Math.floor(100000 + Math.random() * 900000).toString();
     
     try {
-      if (roomConfig) {
-        this.validateRoomConfig(roomConfig);
-      }
+      if (roomConfig) this.validateRoomConfig(roomConfig);
 
       await db.transaction(async (connection) => {
         await connection.execute(
-          `INSERT INTO rooms (id, host_open_id, game_started, room_config, created_at, updated_at) 
-           VALUES (?, ?, FALSE, ?, NOW(), NOW())`,
+          'INSERT INTO rooms (id, owner_id, game_started, room_config, created_at, updated_at) VALUES (?, ?, FALSE, ?, NOW(), NOW())',
           [roomId, hostOpenId, roomConfig ? JSON.stringify(roomConfig) : null]
         );
-        
         await connection.execute(
-          `INSERT INTO players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_host, is_ready, created_at) 
-           VALUES (?, ?, ?, ?, ?, 1, TRUE, FALSE, NOW())`,
+          'INSERT INTO players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_ready, created_at) VALUES (?, ?, ?, ?, ?, 1, FALSE, NOW())',
           [roomId, hostOpenId, hostNickName, hostWxNickName, hostAvatarUrl]
+        );
+        await connection.execute(
+          'UPDATE users SET current_room_id = ?, updated_at = NOW() WHERE open_id = ?',
+          [roomId, hostOpenId]
         );
       });
       
@@ -136,7 +134,7 @@ class RoomModel {
     try {
       // 获取房间基本信息
       const rooms = await db.query(
-        `SELECT id as _id, host_open_id as hostOpenId, game_started as gameStarted, 
+        `SELECT id as _id, owner_id as ownerId, game_started as gameStarted, 
                 room_config as roomConfig,
                 created_at as createdAt, updated_at as updatedAt 
          FROM rooms WHERE id = ?`,
@@ -155,27 +153,25 @@ class RoomModel {
       // 获取房间内的玩家
       const players = await db.query(
         `SELECT open_id as openId, nick_name as nickName, wx_nick_name as wxNickName, avatar_url as avatarUrl, 
-                seat_number as seatNumber, is_host as isHost, is_ready as isReady
+                seat_number as seatNumber, is_ready as isReady
          FROM players WHERE room_id = ? ORDER BY seat_number`,
         [roomId]
       );
       
-      // 获取准备玩家列表
       const readyPlayersResult = await db.query(
-        `SELECT open_id FROM players WHERE room_id = ? AND is_ready = TRUE`,
+        'SELECT open_id FROM players WHERE room_id = ? AND is_ready = TRUE',
         [roomId]
       );
       
       const readyPlayers = readyPlayersResult.map(row => row.open_id);
       
-      // 组装完整房间对象
       return {
         ...room,
-        players,
         readyPlayers,
         players: players.map(player => ({
           ...player,
-          isHost: player.isHost === 1 || player.isHost === true,
+          isHost: player.openId === room.ownerId,
+          isReady: player.isReady === 1 || player.isReady === true
           isReady: player.isReady === 1 || player.isReady === true
         }))
       };
@@ -204,37 +200,27 @@ class RoomModel {
     
     try {
       await db.transaction(async (connection) => {
-        const [rooms] = await connection.execute(
-          'SELECT game_started FROM rooms WHERE id = ? FOR UPDATE',
-          [roomId]
-        );
+        const [rooms] = await connection.execute('SELECT game_started FROM rooms WHERE id = ? FOR UPDATE', [roomId]);
         if (rooms.length === 0) throw new Error('房间不存在');
         if (rooms[0].game_started) throw new Error('游戏已开始');
         
-        const [alreadyJoined] = await connection.execute(
-          'SELECT COUNT(*) as count FROM players WHERE room_id = ? AND open_id = ?',
-          [roomId, openId]
-        );
+        const [alreadyJoined] = await connection.execute('SELECT COUNT(*) as count FROM players WHERE room_id = ? AND open_id = ?', [roomId, openId]);
         if (alreadyJoined[0].count > 0) throw new Error('已在房间中');
         
         if (seat >= 1) {
-          const [occupiedSeats] = await connection.execute(
-            'SELECT COUNT(*) as count FROM players WHERE room_id = ? AND seat_number = ?',
-            [roomId, seat]
-          );
+          const [occupiedSeats] = await connection.execute('SELECT COUNT(*) as count FROM players WHERE room_id = ? AND seat_number = ?', [roomId, seat]);
           if (occupiedSeats[0].count > 0) throw new Error(`${seat}号座位已被占用`);
         }
         
         await connection.execute(
-          `INSERT INTO players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_host, is_ready, created_at) 
-           VALUES (?, ?, ?, ?, ?, ?, FALSE, FALSE, NOW())`,
+          'INSERT INTO players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_ready, created_at) VALUES (?, ?, ?, ?, ?, ?, FALSE, NOW())',
           [roomId, openId, nickName, wxNickName, userInfo.avatarUrl || '', seat]
         );
-        
         await connection.execute(
-          'UPDATE rooms SET updated_at = NOW() WHERE id = ?',
-          [roomId]
+          'UPDATE users SET current_room_id = ?, updated_at = NOW() WHERE open_id = ?',
+          [roomId, openId]
         );
+        await connection.execute('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
       });
       
       return await this.getById(roomId);
@@ -253,60 +239,15 @@ class RoomModel {
   static async leave(roomId, openId) {
     try {
       await db.transaction(async (connection) => {
-        // 获取玩家信息
-        const [players] = await connection.execute(
-          'SELECT is_host FROM players WHERE room_id = ? AND open_id = ?',
-          [roomId, openId]
-        );
+        await connection.execute('DELETE FROM players WHERE room_id = ? AND open_id = ?', [roomId, openId]);
+        await connection.execute('UPDATE users SET current_room_id = NULL WHERE open_id = ?', [openId]);
         
-        if (players.length === 0) {
-          return; // 玩家不在房间中
-        }
-        
-        const isHost = players[0].is_host;
-        
-        // 删除玩家
-        await connection.execute(
-          'DELETE FROM players WHERE room_id = ? AND open_id = ?',
-          [roomId, openId]
-        );
-        
-        // 检查房间是否为空
-        const [remainingPlayers] = await connection.execute(
-          'SELECT COUNT(*) as count FROM players WHERE room_id = ?',
-          [roomId]
-        );
-        
+        const [remainingPlayers] = await connection.execute('SELECT COUNT(*) as count FROM players WHERE room_id = ?', [roomId]);
         if (remainingPlayers[0].count === 0) {
-          // 删除空房间
           await connection.execute('DELETE FROM rooms WHERE id = ?', [roomId]);
-        } else if (isHost) {
-          // 房主离开，转让房主给第一个玩家
-          const [nextHost] = await connection.execute(
-            'SELECT open_id FROM players WHERE room_id = ? ORDER BY created_at LIMIT 1',
-            [roomId]
-          );
-          
-          if (nextHost.length > 0) {
-            // 更新新房主
-            await connection.execute(
-              'UPDATE players SET is_host = TRUE WHERE room_id = ? AND open_id = ?',
-              [roomId, nextHost[0].open_id]
-            );
-            
-            // 更新房间房主信息
-            await connection.execute(
-              'UPDATE rooms SET host_open_id = ?, updated_at = NOW() WHERE id = ?',
-              [nextHost[0].open_id, roomId]
-            );
-          }
+        } else {
+          await connection.execute('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
         }
-        
-        // 更新房间更新时间
-        await connection.execute(
-          'UPDATE rooms SET updated_at = NOW() WHERE id = ?',
-          [roomId]
-        );
       });
       
       return await this.getById(roomId);
@@ -394,10 +335,8 @@ class RoomModel {
           [roomId, playerId]
         );
       } else {
-        await db.query(
-          'DELETE FROM players WHERE room_id = ? AND open_id = ?',
-          [roomId, playerId]
-        );
+        await db.query('DELETE FROM players WHERE room_id = ? AND open_id = ?', [roomId, playerId]);
+        await db.query('UPDATE users SET current_room_id = NULL WHERE open_id = ?', [playerId]);
       }
       
       await db.query(
@@ -435,7 +374,8 @@ class RoomModel {
   static async disband(roomId, openId) {
     const room = await this.getById(roomId);
     if (!room) throw new Error('房间不存在');
-    if (room.hostOpenId !== openId) throw new Error('仅房主可解散房间');
+    if (room.ownerId !== openId) throw new Error('仅房主可解散房间');
+    await db.query('UPDATE users SET current_room_id = NULL WHERE current_room_id = ?', [roomId]);
     await db.query('DELETE FROM players WHERE room_id = ?', [roomId]);
     await db.query('DELETE FROM rooms WHERE id = ?', [roomId]);
     return { success: true, message: '房间已解散' };

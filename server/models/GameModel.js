@@ -1,5 +1,6 @@
 // 游戏数据模型
 const db = require('../config/db');
+const { v4: uuidv4 } = require('uuid');
 
 class GameModel {
   /**
@@ -12,14 +13,16 @@ class GameModel {
       let game = null;
       
       await db.transaction(async (connection) => {
+        const gameId = uuidv4();
+        
         // 1. 获取房间和玩家信息
         const [roomInfo] = await connection.execute(
-          `SELECT r.host_open_id, r.room_config, COUNT(p.id) as player_count,
+          `SELECT r.owner_id, r.room_config, COUNT(p.id) as player_count,
                   SUM(CASE WHEN p.is_ready THEN 1 ELSE 0 END) as ready_count
            FROM rooms r
            LEFT JOIN players p ON r.id = p.room_id
            WHERE r.id = ? AND r.game_started = FALSE
-           GROUP BY r.host_open_id, r.room_config
+           GROUP BY r.owner_id, r.room_config
            FOR UPDATE`,
           [roomId]
         );
@@ -31,6 +34,7 @@ class GameModel {
         const playerCount = parseInt(roomInfo[0].player_count);
         const readyCount = parseInt(roomInfo[0].ready_count);
         const roomConfig = roomInfo[0].room_config ? (typeof roomInfo[0].room_config === 'string' ? JSON.parse(roomInfo[0].room_config) : roomInfo[0].room_config) : null;
+        const ownerId = roomInfo[0].owner_id;
         
         // 验证游戏开始条件
         if (playerCount < 5) {
@@ -59,10 +63,10 @@ class GameModel {
         
         // 4. 创建游戏记录
         await connection.execute(
-          `INSERT INTO games (room_id, current_phase, current_round, team_leader_index, 
-                             failed_nominations, created_at, updated_at)
-           VALUES (?, 'roleReveal', 1, 0, 0, NOW(), NOW())`,
-          [roomId]
+          `INSERT INTO games (id, room_id, owner_id, current_phase, current_round, 
+                              team_leader_index, failed_nominations, status, created_at, updated_at)
+           VALUES (?, ?, ?, 'roleReveal', 1, 0, 0, 'active', NOW(), NOW())`,
+          [gameId, roomId, ownerId]
         );
         
         // 5. 添加游戏玩家角色
@@ -74,7 +78,7 @@ class GameModel {
           await connection.execute(
             `INSERT INTO game_players (game_id, open_id, role, side, created_at)
              VALUES (?, ?, ?, ?, NOW())`,
-            [roomId, player.openId, role, side]
+            [gameId, player.openId, role, side]
           );
         }
         
@@ -92,6 +96,7 @@ class GameModel {
         }));
         
         game = {
+          gameId,
           roomId,
           players: playersWithRoles,
           currentPhase: 'roleReveal',
@@ -116,20 +121,20 @@ class GameModel {
   
   /**
    * 获取游戏状态
-   * @param {string} roomId 房间ID
+   * @param {string} gameId 游戏ID
    * @param {string} openId 玩家openId（可选）
    * @returns {Promise<Object>} 游戏状态
    */
-  static async getState(roomId, openId = null) {
+  static async getState(gameId, openId = null) {
     try {
       // 获取游戏基本信息
       const games = await db.query(
-        `SELECT room_id as roomId, current_phase as currentPhase, current_round as currentRound,
+        `SELECT id as gameId, room_id as roomId, current_phase as currentPhase, current_round as currentRound,
                 team_leader_index as teamLeaderIndex, nominated_team as nominatedTeam,
                 failed_nominations as failedNominations, game_result as gameResult,
                 created_at as createdAt, updated_at as updatedAt
-         FROM games WHERE room_id = ?`,
-        [roomId]
+         FROM games WHERE id = ?`,
+        [gameId]
       );
       
       if (games.length === 0) {
@@ -154,7 +159,7 @@ class GameModel {
          JOIN players p ON gp.open_id = p.open_id AND p.room_id = ?
          WHERE gp.game_id = ?
          ORDER BY p.seat_number`,
-        [roomId, roomId]
+        [game.roomId, gameId]
       );
       
       game.players = players;
@@ -165,7 +170,7 @@ class GameModel {
          FROM votes 
          WHERE game_id = ? AND vote_type = 'team' AND round = ?
          ORDER BY created_at`,
-        [roomId, game.currentRound]
+        [gameId, game.currentRound]
       );
       
       const missionVotes = await db.query(
@@ -173,7 +178,7 @@ class GameModel {
          FROM votes 
          WHERE game_id = ? AND vote_type = 'mission' AND round = ?
          ORDER BY created_at`,
-        [roomId, game.currentRound]
+        [gameId, game.currentRound]
       );
       
       // 转换为对象格式
@@ -194,7 +199,7 @@ class GameModel {
          FROM mission_results 
          WHERE game_id = ? 
          ORDER BY round`,
-        [roomId]
+        [gameId]
       );
       
       game.missionResults = missionResults.map(result => ({
@@ -226,20 +231,20 @@ class GameModel {
   
   /**
    * 提交提名队伍
-   * @param {string} roomId 房间ID
+   * @param {string} gameId 游戏ID
    * @param {string} openId 队长openId
    * @param {Array<string>} nominatedTeam 提名队伍openId数组
    * @returns {Promise<Object>} 更新后的游戏状态
    */
-  static async submitNomination(roomId, openId, nominatedTeam) {
+  static async submitNomination(gameId, openId, nominatedTeam) {
     try {
       await db.transaction(async (connection) => {
         // 验证游戏状态和队长身份
         const [game] = await connection.execute(
           `SELECT current_phase, team_leader_index, 
                   (SELECT COUNT(*) FROM game_players WHERE game_id = ?) as player_count
-           FROM games WHERE room_id = ? FOR UPDATE`,
-          [roomId, roomId]
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId, gameId]
         );
         
         if (game.length === 0) {
@@ -253,7 +258,7 @@ class GameModel {
         // 验证队长身份
         const [players] = await connection.execute(
           `SELECT open_id FROM game_players WHERE game_id = ? ORDER BY open_id`,
-          [roomId]
+          [gameId]
         );
         
         const teamLeaderIndex = game[0].team_leader_index;
@@ -274,12 +279,12 @@ class GameModel {
            SET current_phase = 'teamVote', 
                nominated_team = ?,
                updated_at = NOW()
-           WHERE room_id = ?`,
-          [JSON.stringify(nominatedTeam), roomId]
+           WHERE id = ?`,
+          [JSON.stringify(nominatedTeam), gameId]
         );
       });
       
-      return await this.getState(roomId);
+      return await this.getState(gameId);
     } catch (error) {
       console.error('提交提名失败:', error);
       throw error;
@@ -288,20 +293,20 @@ class GameModel {
   
   /**
    * 投票
-   * @param {string} roomId 房间ID
+   * @param {string} gameId 游戏ID
    * @param {string} openId 投票玩家openId
    * @param {string} vote 投票值 ('approve' 或 'reject')
    * @returns {Promise<Object>} 更新后的游戏状态
    */
-  static async castVote(roomId, openId, vote) {
+  static async castVote(gameId, openId, vote) {
     try {
       await db.transaction(async (connection) => {
         // 获取游戏状态
         const [game] = await connection.execute(
           `SELECT current_phase, current_round, 
                   (SELECT COUNT(*) FROM game_players WHERE game_id = ?) as player_count
-           FROM games WHERE room_id = ? FOR UPDATE`,
-          [roomId, roomId]
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId, gameId]
         );
         
         if (game.length === 0) {
@@ -316,7 +321,7 @@ class GameModel {
         const [existingVote] = await connection.execute(
           `SELECT COUNT(*) as count FROM votes 
            WHERE game_id = ? AND open_id = ? AND vote_type = 'team' AND round = ?`,
-          [roomId, openId, game[0].current_round]
+          [gameId, openId, game[0].current_round]
         );
         
         if (existingVote[0].count > 0) {
@@ -327,14 +332,14 @@ class GameModel {
         await connection.execute(
           `INSERT INTO votes (game_id, open_id, vote_type, vote_value, round, created_at)
            VALUES (?, ?, 'team', ?, ?, NOW())`,
-          [roomId, openId, vote, game[0].current_round]
+          [gameId, openId, vote, game[0].current_round]
         );
         
         // 检查是否所有玩家都已投票
         const [voteCount] = await connection.execute(
           `SELECT COUNT(*) as count FROM votes 
            WHERE game_id = ? AND vote_type = 'team' AND round = ?`,
-          [roomId, game[0].current_round]
+          [gameId, game[0].current_round]
         );
         
         const playerCount = game[0].player_count;
@@ -344,7 +349,7 @@ class GameModel {
           const [votes] = await connection.execute(
             `SELECT vote_value FROM votes 
              WHERE game_id = ? AND vote_type = 'team' AND round = ?`,
-            [roomId, game[0].current_round]
+            [gameId, game[0].current_round]
           );
           
           const approveCount = votes.filter(v => v.vote_value === 'approve').length;
@@ -356,8 +361,8 @@ class GameModel {
               `UPDATE games 
                SET current_phase = 'missionVote',
                    updated_at = NOW()
-               WHERE room_id = ?`,
-              [roomId]
+               WHERE id = ?`,
+              [gameId]
             );
           } else {
             // 投票否决
@@ -370,8 +375,8 @@ class GameModel {
                  SET current_phase = 'gameEnd',
                      game_result = ?,
                      updated_at = NOW()
-                 WHERE room_id = ?`,
-                [JSON.stringify({ winner: 'evil', reason: '连续5次提名被否决' }), roomId]
+                 WHERE id = ?`,
+                [JSON.stringify({ winner: 'evil', reason: '连续5次提名被否决' }), gameId]
               );
             } else {
               // 更换队长，进入下一轮提名
@@ -384,15 +389,15 @@ class GameModel {
                      nominated_team = NULL,
                      failed_nominations = ?,
                      updated_at = NOW()
-                 WHERE room_id = ?`,
-                [newTeamLeaderIndex, failedNominations, roomId]
+                 WHERE id = ?`,
+                [newTeamLeaderIndex, failedNominations, gameId]
               );
             }
           }
         }
       });
       
-      return await this.getState(roomId);
+      return await this.getState(gameId);
     } catch (error) {
       console.error('投票失败:', error);
       throw error;
@@ -401,21 +406,21 @@ class GameModel {
   
   /**
    * 任务投票
-   * @param {string} roomId 房间ID
+   * @param {string} gameId 游戏ID
    * @param {string} openId 投票玩家openId
    * @param {string} vote 投票值 ('success' 或 'fail')
    * @param {string} playerRole 玩家角色
    * @returns {Promise<Object>} 更新后的游戏状态
    */
-  static async castMissionVote(roomId, openId, vote, playerRole) {
+  static async castMissionVote(gameId, openId, vote, playerRole) {
     try {
       await db.transaction(async (connection) => {
         // 获取游戏状态
         const [game] = await connection.execute(
           `SELECT current_phase, current_round, nominated_team,
                   (SELECT COUNT(*) FROM game_players WHERE game_id = ?) as player_count
-           FROM games WHERE room_id = ? FOR UPDATE`,
-          [roomId, roomId]
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId, gameId]
         );
         
         if (game.length === 0) {
@@ -438,7 +443,7 @@ class GameModel {
         const [existingVote] = await connection.execute(
           `SELECT COUNT(*) as count FROM votes 
            WHERE game_id = ? AND open_id = ? AND vote_type = 'mission' AND round = ?`,
-          [roomId, openId, game[0].current_round]
+          [gameId, openId, game[0].current_round]
         );
         
         if (existingVote[0].count > 0) {
@@ -449,14 +454,14 @@ class GameModel {
         await connection.execute(
           `INSERT INTO votes (game_id, open_id, vote_type, vote_value, round, created_at)
            VALUES (?, ?, 'mission', ?, ?, NOW())`,
-          [roomId, openId, vote, game[0].current_round]
+          [gameId, openId, vote, game[0].current_round]
         );
         
         // 检查是否所有玩家都已投票
         const [voteCount] = await connection.execute(
           `SELECT COUNT(*) as count FROM votes 
            WHERE game_id = ? AND vote_type = 'mission' AND round = ?`,
-          [roomId, game[0].current_round]
+          [gameId, game[0].current_round]
         );
         
         const playerCount = game[0].player_count;
@@ -466,7 +471,7 @@ class GameModel {
           const [votes] = await connection.execute(
             `SELECT vote_value FROM votes 
              WHERE game_id = ? AND vote_type = 'mission' AND round = ?`,
-            [roomId, game[0].current_round]
+            [gameId, game[0].current_round]
           );
           
           const failCount = votes.filter(v => v.vote_value === 'fail').length;
@@ -482,14 +487,14 @@ class GameModel {
           await connection.execute(
             `INSERT INTO mission_results (game_id, round, success, fail_count, team, created_at)
              VALUES (?, ?, ?, ?, ?, NOW())`,
-            [roomId, game[0].current_round, success, failCount, JSON.stringify(nominatedTeam)]
+            [gameId, game[0].current_round, success, failCount, JSON.stringify(nominatedTeam)]
           );
           
           // 获取已成功任务数量
           const [successCountResult] = await connection.execute(
             `SELECT COUNT(*) as count FROM mission_results 
              WHERE game_id = ? AND success = TRUE`,
-            [roomId]
+            [gameId]
           );
           
           const successCount = successCountResult[0].count;
@@ -502,8 +507,8 @@ class GameModel {
                SET current_phase = 'gameEnd',
                    game_result = ?,
                    updated_at = NOW()
-               WHERE room_id = ?`,
-              [JSON.stringify({ winner: 'good', reason: '好人完成3个任务' }), roomId]
+               WHERE id = ?`,
+              [JSON.stringify({ winner: 'good', reason: '好人完成3个任务' }), gameId]
             );
           } else if (game[0].current_round >= 5) {
             // 5回合结束，坏人胜利
@@ -512,8 +517,8 @@ class GameModel {
                SET current_phase = 'gameEnd',
                    game_result = ?,
                    updated_at = NOW()
-               WHERE room_id = ?`,
-              [JSON.stringify({ winner: 'evil', reason: '坏人完成3个任务' }), roomId]
+               WHERE id = ?`,
+              [JSON.stringify({ winner: 'evil', reason: '坏人完成3个任务' }), gameId]
             );
           } else {
             // 进入下一回合
@@ -527,14 +532,14 @@ class GameModel {
                    team_leader_index = ?,
                    nominated_team = NULL,
                    updated_at = NOW()
-               WHERE room_id = ?`,
-              [newRound, newTeamLeaderIndex, roomId]
+               WHERE id = ?`,
+              [newRound, newTeamLeaderIndex, gameId]
             );
           }
         }
       });
       
-      return await this.getState(roomId);
+      return await this.getState(gameId);
     } catch (error) {
       console.error('任务投票失败:', error);
       throw error;
@@ -543,31 +548,44 @@ class GameModel {
   
   /**
    * 结束游戏
-   * @param {string} roomId 房间ID
+   * @param {string} gameId 游戏ID
    * @returns {Promise<boolean>} 是否成功
    */
-  static async end(roomId) {
+  static async end(gameId) {
     try {
       await db.transaction(async (connection) => {
-        // 删除游戏记录（触发器会自动处理游戏历史）
-        await connection.execute('DELETE FROM games WHERE room_id = ?', [roomId]);
-        
-        // 重置房间状态
+        // 标记游戏结束
         await connection.execute(
-          `UPDATE rooms 
-           SET game_started = FALSE, 
-               updated_at = NOW() 
-           WHERE id = ?`,
-          [roomId]
+          'UPDATE games SET status = \'ended\', ended_at = NOW(), updated_at = NOW() WHERE id = ?',
+          [gameId]
         );
         
-        // 重置玩家准备状态
-        await connection.execute(
-          `UPDATE players 
-           SET is_ready = FALSE 
-           WHERE room_id = ?`,
-          [roomId]
+        // 获取room_id用于后续重置
+        const [gameRows] = await connection.execute(
+          'SELECT room_id FROM games WHERE id = ?',
+          [gameId]
         );
+        
+        const roomId = gameRows[0] ? gameRows[0].room_id : null;
+        
+        if (roomId) {
+          // 重置房间状态
+          await connection.execute(
+            `UPDATE rooms 
+             SET game_started = FALSE, 
+                 updated_at = NOW() 
+             WHERE id = ?`,
+            [roomId]
+          );
+          
+          // 重置玩家准备状态
+          await connection.execute(
+            `UPDATE players 
+             SET is_ready = FALSE 
+             WHERE room_id = ?`,
+            [roomId]
+          );
+        }
       });
       
       return true;
@@ -657,15 +675,13 @@ class GameModel {
     try {
       const totalGames = await db.query('SELECT COUNT(*) as count FROM games');
       const activeGames = await db.query(
-        `SELECT COUNT(*) as count FROM games g
-         JOIN rooms r ON g.room_id = r.id
-         WHERE r.updated_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)`
+        'SELECT COUNT(*) as count FROM games WHERE status = \'active\''
       );
       const gamesByPhase = await db.query(
         'SELECT current_phase, COUNT(*) as count FROM games GROUP BY current_phase'
       );
       const completedGames = await db.query(
-        `SELECT COUNT(*) as count FROM game_history`
+        'SELECT COUNT(*) as count FROM games WHERE status = \'ended\''
       );
       
       return {

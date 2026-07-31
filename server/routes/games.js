@@ -70,8 +70,12 @@ router.post('/start', (req, res) => {
     side: getRoleSide(shuffledRoles[index])
   }));
   
+  const gameId = 'g_' + Date.now();
+  
   const game = {
+    gameId,
     roomId,
+    ownerId: room.ownerId,
     players: playersWithRoles,
     currentPhase: 'roleReveal',
     currentRound: 1,
@@ -81,11 +85,12 @@ router.post('/start', (req, res) => {
     missionVotes: {},
     missionResults: [],
     failedNominations: 0,
+    isEnded: false,
     createdAt: new Date(),
     updatedAt: new Date()
   };
   
-  games.set(roomId, game);
+  games.set(gameId, game);
   
   room.gameStarted = true;
   room.updatedAt = new Date();
@@ -93,14 +98,15 @@ router.post('/start', (req, res) => {
   
   res.json({
     success: true,
+    gameId,
     game
   });
 });
 
-router.get('/:roomId', (req, res) => {
-  const { roomId } = req.params;
+router.get('/:gameId', (req, res) => {
+  const { gameId } = req.params;
   const { openId } = req.query;
-  const game = games.get(roomId);
+  const game = games.get(gameId);
   
   if (!game) {
     return res.status(404).json({ success: false, message: '游戏不存在' });
@@ -120,8 +126,8 @@ router.get('/:roomId', (req, res) => {
 });
 
 router.post('/submitNomination', (req, res) => {
-  const { roomId, openId, nominatedTeam } = req.body;
-  const game = games.get(roomId);
+  const { gameId, openId, nominatedTeam } = req.body;
+  const game = games.get(gameId);
   
   if (!game) {
     return res.status(404).json({ success: false, message: '游戏不存在' });
@@ -142,14 +148,14 @@ router.post('/submitNomination', (req, res) => {
   game.teamVotes = {};
   game.updatedAt = new Date();
   
-  games.set(roomId, game);
+  games.set(gameId, game);
   
   res.json({ success: true, game });
 });
 
 router.post('/castVote', (req, res) => {
-  const { roomId, openId, vote } = req.body;
-  const game = games.get(roomId);
+  const { gameId, openId, vote } = req.body;
+  const game = games.get(gameId);
   
   if (!game) {
     return res.status(404).json({ success: false, message: '游戏不存在' });
@@ -180,6 +186,7 @@ router.post('/castVote', (req, res) => {
       game.failedNominations++;
       if (game.failedNominations >= 5) {
         game.currentPhase = 'gameEnd';
+        game.isEnded = true;
         game.gameResult = { winner: 'evil', reason: '连续5次提名被否决' };
       } else {
         game.teamLeaderIndex = (game.teamLeaderIndex + 1) % allPlayers;
@@ -191,14 +198,14 @@ router.post('/castVote', (req, res) => {
   }
   
   game.updatedAt = new Date();
-  games.set(roomId, game);
+  games.set(gameId, game);
   
   res.json({ success: true, game });
 });
 
 router.post('/castMissionVote', (req, res) => {
-  const { roomId, openId, vote, playerRole } = req.body;
-  const game = games.get(roomId);
+  const { gameId, openId, vote, playerRole } = req.body;
+  const game = games.get(gameId);
   
   if (!game) {
     return res.status(404).json({ success: false, message: '游戏不存在' });
@@ -251,23 +258,30 @@ router.post('/castMissionVote', (req, res) => {
   }
   
   game.updatedAt = new Date();
-  games.set(roomId, game);
+  games.set(gameId, game);
   
   res.json({ success: true, game });
 });
 
 router.post('/end', (req, res) => {
-  const { roomId } = req.body;
+  const { gameId } = req.body;
+  const game = games.get(gameId);
   
-  games.delete(roomId);
+  if (!game) {
+    return res.status(404).json({ success: false, message: '游戏不存在' });
+  }
   
-  const room = rooms.get(roomId);
+  game.isEnded = true;
+  game.updatedAt = new Date();
+  games.set(gameId, game);
+  
+  const room = rooms.get(game.roomId);
   if (room) {
     room.gameStarted = false;
     room.players = room.players.map(p => ({ ...p, isHost: p.isHost }));
     room.readyPlayers = [];
     room.updatedAt = new Date();
-    rooms.set(roomId, room);
+    rooms.set(game.roomId, room);
   }
   
   res.json({ success: true });
