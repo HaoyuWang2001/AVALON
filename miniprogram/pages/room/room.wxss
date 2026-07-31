@@ -72,16 +72,18 @@ page { background: #F3F4F6; }
 .btn-random-seat { background: #E5E7EB; color: #374151; font-size: 22rpx; padding: 8rpx 20rpx; }
 .btn-spectate { background: #E5E7EB; color: #374151; font-size: 22rpx; padding: 8rpx 20rpx; }
 
-/* ─── Card 2: Control ─── */
-.host-controls { display: flex; flex-direction: column; gap: 16rpx; }
-.btn-start-game {
-  width: 100%; font-size: 32rpx; padding: 20rpx; border-radius: 32rpx;
+/* ─── Card 2: Host Control ─── */
+.host-card { background: linear-gradient(135deg, #FAF5FF, #F5F3FF); }
+.btn-host-start {
+  display: block; width: 100%; font-size: 32rpx; font-weight: 700; padding: 22rpx;
+  border-radius: 40rpx; text-align: center; margin-bottom: 12rpx;
   background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff;
 }
-.btn-start-game.disabled { background: #E5E7EB; color: #9CA3AF; }
-.start-hint { font-size: 22rpx; color: #8B5CF6; text-align: center; margin-top: -8rpx; }
-.host-actions { display: flex; gap: 12rpx; }
-.player-controls { display: flex; justify-content: center; }
+.btn-host-start.disabled { background: #E5E7EB; color: #9CA3AF; }
+.start-hint { font-size: 22rpx; color: #8B5CF6; text-align: center; display: block; margin-bottom: 8rpx; }
+.host-divider { height: 1rpx; background: #E5E7EB; margin: 20rpx 0; }
+.host-actions { display: flex; gap: 20rpx; justify-content: center; }
+.host-actions .btn-round { font-size: 26rpx; padding: 14rpx 40rpx; }
 
 /* ─── Card 3: Seats ─── */
 .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20rpx; }
@@ -121,6 +123,14 @@ page { background: #F3F4F6; }
 .dot-yellow { background: #F59E0B; }
 .seat-status.ready { color: #10B981; }
 .seat-status.not-ready { color: #F59E0B; }
+
+.seat-action { flex-shrink: 0; }
+.btn-seat-action {
+  display: inline-block; font-size: 22rpx; font-weight: 600; padding: 10rpx 20rpx;
+  border-radius: 20rpx; text-align: center; line-height: 1.4;
+}
+.btn-seat-action.btn-ready { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
+.btn-seat-action.btn-cancel { background: #E5E7EB; color: #6B7280; }
 
 .seat-kick {
   display: inline-flex; align-items: center; justify-content: center;

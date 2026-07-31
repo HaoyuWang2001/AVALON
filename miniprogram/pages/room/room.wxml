@@ -29,20 +29,17 @@
     </view>
   </view>
 
-  <!-- Card 2: Control Area -->
-  <view class="card control-card" wx:if="{{currentUser && currentUser.seatNumber >= 1}}">
-    <view wx:if="{{isHost}}" class="host-controls">
-      <text class="btn-round btn-start-game {{canStartGame ? '' : 'disabled'}}" bindtap="startGame">开始游戏</text>
-      <text wx:if="{{!canStartGame && startHint}}" class="start-hint">{{startHint}}</text>
-      <view class="host-actions">
-        <text class="btn-round btn-purple" bindtap="modifyConfig">修改配置</text>
-        <text class="btn-round btn-purple" bindtap="randomShuffleSeats">随机位置</text>
-      </view>
+  <!-- Card 2: Host Control -->
+  <view class="card host-card" wx:if="{{currentUser && currentUser.seatNumber >= 1 && isHost}}">
+    <view class="card-header">
+      <text class="card-title">🎮 房主控制台</text>
     </view>
-    <view wx:else class="player-controls">
-      <text class="btn-round {{readyPlayers.indexOf(currentUser.openId) > -1 ? 'btn-cancel' : 'btn-ready'}}" bindtap="toggleReady">
-        {{readyPlayers.indexOf(currentUser.openId) > -1 ? '取消准备' : '准备游戏'}}
-      </text>
+    <text class="btn-host-start {{canStartGame ? '' : 'disabled'}}" bindtap="startGame">开始游戏</text>
+    <text wx:if="{{!canStartGame && startHint}}" class="start-hint">{{startHint}}</text>
+    <view class="host-divider"></view>
+    <view class="host-actions">
+      <text class="btn-round btn-purple" bindtap="modifyConfig">修改配置</text>
+      <text class="btn-round btn-purple" bindtap="randomShuffleSeats">随机位置</text>
     </view>
   </view>
 
@@ -67,7 +64,10 @@
           <text class="seat-name-empty">空位</text>
           <text wx:if="{{currentUser && currentUser.seatNumber < 1}}" class="btn-take" bindtap="takeSeat" data-seat="{{item.number}}">入座</text>
         </view>
-        <view wx:if="{{item.occupied}}" class="seat-status {{item.isReady ? 'ready' : 'not-ready'}}">
+        <view wx:if="{{item.isSelf && item.occupied}}" class="seat-action">
+          <text class="btn-seat-action {{item.isReady ? 'btn-cancel' : 'btn-ready'}}" bindtap="toggleReady">{{item.isReady ? '取消准备' : '准备游戏'}}</text>
+        </view>
+        <view wx:elif="{{item.occupied}}" class="seat-status {{item.isReady ? 'ready' : 'not-ready'}}">
           <view class="status-dot {{item.isReady ? 'dot-green' : 'dot-yellow'}}"></view>
           <text>{{item.isReady ? '已准备' : '未准备'}}</text>
         </view>
