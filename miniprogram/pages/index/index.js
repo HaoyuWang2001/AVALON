@@ -94,7 +94,13 @@ Page({
     swiperPage: 0,
 
     allowSpectator: true,
-    maxSpectators: 0
+    maxSpectators: 0,
+
+    goodRoleNames: '',
+    evilRoleNames: '',
+    summarySpeech: '',
+    summarySpec: '',
+    summaryLady: ''
   },
 
   onLoad() {
@@ -460,6 +466,7 @@ Page({
     if (hasLancelot) pages.push(2);
     if (hasMerlin) pages.push(4);
     pages.push(5);
+    pages.push(6);
 
     this.setData({
       visiblePages: pages,
@@ -473,6 +480,32 @@ Page({
     this.computeLoyalCount();
     this.computeTeamSizes();
     this.computeVisiblePages();
+
+    const sel = this.data.selectedRoles;
+    const good = [];
+    if (sel.merlin) good.push('梅林');
+    if (sel.percival) good.push('派西');
+    if (sel.lancelotBlue) good.push('蓝兰');
+    if (this.data.loyalCount > 0) good.push('忠臣×' + this.data.loyalCount);
+    const evil = [];
+    if (sel.morgana) evil.push('莫甘娜');
+    if (sel.assassin) evil.push('刺客');
+    if (sel.mordred) evil.push('莫德雷德');
+    if (sel.oberon) evil.push('奥伯伦');
+    if (sel.minion) evil.push('爪牙');
+    if (sel.lancelotRed) evil.push('红兰');
+
+    const speech = this.data.speechTimeoutIndex > 0 ? SPEECH_OPTIONS[this.data.speechTimeoutIndex] : '不限';
+    const spec = this.data.allowSpectator ? (this.data.maxSpectators > 0 ? '允许（上限' + this.data.maxSpectators + '人）' : '允许') : '不允许';
+    const lady = this.data.ladyOfTheLake ? '启用（第' + this.data.ladyOfTheLakeRound + '轮）' : '未启用';
+
+    this.setData({
+      goodRoleNames: good.join('、'),
+      evilRoleNames: evil.join('、'),
+      summarySpeech: speech,
+      summarySpec: spec,
+      summaryLady: lady
+    });
   },
 
   // ─────────── Create Room ───────────

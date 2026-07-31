@@ -2,6 +2,7 @@
 
 button { margin: 0; padding: 0; width: auto; }
 button::after { border: none; }
+button.btn-round { width: fit-content; min-width: auto; }
 
 page { background: #F3F4F6; }
 

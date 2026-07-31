@@ -181,6 +181,18 @@
 .section-icon { width: 36rpx; height: 36rpx; margin-right: 10rpx; vertical-align: middle; }
 .role-img { width: 60rpx; height: 60rpx; }
 
+/* ─────── Config Summary ─────── */
+.summary-card {
+  background: #F9FAFB; border-radius: 16rpx; padding: 20rpx;
+}
+.summary-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14rpx 0; border-bottom: 1rpx solid #E5E7EB;
+}
+.summary-row:last-child { border-bottom: none; }
+.summary-label { font-size: 26rpx; color: #6B7280; flex-shrink: 0; }
+.summary-value { font-size: 26rpx; color: #111827; font-weight: 600; text-align: right; }
+
 /* ─────── Create button ─────── */
 .create-section { padding: 30rpx 0; }
 .create-btn {

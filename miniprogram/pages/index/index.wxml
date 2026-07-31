@@ -38,12 +38,12 @@
     </view>
   </view>
 
-  <view class="card action-card">
+  <view class="card action-card" wx:if="{{!currentRoom}}">
     <view class="action-title">开始游戏</view>
-    <button class="action-btn action-btn-primary" bindtap="showConfig" wx:if="{{!currentRoom}}">
+    <button class="action-btn action-btn-primary" bindtap="showConfig">
       <text class="btn-icon">🎮</text>召开会议
     </button>
-    <button class="action-btn action-btn-primary" bindtap="joinRoom" wx:if="{{!currentRoom}}">
+    <button class="action-btn action-btn-primary" bindtap="joinRoom">
       <text class="btn-icon">🚪</text>加入会议
     </button>
   </view>
@@ -395,6 +395,50 @@
             <view class="rule-row" wx:if="{{allowSpectator}}">
               <text class="rule-label">观战人数上限</text>
               <input class="spectator-input" type="number" maxlength="3" placeholder="0=不限" value="{{maxSpectators || ''}}" data-field="maxSpectators" bindinput="onSpectatorLimitInput"/>
+            </view>
+          </view>
+          <view style="height:60rpx"></view>
+        </scroll-view>
+      </swiper-item>
+
+      <!-- Page 6: 配置总结+会议信息+召开 -->
+      <swiper-item>
+        <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
+          <view class="config-section">
+            <view class="section-title">📋 配置总结</view>
+            <view class="summary-card">
+              <view class="summary-row">
+                <text class="summary-label">玩家数</text>
+                <text class="summary-value">{{playerCount}}人</text>
+              </view>
+              <view class="summary-row">
+                <text class="summary-label">好人</text>
+                <text class="summary-value">{{goodRoleNames}}</text>
+              </view>
+              <view class="summary-row">
+                <text class="summary-label">坏人</text>
+                <text class="summary-value">{{evilRoleNames}}</text>
+              </view>
+              <view class="summary-row">
+                <text class="summary-label">坏人互知</text>
+                <text class="summary-value">{{rules.evilKnowsEachOther ? '是' : '否'}}</text>
+              </view>
+              <view class="summary-row">
+                <text class="summary-label">票型</text>
+                <text class="summary-value">{{rules.voteVisibility === 'public' ? '公开' : '匿名'}}</text>
+              </view>
+              <view class="summary-row">
+                <text class="summary-label">湖中仙女</text>
+                <text class="summary-value">{{summaryLady}}</text>
+              </view>
+              <view class="summary-row">
+                <text class="summary-label">发言限时</text>
+                <text class="summary-value">{{summarySpeech}}</text>
+              </view>
+              <view class="summary-row">
+                <text class="summary-label">观战</text>
+                <text class="summary-value">{{summarySpec}}</text>
+              </view>
             </view>
           </view>
 
