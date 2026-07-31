@@ -104,7 +104,7 @@ function createRouter() {
         'SELECT current_room_id FROM users WHERE open_id = ?',
         [openId]
       );
-      if (existing.length > 0 && existing[0].current_room_id) {
+      if (existing.length > 0 && existing[0].current_room_id && existing[0].current_room_id !== roomId) {
         return res.status(400).json({
           success: false,
           message: '你已在其他房间中，请先退出'
