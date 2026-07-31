@@ -51,7 +51,7 @@ services:
       SSL_CERT_PATH: /app/ssl/haoyu-wang141.top_nginx/haoyu-wang141.top_bundle.pem
       SSL_KEY_PATH: /app/ssl/haoyu-wang141.top_nginx/haoyu-wang141.top.key
     volumes:
-      - ./ssl:/app/ssl:ro
+      - ../ssl:/app/ssl:ro
     depends_on:
       mysql:
         condition: service_healthy
