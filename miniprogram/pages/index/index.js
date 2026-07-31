@@ -161,7 +161,7 @@ Page({
     const name = this.data.customNickName || (this.data.userInfo && this.data.userInfo.nickName) || '房主';
     this.setData({
       showConfig: true, logicalPage: 0, swiperPage: this.data.visiblePages[0] || 0,
-      roomName: name + '的房间'
+      roomName: name + '的会议'
     });
   },
 
@@ -403,7 +403,7 @@ Page({
 
   createRoom() {
     const config = this.getRoomConfig();
-    wx.showLoading({ title: '创建房间中...' });
+    wx.showLoading({ title: '开始拉会中...' });
     api.request('/rooms/create', {
       method: 'POST',
       data: {
@@ -426,13 +426,13 @@ Page({
     }).catch(err => {
       wx.hideLoading();
       wx.showToast({ title: '创建失败', icon: 'error' });
-      console.error('创建房间失败:', err);
+      console.error('开始拉会失败:', err);
     });
   },
 
   joinRoom() {
     wx.showModal({
-      title: '加入房间', editable: true, placeholderText: '6位房间号',
+      title: '加入会议', editable: true, placeholderText: '6位会议ID',
       success: (res) => {
         if (res.confirm && res.content) {
           const input = res.content.trim();
@@ -459,7 +459,7 @@ Page({
   },
 
   doJoinRoom(roomId, seatNumber) {
-    wx.showLoading({ title: '加入房间中...' });
+    wx.showLoading({ title: '加入会议中...' });
     api.joinRoom(roomId, seatNumber).then(res => {
       wx.hideLoading();
       if (res.success) {

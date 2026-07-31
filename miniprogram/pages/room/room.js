@@ -204,7 +204,7 @@ Page({
       data: roomId,
       success: () => {
         wx.showToast({
-          title: '房间号已复制',
+          title: '会议ID已复制',
           icon: 'success',
         });
       }

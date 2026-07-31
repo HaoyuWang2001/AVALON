@@ -26,10 +26,10 @@
   <view class="card action-card">
     <view class="action-title">开始游戏</view>
     <button class="action-btn action-btn-primary" bindtap="showConfig">
-      <text class="btn-icon">🎮</text>创建房间
+      <text class="btn-icon">🎮</text>开始拉会
     </button>
     <button class="action-btn action-btn-primary" bindtap="joinRoom">
-      <text class="btn-icon">🚪</text>加入房间
+      <text class="btn-icon">🚪</text>加入会议
     </button>
   </view>
 
@@ -372,10 +372,10 @@
           </view>
 
           <view class="config-section">
-            <view class="section-title">📝 房间信息</view>
+            <view class="section-title">📝 会议信息</view>
             <view class="meta-row">
-              <text class="rule-label">房间名</text>
-              <input class="meta-input" placeholder="{{customNickName || '房主'}}的房间" value="{{roomName}}" data-field="roomName" bindinput="onMetaInput"/>
+              <text class="rule-label">会议名</text>
+              <input class="meta-input" placeholder="{{customNickName || '房主'}}的会议" value="{{roomName}}" data-field="roomName" bindinput="onMetaInput"/>
             </view>
             <view class="meta-row">
               <text class="rule-label">描述</text>
@@ -384,7 +384,7 @@
           </view>
 
           <view class="create-section">
-            <button class="create-btn" bindtap="createRoom" disabled="{{roleWarning !== ''}}">🎮 创建房间</button>
+            <button class="create-btn" bindtap="createRoom" disabled="{{roleWarning !== ''}}">🎮 开始拉会</button>
           </view>
           <view style="height:60rpx"></view>
         </scroll-view>

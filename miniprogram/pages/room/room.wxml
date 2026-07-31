@@ -3,7 +3,7 @@
   <view class="card">
     <view class="flex-between">
       <view>
-        <view class="subtitle">房间号: {{roomId}}</view>
+        <view class="subtitle">会议ID: {{roomId}}</view>
         <view class="text-muted">房主{{isHost ? '(您)' : ''}}可开始游戏</view>
       </view>
       <view>
