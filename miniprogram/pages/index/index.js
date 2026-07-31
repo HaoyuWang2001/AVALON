@@ -25,7 +25,7 @@ const DEFAULT_CONFIGS = {
 const SPEECH_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒', '150秒', '180秒'];
 const ROUND_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒'];
 const VOTE_OPTIONS = ['不限', '15秒', '30秒', '45秒', '60秒'];
-const DEFAULT_AVATAR = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNTAiIGZpbGw9IiNGRkZGRkYiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjM4IiByPSIxNiIgZmlsbD0iIzhCNUNGNSIvPjxwYXRoIGQ9Ik0xOCA4NWMwLTIyIDE0LTM2IDMyLTM2czMyIDE0IDMyIDM2IiBmaWxsPSIjOEI1Q0Y1Ii8+PC9zdmc+';
+const DEFAULT_AVATAR = '/images/default-avatar.png';
 
 const TEAM_SIZES = {
   5: [2,3,2,3,3], 6: [2,3,4,3,4], 7: [2,3,3,4,4],
@@ -204,24 +204,27 @@ Page({
   onChooseAvatar(e) {
     if (!e.detail || !e.detail.avatarUrl) return;
     const tempPath = e.detail.avatarUrl;
+    const app = getApp();
+    const openId = app.globalData.openId || wx.getStorageSync('openId') || 'default';
+
+    this.setData({ 'userInfo.avatarUrl': tempPath });
+    app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: tempPath };
+
     const fs = wx.getFileSystemManager();
-    const openId = getApp().globalData.openId || wx.getStorageSync('openId') || 'default';
     const savedPath = wx.env.USER_DATA_PATH + '/avatar_' + openId + '.jpg';
     fs.saveFile({
       tempFilePath: tempPath,
       filePath: savedPath,
       success: () => {
-        this.setData({ 'userInfo.avatarUrl': savedPath });
         wx.setStorageSync('avatarUrl', savedPath);
-        const app = getApp();
+        this.setData({ 'userInfo.avatarUrl': savedPath });
         app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: savedPath };
-        const openId = app.globalData.openId;
         if (openId) {
           api.updateUserProfile(openId, { avatarUrl: savedPath }).catch(() => {});
         }
       },
       fail: () => {
-        this.setData({ 'userInfo.avatarUrl': tempPath });
+        wx.setStorageSync('avatarUrl', tempPath);
       }
     });
   },
