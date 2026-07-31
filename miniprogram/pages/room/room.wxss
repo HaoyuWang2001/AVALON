@@ -34,7 +34,7 @@ page { background: #F3F4F6; }
 }
 
 /* ─── Card 1: Room Info ─── */
-.room-info-card { background: linear-gradient(135deg, #FAF5FF, #F5F3FF); }
+.room-info-card { background: #fff; }
 .info-top-row { display: flex; align-items: center; justify-content: space-between; }
 .info-label { font-size: 26rpx; color: #6B7280; margin-left: 4rpx; }
 .info-btns { display: flex; gap: 12rpx; }
@@ -68,12 +68,12 @@ page { background: #F3F4F6; }
 .btn-purple { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
 .btn-disband { background: #FEE2E2; color: #DC2626; }
 .btn-cancel { background: #E5E7EB; color: #6B7280; }
-.btn-ready { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; min-width: 240rpx; }
+.btn-ready { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
 .btn-random-seat { background: #E5E7EB; color: #374151; font-size: 22rpx; padding: 8rpx 20rpx; }
 .btn-spectate { background: #E5E7EB; color: #374151; font-size: 22rpx; padding: 8rpx 20rpx; }
 
 /* ─── Card 2: Host Control ─── */
-.host-card { background: linear-gradient(135deg, #FAF5FF, #F5F3FF); }
+.host-card { background: #fff; }
 .btn-host-start {
   display: block; width: 100%; font-size: 32rpx; font-weight: 700; padding: 22rpx;
   border-radius: 40rpx; text-align: center; margin-bottom: 12rpx;
