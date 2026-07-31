@@ -79,31 +79,26 @@ function createRouter() {
     try {
       const { roomId, userInfo, seatNumber, customNickName } = req.body;
       
-      if (!roomId || !userInfo || !seatNumber) {
+      if (!roomId || !userInfo) {
         return res.status(400).json({ 
           success: false, 
           message: '缺少必要参数' 
         });
       }
       
-      if (seatNumber < 1 || seatNumber > 12) {
-        return res.status(400).json({ 
-          success: false, 
-          message: '座位号无效，请选择1-12号' 
-        });
-      }
+      const seat = (seatNumber == null) ? 0 : seatNumber;
       
       const room = await RoomModel.join(
         roomId, 
         userInfo, 
-        seatNumber, 
+        seat, 
         customNickName || ''
       );
       
       res.json({
         success: true,
         message: '加入房间成功',
-        seatNumber,
+        seatNumber: seat,
         room
       });
     } catch (error) {
@@ -201,17 +196,10 @@ function createRouter() {
     try {
       const { roomId, openId, newSeatNumber } = req.body;
       
-      if (!roomId || !openId || !newSeatNumber) {
+      if (!roomId || !openId || newSeatNumber == null) {
         return res.status(400).json({ 
           success: false, 
           message: '缺少必要参数' 
-        });
-      }
-      
-      if (newSeatNumber < 1 || newSeatNumber > 12) {
-        return res.status(400).json({ 
-          success: false, 
-          message: '座位号无效，请选择1-12号' 
         });
       }
       
@@ -242,7 +230,7 @@ function createRouter() {
   // 踢出玩家（房主操作）
   router.post('/kickPlayer', async (req, res) => {
     try {
-      const { roomId, playerId } = req.body;
+      const { roomId, playerId, mode } = req.body;
       
       if (!roomId || !playerId) {
         return res.status(400).json({ 
@@ -251,12 +239,12 @@ function createRouter() {
         });
       }
       
-      const room = await RoomModel.kickPlayer(roomId, playerId);
+      const room = await RoomModel.kickPlayer(roomId, playerId, mode || 'room');
       
       res.json({ 
         success: true, 
         room,
-        message: '已踢出玩家'
+        message: mode === 'unseat' ? '已踢到未入座区' : '已踢出房间'
       });
     } catch (error) {
       console.error('踢出玩家API错误:', error);
@@ -332,7 +320,36 @@ function createRouter() {
       });
     }
   });
-  
+
+  // 解散房间（房主操作）
+  router.post('/:roomId/disband', async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const { openId } = req.body;
+      const result = await RoomModel.disband(roomId, openId);
+      res.json(result);
+    } catch (error) {
+      if (error.message.includes('仅房主')) {
+        return res.status(403).json({ success: false, message: error.message });
+      }
+      if (error.message.includes('不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // 随机座位（房主操作）
+  router.post('/:roomId/randomSeats', async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const room = await RoomModel.randomSeats(roomId);
+      res.json({ success: true, room, message: '座位已随机打乱' });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
   // 清理过期房间（管理接口）
   router.post('/cleanup', async (req, res) => {
     try {

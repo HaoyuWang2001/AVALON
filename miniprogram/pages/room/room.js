@@ -6,225 +6,209 @@ Page({
   data: {
     roomId: '',
     isHost: false,
-    seatNumber: 0,
+    playerCount: 0,
     players: [],
+    seatedPlayers: [],
+    unseatedPlayers: [],
+    spectatorPlayers: [],
     readyPlayers: [],
-    gameStarted: false,
-    currentUser: null,
     roomInfo: null,
-    userInfo: null,
-    showSeatModal: false,
-    occupiedSeats: []
+    currentUser: null,
+    gameStarted: false
   },
 
   onLoad(options) {
-    const { roomId, isHost, seatNumber } = options;
+    const { roomId, isHost } = options;
     this.setData({
       roomId: roomId || '',
-      isHost: isHost === 'true',
-      seatNumber: parseInt(seatNumber) || 0
+      isHost: isHost === 'true'
     });
-
-    const userInfo = app.globalData.userInfo;
-    this.setData({ userInfo });
-
     this.initRoomPolling();
   },
 
   onUnload() {
-    if (this.roomPolling) {
-      clearInterval(this.roomPolling);
-    }
+    if (this.roomPolling) clearInterval(this.roomPolling);
     this.leaveRoom();
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '加入我的阿瓦隆房间',
+      path: `/pages/room/room?roomId=${this.data.roomId}&isHost=false`
+    };
   },
 
   initRoomPolling() {
     this.fetchRoomInfo();
-    this.roomPolling = setInterval(() => {
-      this.fetchRoomInfo();
-    }, 2000);
+    this.roomPolling = setInterval(() => { this.fetchRoomInfo(); }, 2000);
   },
 
   fetchRoomInfo() {
-    const { roomId } = this.data;
-    api.getRoom(roomId).then(res => {
+    api.getRoom(this.data.roomId).then(res => {
       if (res.success && res.room) {
         const room = res.room;
         const players = room.players || [];
-        const occupiedSeats = players.map(p => p.seatNumber);
+        const readyPlayers = room.readyPlayers || [];
         const currentUser = players.find(p => p.openId === app.globalData.openId);
+
+        let playerCount = 0;
+        if (room.roomConfig && room.roomConfig.roles) {
+          const good = room.roomConfig.roles.good || [];
+          const evil = room.roomConfig.roles.evil || [];
+          playerCount = good.length + evil.length;
+        }
+
+        const seatedPlayers = players.filter(p => p.seatNumber >= 1).sort((a, b) => a.seatNumber - b.seatNumber);
+        const unseatedPlayers = players.filter(p => p.seatNumber === 0);
+        const spectatorPlayers = players.filter(p => p.seatNumber === -1);
+        const seatedSeats = new Set(seatedPlayers.map(p => p.seatNumber));
+
+        const seats = [];
+        for (let i = 1; i <= playerCount; i++) {
+          const player = seatedPlayers.find(p => p.seatNumber === i);
+          const isReady = player ? readyPlayers.includes(player.openId) : false;
+          seats.push({
+            number: i,
+            player: player || null,
+            occupied: !!player,
+            isReady: isReady,
+            isHost: player ? player.isHost : false,
+            isSelf: player ? player.openId === (currentUser ? currentUser.openId : '') : false
+          });
+        }
 
         this.setData({
           roomInfo: room,
           players: players,
-          readyPlayers: room.readyPlayers || [],
-          gameStarted: room.gameStarted || false,
-          occupiedSeats: occupiedSeats,
+          playerCount: playerCount,
+          seatedPlayers: seatedPlayers,
+          unseatedPlayers: unseatedPlayers,
+          spectatorPlayers: spectatorPlayers,
+          readyPlayers: readyPlayers,
           currentUser: currentUser,
-          seatNumber: currentUser ? currentUser.seatNumber : this.data.seatNumber
+          gameStarted: room.gameStarted || false,
+          seatedSeats: seats
         });
 
         if (room.gameStarted && !this.data.gameStarted) {
-          wx.redirectTo({
-            url: `/pages/game/game?roomId=${roomId}`,
-          });
+          wx.redirectTo({ url: `/pages/game/game?roomId=${this.data.roomId}` });
         }
       } else {
-        wx.showToast({
-          title: '房间已解散',
-          icon: 'error',
-        });
-        setTimeout(() => {
-          wx.navigateBack();
-        }, 1500);
+        wx.showToast({ title: '房间已解散', icon: 'error' });
+        setTimeout(() => { wx.navigateBack(); }, 1500);
       }
-    }).catch(err => {
-      console.error('获取房间信息失败:', err);
-    });
+    }).catch(() => {});
   },
 
-  showSeatSelectionModal() {
-    this.setData({ showSeatModal: true });
+  // ─── Seat actions ───
+
+  takeSeat(e) {
+    const seatNum = e.currentTarget.dataset.seat;
+    const userId = app.globalData.openId;
+    api.updateSeatNumber(this.data.roomId, seatNum).catch(() => {});
   },
 
-  hideSeatModal() {
-    this.setData({ showSeatModal: false });
-  },
-
-  selectSeat(e) {
-    const seatNumber = e.currentTarget.dataset.seat;
-    const { occupiedSeats, roomId } = this.data;
-
-    if (occupiedSeats.includes(seatNumber)) {
-      wx.showToast({
-        title: '该座位已被占用',
-        icon: 'error'
-      });
-      return;
+  randomTakeSeat() {
+    const occupiedSeats = new Set(this.data.seatedPlayers.map(p => p.seatNumber));
+    const emptySeats = [];
+    for (let i = 1; i <= this.data.playerCount; i++) {
+      if (!occupiedSeats.has(i)) emptySeats.push(i);
     }
-
-    api.updateSeatNumber(roomId, seatNumber).then(res => {
-      if (res.success) {
-        this.setData({
-          seatNumber: seatNumber,
-          showSeatModal: false
-        });
-        wx.showToast({
-          title: `已选择${seatNumber}号座位`,
-          icon: 'success'
-        });
-      } else {
-        wx.showToast({
-          title: res.message || '选择失败',
-          icon: 'error'
-        });
-      }
-    }).catch(err => {
-      wx.showToast({
-        title: '选择失败',
-        icon: 'error'
-      });
-    });
+    if (emptySeats.length === 0) return;
+    const seat = emptySeats[Math.floor(Math.random() * emptySeats.length)];
+    api.updateSeatNumber(this.data.roomId, seat).catch(() => {});
   },
 
-  changeSeatNumber() {
-    this.setData({ showSeatModal: true });
+  leaveSeat() {
+    api.updateSeatNumber(this.data.roomId, 0).catch(() => {});
   },
 
-  leaveRoom() {
-    const { roomId } = this.data;
-    api.leaveRoom(roomId).then(() => {
-      console.log('已离开房间');
-    }).catch(err => {
-      console.error('离开房间失败:', err);
-    });
+  becomeSpectator() {
+    api.updateSeatNumber(this.data.roomId, -1).catch(() => {});
   },
+
+  // ─── Ready / Start / Disband ───
 
   toggleReady() {
-    const { roomId, readyPlayers } = this.data;
-    const userOpenId = app.globalData.openId;
-    const isReady = readyPlayers.includes(userOpenId);
-
-    api.toggleReady(roomId, !isReady).then(res => {
-      console.log('准备状态切换成功:', res);
-    }).catch(err => {
-      console.error('准备状态切换失败:', err);
-    });
+    const userId = app.globalData.openId;
+    const isReady = this.data.readyPlayers.includes(userId);
+    api.toggleReady(this.data.roomId, !isReady).catch(() => {});
   },
 
   startGame() {
-    const { roomId, players } = this.data;
-    if (players.length < 5) {
-      wx.showToast({
-        title: '至少需要5人',
-        icon: 'error',
-      });
+    const { roomId, seatedSeats, readyPlayers } = this.data;
+    const allSeated = seatedSeats.every(s => s.occupied);
+    if (!allSeated) {
+      wx.showToast({ title: '所有游戏座位需满员', icon: 'error' });
       return;
     }
-
+    const allReady = seatedSeats.every(s => s.isReady);
+    if (!allReady) {
+      wx.showToast({ title: '所有入座玩家需准备', icon: 'error' });
+      return;
+    }
     wx.showModal({
       title: '开始游戏',
-      content: '确定要开始游戏吗？游戏开始后不能再加入新玩家。',
+      content: '确定开始游戏吗？开始后不能再加入。',
       success: (res) => {
         if (res.confirm) {
-          wx.showLoading({
-            title: '游戏准备中...',
-          });
-          api.startGame(roomId).then(res => {
-            wx.hideLoading();
-            console.log('游戏开始成功:', res);
-          }).catch(err => {
-            wx.hideLoading();
-            console.error('游戏开始失败:', err);
-            wx.showToast({
-              title: '开始失败',
-              icon: 'error',
-            });
+          wx.showLoading({ title: '准备中...' });
+          api.startGame(roomId).then(() => wx.hideLoading()).catch(() => {
+            wx.hideLoading(); wx.showToast({ title: '开始失败', icon: 'error' });
           });
         }
       }
     });
   },
 
-  shareRoom() {
-    const { roomId } = this.data;
-    wx.showShareMenu({
-      withShareTicket: true
-    });
-    wx.shareAppMessage({
-      title: '加入我的阿瓦隆房间',
-      path: `/pages/room/room?roomId=${roomId}&isHost=false`,
-      imageUrl: '/images/share.jpg'
-    });
-  },
-
-  copyRoomId() {
-    const { roomId } = this.data;
-    wx.setClipboardData({
-      data: roomId,
-      success: () => {
-        wx.showToast({
-          title: '会议ID已复制',
-          icon: 'success',
-        });
+  disbandRoom() {
+    wx.showModal({
+      title: '解散房间',
+      content: '确定解散房间吗？所有玩家将被移出。',
+      success: (res) => {
+        if (res.confirm) {
+          api.disbandRoom(this.data.roomId).then(() => {
+            wx.showToast({ title: '已解散', icon: 'success' });
+            wx.navigateBack();
+          }).catch(() => wx.showToast({ title: '解散失败', icon: 'error' }));
+        }
       }
     });
   },
+
+  randomShuffleSeats() {
+    api.randomSeats(this.data.roomId).catch(() => {});
+  },
+
+  // ─── Kick ───
 
   kickPlayer(e) {
     const playerId = e.currentTarget.dataset.id;
-    wx.showModal({
-      title: '踢出玩家',
-      content: '确定要踢出该玩家吗？',
+    wx.showActionSheet({
+      itemList: ['踢到未入座区', '踢出房间'],
       success: (res) => {
-        if (res.confirm) {
-          api.kickPlayer(this.data.roomId, playerId).then(() => {
-            console.log('踢出玩家成功');
-          }).catch(err => {
-            console.error('踢出玩家失败:', err);
-          });
-        }
+        const mode = res.tapIndex === 0 ? 'unseat' : 'room';
+        api.kickPlayer(this.data.roomId, playerId, mode).catch(() => {});
       }
     });
+  },
+
+  // ─── Copy ───
+
+  copyRoomId() {
+    wx.setClipboardData({
+      data: this.data.roomId,
+      success: () => wx.showToast({ title: '会议ID已复制', icon: 'success' })
+    });
+  },
+
+  leaveRoom() {
+    api.leaveRoom(this.data.roomId).catch(() => {});
+  },
+
+  // ─── Modify config placeholder ───
+
+  modifyConfig() {
+    wx.showToast({ title: '功能开发中', icon: 'none' });
   }
 });

@@ -107,10 +107,24 @@ class ApiService {
     });
   }
 
-  async kickPlayer(roomId, playerId) {
+  async kickPlayer(roomId, playerId, mode) {
     return this.request('/rooms/kickPlayer', {
       method: 'POST',
-      data: { roomId, playerId }
+      data: { roomId, playerId, mode: mode || 'room' }
+    });
+  }
+
+  async disbandRoom(roomId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/rooms/${roomId}/disband`, {
+      method: 'POST',
+      data: { openId }
+    });
+  }
+
+  async randomSeats(roomId) {
+    return this.request(`/rooms/${roomId}/randomSeats`, {
+      method: 'POST'
     });
   }
 

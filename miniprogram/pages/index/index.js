@@ -493,23 +493,9 @@ Page({
       title: '加入会议', editable: true, placeholderText: '6位会议ID',
       success: (res) => {
         if (res.confirm && res.content) {
-          const input = res.content.trim();
-          const parts = input.split(' ');
-          const roomId = parts[0];
-          let seatNumber = parseInt(parts[1]) || null;
+          const roomId = res.content.trim();
           if (roomId.length === 6) {
-            if (!seatNumber || seatNumber < 1 || seatNumber > 12) {
-              wx.showModal({
-                title: '选择座位号', content: '请输入座位号(1-12)',
-                editable: true, placeholderText: '1-12',
-                success: (seatRes) => {
-                  if (seatRes.confirm && seatRes.content) {
-                    seatNumber = parseInt(seatRes.content.trim());
-                    if (seatNumber >= 1 && seatNumber <= 12) { this.doJoinRoom(roomId, seatNumber); }
-                  }
-                }
-              });
-            } else { this.doJoinRoom(roomId, seatNumber); }
+            this.doJoinRoom(roomId, 0);
           }
         }
       }

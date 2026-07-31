@@ -192,7 +192,7 @@ class RoomModel {
    * @param {string} userInfo.openId 用户openId
    * @param {string} userInfo.nickName 用户昵称
    * @param {string} userInfo.avatarUrl 用户头像URL
-   * @param {number} seatNumber 座位号(1-12)
+   * @param {number} seatNumber 座位号(0=未入座, -1=观战, 1-n=入座)
    * @param {string} customNickName 自定义昵称
    * @returns {Promise<Object>} 加入结果
    */
@@ -200,61 +200,37 @@ class RoomModel {
     const openId = userInfo.openId;
     const nickName = customNickName || userInfo.nickName || '匿名玩家';
     const wxNickName = userInfo.wxNickName || '';
+    const seat = (seatNumber == null) ? 0 : seatNumber;
     
     try {
       await db.transaction(async (connection) => {
-        // 检查房间是否存在且未开始游戏
         const [rooms] = await connection.execute(
           'SELECT game_started FROM rooms WHERE id = ? FOR UPDATE',
           [roomId]
         );
+        if (rooms.length === 0) throw new Error('房间不存在');
+        if (rooms[0].game_started) throw new Error('游戏已开始');
         
-        if (rooms.length === 0) {
-          throw new Error('房间不存在');
-        }
-        
-        if (rooms[0].game_started) {
-          throw new Error('游戏已开始');
-        }
-        
-        // 检查房间是否已满
-        const [playerCount] = await connection.execute(
-          'SELECT COUNT(*) as count FROM players WHERE room_id = ?',
-          [roomId]
-        );
-        
-        if (playerCount[0].count >= 12) {
-          throw new Error('房间已满');
-        }
-        
-        // 检查座位是否被占用
-        const [occupiedSeats] = await connection.execute(
-          'SELECT COUNT(*) as count FROM players WHERE room_id = ? AND seat_number = ?',
-          [roomId, seatNumber]
-        );
-        
-        if (occupiedSeats[0].count > 0) {
-          throw new Error(`${seatNumber}号座位已被占用`);
-        }
-        
-        // 检查是否已加入房间
         const [alreadyJoined] = await connection.execute(
           'SELECT COUNT(*) as count FROM players WHERE room_id = ? AND open_id = ?',
           [roomId, openId]
         );
+        if (alreadyJoined[0].count > 0) throw new Error('已在房间中');
         
-        if (alreadyJoined[0].count > 0) {
-          throw new Error('已在房间中');
+        if (seat >= 1) {
+          const [occupiedSeats] = await connection.execute(
+            'SELECT COUNT(*) as count FROM players WHERE room_id = ? AND seat_number = ?',
+            [roomId, seat]
+          );
+          if (occupiedSeats[0].count > 0) throw new Error(`${seat}号座位已被占用`);
         }
         
-        // 添加玩家
         await connection.execute(
           `INSERT INTO players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_host, is_ready, created_at) 
            VALUES (?, ?, ?, ?, ?, ?, FALSE, FALSE, NOW())`,
-          [roomId, openId, nickName, wxNickName, userInfo.avatarUrl || '', seatNumber]
+          [roomId, openId, nickName, wxNickName, userInfo.avatarUrl || '', seat]
         );
         
-        // 更新房间更新时间
         await connection.execute(
           'UPDATE rooms SET updated_at = NOW() WHERE id = ?',
           [roomId]
@@ -377,23 +353,19 @@ class RoomModel {
   static async updateSeatNumber(roomId, openId, newSeatNumber) {
     try {
       await db.transaction(async (connection) => {
-        // 检查座位是否被占用
-        const [occupiedSeats] = await connection.execute(
-          'SELECT COUNT(*) as count FROM players WHERE room_id = ? AND seat_number = ? AND open_id != ?',
-          [roomId, newSeatNumber, openId]
-        );
-        
-        if (occupiedSeats[0].count > 0) {
-          throw new Error('座位已被占用');
+        if (newSeatNumber >= 1) {
+          const [occupiedSeats] = await connection.execute(
+            'SELECT COUNT(*) as count FROM players WHERE room_id = ? AND seat_number = ? AND open_id != ?',
+            [roomId, newSeatNumber, openId]
+          );
+          if (occupiedSeats[0].count > 0) throw new Error('座位已被占用');
         }
         
-        // 更新座位号
         await connection.execute(
-          'UPDATE players SET seat_number = ? WHERE room_id = ? AND open_id = ?',
+          'UPDATE players SET seat_number = ?, is_ready = FALSE WHERE room_id = ? AND open_id = ?',
           [newSeatNumber, roomId, openId]
         );
         
-        // 更新房间更新时间
         await connection.execute(
           'UPDATE rooms SET updated_at = NOW() WHERE id = ?',
           [roomId]
@@ -411,16 +383,23 @@ class RoomModel {
    * 踢出玩家
    * @param {string} roomId 房间ID
    * @param {string} playerId 被踢玩家openId
+   * @param {string} mode 'room'=踢出房间, 'unseat'=踢到未入座区
    * @returns {Promise<Object>} 更新后的房间信息
    */
-  static async kickPlayer(roomId, playerId) {
+  static async kickPlayer(roomId, playerId, mode = 'room') {
     try {
-      await db.query(
-        'DELETE FROM players WHERE room_id = ? AND open_id = ?',
-        [roomId, playerId]
-      );
+      if (mode === 'unseat') {
+        await db.query(
+          'UPDATE players SET seat_number = 0, is_ready = FALSE WHERE room_id = ? AND open_id = ?',
+          [roomId, playerId]
+        );
+      } else {
+        await db.query(
+          'DELETE FROM players WHERE room_id = ? AND open_id = ?',
+          [roomId, playerId]
+        );
+      }
       
-      // 更新房间更新时间
       await db.query(
         'UPDATE rooms SET updated_at = NOW() WHERE id = ?',
         [roomId]
@@ -451,6 +430,32 @@ class RoomModel {
       console.error('设置游戏开始状态失败:', error);
       throw error;
     }
+  }
+
+  static async disband(roomId, openId) {
+    const room = await this.getById(roomId);
+    if (!room) throw new Error('房间不存在');
+    if (room.hostOpenId !== openId) throw new Error('仅房主可解散房间');
+    await db.query('DELETE FROM players WHERE room_id = ?', [roomId]);
+    await db.query('DELETE FROM rooms WHERE id = ?', [roomId]);
+    return { success: true, message: '房间已解散' };
+  }
+
+  static async randomSeats(roomId) {
+    const room = await this.getById(roomId);
+    if (!room) throw new Error('房间不存在');
+    const seated = room.players.filter(p => p.seatNumber >= 1);
+    if (seated.length === 0) throw new Error('没有入座玩家');
+    const shuffled = [...seated].sort(() => Math.random() - 0.5);
+    const seatNumbers = seated.map(p => p.seatNumber).sort((a, b) => a - b);
+    for (let i = 0; i < shuffled.length; i++) {
+      await db.query(
+        'UPDATE players SET seat_number = ? WHERE room_id = ? AND open_id = ?',
+        [seatNumbers[i], roomId, shuffled[i].openId]
+      );
+    }
+    await db.query('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
+    return await this.getById(roomId);
   }
   
   /**

@@ -67,10 +67,7 @@ router.get('/:roomId', (req, res) => {
 router.post('/join', (req, res) => {
   const { roomId, userInfo, seatNumber, customNickName } = req.body;
   const openId = userInfo.openId;
-  
-  if (!seatNumber || seatNumber < 1 || seatNumber > 12) {
-    return res.status(400).json({ success: false, message: '座位号无效' });
-  }
+  const seat = (seatNumber == null) ? 0 : seatNumber;
   
   const room = rooms.get(roomId);
   if (!room) {
@@ -81,13 +78,11 @@ router.post('/join', (req, res) => {
     return res.status(400).json({ success: false, message: '游戏已开始' });
   }
   
-  if (room.players.length >= 12) {
-    return res.status(400).json({ success: false, message: '房间已满' });
-  }
-  
-  const occupiedSeats = room.players.map(p => p.seatNumber);
-  if (occupiedSeats.includes(seatNumber)) {
-    return res.status(400).json({ success: false, message: `${seatNumber}号座位已被占用` });
+  if (seat >= 1) {
+    const occupiedSeats = room.players.map(p => p.seatNumber);
+    if (occupiedSeats.includes(seat)) {
+      return res.status(400).json({ success: false, message: `${seat}号座位已被占用` });
+    }
   }
   
   const alreadyJoined = room.players.some(p => p.openId === openId);
@@ -100,9 +95,11 @@ router.post('/join', (req, res) => {
   room.players.push({
     openId,
     nickName,
+    wxNickName: userInfo.wxNickName || '',
     avatarUrl: userInfo.avatarUrl || '',
-    seatNumber,
-    isHost: false
+    seatNumber: seat,
+    isHost: false,
+    isReady: false
   });
   
   room.updatedAt = new Date();
@@ -111,7 +108,7 @@ router.post('/join', (req, res) => {
   res.json({
     success: true,
     message: '加入房间成功',
-    seatNumber,
+    seatNumber: seat,
     room
   });
 });
@@ -175,21 +172,19 @@ router.post('/updateSeatNumber', (req, res) => {
     return res.status(404).json({ success: false, message: '房间不存在' });
   }
   
-  if (newSeatNumber < 1 || newSeatNumber > 12) {
-    return res.status(400).json({ success: false, message: '座位号无效' });
-  }
-  
-  const occupiedSeats = room.players
-    .filter(p => p.openId !== openId)
-    .map(p => p.seatNumber);
-  
-  if (occupiedSeats.includes(newSeatNumber)) {
-    return res.status(400).json({ success: false, message: '座位已被占用' });
+  if (newSeatNumber >= 1) {
+    const occupiedSeats = room.players
+      .filter(p => p.openId !== openId)
+      .map(p => p.seatNumber);
+    if (occupiedSeats.includes(newSeatNumber)) {
+      return res.status(400).json({ success: false, message: '座位已被占用' });
+    }
   }
   
   const player = room.players.find(p => p.openId === openId);
   if (player) {
     player.seatNumber = newSeatNumber;
+    player.isReady = false;
     room.updatedAt = new Date();
     rooms.set(roomId, room);
   }
@@ -198,22 +193,54 @@ router.post('/updateSeatNumber', (req, res) => {
 });
 
 router.post('/kickPlayer', (req, res) => {
-  const { roomId, playerId } = req.body;
+  const { roomId, playerId, mode } = req.body;
   const room = rooms.get(roomId);
   
   if (!room) {
     return res.status(404).json({ success: false, message: '房间不存在' });
   }
   
-  const playerIndex = room.players.findIndex(p => p.openId === playerId);
-  if (playerIndex !== -1) {
-    room.players.splice(playerIndex, 1);
+  if (mode === 'unseat') {
+    const player = room.players.find(p => p.openId === playerId);
+    if (player) {
+      player.seatNumber = 0;
+      player.isReady = false;
+      room.readyPlayers = room.readyPlayers.filter(id => id !== playerId);
+      room.updatedAt = new Date();
+      rooms.set(roomId, room);
+    }
+  } else {
+    room.players = room.players.filter(p => p.openId !== playerId);
     room.readyPlayers = room.readyPlayers.filter(id => id !== playerId);
     room.updatedAt = new Date();
     rooms.set(roomId, room);
   }
   
   res.json({ success: true, room });
+});
+
+router.post('/:roomId/disband', (req, res) => {
+  const { roomId } = req.params;
+  const { openId } = req.body;
+  const room = rooms.get(roomId);
+  if (!room) return res.status(404).json({ success: false, message: '房间不存在' });
+  if (room.hostOpenId !== openId) return res.status(403).json({ success: false, message: '仅房主可解散房间' });
+  rooms.delete(roomId);
+  res.json({ success: true, message: '房间已解散' });
+});
+
+router.post('/:roomId/randomSeats', (req, res) => {
+  const { roomId } = req.params;
+  const room = rooms.get(roomId);
+  if (!room) return res.status(404).json({ success: false, message: '房间不存在' });
+  const seated = room.players.filter(p => p.seatNumber >= 1);
+  if (seated.length === 0) return res.status(400).json({ success: false, message: '没有入座玩家' });
+  const seatNumbers = seated.map(p => p.seatNumber).sort((a, b) => a - b);
+  const shuffled = [...seated].sort(() => Math.random() - 0.5);
+  shuffled.forEach((p, i) => { p.seatNumber = seatNumbers[i]; });
+  room.updatedAt = new Date();
+  rooms.set(roomId, room);
+  res.json({ success: true, room, message: '座位已随机打乱' });
 });
 
   return router;
