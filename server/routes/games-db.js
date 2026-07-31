@@ -218,6 +218,7 @@ function createRouter() {
       
       if (error.message.includes('当前不是任务投票阶段') ||
           error.message.includes('只有坏人才能破坏任务') ||
+          error.message.includes('只有任务队成员才能投票') ||
           error.message.includes('已投票')) {
         return res.status(400).json({ 
           success: false, 
@@ -232,6 +233,94 @@ function createRouter() {
     }
   });
   
+  // 推进游戏阶段
+  router.post('/:gameId/advancePhase', async (req, res) => {
+    try {
+      const { gameId } = req.params;
+
+      if (!gameId) {
+        return res.status(400).json({ 
+          success: false, 
+          message: '缺少游戏ID' 
+        });
+      }
+
+      const result = await GameModel.advancePhase(gameId);
+
+      res.json({ 
+        success: true, 
+        game: result.game 
+      });
+    } catch (error) {
+      console.error('推进阶段API错误:', error);
+
+      if (error.message.includes('游戏不存在')) {
+        return res.status(404).json({ 
+          success: false, 
+          message: error.message 
+        });
+      }
+
+      if (error.message.includes('当前阶段无法推进')) {
+        return res.status(400).json({ 
+          success: false, 
+          message: error.message 
+        });
+      }
+
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || '推进阶段失败' 
+      });
+    }
+  });
+
+  // 刺客刺杀梅林
+  router.post('/:gameId/assassinate', async (req, res) => {
+    try {
+      const { gameId } = req.params;
+      const { killerOpenId, targetOpenId } = req.body;
+
+      if (!gameId || !killerOpenId || !targetOpenId) {
+        return res.status(400).json({ 
+          success: false, 
+          message: '缺少必要参数' 
+        });
+      }
+
+      const result = await GameModel.assassinate(gameId, killerOpenId, targetOpenId);
+
+      res.json({ 
+        success: true, 
+        game: result.game 
+      });
+    } catch (error) {
+      console.error('刺杀API错误:', error);
+
+      if (error.message.includes('游戏不存在')) {
+        return res.status(404).json({ 
+          success: false, 
+          message: error.message 
+        });
+      }
+
+      if (error.message.includes('游戏已结束') ||
+          error.message.includes('本局已使用过刺杀') ||
+          error.message.includes('不在此游戏中') ||
+          error.message.includes('只有坏人才能发起刺杀')) {
+        return res.status(400).json({ 
+          success: false, 
+          message: error.message 
+        });
+      }
+
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || '刺杀失败' 
+      });
+    }
+  });
+
   // 结束游戏
   router.post('/end', async (req, res) => {
     try {
@@ -283,24 +372,25 @@ function createRouter() {
     try {
       const { roomId } = req.params;
       const { limit = 10 } = req.query;
-      
+
       const db = require('../config/db');
       const history = await db.query(
-        `SELECT id, room_id as roomId, game_data as gameData, winner, player_count as playerCount,
-                duration_seconds as durationSeconds, created_at as createdAt
-         FROM games 
-         WHERE room_id = ? AND status = 'ended'
-         ORDER BY created_at DESC
+        `SELECT g.id, g.room_id as roomId, g.current_phase as currentPhase, g.game_result as gameResult,
+                (SELECT COUNT(*) FROM game_players WHERE game_id = g.id) as playerCount,
+                g.created_at as createdAt, g.ended_at as endedAt,
+                TIMESTAMPDIFF(SECOND, g.created_at, g.ended_at) as durationSeconds
+         FROM games g
+         WHERE g.room_id = ? AND g.status = 'ended'
+         ORDER BY g.created_at DESC
          LIMIT ?`,
         [roomId, parseInt(limit)]
       );
-      
-      // 解析JSON数据
+
       const parsedHistory = history.map(record => ({
         ...record,
-        gameData: record.gameData ? JSON.parse(record.gameData) : null
+        gameResult: record.gameResult ? JSON.parse(record.gameResult) : null
       }));
-      
+
       res.json({ 
         success: true, 
         history: parsedHistory,
@@ -319,12 +409,14 @@ function createRouter() {
   router.get('/recent/games', async (req, res) => {
     try {
       const { limit = 20 } = req.query;
-      
+
       const db = require('../config/db');
       const recentGames = await db.query(
-        `SELECT g.id, g.room_id as roomId, g.winner, g.player_count as playerCount,
-                g.duration_seconds as durationSeconds, g.created_at as gameEndedAt,
-                r.host_open_id as hostOpenId
+        `SELECT g.id, g.room_id as roomId, g.game_result as gameResult,
+                (SELECT COUNT(*) FROM game_players WHERE game_id = g.id) as playerCount,
+                TIMESTAMPDIFF(SECOND, g.created_at, g.ended_at) as durationSeconds,
+                g.created_at as createdAt, g.ended_at as endedAt,
+                r.owner_id as hostOpenId
          FROM games g
          LEFT JOIN rooms r ON g.room_id = r.id
          WHERE g.status = 'ended'
@@ -332,11 +424,16 @@ function createRouter() {
          LIMIT ?`,
         [parseInt(limit)]
       );
-      
+
+      const parsed = recentGames.map(g => ({
+        ...g,
+        gameResult: g.gameResult ? JSON.parse(g.gameResult) : null
+      }));
+
       res.json({ 
         success: true, 
-        games: recentGames,
-        count: recentGames.length
+        games: parsed,
+        count: parsed.length
       });
     } catch (error) {
       console.error('获取最近游戏API错误:', error);

@@ -55,7 +55,12 @@ class GameModel {
         // 3. 分配角色
         let roles;
         if (roomConfig && roomConfig.roles && roomConfig.roles.good && roomConfig.roles.evil) {
-          roles = [...roomConfig.roles.good, ...roomConfig.roles.evil];
+          const customRoles = [...roomConfig.roles.good, ...roomConfig.roles.evil];
+          if (customRoles.length === playerCount) {
+            roles = customRoles;
+          } else {
+            roles = this.getRoleConfiguration(playerCount);
+          }
         } else {
           roles = this.getRoleConfiguration(playerCount);
         }
@@ -131,7 +136,8 @@ class GameModel {
       const games = await db.query(
         `SELECT id as gameId, room_id as roomId, current_phase as currentPhase, current_round as currentRound,
                 team_leader_index as teamLeaderIndex, nominated_team as nominatedTeam,
-                failed_nominations as failedNominations, game_result as gameResult,
+                failed_nominations as failedNominations, assassination,
+                game_result as gameResult,
                 created_at as createdAt, updated_at as updatedAt
          FROM games WHERE id = ?`,
         [gameId]
@@ -149,6 +155,9 @@ class GameModel {
       }
       if (game.gameResult) {
         game.gameResult = JSON.parse(game.gameResult);
+      }
+      if (game.assassination) {
+        game.assassination = JSON.parse(game.assassination);
       }
       
       // 获取游戏玩家
@@ -367,32 +376,18 @@ class GameModel {
           } else {
             // 投票否决
             const failedNominations = game[0].failed_nominations + 1;
-            
-            if (failedNominations >= 5) {
-              // 连续5次提名被否决，坏人直接获胜
-              await connection.execute(
-                `UPDATE games 
-                 SET current_phase = 'gameEnd',
-                     game_result = ?,
-                     updated_at = NOW()
-                 WHERE id = ?`,
-                [JSON.stringify({ winner: 'evil', reason: '连续5次提名被否决' }), gameId]
-              );
-            } else {
-              // 更换队长，进入下一轮提名
-              const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
-              
-              await connection.execute(
-                `UPDATE games 
-                 SET current_phase = 'teamSelection',
-                     team_leader_index = ?,
-                     nominated_team = NULL,
-                     failed_nominations = ?,
-                     updated_at = NOW()
-                 WHERE id = ?`,
-                [newTeamLeaderIndex, failedNominations, gameId]
-              );
-            }
+            const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
+
+            await connection.execute(
+              `UPDATE games 
+               SET current_phase = 'teamSelection',
+                   team_leader_index = ?,
+                   nominated_team = NULL,
+                   failed_nominations = ?,
+                   updated_at = NOW()
+               WHERE id = ?`,
+              [newTeamLeaderIndex, failedNominations, gameId]
+            );
           }
         }
       });
@@ -417,7 +412,7 @@ class GameModel {
       await db.transaction(async (connection) => {
         // 获取游戏状态
         const [game] = await connection.execute(
-          `SELECT current_phase, current_round, nominated_team,
+          `SELECT current_phase, current_round, team_leader_index, nominated_team,
                   (SELECT COUNT(*) FROM game_players WHERE game_id = ?) as player_count
            FROM games WHERE id = ? FOR UPDATE`,
           [gameId, gameId]
@@ -430,7 +425,13 @@ class GameModel {
         if (game[0].current_phase !== 'missionVote') {
           throw new Error('当前不是任务投票阶段');
         }
-        
+
+        // 验证只有任务队成员才能投票
+        const nominatedTeam = game[0].nominated_team ? JSON.parse(game[0].nominated_team) : [];
+        if (!nominatedTeam.includes(openId)) {
+          throw new Error('只有任务队成员才能投票');
+        }
+
         // 验证坏人才能投失败票
         if (vote === 'fail') {
           const isEvil = ['mordred', 'morgana', 'assassin', 'minion', 'oberon', 'lancelotRed'].includes(playerRole);
@@ -457,61 +458,56 @@ class GameModel {
           [gameId, openId, vote, game[0].current_round]
         );
         
-        // 检查是否所有玩家都已投票
+        // 检查任务队伍成员是否都已投票
         const [voteCount] = await connection.execute(
           `SELECT COUNT(*) as count FROM votes 
            WHERE game_id = ? AND vote_type = 'mission' AND round = ?`,
           [gameId, game[0].current_round]
         );
-        
-        const playerCount = game[0].player_count;
-        
-        if (voteCount[0].count >= playerCount) {
+
+        const teamSize = nominatedTeam.length;
+
+        if (voteCount[0].count >= teamSize) {
           // 统计投票结果
           const [votes] = await connection.execute(
             `SELECT vote_value FROM votes 
              WHERE game_id = ? AND vote_type = 'mission' AND round = ?`,
             [gameId, game[0].current_round]
           );
-          
+
           const failCount = votes.filter(v => v.vote_value === 'fail').length;
-          
-          // 解析提名队伍大小
-          const nominatedTeam = game[0].nominated_team ? JSON.parse(game[0].nominated_team) : [];
-          const teamSize = nominatedTeam.length;
-          
+
           // 判断任务是否成功
           const success = failCount === 0 || (teamSize > 1 && failCount === 1);
-          
+
           // 保存任务结果
           await connection.execute(
             `INSERT INTO mission_results (game_id, round, success, fail_count, team, created_at)
              VALUES (?, ?, ?, ?, ?, NOW())`,
             [gameId, game[0].current_round, success, failCount, JSON.stringify(nominatedTeam)]
           );
-          
+
           // 获取已成功任务数量
           const [successCountResult] = await connection.execute(
             `SELECT COUNT(*) as count FROM mission_results 
              WHERE game_id = ? AND success = TRUE`,
             [gameId]
           );
-          
+
           const successCount = successCountResult[0].count;
-          
+
+          // 获取已失败任务数量
+          const [failCountResult] = await connection.execute(
+            `SELECT COUNT(*) as count FROM mission_results 
+             WHERE game_id = ? AND success = FALSE`,
+            [gameId]
+          );
+
+          const failMissionCount = failCountResult[0].count;
+
           // 检查游戏是否结束
-          if (successCount >= 3) {
-            // 好人完成3个任务，好人胜利
-            await connection.execute(
-              `UPDATE games 
-               SET current_phase = 'gameEnd',
-                   game_result = ?,
-                   updated_at = NOW()
-               WHERE id = ?`,
-              [JSON.stringify({ winner: 'good', reason: '好人完成3个任务' }), gameId]
-            );
-          } else if (game[0].current_round >= 5) {
-            // 5回合结束，坏人胜利
+          if (failMissionCount >= 3) {
+            // 3次任务失败，坏人胜利
             await connection.execute(
               `UPDATE games 
                SET current_phase = 'gameEnd',
@@ -520,11 +516,38 @@ class GameModel {
                WHERE id = ?`,
               [JSON.stringify({ winner: 'evil', reason: '坏人完成3个任务' }), gameId]
             );
+          } else if (successCount >= 3) {
+            // 好人完成3个任务，检查刺杀状态
+            const [assassinationResult] = await connection.execute(
+              `SELECT assassination FROM games WHERE id = ?`,
+              [gameId]
+            );
+
+            if (assassinationResult[0].assassination) {
+              // 坏人已提前刺杀且未命中，好人直接获胜
+              await connection.execute(
+                `UPDATE games 
+                 SET current_phase = 'gameEnd',
+                     game_result = ?,
+                     updated_at = NOW()
+                 WHERE id = ?`,
+                [JSON.stringify({ winner: 'good', reason: '好人完成3个任务', assassination: JSON.parse(assassinationResult[0].assassination) }), gameId]
+              );
+            } else {
+              // 进入刺客刺杀阶段
+              await connection.execute(
+                `UPDATE games 
+                 SET current_phase = 'assassination',
+                     updated_at = NOW()
+                 WHERE id = ?`,
+                [gameId]
+              );
+            }
           } else {
             // 进入下一回合
             const newRound = game[0].current_round + 1;
-            const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
-            
+            const newTeamLeaderIndex = (game[0].team_leader_index + 1) % game[0].player_count;
+
             await connection.execute(
               `UPDATE games 
                SET current_phase = 'teamSelection',
@@ -595,6 +618,151 @@ class GameModel {
     }
   }
   
+  /**
+   * 推进游戏阶段
+   * @param {string} gameId 游戏ID
+   * @returns {Promise<Object>} 更新后的游戏状态
+   */
+  static async advancePhase(gameId) {
+    try {
+      await db.transaction(async (connection) => {
+        const [game] = await connection.execute(
+          `SELECT current_phase, team_leader_index,
+                  (SELECT COUNT(*) FROM game_players WHERE game_id = ?) as player_count
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId, gameId]
+        );
+
+        if (game.length === 0) {
+          throw new Error('游戏不存在');
+        }
+
+        if (game[0].current_phase !== 'roleReveal') {
+          throw new Error('当前阶段无法推进');
+        }
+
+        await connection.execute(
+          `UPDATE games 
+           SET current_phase = 'teamSelection',
+               updated_at = NOW()
+           WHERE id = ?`,
+          [gameId]
+        );
+      });
+
+      return await this.getState(gameId);
+    } catch (error) {
+      console.error('推进阶段失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 刺客刺杀梅林
+   * @param {string} gameId 游戏ID
+   * @param {string} killerOpenId 刺杀者openId
+   * @param {string} targetOpenId 目标openId
+   * @returns {Promise<Object>} 更新后的游戏状态
+   */
+  static async assassinate(gameId, killerOpenId, targetOpenId) {
+    try {
+      await db.transaction(async (connection) => {
+        const [game] = await connection.execute(
+          `SELECT current_phase, current_round, assassination
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId]
+        );
+
+        if (game.length === 0) {
+          throw new Error('游戏不存在');
+        }
+
+        if (game[0].current_phase === 'gameEnd') {
+          throw new Error('游戏已结束');
+        }
+
+        if (game[0].assassination) {
+          throw new Error('本局已使用过刺杀');
+        }
+
+        // 验证刺杀者是坏人阵营
+        const [killer] = await connection.execute(
+          `SELECT side FROM game_players WHERE game_id = ? AND open_id = ?`,
+          [gameId, killerOpenId]
+        );
+
+        if (killer.length === 0) {
+          throw new Error('刺杀者不在此游戏中');
+        }
+
+        if (killer[0].side !== 'evil') {
+          throw new Error('只有坏人才能发起刺杀');
+        }
+
+        // 查询目标角色
+        const [target] = await connection.execute(
+          `SELECT role FROM game_players WHERE game_id = ? AND open_id = ?`,
+          [gameId, targetOpenId]
+        );
+
+        if (target.length === 0) {
+          throw new Error('目标不在此游戏中');
+        }
+
+        const isMerlin = target[0].role === 'merlin';
+        const assassination = {
+          killer: killerOpenId,
+          target: targetOpenId,
+          correct: isMerlin,
+          phase: game[0].current_phase,
+          round: game[0].current_round
+        };
+
+        if (isMerlin) {
+          // 刺中梅林，坏人立即获胜
+          await connection.execute(
+            `UPDATE games 
+             SET current_phase = 'gameEnd',
+                 assassination = ?,
+                 game_result = ?,
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [JSON.stringify(assassination),
+             JSON.stringify({ winner: 'evil', reason: '刺杀命中梅林', assassination }),
+             gameId]
+          );
+        } else if (game[0].current_phase === 'assassination') {
+          // 刺杀阶段未命中，好人获胜
+          await connection.execute(
+            `UPDATE games 
+             SET current_phase = 'gameEnd',
+                 assassination = ?,
+                 game_result = ?,
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [JSON.stringify(assassination),
+             JSON.stringify({ winner: 'good', reason: '好人完成任务且刺杀未命中', assassination }),
+             gameId]
+          );
+        } else {
+          // 提前刺杀未命中，游戏继续
+          await connection.execute(
+            `UPDATE games 
+             SET assassination = ?,
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [JSON.stringify(assassination), gameId]
+          );
+        }
+      });
+
+      return await this.getState(gameId);
+    } catch (error) {
+      console.error('刺杀失败:', error);
+      throw error;
+    }
+  }
+
   // =============== 工具方法 ===============
   
   /**
@@ -604,14 +772,14 @@ class GameModel {
    */
   static getRoleConfiguration(playerCount) {
     const configs = {
-      5:  ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin'],
-      6:  ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin'],
-      7:  ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin', 'oberon'],
-      8:  ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin', 'minion'],
-      9:  ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin', 'mordred'],
-      10: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin', 'mordred', 'oberon'],
-      11: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'mordred', 'oberon', 'lancelotBlue', 'lancelotRed'],
-      12: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin', 'mordred', 'oberon', 'lancelotBlue', 'lancelotRed']
+      5:  ['merlin', 'percival', 'loyal', 'morgana', 'assassin'],
+      6:  ['merlin', 'percival', 'loyal', 'loyal', 'morgana', 'assassin'],
+      7:  ['merlin', 'percival', 'loyal', 'loyal', 'morgana', 'assassin', 'oberon'],
+      8:  ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin', 'minion'],
+      9:  ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin', 'mordred'],
+      10: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'morgana', 'assassin', 'mordred', 'oberon'],
+      11: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'lancelotBlue', 'morgana', 'mordred', 'oberon', 'lancelotRed'],
+      12: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'lancelotBlue', 'morgana', 'assassin', 'mordred', 'oberon', 'lancelotRed']
     };
     
     return configs[playerCount] || configs[5];

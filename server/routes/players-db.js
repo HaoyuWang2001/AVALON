@@ -16,7 +16,7 @@ function createRouter() {
         [openId]
       );
 
-      if (rows.length > 0) {
+      if (rows.length > 0 && rows[0].room_id) {
         res.json({
           success: true,
           room: { roomId: rows[0].room_id, gameStarted: rows[0].game_started === 1, gameId: rows[0].game_id || null }

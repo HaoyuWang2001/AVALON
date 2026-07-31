@@ -70,6 +70,7 @@ CREATE TABLE games (
     team_leader_index INT DEFAULT 0 COMMENT '当前队长索引',
     nominated_team JSON COMMENT '提名的队伍',
     failed_nominations INT DEFAULT 0 COMMENT '连续失败提名次数',
+    assassination JSON NULL COMMENT '刺杀记录: {killer, target, correct, phase, round}',
     game_result JSON COMMENT '游戏结果',
     status VARCHAR(20) DEFAULT 'active' COMMENT '状态：active=进行中, ended=正常结束, abandoned=异常结束',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '开始时间',
@@ -167,14 +168,14 @@ CREATE TABLE role_configurations (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色配置表';
 
 INSERT INTO role_configurations (player_count, roles, team_sizes, description) VALUES
-(5, '["merlin", "percival", "loyal", "loyal", "loyal", "morgana", "assassin"]', '[2,3,2,3,3]', '5人推荐局（莫甘娜+刺客）'),
-(6, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin"]', '[2,3,4,3,4]', '6人推荐局（莫甘娜+刺客）'),
-(7, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "oberon"]', '[2,3,3,4,4]', '7人推荐局（莫甘娜+刺客+奥伯伦）'),
-(8, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "minion"]', '[3,4,4,5,5]', '8人推荐局（莫甘娜+刺客+爪牙）'),
-(9, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "mordred"]', '[3,4,4,5,5]', '9人推荐局（莫甘娜+刺客+莫德雷德）'),
-(10, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "mordred", "oberon"]', '[3,4,4,5,5]', '10人推荐局（莫甘娜+刺客+莫德雷德+奥伯伦）'),
-(11, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "loyal", "loyal", "morgana", "mordred", "oberon", "lancelotBlue", "lancelotRed"]', '[3,4,4,5,5]', '11人推荐局（含蓝红兰斯洛特）'),
-(12, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "mordred", "oberon", "lancelotBlue", "lancelotRed"]', '[4,5,5,6,6]', '12人推荐局（含蓝红兰斯洛特）')
+(5, '["merlin", "percival", "loyal", "morgana", "assassin"]', '[2,3,2,3,3]', '5人推荐局（莫甘娜+刺客）'),
+(6, '["merlin", "percival", "loyal", "loyal", "morgana", "assassin"]', '[2,3,4,3,4]', '6人推荐局（莫甘娜+刺客）'),
+(7, '["merlin", "percival", "loyal", "loyal", "morgana", "assassin", "oberon"]', '[2,3,3,4,4]', '7人推荐局（莫甘娜+刺客+奥伯伦）'),
+(8, '["merlin", "percival", "loyal", "loyal", "loyal", "morgana", "assassin", "minion"]', '[3,4,4,5,5]', '8人推荐局（莫甘娜+刺客+爪牙）'),
+(9, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "mordred"]', '[3,4,4,5,5]', '9人推荐局（莫甘娜+刺客+莫德雷德）'),
+(10, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "mordred", "oberon"]', '[3,4,4,5,5]', '10人推荐局（莫甘娜+刺客+莫德雷德+奥伯伦）'),
+(11, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "lancelotBlue", "morgana", "mordred", "oberon", "lancelotRed"]', '[3,4,5,6,6]', '11人推荐局（含蓝红兰斯洛特）'),
+(12, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "lancelotBlue", "morgana", "assassin", "mordred", "oberon", "lancelotRed"]', '[3,4,5,6,6]', '12人推荐局（含蓝红兰斯洛特）')
 ON DUPLICATE KEY UPDATE roles=VALUES(roles), team_sizes=VALUES(team_sizes), description=VALUES(description);
 
 -- =============================================

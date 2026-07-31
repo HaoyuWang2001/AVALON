@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  test-backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.test
+    image: avalon-server:test
+    container_name: avalon-server-test
+    environment:
+      - NODE_ENV=test
+      - PORT=0
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=avalon_test_user
+      - DB_PASS=avalon_test_pass_2024
+      - DB_NAME=avalon_db_test
+      - DB_POOL_MAX=10
+      - DB_ROOT_USER=root
+      - DB_ROOT_PASS=${MYSQL_ROOT_PASSWORD:-avalon_root_2024}
+      - HTTPS=false
+      - WX_APPID=test_appid
+      - WX_SECRET=test_secret
+    command: ["npm", "test"]
+    networks:
+      - avalon-net
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+networks:
+  avalon-net:
+    external: true

@@ -80,7 +80,7 @@ page { background: #F3F4F6; }
   background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff;
 }
 .btn-host-start.disabled { background: #E5E7EB; color: #9CA3AF; }
-.start-hint { font-size: 22rpx; color: #8B5CF6; text-align: center; display: block; margin-bottom: 8rpx; }
+.start-hint { font-size: 32rpx; color: #8B5CF6; text-align: center; display: block; margin-bottom: 8rpx; }
 .host-divider { height: 1rpx; background: #E5E7EB; margin: 20rpx 0; }
 .host-actions { display: flex; gap: 20rpx; justify-content: center; }
 .host-actions .btn-round { font-size: 26rpx; padding: 14rpx 40rpx; }

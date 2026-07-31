@@ -24,3 +24,5 @@ Thumbs.db
 .claude/
 .project.private.config.json
 .env
+coverage/
+*.tmp/

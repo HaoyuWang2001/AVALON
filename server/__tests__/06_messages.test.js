@@ -1,16 +1,12 @@
 const {
-  makeUserId, makeNickName,
-  sendMessage, getMessages, getLatestMessages,
-  createRoom, isDbMode,
+  makeUserId, createRoom, sendMessage, getMessages, getLatestMessages
 } = require('./helpers/testHelper');
 
-describe('04 — Messaging', () => {
+describe('06 — Messaging', () => {
   let roomId;
   let userId;
-  let dbMode = false;
 
   beforeAll(async () => {
-    dbMode = await isDbMode();
     userId = makeUserId();
     const result = await createRoom(userId, 'Messenger');
     roomId = result.roomId;
@@ -20,7 +16,6 @@ describe('04 — Messaging', () => {
     it('should send a text message', async () => {
       const result = await sendMessage(roomId, userId, 'Messenger', 'Hello World', 'text');
       expect(result.success).toBe(true);
-      expect(result.message).toBeDefined();
       expect(result.message.content).toBe('Hello World');
       expect(result.message.openId).toBe(userId);
     });
@@ -35,41 +30,20 @@ describe('04 — Messaging', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject messages over 1000 chars (DB mode validates this)', async () => {
+    it('should reject messages over 1000 chars', async () => {
       const longContent = 'a'.repeat(1001);
       const res = await require('./helpers/testHelper').apiPost('/api/messages/send', {
         roomId, openId: userId, nickName: 'Test', content: longContent, type: 'text'
       });
-      if (dbMode) {
-        expect(res.status).toBe(400);
-        expect(res.body.success).toBe(false);
-      } else {
-        // Memory mode doesn't validate content length
-        expect(res.body).toBeDefined();
-      }
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
     });
 
-    it('should reject invalid message type (DB mode validates this)', async () => {
+    it('should reject invalid message type', async () => {
       const res = await require('./helpers/testHelper').apiPost('/api/messages/send', {
         roomId, openId: userId, nickName: 'Test', content: 'test', type: 'invalid'
       });
-      if (dbMode) {
-        expect(res.status).toBe(400);
-        expect(res.body.success).toBe(false);
-      } else {
-        expect(res.body).toBeDefined();
-      }
-    });
-
-    it('should reject missing parameters (DB mode validates this)', async () => {
-      const res = await require('./helpers/testHelper').apiPost('/api/messages/send', {
-        roomId: roomId
-      });
-      if (dbMode) {
-        expect(res.status).toBe(400);
-      } else {
-        expect(res.body).toBeDefined();
-      }
+      expect(res.status).toBe(400);
     });
   });
 
@@ -105,15 +79,19 @@ describe('04 — Messaging', () => {
   });
 
   describe('GET /api/messages/:roomId/latest', () => {
-    it('should retrieve latest N messages (DB only)', async () => {
+    it('should retrieve latest N messages', async () => {
       const result = await getLatestMessages(roomId, 2);
-      if (dbMode) {
-        expect(result.success).toBe(true);
-        expect(result.messages.length).toBeLessThanOrEqual(2);
-      } else {
-        // Memory mode doesn't have this endpoint
-        expect([200, 404]).toContain(result.success ? 200 : (result.error ? 404 : 200));
-      }
+      expect(result.success).toBe(true);
+      expect(result.messages.length).toBeLessThanOrEqual(2);
+    });
+  });
+
+  describe('Missing parameters', () => {
+    it('should reject send with missing parameters', async () => {
+      const res = await require('./helpers/testHelper').apiPost('/api/messages/send', {
+        roomId: roomId
+      });
+      expect(res.status).toBe(400);
     });
   });
 });

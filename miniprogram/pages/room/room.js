@@ -30,7 +30,7 @@ Page({
 
   onUnload() {
     if (this.roomPolling) clearInterval(this.roomPolling);
-    if (!this.navigatingToGame && !this.leaving) this.leaveRoom();
+    if (this.leaving) this.leaveRoom();
   },
 
   onShareAppMessage() {

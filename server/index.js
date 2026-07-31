@@ -96,54 +96,32 @@ async function initializeDatabase() {
     }
   } catch (error) {
     console.error('❌ 数据库初始化失败:', error.message);
-    console.log('⚠️ 服务将以内存模式启动（数据不会持久化）');
-    return false;
+    console.error('数据库模式必须可用，服务无法启动');
+    process.exit(1);
   }
 }
-
-// 内存存储（兼容模式，用于WebSocket事件等）
-const rooms = new Map();
-const games = new Map();
-const messages = new Map();
-const users = new Map();
 
 // 导入模型管理器
 const { modelManager } = require('./models');
 
-// 路由设置函数（在数据库初始化后调用）
-function setupRoutes(dbInitialized) {
-  let roomRoutes, gameRoutes, messageRoutes, userRoutes, authRoutes, playerRoutes;
-  
-  if (dbInitialized) {
-    console.log('📊 使用数据库路由');
-    roomRoutes = require('./routes/rooms-db')();
-    gameRoutes = require('./routes/games-db')();
-    messageRoutes = require('./routes/messages-db')();
-    userRoutes = require('./routes/users-db')();
-    authRoutes = require('./routes/auth-db')();
-    playerRoutes = require('./routes/players-db')();
-    
-    modelManager.setDbInitialized(true);
-  } else {
-    console.log('💾 使用内存路由');
-    roomRoutes = require('./routes/rooms')(rooms);
-    gameRoutes = require('./routes/games')(rooms, games);
-    messageRoutes = require('./routes/messages')(messages);
-    userRoutes = require('./routes/users')(users);
-    authRoutes = require('./routes/auth')(users);
-    playerRoutes = require('./routes/players')(rooms);
-    
-    modelManager.setDbInitialized(false);
-  }
-  
+// 路由设置函数（仅数据库模式）
+function setupRoutes() {
+  console.log('📊 使用数据库路由');
+  const roomRoutes = require('./routes/rooms-db')();
+  const gameRoutes = require('./routes/games-db')();
+  const messageRoutes = require('./routes/messages-db')();
+  const userRoutes = require('./routes/users-db')();
+  const authRoutes = require('./routes/auth-db')();
+  const playerRoutes = require('./routes/players-db')();
+
+  modelManager.setDbInitialized(true);
+
   app.use('/api/rooms', roomRoutes);
   app.use('/api/games', gameRoutes);
   app.use('/api/messages', messageRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/auth', authRoutes);
   app.use('/api/players', playerRoutes);
-  
-  return { roomRoutes, gameRoutes, messageRoutes, userRoutes, authRoutes, playerRoutes };
 }
 
 // 健康检查端点（包含数据库状态）
@@ -264,15 +242,15 @@ async function startServer() {
     // 初始化数据库
     dbInitialized = await initializeDatabase();
     
-    // 设置路由（根据数据库初始化状态）
-    setupRoutes(dbInitialized);
+    // 设置路由
+    setupRoutes();
     
     server.listen(PORT, '0.0.0.0', () => {
       console.log('================================');
       console.log('🚀 AVALON 游戏服务器启动成功');
       console.log(`📡 端口: ${PORT}`);
       console.log(`🌐 环境: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`💾 数据库: ${dbInitialized ? '已连接' : '内存模式'}`);
+      console.log(`💾 数据库: 已连接`);
       console.log('================================');
       console.log('健康检查: http://localhost:' + PORT + '/api/health');
       if (process.env.NODE_ENV !== 'production') {
@@ -311,9 +289,6 @@ module.exports = {
   app, 
   server,
   io, 
-  rooms, 
-  games, 
-  messages,
   db,
   dbInitialized
 };

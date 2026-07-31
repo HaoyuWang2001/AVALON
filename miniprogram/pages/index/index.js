@@ -136,6 +136,12 @@ Page({
     }
   },
 
+  onShow() {
+    if (getApp().globalData.openId) {
+      this.checkCurrentRoom();
+    }
+  },
+
   checkCurrentRoom() {
     const openId = getApp().globalData.openId || wx.getStorageSync('openId');
     if (!openId) return;

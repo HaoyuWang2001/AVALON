@@ -1,4 +1,4 @@
-const { apiGet, apiPost } = require('./helpers/testHelper');
+const { apiGet } = require('./helpers/testHelper');
 
 describe('01 — Health & Connectivity', () => {
   describe('GET /hello', () => {
@@ -10,20 +10,18 @@ describe('01 — Health & Connectivity', () => {
   });
 
   describe('GET /api/health', () => {
-    it('should return health status', async () => {
+    it('should return health status with database connected', async () => {
       const res = await apiGet('/api/health');
       expect(res.status).toBe(200);
       const body = res.body;
       expect(body).toHaveProperty('status', 'ok');
       expect(body).toHaveProperty('server', 'avalon-server');
       expect(body).toHaveProperty('database');
-      expect(body.database).toHaveProperty('initialized');
-      expect(typeof body.database.initialized).toBe('boolean');
+      expect(body.database.initialized).toBe(true);
+      expect(body.database.connected).toBe(true);
     });
-  });
 
-  describe('Server info', () => {
-    it('should return JSON response for health', async () => {
+    it('should return JSON response', async () => {
       const res = await apiGet('/api/health');
       expect(res.headers['content-type']).toMatch(/json/);
     });

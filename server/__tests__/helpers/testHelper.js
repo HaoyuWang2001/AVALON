@@ -33,32 +33,6 @@ function makeNickName(userId) {
 
 // ---- API helpers ----
 
-let _isDbMode = null;
-
-async function isDbMode() {
-  if (_isDbMode !== null) return _isDbMode;
-  try {
-    const res = await apiGet('/api/health');
-    _isDbMode = res.body.database.initialized === true && res.body.database.connected === true;
-  } catch (e) {
-    _isDbMode = false;
-  }
-  return _isDbMode;
-}
-
-function getServerMode() {
-  if (TEST_SERVER_URL) return 'remote';
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    const configFile = path.resolve(__dirname, '../../node_modules/.tmp/test-server.json');
-    const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-    return config.mode || 'unknown';
-  } catch (e) {
-    return 'unknown';
-  }
-}
-
 async function apiGet(path) {
   const res = await request().get(path);
   return res;
@@ -71,11 +45,11 @@ async function apiPost(path, body) {
 
 // ---- Room workflow helpers ----
 
-async function createRoom(hostId, hostNick) {
-  const defaultConfig = {
+function buildMinimalRoomConfig() {
+  return {
     roles: {
-      good: ['merlin', 'percival', 'loyal', 'loyal', 'loyal'],
-      evil: ['morgana', 'assassin']
+      good: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'loyal'],
+      evil: ['morgana', 'assassin', 'mordred', 'oberon']
     },
     rules: {
       evilKnowsEachOther: true,
@@ -89,26 +63,21 @@ async function createRoom(hostId, hostNick) {
       voteVisibility: 'anonymous',
       missionFailDetail: 'count'
     },
-    limits: {
-      speechTimeout: null,
-      roundTimeout: null,
-      voteTimeout: null
-    },
-    meta: {
-      roomName: 'Test Room',
-      roomDescription: '',
-      tags: []
-    },
+    limits: { speechTimeout: null, roundTimeout: null, voteTimeout: null },
+    meta: { roomName: 'Test Room', roomDescription: '', tags: [] },
     merlinVision: {
       canSee: ['assassin', 'morgana', 'minion', 'oberon', 'lancelotRed', 'lancelotBlue'],
       canIdentify: []
     }
   };
+}
+
+async function createRoom(hostId, hostNick) {
   const res = await apiPost('/api/rooms/create', {
     hostOpenId: hostId,
     hostNickName: hostNick || makeNickName(hostId),
     hostAvatarUrl: '',
-    roomConfig: defaultConfig
+    roomConfig: buildMinimalRoomConfig()
   });
   return res.body;
 }
@@ -142,36 +111,50 @@ async function leaveRoom(roomId, userId) {
   return res.body;
 }
 
+// ---- Game workflow helpers (all use gameId, not roomId) ----
+
 async function startGame(roomId) {
   const res = await apiPost('/api/games/start', { roomId });
   return res.body;
 }
 
-async function getGameState(roomId, openId) {
-  const path = openId ? `/api/games/${roomId}?openId=${openId}` : `/api/games/${roomId}`;
+async function getGameState(gameId, openId) {
+  const path = openId ? `/api/games/${gameId}?openId=${openId}` : `/api/games/${gameId}`;
   const res = await apiGet(path);
   return res.body;
 }
 
-async function submitNomination(roomId, openId, nominatedTeam) {
-  const res = await apiPost('/api/games/submitNomination', { roomId, openId, nominatedTeam });
+async function advancePhase(gameId) {
+  const res = await apiPost(`/api/games/${gameId}/advancePhase`, {});
   return res.body;
 }
 
-async function castVote(roomId, openId, vote) {
-  const res = await apiPost('/api/games/castVote', { roomId, openId, vote });
+async function submitNomination(gameId, openId, nominatedTeam) {
+  const res = await apiPost('/api/games/submitNomination', { gameId, openId, nominatedTeam });
   return res.body;
 }
 
-async function castMissionVote(roomId, openId, vote, playerRole) {
-  const res = await apiPost('/api/games/castMissionVote', { roomId, openId, vote, playerRole });
+async function castVote(gameId, openId, vote) {
+  const res = await apiPost('/api/games/castVote', { gameId, openId, vote });
   return res.body;
 }
 
-async function endGame(roomId) {
-  const res = await apiPost('/api/games/end', { roomId });
+async function castMissionVote(gameId, openId, vote, playerRole) {
+  const res = await apiPost('/api/games/castMissionVote', { gameId, openId, vote, playerRole });
   return res.body;
 }
+
+async function assassinate(gameId, killerOpenId, targetOpenId) {
+  const res = await apiPost(`/api/games/${gameId}/assassinate`, { killerOpenId, targetOpenId });
+  return res.body;
+}
+
+async function endGame(gameId) {
+  const res = await apiPost('/api/games/end', { gameId });
+  return res.body;
+}
+
+// ---- Message helpers ----
 
 async function sendMessage(roomId, openId, nickName, content, type) {
   const res = await apiPost('/api/messages/send', {
@@ -194,10 +177,10 @@ async function getLatestMessages(roomId, limit) {
 }
 
 /**
- * Create a room with N players, all ready to start.
- * Returns { roomId, players: [{openId, nickName, seatNumber}] }
+ * Create a room with N players, all joined and ready.
+ * Returns { roomId, players: [{openId, nickName, seatNumber}], hostId }
  */
-async function createRoomWithPlayers(playerCount, hostIndex) {
+async function createRoomWithPlayers(playerCount) {
   const hostId = makeUserId();
   const hostNick = makeNickName(hostId);
   const createResult = await createRoom(hostId, hostNick);
@@ -205,16 +188,11 @@ async function createRoomWithPlayers(playerCount, hostIndex) {
   const roomId = createResult.roomId;
   const players = [{ openId: hostId, nickName: hostNick, seatNumber: 1 }];
 
-  const otherPlayers = [];
   for (let i = 1; i < playerCount; i++) {
     const uid = makeUserId();
-    otherPlayers.push({ openId: uid, nickName: makeNickName(uid), seatNumber: i + 1 });
-  }
-
-  for (const p of otherPlayers) {
-    const result = await joinRoom(roomId, p.openId, p.seatNumber, p.nickName);
+    const result = await joinRoom(roomId, uid, i + 1, makeNickName(uid));
     if (!result.success) throw new Error(`Failed to join room: ${JSON.stringify(result)}`);
-    players.push(p);
+    players.push({ openId: uid, nickName: makeNickName(uid), seatNumber: i + 1 });
   }
 
   for (const p of players) {
@@ -224,6 +202,25 @@ async function createRoomWithPlayers(playerCount, hostIndex) {
   return { roomId, players, hostId };
 }
 
+/**
+ * Create room + start game with N players.
+ * Returns { roomId, gameId, players, hostId }.
+ * players have openId, nickName, seatNumber, role, side resolved from game state.
+ */
+async function createRoomAndStartGame(playerCount) {
+  const { roomId, players, hostId } = await createRoomWithPlayers(playerCount);
+  const startResult = await startGame(roomId);
+  if (!startResult.success) throw new Error(`Failed to start game: ${JSON.stringify(startResult)}`);
+  const gameId = startResult.gameId;
+  const gameState = await getGameState(gameId);
+  if (!gameState.success) throw new Error(`Failed to get game state: ${JSON.stringify(gameState)}`);
+  const enrichedPlayers = players.map(p => {
+    const gp = gameState.game.players.find(gp => gp.openId === p.openId);
+    return { ...p, role: gp.role, side: gp.side };
+  });
+  return { roomId, gameId, players: enrichedPlayers, hostId };
+}
+
 module.exports = {
   setRequest,
   request,
@@ -231,8 +228,6 @@ module.exports = {
   TEST_PREFIX,
   makeUserId,
   makeNickName,
-  isDbMode,
-  getServerMode,
   apiGet,
   apiPost,
   createRoom,
@@ -242,12 +237,15 @@ module.exports = {
   leaveRoom,
   startGame,
   getGameState,
+  advancePhase,
   submitNomination,
   castVote,
   castMissionVote,
+  assassinate,
   endGame,
   sendMessage,
   getMessages,
   getLatestMessages,
   createRoomWithPlayers,
+  createRoomAndStartGame,
 };
