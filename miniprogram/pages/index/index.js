@@ -205,7 +205,8 @@ Page({
     if (!e.detail || !e.detail.avatarUrl) return;
     const tempPath = e.detail.avatarUrl;
     const fs = wx.getFileSystemManager();
-    const savedPath = wx.env.USER_DATA_PATH + '/avatar_' + Date.now() + '.jpg';
+    const openId = getApp().globalData.openId || wx.getStorageSync('openId') || 'default';
+    const savedPath = wx.env.USER_DATA_PATH + '/avatar_' + openId + '.jpg';
     fs.saveFile({
       tempFilePath: tempPath,
       filePath: savedPath,
