@@ -420,24 +420,12 @@
                 <text class="summary-value">{{evilRoleNames}}</text>
               </view>
               <view class="summary-row">
-                <text class="summary-label">坏人互知</text>
-                <text class="summary-value">{{rules.evilKnowsEachOther ? '是' : '否'}}</text>
-              </view>
-              <view class="summary-row">
-                <text class="summary-label">票型</text>
-                <text class="summary-value">{{rules.voteVisibility === 'public' ? '公开' : '匿名'}}</text>
-              </view>
-              <view class="summary-row">
                 <text class="summary-label">湖中仙女</text>
                 <text class="summary-value">{{summaryLady}}</text>
               </view>
               <view class="summary-row">
-                <text class="summary-label">发言限时</text>
-                <text class="summary-value">{{summarySpeech}}</text>
-              </view>
-              <view class="summary-row">
-                <text class="summary-label">观战</text>
-                <text class="summary-value">{{summarySpec}}</text>
+                <text class="summary-label">坏人互知</text>
+                <text class="summary-value">{{rules.evilKnowsEachOther ? '是' : '否'}}</text>
               </view>
             </view>
           </view>
