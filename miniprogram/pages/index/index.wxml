@@ -9,9 +9,10 @@
   <view class="card user-card">
     <view class="user-info-section">
       <view class="user-left">
-        <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" size="mini">
+        <view class="avatar-wrap">
           <image src="{{userInfo.avatarUrl}}" class="avatar-img"/>
-        </button>
+          <button class="avatar-tap" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar"/>
+        </view>
         <view class="user-details">
           <input type="nickname" class="user-name-input" value="{{userInfo.nickName}}" placeholder="点击设置微信昵称" bindinput="onNickInput"/>
           <view class="user-game-nick">游戏内昵称：{{customNickName || '未设置'}}</view>
