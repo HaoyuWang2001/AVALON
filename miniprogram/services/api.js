@@ -16,27 +16,31 @@ class ApiService {
     this.nickName = nickName;
   }
 
-  async request(url, options = {}) {
-    try {
-      const res = await wx.request({
+  request(url, options = {}) {
+    return new Promise((resolve, reject) => {
+      wx.request({
         url: BASE_URL + url,
+        method: options.method || 'GET',
+        data: options.data,
         header: {
           'Content-Type': 'application/json',
           ...options.header
         },
-        ...options
+        success: (res) => {
+          if (!res || !res.data) {
+            reject(new Error('请求失败：服务器无响应'));
+          } else if (res.statusCode >= 400) {
+            reject(new Error((res.data && res.data.message) || `HTTP ${res.statusCode}`));
+          } else {
+            resolve(res.data);
+          }
+        },
+        fail: (err) => {
+          console.error('API请求失败:', err);
+          reject(new Error(err.errMsg || '请求失败：网络错误'));
+        }
       });
-      if (!res || res.statusCode === 0 || !res.data) {
-        throw new Error((res && res.errMsg) ? res.errMsg : '请求失败：服务器无响应');
-      }
-      if (res.statusCode >= 400) {
-        throw new Error((res.data && res.data.message) || `请求失败: HTTP ${res.statusCode}`);
-      }
-      return res.data;
-    } catch (err) {
-      console.error('API请求失败:', err);
-      throw err;
-    }
+    });
   }
 
   async createRoom() {
