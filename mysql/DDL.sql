@@ -37,12 +37,11 @@ CREATE TABLE rooms (
 ALTER TABLE users ADD FOREIGN KEY (current_room_id) REFERENCES rooms(id) ON DELETE SET NULL;
 
 -- =============================================
--- 3. players表：房间内的玩家
+-- 3. room_players表：房间内的玩家
 -- =============================================
-CREATE TABLE players (
-    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
+CREATE TABLE room_players (
+    open_id VARCHAR(64) NOT NULL PRIMARY KEY COMMENT '玩家openId（主键，一人一行）',
     room_id VARCHAR(6) NOT NULL COMMENT '房间ID',
-    open_id VARCHAR(64) NOT NULL COMMENT '玩家openId',
     nick_name VARCHAR(100) NOT NULL DEFAULT '匿名玩家' COMMENT '游戏内昵称',
     wx_nick_name VARCHAR(100) NOT NULL DEFAULT '' COMMENT '微信昵称',
     avatar_url TEXT COMMENT '头像URL',
@@ -50,14 +49,12 @@ CREATE TABLE players (
     is_ready BOOLEAN DEFAULT FALSE COMMENT '是否已准备',
     banned_from_seating BOOLEAN DEFAULT FALSE COMMENT '是否禁止上座',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '加入时间',
-    seat_unique_for_game INT GENERATED ALWAYS AS (IF(seat_number >= 1, seat_number, NULL)) STORED COMMENT '浅席位唯一约束(仅>=1)',
+    seat_unique_for_game INT GENERATED ALWAYS AS (IF(seat_number >= 1, seat_number, NULL)) STORED COMMENT '游戏座位唯一约束(仅>=1)',
     UNIQUE KEY uk_room_seat (room_id, seat_unique_for_game) COMMENT '同房间游戏座位号唯一(排除未入座/观战)',
-    UNIQUE KEY uk_room_player (room_id, open_id) COMMENT '同房间玩家唯一',
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
     INDEX idx_room_id (room_id),
-    INDEX idx_open_id (open_id),
     INDEX idx_is_ready (is_ready)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='玩家表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='房间玩家表';
 
 -- =============================================
 -- 4. games表：游戏记录（持久化不删除）

@@ -271,7 +271,7 @@ async function validateInitialization(connection, databaseName) {
     
     // 检查必要的表是否存在
     const requiredTables = [
-      'rooms', 'players', 'games', 'game_players', 
+      'rooms', 'room_players', 'games', 'game_players', 
       'votes', 'mission_results', 'messages'
     ];
     
@@ -445,7 +445,7 @@ async function main() {
  */
 async function checkTablesHaveData(connection, databaseName) {
   try {
-    const coreTables = ['rooms', 'players', 'games', 'game_players', 'votes', 'mission_results', 'messages', 'role_configurations'];
+    const coreTables = ['rooms', 'room_players', 'games', 'game_players', 'votes', 'mission_results', 'messages', 'role_configurations'];
     
     for (const table of coreTables) {
       const [exists] = await connection.execute(
@@ -487,7 +487,7 @@ async function checkTablesHaveData(connection, databaseName) {
  */
 async function printDataSummary(connection, databaseName) {
   try {
-    const tables = ['rooms', 'players', 'games', 'game_players', 'votes', 'mission_results', 'messages', 'game_history'];
+    const tables = ['rooms', 'room_players', 'games', 'game_players', 'votes', 'mission_results', 'messages', 'game_history'];
     console.log('\n📊 当前数据库表数据统计:');
     
     for (const table of tables) {

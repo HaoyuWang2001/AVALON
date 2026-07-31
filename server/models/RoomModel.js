@@ -80,7 +80,7 @@ class RoomModel {
           [roomId, hostOpenId, roomConfig ? JSON.stringify(roomConfig) : null]
         );
         await connection.execute(
-          'INSERT INTO players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_ready, created_at) VALUES (?, ?, ?, ?, ?, 1, FALSE, NOW())',
+          'INSERT INTO room_players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_ready, created_at) VALUES (?, ?, ?, ?, ?, 1, FALSE, NOW())',
           [roomId, hostOpenId, hostNickName, hostWxNickName, hostAvatarUrl]
         );
         await connection.execute(
@@ -159,12 +159,12 @@ class RoomModel {
       const players = await db.query(
         `SELECT open_id as openId, nick_name as nickName, wx_nick_name as wxNickName, avatar_url as avatarUrl, 
                 seat_number as seatNumber, is_ready as isReady, banned_from_seating as bannedFromSeating
-         FROM players WHERE room_id = ? ORDER BY seat_number`,
+         FROM room_players WHERE room_id = ? ORDER BY seat_number`,
         [roomId]
       );
       
       const readyPlayersResult = await db.query(
-        'SELECT open_id FROM players WHERE room_id = ? AND is_ready = TRUE',
+        'SELECT open_id FROM room_players WHERE room_id = ? AND is_ready = TRUE',
         [roomId]
       );
       
@@ -209,16 +209,16 @@ class RoomModel {
         if (rooms.length === 0) throw new Error('房间不存在');
         if (rooms[0].game_started) throw new Error('游戏已开始');
         
-        const [alreadyJoined] = await connection.execute('SELECT COUNT(*) as count FROM players WHERE room_id = ? AND open_id = ?', [roomId, openId]);
+        const [alreadyJoined] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND open_id = ?', [roomId, openId]);
         if (alreadyJoined[0].count > 0) throw new Error('已在房间中');
         
         if (seat >= 1) {
-          const [occupiedSeats] = await connection.execute('SELECT COUNT(*) as count FROM players WHERE room_id = ? AND seat_number = ?', [roomId, seat]);
+          const [occupiedSeats] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND seat_number = ?', [roomId, seat]);
           if (occupiedSeats[0].count > 0) throw new Error(`${seat}号座位已被占用`);
         }
         
         await connection.execute(
-          'INSERT INTO players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_ready, created_at) VALUES (?, ?, ?, ?, ?, ?, FALSE, NOW())',
+          'INSERT INTO room_players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_ready, created_at) VALUES (?, ?, ?, ?, ?, ?, FALSE, NOW())',
           [roomId, openId, nickName, wxNickName, userInfo.avatarUrl || '', seat]
         );
         await connection.execute(
@@ -244,10 +244,10 @@ class RoomModel {
   static async leave(roomId, openId) {
     try {
       await db.transaction(async (connection) => {
-        await connection.execute('DELETE FROM players WHERE room_id = ? AND open_id = ?', [roomId, openId]);
+        await connection.execute('DELETE FROM room_players WHERE room_id = ? AND open_id = ?', [roomId, openId]);
         await connection.execute('UPDATE users SET current_room_id = NULL WHERE open_id = ?', [openId]);
         
-        const [remainingPlayers] = await connection.execute('SELECT COUNT(*) as count FROM players WHERE room_id = ?', [roomId]);
+        const [remainingPlayers] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ?', [roomId]);
         if (remainingPlayers[0].count === 0) {
           await connection.execute('DELETE FROM rooms WHERE id = ?', [roomId]);
         } else {
@@ -272,7 +272,7 @@ class RoomModel {
   static async toggleReady(roomId, openId, isReady) {
     try {
       await db.query(
-        'UPDATE players SET is_ready = ? WHERE room_id = ? AND open_id = ?',
+        'UPDATE room_players SET is_ready = ? WHERE room_id = ? AND open_id = ?',
         [isReady, roomId, openId]
       );
       
@@ -301,21 +301,21 @@ class RoomModel {
       await db.transaction(async (connection) => {
         if (newSeatNumber >= 1) {
           const [banCheck] = await connection.execute(
-            'SELECT banned_from_seating FROM players WHERE room_id = ? AND open_id = ?',
+            'SELECT banned_from_seating FROM room_players WHERE room_id = ? AND open_id = ?',
             [roomId, openId]
           );
           if (banCheck.length > 0 && banCheck[0].banned_from_seating) {
             throw new Error('你已被禁止上座');
           }
           const [occupiedSeats] = await connection.execute(
-            'SELECT COUNT(*) as count FROM players WHERE room_id = ? AND seat_number = ? AND open_id != ?',
+            'SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND seat_number = ? AND open_id != ?',
             [roomId, newSeatNumber, openId]
           );
           if (occupiedSeats[0].count > 0) throw new Error('座位已被占用');
         }
         
         await connection.execute(
-          'UPDATE players SET seat_number = ?, is_ready = FALSE WHERE room_id = ? AND open_id = ?',
+          'UPDATE room_players SET seat_number = ?, is_ready = FALSE WHERE room_id = ? AND open_id = ?',
           [newSeatNumber, roomId, openId]
         );
         
@@ -343,11 +343,11 @@ class RoomModel {
     try {
       if (mode === 'unseat') {
         await db.query(
-          'UPDATE players SET seat_number = 0, is_ready = FALSE WHERE room_id = ? AND open_id = ?',
+          'UPDATE room_players SET seat_number = 0, is_ready = FALSE WHERE room_id = ? AND open_id = ?',
           [roomId, playerId]
         );
       } else {
-        await db.query('DELETE FROM players WHERE room_id = ? AND open_id = ?', [roomId, playerId]);
+        await db.query('DELETE FROM room_players WHERE room_id = ? AND open_id = ?', [roomId, playerId]);
         await db.query('UPDATE users SET current_room_id = NULL WHERE open_id = ?', [playerId]);
       }
       
@@ -366,7 +366,7 @@ class RoomModel {
   static async banFromSeating(roomId, playerId, banned) {
     try {
       await db.query(
-        'UPDATE players SET banned_from_seating = ? WHERE room_id = ? AND open_id = ?',
+        'UPDATE room_players SET banned_from_seating = ? WHERE room_id = ? AND open_id = ?',
         [banned, roomId, playerId]
       );
       await db.query('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
@@ -410,7 +410,7 @@ class RoomModel {
     if (!room) throw new Error('房间不存在');
     if (room.ownerId !== openId) throw new Error('仅房主可解散房间');
     await db.query('UPDATE users SET current_room_id = NULL WHERE current_room_id = ?', [roomId]);
-    await db.query('DELETE FROM players WHERE room_id = ?', [roomId]);
+    await db.query('DELETE FROM room_players WHERE room_id = ?', [roomId]);
     await db.query('DELETE FROM rooms WHERE id = ?', [roomId]);
     return { success: true, message: '房间已解散' };
   }
@@ -424,7 +424,7 @@ class RoomModel {
     const seatNumbers = seated.map(p => p.seatNumber).sort((a, b) => a - b);
     for (let i = 0; i < shuffled.length; i++) {
       await db.query(
-        'UPDATE players SET seat_number = ? WHERE room_id = ? AND open_id = ?',
+        'UPDATE room_players SET seat_number = ? WHERE room_id = ? AND open_id = ?',
         [seatNumbers[i], roomId, shuffled[i].openId]
       );
     }
@@ -466,7 +466,7 @@ class RoomModel {
                 COUNT(p.id) as playerCount,
                 SUM(CASE WHEN p.is_ready THEN 1 ELSE 0 END) as readyCount
          FROM rooms r
-         LEFT JOIN players p ON r.id = p.room_id
+         LEFT JOIN room_players p ON r.id = p.room_id
          WHERE r.updated_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
          GROUP BY r.id, r.host_open_id, r.game_started, r.created_at, r.updated_at
           ORDER BY r.updated_at DESC
@@ -491,7 +491,7 @@ class RoomModel {
       const activeRooms = await db.query(
         'SELECT COUNT(*) as count FROM rooms WHERE updated_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)'
       );
-      const totalPlayers = await db.query('SELECT COUNT(*) as count FROM players');
+      const totalPlayers = await db.query('SELECT COUNT(*) as count FROM room_players');
       const roomsByStatus = await db.query(
         'SELECT game_started, COUNT(*) as count FROM rooms GROUP BY game_started'
       );

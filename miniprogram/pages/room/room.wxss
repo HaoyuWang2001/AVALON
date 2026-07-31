@@ -118,8 +118,8 @@ page { background: #F3F4F6; }
 .tag { font-size: 20rpx; padding: 2rpx 8rpx; border-radius: 4rpx; }
 .tag-host { background: #DBEAFE; color: #2563EB; }
 
-.seat-status { display: flex; align-items: center; gap: 6rpx; flex-shrink: 0; font-size: 22rpx; }
-.status-dot { width: 14rpx; height: 14rpx; border-radius: 50%; }
+.seat-status { display: flex; align-items: center; gap: 6rpx; flex-shrink: 0; font-size: 28rpx; }
+.status-dot { width: 16rpx; height: 16rpx; border-radius: 50%; }
 .dot-green { background: #10B981; }
 .dot-yellow { background: #F59E0B; }
 .seat-status.ready { color: #10B981; }

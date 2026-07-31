@@ -204,8 +204,10 @@ Page({
   onPlayerAction(e) {
     if (!this.data.isHost) return;
     const playerId = e.currentTarget.dataset.id;
+    if (!playerId) return;
     const player = this.data.players.find(p => p.openId === playerId);
     if (!player) return;
+    if (player.openId === app.globalData.openId) return;
     const name = player.nickName || player.wxNickName || '玩家';
     const isBanned = player.bannedFromSeating;
     const roomId = this.data.roomId;

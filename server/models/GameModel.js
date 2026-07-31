@@ -17,10 +17,10 @@ class GameModel {
         
         // 1. 获取房间和玩家信息
         const [roomInfo] = await connection.execute(
-          `SELECT r.owner_id, r.room_config, COUNT(p.id) as player_count,
+          `SELECT r.owner_id, r.room_config, COUNT(p.open_id) as player_count,
                   SUM(CASE WHEN p.is_ready THEN 1 ELSE 0 END) as ready_count
            FROM rooms r
-           LEFT JOIN players p ON r.id = p.room_id
+           LEFT JOIN room_players p ON r.id = p.room_id
            WHERE r.id = ? AND r.game_started = FALSE
            GROUP BY r.owner_id, r.room_config
            FOR UPDATE`,
@@ -48,7 +48,7 @@ class GameModel {
         // 2. 获取已排序的玩家列表
         const [players] = await connection.execute(
           `SELECT open_id as openId, nick_name as nickName, avatar_url as avatarUrl, seat_number as seatNumber
-           FROM players WHERE room_id = ? ORDER BY seat_number`,
+           FROM room_players WHERE room_id = ? ORDER BY seat_number`,
           [roomId]
         );
         
@@ -165,7 +165,7 @@ class GameModel {
         `SELECT gp.open_id as openId, gp.role, gp.side,
                 p.nick_name as nickName, p.avatar_url as avatarUrl, p.seat_number as seatNumber
          FROM game_players gp
-         JOIN players p ON gp.open_id = p.open_id AND p.room_id = ?
+         JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
          WHERE gp.game_id = ?
          ORDER BY p.seat_number`,
         [game.roomId, gameId]
@@ -592,7 +592,7 @@ class GameModel {
           
           // 重置玩家准备状态
           await connection.execute(
-            `UPDATE players 
+            `UPDATE room_players 
              SET is_ready = FALSE 
              WHERE room_id = ?`,
             [roomId]
