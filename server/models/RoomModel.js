@@ -149,8 +149,13 @@ class RoomModel {
       if (room.roomConfig && typeof room.roomConfig === 'string') {
         room.roomConfig = JSON.parse(room.roomConfig);
       }
-      
-      // 获取房间内的玩家
+
+      let activeGameId = null;
+      if (room.gameStarted) {
+        const [games] = await db.query('SELECT id FROM games WHERE room_id = ? AND status = ? LIMIT 1', [roomId, 'active']);
+        if (games.length > 0) activeGameId = games[0].id;
+      }
+
       const players = await db.query(
         `SELECT open_id as openId, nick_name as nickName, wx_nick_name as wxNickName, avatar_url as avatarUrl, 
                 seat_number as seatNumber, is_ready as isReady
@@ -167,6 +172,7 @@ class RoomModel {
       
       return {
         ...room,
+        activeGameId,
         readyPlayers,
         players: players.map(player => ({
           ...player,

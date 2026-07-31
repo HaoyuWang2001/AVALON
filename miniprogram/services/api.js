@@ -139,39 +139,39 @@ class ApiService {
     });
   }
 
-  async getGameState(roomId) {
+  async getGameState(gameId) {
     const openId = this.openId || getApp().globalData.openId;
-    return this.request(`/games/${roomId}?openId=${openId}`);
+    return this.request(`/games/${gameId}?openId=${openId}`);
   }
 
-  async submitNomination(roomId, nominatedTeam) {
+  async submitNomination(gameId, nominatedTeam) {
     const openId = this.openId || getApp().globalData.openId;
     return this.request('/games/submitNomination', {
       method: 'POST',
-      data: { roomId, openId, nominatedTeam }
+      data: { gameId, openId, nominatedTeam }
     });
   }
 
-  async castVote(roomId, vote) {
+  async castVote(gameId, vote) {
     const openId = this.openId || getApp().globalData.openId;
     return this.request('/games/castVote', {
       method: 'POST',
-      data: { roomId, openId, vote }
+      data: { gameId, openId, vote }
     });
   }
 
-  async castMissionVote(roomId, vote, playerRole) {
+  async castMissionVote(gameId, vote, playerRole) {
     const openId = this.openId || getApp().globalData.openId;
     return this.request('/games/castMissionVote', {
       method: 'POST',
-      data: { roomId, openId, vote, playerRole }
+      data: { gameId, openId, vote, playerRole }
     });
   }
 
-  async endGame(roomId) {
+  async endGame(gameId) {
     return this.request('/games/end', {
       method: 'POST',
-      data: { roomId }
+      data: { gameId }
     });
   }
 

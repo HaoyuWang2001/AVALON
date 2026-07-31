@@ -8,9 +8,10 @@ function createRouter() {
     try {
       const { openId } = req.params;
       const rows = await db.query(
-        `SELECT u.current_room_id as room_id, r.game_started
+        `SELECT u.current_room_id as room_id, r.game_started, g.id as game_id
          FROM users u
          LEFT JOIN rooms r ON u.current_room_id = r.id
+         LEFT JOIN games g ON r.id = g.room_id AND g.status = 'active'
          WHERE u.open_id = ?`,
         [openId]
       );
@@ -18,7 +19,7 @@ function createRouter() {
       if (rows.length > 0) {
         res.json({
           success: true,
-          room: { roomId: rows[0].room_id, gameStarted: rows[0].game_started === 1 }
+          room: { roomId: rows[0].room_id, gameStarted: rows[0].game_started === 1, gameId: rows[0].game_id || null }
         });
       } else {
         res.json({ success: true, room: null });

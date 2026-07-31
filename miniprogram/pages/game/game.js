@@ -5,6 +5,7 @@ const api = require('../../services/api.js');
 Page({
   data: {
     roomId: '',
+    gameId: '',
     gameState: null,
     playerRole: null,
     currentPhase: '',
@@ -21,9 +22,10 @@ Page({
   },
 
   onLoad(options) {
-    const { roomId } = options;
+    const { roomId, gameId } = options;
     this.setData({
       roomId: roomId || '',
+      gameId: gameId || '',
       userInfo: app.globalData.userInfo,
     });
 
@@ -44,8 +46,8 @@ Page({
   },
 
   fetchGameState() {
-    const { roomId } = this.data;
-    api.getGameState(roomId).then(res => {
+    const { gameId } = this.data;
+    api.getGameState(gameId).then(res => {
       if (res.success && res.game) {
         this.setData({
           gameState: res.game,
@@ -149,12 +151,10 @@ Page({
   },
 
   submitNomination() {
-    const { roomId, nominatedTeam } = this.data;
+    const { gameId, nominatedTeam } = this.data;
     const isLeader = this.checkIfTeamLeader();
-
     if (!isLeader) return;
-
-    api.submitNomination(roomId, nominatedTeam).then(res => {
+    api.submitNomination(gameId, nominatedTeam).then(res => {
       console.log('提名提交成功:', res);
     }).catch(err => {
       console.error('提名提交失败:', err);
@@ -171,9 +171,9 @@ Page({
 
   castVote(e) {
     const vote = e.currentTarget.dataset.vote;
-    const { roomId } = this.data;
+    const { gameId } = this.data;
 
-    api.castVote(roomId, vote).then(res => {
+    api.castVote(gameId, vote).then(res => {
       console.log('投票成功:', res);
     }).catch(err => {
       console.error('投票失败:', err);
@@ -182,7 +182,7 @@ Page({
 
   castMissionVote(e) {
     const vote = e.currentTarget.dataset.vote;
-    const { roomId, playerRole } = this.data;
+    const { gameId, playerRole } = this.data;
 
     if (vote === 'fail') {
       const isEvil = ['mordred', 'morgana', 'assassin', 'minion', 'oberon'].includes(playerRole);
@@ -195,7 +195,7 @@ Page({
       }
     }
 
-    api.castMissionVote(roomId, vote, playerRole).then(res => {
+    api.castMissionVote(gameId, vote, playerRole).then(res => {
       console.log('任务投票成功:', res);
     }).catch(err => {
       console.error('任务投票失败:', err);
@@ -224,7 +224,7 @@ Page({
       content: '确定要结束游戏吗？',
       success: (res) => {
         if (res.confirm) {
-          api.endGame(this.data.roomId).then(() => {
+          api.endGame(this.data.gameId).then(() => {
             wx.navigateBack();
           }).catch(err => {
             console.error('结束游戏失败:', err);

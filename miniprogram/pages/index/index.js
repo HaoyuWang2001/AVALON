@@ -150,7 +150,7 @@ Page({
     const room = this.data.currentRoom;
     if (!room) return;
     if (room.gameStarted) {
-      wx.navigateTo({ url: `/pages/game/game?roomId=${room.roomId}` });
+      wx.navigateTo({ url: `/pages/game/game?gameId=${room.gameId}&roomId=${room.roomId}` });
     } else {
       wx.navigateTo({ url: `/pages/room/room?roomId=${room.roomId}&isHost=false` });
     }

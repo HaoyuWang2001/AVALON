@@ -113,7 +113,7 @@ Page({
         this.setData({ canStartGame: canStart, startHint: hint });
 
         if (room.gameStarted && !this.data.gameStarted) {
-          wx.redirectTo({ url: `/pages/game/game?roomId=${this.data.roomId}` });
+          wx.redirectTo({ url: `/pages/game/game?gameId=${room.activeGameId}&roomId=${this.data.roomId}` });
         }
       } else {
         wx.showToast({ title: '会议已解散', icon: 'error' });
@@ -159,25 +159,21 @@ Page({
   },
 
   startGame() {
-    const { roomId, seatedSeats, readyPlayers, playerCount } = this.data;
-    if (!this.data.canStartGame) return;
-    const allSeated = seatedSeats.every(s => s.occupied);
-    if (!allSeated) {
-      wx.showToast({ title: '所有游戏座位需满员', icon: 'error' });
-      return;
-    }
-    const allReady = seatedSeats.every(s => s.isReady);
-    if (!allReady) {
-      wx.showToast({ title: '所有入座玩家需准备', icon: 'error' });
-      return;
-    }
+    const { roomId, seatedSeats, canStartGame } = this.data;
+    if (!canStartGame) return;
     wx.showModal({
       title: '开始游戏',
       content: '确定开始游戏吗？开始后不能再加入。',
       success: (res) => {
         if (res.confirm) {
           wx.showLoading({ title: '准备中...' });
-          api.startGame(roomId).then(() => wx.hideLoading()).catch(() => {
+          api.startGame(roomId).then(result => {
+            wx.hideLoading();
+            if (result.success) {
+              const gameId = result.gameId;
+              wx.redirectTo({ url: `/pages/game/game?gameId=${gameId}&roomId=${roomId}` });
+            }
+          }).catch(() => {
             wx.hideLoading(); wx.showToast({ title: '开始失败', icon: 'error' });
           });
         }
