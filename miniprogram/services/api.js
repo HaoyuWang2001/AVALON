@@ -128,6 +128,21 @@ class ApiService {
     });
   }
 
+  async banFromSeating(roomId, playerId, banned) {
+    return this.request(`/rooms/${roomId}/banSeat`, {
+      method: 'POST',
+      data: { playerId, banned }
+    });
+  }
+
+  async transferOwner(roomId, newOwnerId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/rooms/${roomId}/transferOwner`, {
+      method: 'POST',
+      data: { currentOwnerId: openId, newOwnerId }
+    });
+  }
+
   async getCurrentRoom(openId) {
     return this.request(`/players/${openId}/currentRoom`);
   }

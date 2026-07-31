@@ -48,6 +48,7 @@ CREATE TABLE players (
     avatar_url TEXT COMMENT '头像URL',
     seat_number INT NOT NULL COMMENT '座位号：-1=观战, 0=未入座, 1~N=入座',
     is_ready BOOLEAN DEFAULT FALSE COMMENT '是否已准备',
+    banned_from_seating BOOLEAN DEFAULT FALSE COMMENT '是否禁止上座',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '加入时间',
     seat_unique_for_game INT GENERATED ALWAYS AS (IF(seat_number >= 1, seat_number, NULL)) STORED COMMENT '浅席位唯一约束(仅>=1)',
     UNIQUE KEY uk_room_seat (room_id, seat_unique_for_game) COMMENT '同房间游戏座位号唯一(排除未入座/观战)',

@@ -346,6 +346,31 @@ function createRouter() {
     }
   });
 
+  // 禁止/允许上座（房主操作）
+  router.post('/:roomId/banSeat', async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const { playerId, banned } = req.body;
+      const room = await RoomModel.banFromSeating(roomId, playerId, banned);
+      res.json({ success: true, room, message: banned ? '已禁止上座' : '已允许上座' });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // 转让房主（房主操作）
+  router.post('/:roomId/transferOwner', async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const { currentOwnerId, newOwnerId } = req.body;
+      const room = await RoomModel.transferOwner(roomId, currentOwnerId, newOwnerId);
+      res.json({ success: true, room, message: '房主已转让' });
+    } catch (error) {
+      if (error.message.includes('仅房主')) return res.status(403).json({ success: false, message: error.message });
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
   // 解散房间（房主操作）
   router.post('/:roomId/disband', async (req, res) => {
     try {

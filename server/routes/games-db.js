@@ -305,9 +305,9 @@ function createRouter() {
       }
 
       if (error.message.includes('游戏已结束') ||
-          error.message.includes('本局已使用过刺杀') ||
-          error.message.includes('不在此游戏中') ||
-          error.message.includes('只有坏人才能发起刺杀')) {
+          error.message.includes('本局无刺杀者角色') ||
+          error.message.includes('只有刺杀者才能发起刺杀') ||
+          error.message.includes('目标不在此游戏中')) {
         return res.status(400).json({ 
           success: false, 
           message: error.message 

@@ -1,26 +1,24 @@
 const {
   createRoomWithPlayers, createRoomAndStartGame,
-  startGame, getGameState, advancePhase, makeUserId
+  startGame, getGameState, advancePhase
 } = require('./helpers/testHelper');
 
 const PLAYER_COUNTS = [5, 6, 7, 8, 9, 10, 11, 12];
 
 describe('03 — Game Start & Role Assignment', () => {
   describe.each(PLAYER_COUNTS)('Player count: %p', (n) => {
-    let roomId;
     let gameId;
     let players;
 
     beforeAll(async () => {
       const result = await createRoomAndStartGame(n);
-      roomId = result.roomId;
       gameId = result.gameId;
       players = result.players;
     });
 
     it(`should start game with ${n} players`, async () => {
       expect(gameId).toBeDefined();
-      expect(gameId.length).toBeGreaterThan(10); // UUID
+      expect(gameId.length).toBeGreaterThan(10);
     });
 
     it('should return correct game state', async () => {
@@ -38,10 +36,8 @@ describe('03 — Game Start & Role Assignment', () => {
 
     it('should assign a unique role to every player', async () => {
       const state = await getGameState(gameId);
-      const roles = state.game.players.map(p => p.role);
-      expect(new Set(roles).size).toBeGreaterThanOrEqual(1);
-      expect(roles.length).toBe(n);
-      expect(roles.every(r => typeof r === 'string')).toBe(true);
+      expect(state.game.players.length).toBe(n);
+      expect(state.game.players.every(p => typeof p.role === 'string')).toBe(true);
     });
 
     it('should assign a side (good/evil) to every player', async () => {
@@ -62,26 +58,25 @@ describe('03 — Game Start & Role Assignment', () => {
       expect(state.playerRole).toBe(players[0].role);
     });
 
-    it('should allow advancePhase from roleReveal to teamSelection', async () => {
+    it('should advance from roleReveal to teamSelection', async () => {
       const result = await advancePhase(gameId);
       expect(result.success).toBe(true);
       expect(result.game.currentPhase).toBe('teamSelection');
 
-      // Should reject second advancePhase
       const res2 = await advancePhase(gameId);
       expect(res2.success).toBe(false);
     });
 
-    it('should reject game start with fewer than 5 players', async () => {
-      const smallResult = await createRoomWithPlayers(4);
-      const res = await startGame(smallResult.roomId);
+    it('should reject start with fewer than 5 players', async () => {
+      const setup = await createRoomWithPlayers(4);
+      const res = await startGame(setup.roomId);
       expect(res.success).toBe(false);
     });
   });
 
-  it('should reject game start when players are not ready', async () => {
-    const { startGame, getRoom, toggleReady } = require('./helpers/testHelper');
+  it('should reject start when not all ready', async () => {
     const { roomId, players } = await createRoomWithPlayers(5);
+    const { toggleReady } = require('./helpers/testHelper');
     await toggleReady(roomId, players[0].openId, false);
     const res = await startGame(roomId);
     expect(res.success).toBe(false);

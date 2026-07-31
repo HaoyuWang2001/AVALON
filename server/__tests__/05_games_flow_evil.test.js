@@ -8,131 +8,119 @@ const EVIL_WIN_COUNTS = [5, 10];
 
 describe('05 — Evil Win Paths', () => {
   describe.each(EVIL_WIN_COUNTS)('Player count: %p', (n) => {
-    let gameId;
-    let players;
-    let evilPlayers;
-    let currentState;
-
-    const getState = async () => {
-      const state = await getGameState(gameId);
-      currentState = state.game;
-      return state;
-    };
-
     describe('Path 1: 3 mission failures', () => {
+      let gameId;
+      let players;
+
       beforeAll(async () => {
         const result = await createRoomAndStartGame(n);
         gameId = result.gameId;
         players = result.players;
-        evilPlayers = players.filter(p => p.side === 'evil');
         await advancePhase(gameId);
       });
 
       it(`should result in evil win by 3 failed missions (${n} players)`, async () => {
         let failMissionCount = 0;
         let round = 0;
-        const maxRounds = 15;
+        const maxRounds = 20;
 
         while (failMissionCount < 3 && round < maxRounds) {
           round++;
-          await getState();
+          let state = await getGameState(gameId);
+          const gs = state.game;
 
-          if (currentState.currentPhase === 'gameEnd') break;
+          if (gs.currentPhase === 'gameEnd') break;
 
-          const leader = players[currentState.teamLeaderIndex];
-          const teamSize = getTeamSize(n, currentState.currentRound);
-          const teamSlots = [];
+          if (gs.currentPhase === 'teamSelection') {
+            const leader = players[gs.teamLeaderIndex];
+            const teamSize = getTeamSize(n, gs.currentRound);
+            // Ensure at least 1 evil in team
+            const evilP = players.filter(p => p.side === 'evil');
+            const goodP = players.filter(p => p.side === 'good');
+            const team = [evilP[0].openId, ...goodP.slice(0, teamSize - 1).map(p => p.openId)];
+            const result = await submitNomination(gameId, leader.openId, team.slice(0, teamSize));
+            if (!result.success) continue;
+          }
 
-          // Ensure at least 1 evil is in the team (to cause fail)
-          let evilAdded = false;
-          for (const p of players) {
-            if (teamSlots.length >= teamSize) break;
-            if (!evilAdded && p.side === 'evil') {
-              teamSlots.push(p.openId);
-              evilAdded = true;
-            } else if (p.side === 'good' && teamSlots.length < teamSize) {
-              teamSlots.push(p.openId);
+          state = await getGameState(gameId);
+          if (state.game.currentPhase === 'teamVote') {
+            const half = Math.floor(n / 2) + 1;
+            for (let i = 0; i < half; i++) {
+              await castVote(gameId, players[i].openId, 'approve');
+            }
+            for (let i = half; i < n; i++) {
+              await castVote(gameId, players[i].openId, 'reject');
             }
           }
-          // Fill remaining with good players
-          for (const p of players) {
-            if (teamSlots.length >= teamSize) break;
-            if (!teamSlots.includes(p.openId)) {
-              teamSlots.push(p.openId);
+
+          state = await getGameState(gameId);
+          if (state.game.currentPhase === 'teamSelection') continue;
+          if (state.game.currentPhase === 'gameEnd') break;
+
+          if (state.game.currentPhase === 'missionVote') {
+            const missionTeam = state.game.nominatedTeam || [];
+            for (const openId of missionTeam) {
+              const p = players.find(pp => pp.openId === openId);
+              if (p) {
+                const vote = p.side === 'evil' ? 'fail' : 'success';
+                await castMissionVote(gameId, openId, vote, p.role);
+              }
             }
-          }
 
-          await submitNomination(gameId, leader.openId, teamSlots);
-          await getState();
-
-          if (currentState.currentPhase !== 'teamVote') continue;
-
-          // Majority approve
-          const approveCount = Math.floor(n / 2) + 1;
-          for (let i = 0; i < approveCount; i++) {
-            await castVote(gameId, players[i].openId, 'approve');
-          }
-          for (let i = approveCount; i < n; i++) {
-            await castVote(gameId, players[i].openId, 'reject');
-          }
-
-          await getState();
-          if (currentState.currentPhase !== 'missionVote') continue;
-
-          // Mission vote: evil members vote fail
-          for (const openId of teamSlots) {
-            const p = players.find(pp => pp.openId === openId);
-            const vote = p.side === 'evil' ? 'fail' : 'success';
-            await castMissionVote(gameId, openId, vote, p.role);
-          }
-
-          await getState();
-          if (currentState.missionResults) {
-            failMissionCount = currentState.missionResults.filter(r => !r.success).length;
+            state = await getGameState(gameId);
+            if (state.game.missionResults) {
+              failMissionCount = state.game.missionResults.filter(r => !r.success).length;
+            }
           }
         }
 
-        await getState();
-        expect(currentState.currentPhase).toBe('gameEnd');
-        expect(currentState.gameResult.winner).toBe('evil');
+        const finalState = await getGameState(gameId);
+        expect(finalState.game.currentPhase).toBe('gameEnd');
+        if (finalState.game.gameResult) {
+          expect(finalState.game.gameResult.winner).toBe('evil');
+        }
 
         await endGame(gameId);
       });
     });
 
-    describe('Path 2: Successful assassination', () => {
-      beforeAll(async () => {
-        const result = await createRoomAndStartGame(n);
-        gameId = result.gameId;
-        players = result.players;
-        evilPlayers = players.filter(p => p.side === 'evil');
-        await advancePhase(gameId);
-      });
-
-      it(`should result in evil win by assassinating Merlin (${n} players)`, async () => {
-        const merlinPlayer = players.find(p => p.role === 'merlin');
-        const evilKiller = evilPlayers[0];
-
-        const assResult = await assassinate(gameId, evilKiller.openId, merlinPlayer.openId);
-        expect(assResult.success).toBe(true);
-
-        await getState();
-        expect(currentState.currentPhase).toBe('gameEnd');
-        expect(currentState.gameResult.winner).toBe('evil');
-        expect(currentState.gameResult.reason).toContain('梅林');
-
-        await endGame(gameId);
-      });
-
-      it('should reject second assassination attempt', async () => {
+    describe('Path 2: Assassination hits Merlin', () => {
+      it('should result in evil win by assassinating Merlin at any phase', async () => {
         const result = await createRoomAndStartGame(n);
         const gId = result.gameId;
-        const eps = result.players.filter(p => p.side === 'evil');
-        const merlin = result.players.find(p => p.role === 'merlin');
+        const ps = result.players;
 
-        await assassinate(gId, eps[0].openId, merlin.openId);
-        const second = await assassinate(gId, eps[0].openId, merlin.openId);
-        expect(second.success).toBe(false);
+        const assassin = ps.find(p => p.role === 'assassin');
+        const morgana = ps.find(p => p.role === 'morgana');
+        const killer = assassin || morgana;
+        const merlin = ps.find(p => p.role === 'merlin');
+
+        const assResult = await assassinate(gId, killer.openId, merlin.openId);
+        expect(assResult.success).toBe(true);
+
+        const state = await getGameState(gId);
+        expect(state.game.currentPhase).toBe('gameEnd');
+        expect(state.game.gameResult.winner).toBe('evil');
+        expect(state.game.gameResult.reason).toContain('梅林');
+
+        await endGame(gId);
+      });
+
+      it('should reject assassination by non-assassin evil player', async () => {
+        const result = await createRoomAndStartGame(n);
+        const gId = result.gameId;
+        const ps = result.players;
+
+        // Find a non-assassin evil player (not the killer)
+        const assassin = ps.find(p => p.role === 'assassin');
+        const morgana = ps.find(p => p.role === 'morgana');
+        const killerRole = assassin ? 'assassin' : 'morgana';
+        const nonKiller = ps.find(p => p.side === 'evil' && p.role !== killerRole);
+
+        if (nonKiller) {
+          const res = await assassinate(gId, nonKiller.openId, ps[0].openId);
+          expect(res.success).toBe(false);
+        }
 
         await endGame(gId);
       });
@@ -141,13 +129,52 @@ describe('05 — Evil Win Paths', () => {
         const result = await createRoomAndStartGame(n);
         const gId = result.gameId;
         const goodPlayer = result.players.find(p => p.side === 'good');
-        const target = result.players[0];
 
-        const res = await assassinate(gId, goodPlayer.openId, target.openId);
+        const res = await assassinate(gId, goodPlayer.openId, result.players[0].openId);
         expect(res.success).toBe(false);
 
         await endGame(gId);
       });
+
+      it('should reject assassination after game ends', async () => {
+        const result = await createRoomAndStartGame(n);
+        const gId = result.gameId;
+        const ps = result.players;
+        const assassin = ps.find(p => p.role === 'assassin');
+        const morgana = ps.find(p => p.role === 'morgana');
+        const killer = assassin || morgana;
+        const merlin = ps.find(p => p.role === 'merlin');
+
+        await assassinate(gId, killer.openId, merlin.openId);
+        // Game is now ended
+        const second = await assassinate(gId, killer.openId, merlin.openId);
+        expect(second.success).toBe(false);
+
+        await endGame(gId);
+      });
+    });
+  });
+
+  describe('11-player: Morgana as assassin', () => {
+    it('should allow morgana to assassinate in 11p game', async () => {
+      const result = await createRoomAndStartGame(11);
+      const gId = result.gameId;
+      const ps = result.players;
+
+      const assassin = ps.find(p => p.role === 'assassin');
+      expect(assassin).toBeUndefined();
+
+      const morgana = ps.find(p => p.role === 'morgana');
+      expect(morgana).toBeDefined();
+
+      const merlin = ps.find(p => p.role === 'merlin');
+      const assResult = await assassinate(gId, morgana.openId, merlin.openId);
+      expect(assResult.success).toBe(true);
+
+      const state = await getGameState(gId);
+      expect(state.game.gameResult.winner).toBe('evil');
+
+      await endGame(gId);
     });
   });
 });

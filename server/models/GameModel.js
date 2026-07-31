@@ -478,7 +478,14 @@ class GameModel {
           const failCount = votes.filter(v => v.vote_value === 'fail').length;
 
           // 判断任务是否成功
-          const success = failCount === 0 || (teamSize > 1 && failCount === 1);
+          const playerCount = game[0].player_count;
+          const requiresDoubleFail = playerCount >= 7 && game[0].current_round === 4;
+          let success;
+          if (requiresDoubleFail) {
+            success = failCount < 2;
+          } else {
+            success = failCount === 0 || (teamSize > 1 && failCount === 1);
+          }
 
           // 保存任务结果
           await connection.execute(
@@ -517,32 +524,14 @@ class GameModel {
               [JSON.stringify({ winner: 'evil', reason: '坏人完成3个任务' }), gameId]
             );
           } else if (successCount >= 3) {
-            // 好人完成3个任务，检查刺杀状态
-            const [assassinationResult] = await connection.execute(
-              `SELECT assassination FROM games WHERE id = ?`,
+            // 好人完成3个任务，进入刺杀阶段
+            await connection.execute(
+              `UPDATE games 
+               SET current_phase = 'assassination',
+                   updated_at = NOW()
+               WHERE id = ?`,
               [gameId]
             );
-
-            if (assassinationResult[0].assassination) {
-              // 坏人已提前刺杀且未命中，好人直接获胜
-              await connection.execute(
-                `UPDATE games 
-                 SET current_phase = 'gameEnd',
-                     game_result = ?,
-                     updated_at = NOW()
-                 WHERE id = ?`,
-                [JSON.stringify({ winner: 'good', reason: '好人完成3个任务', assassination: JSON.parse(assassinationResult[0].assassination) }), gameId]
-              );
-            } else {
-              // 进入刺客刺杀阶段
-              await connection.execute(
-                `UPDATE games 
-                 SET current_phase = 'assassination',
-                     updated_at = NOW()
-                 WHERE id = ?`,
-                [gameId]
-              );
-            }
           } else {
             // 进入下一回合
             const newRound = game[0].current_round + 1;
@@ -659,6 +648,8 @@ class GameModel {
 
   /**
    * 刺客刺杀梅林
+   * 仅 assassin 可发起；无 assassin 时 morgana 可发起
+   * 强制进入 assassination 阶段，执行后必定 gameEnd
    * @param {string} gameId 游戏ID
    * @param {string} killerOpenId 刺杀者openId
    * @param {string} targetOpenId 目标openId
@@ -668,7 +659,7 @@ class GameModel {
     try {
       await db.transaction(async (connection) => {
         const [game] = await connection.execute(
-          `SELECT current_phase, current_round, assassination
+          `SELECT current_phase, current_round
            FROM games WHERE id = ? FOR UPDATE`,
           [gameId]
         );
@@ -681,22 +672,29 @@ class GameModel {
           throw new Error('游戏已结束');
         }
 
-        if (game[0].assassination) {
-          throw new Error('本局已使用过刺杀');
-        }
-
-        // 验证刺杀者是坏人阵营
-        const [killer] = await connection.execute(
-          `SELECT side FROM game_players WHERE game_id = ? AND open_id = ?`,
-          [gameId, killerOpenId]
+        // 查找刺杀者：assassin 或（无 assassin 时）morgana
+        const [assassinPlayers] = await connection.execute(
+          `SELECT open_id FROM game_players WHERE game_id = ? AND role = 'assassin'`,
+          [gameId]
+        );
+        const [morganaPlayers] = await connection.execute(
+          `SELECT open_id FROM game_players WHERE game_id = ? AND role = 'morgana'`,
+          [gameId]
         );
 
-        if (killer.length === 0) {
-          throw new Error('刺杀者不在此游戏中');
+        let validKillerOpenIds = [];
+        if (assassinPlayers.length > 0) {
+          validKillerOpenIds = assassinPlayers.map(p => p.open_id);
+        } else if (morganaPlayers.length > 0) {
+          validKillerOpenIds = morganaPlayers.map(p => p.open_id);
         }
 
-        if (killer[0].side !== 'evil') {
-          throw new Error('只有坏人才能发起刺杀');
+        if (validKillerOpenIds.length === 0) {
+          throw new Error('本局无刺杀者角色');
+        }
+
+        if (!validKillerOpenIds.includes(killerOpenId)) {
+          throw new Error('只有刺杀者才能发起刺杀');
         }
 
         // 查询目标角色
@@ -718,8 +716,8 @@ class GameModel {
           round: game[0].current_round
         };
 
+        // 无论命中与否，执行刺杀后必定 gameEnd
         if (isMerlin) {
-          // 刺中梅林，坏人立即获胜
           await connection.execute(
             `UPDATE games 
              SET current_phase = 'gameEnd',
@@ -731,8 +729,7 @@ class GameModel {
              JSON.stringify({ winner: 'evil', reason: '刺杀命中梅林', assassination }),
              gameId]
           );
-        } else if (game[0].current_phase === 'assassination') {
-          // 刺杀阶段未命中，好人获胜
+        } else {
           await connection.execute(
             `UPDATE games 
              SET current_phase = 'gameEnd',
@@ -741,17 +738,8 @@ class GameModel {
                  updated_at = NOW()
              WHERE id = ?`,
             [JSON.stringify(assassination),
-             JSON.stringify({ winner: 'good', reason: '好人完成任务且刺杀未命中', assassination }),
+             JSON.stringify({ winner: 'good', reason: '刺杀未命中梅林', assassination }),
              gameId]
-          );
-        } else {
-          // 提前刺杀未命中，游戏继续
-          await connection.execute(
-            `UPDATE games 
-             SET assassination = ?,
-                 updated_at = NOW()
-             WHERE id = ?`,
-            [JSON.stringify(assassination), gameId]
           );
         }
       });

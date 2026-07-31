@@ -199,28 +199,45 @@ Page({
     api.randomSeats(this.data.roomId).catch(() => {});
   },
 
-  // ─── Kick ───
+  // ─── Player Actions ───
 
-  onWaitingPlayerTap(e) {
+  onPlayerAction(e) {
     if (!this.data.isHost) return;
     const playerId = e.currentTarget.dataset.id;
+    const player = this.data.players.find(p => p.openId === playerId);
+    if (!player) return;
+    const name = player.nickName || player.wxNickName || '玩家';
+    const isBanned = player.bannedFromSeating;
+    const roomId = this.data.roomId;
+
     wx.showActionSheet({
-      itemList: ['踢出房间'],
+      itemList: ['踢出房间', isBanned ? '允许上座' : '禁止上座', '转让房主'],
       success: (res) => {
         if (res.tapIndex === 0) {
-          api.kickPlayer(this.data.roomId, playerId, 'room').catch(() => {});
+          wx.showModal({
+            title: '踢出房间',
+            content: `确定将 ${name} 踢出房间吗？`,
+            success: (r) => { if (r.confirm) api.kickPlayer(roomId, playerId, 'room').catch(() => {}); }
+          });
+        } else if (res.tapIndex === 1) {
+          wx.showModal({
+            title: isBanned ? '允许上座' : '禁止上座',
+            content: `确定${isBanned ? '允许' : '禁止'} ${name} 上座吗？`,
+            success: (r) => { if (r.confirm) api.banFromSeating(roomId, playerId, !isBanned).catch(() => {}); }
+          });
+        } else if (res.tapIndex === 2) {
+          wx.showModal({
+            title: '转让房主',
+            content: `确定将房主转让给 ${name} 吗？转让后你将变为普通玩家。`,
+            success: (r) => {
+              if (r.confirm) {
+                api.transferOwner(roomId, playerId).then(() => {
+                  wx.showToast({ title: '已转让', icon: 'success' });
+                }).catch(() => {});
+              }
+            }
+          });
         }
-      }
-    });
-  },
-
-  kickPlayer(e) {
-    const playerId = e.currentTarget.dataset.id;
-    wx.showActionSheet({
-      itemList: ['踢到未入座区', '踢出房间'],
-      success: (res) => {
-        const mode = res.tapIndex === 0 ? 'unseat' : 'room';
-        api.kickPlayer(this.data.roomId, playerId, mode).catch(() => {});
       }
     });
   },

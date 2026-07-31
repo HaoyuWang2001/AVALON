@@ -158,7 +158,7 @@ class RoomModel {
 
       const players = await db.query(
         `SELECT open_id as openId, nick_name as nickName, wx_nick_name as wxNickName, avatar_url as avatarUrl, 
-                seat_number as seatNumber, is_ready as isReady
+                seat_number as seatNumber, is_ready as isReady, banned_from_seating as bannedFromSeating
          FROM players WHERE room_id = ? ORDER BY seat_number`,
         [roomId]
       );
@@ -300,6 +300,13 @@ class RoomModel {
     try {
       await db.transaction(async (connection) => {
         if (newSeatNumber >= 1) {
+          const [banCheck] = await connection.execute(
+            'SELECT banned_from_seating FROM players WHERE room_id = ? AND open_id = ?',
+            [roomId, openId]
+          );
+          if (banCheck.length > 0 && banCheck[0].banned_from_seating) {
+            throw new Error('你已被禁止上座');
+          }
           const [occupiedSeats] = await connection.execute(
             'SELECT COUNT(*) as count FROM players WHERE room_id = ? AND seat_number = ? AND open_id != ?',
             [roomId, newSeatNumber, openId]
@@ -354,6 +361,28 @@ class RoomModel {
       console.error('踢出玩家失败:', error);
       throw error;
     }
+  }
+
+  static async banFromSeating(roomId, playerId, banned) {
+    try {
+      await db.query(
+        'UPDATE players SET banned_from_seating = ? WHERE room_id = ? AND open_id = ?',
+        [banned, roomId, playerId]
+      );
+      await db.query('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
+      return await this.getById(roomId);
+    } catch (error) {
+      console.error('禁止上座操作失败:', error);
+      throw error;
+    }
+  }
+
+  static async transferOwner(roomId, currentOwnerId, newOwnerId) {
+    const room = await this.getById(roomId);
+    if (!room) throw new Error('房间不存在');
+    if (room.ownerId !== currentOwnerId) throw new Error('仅房主可转让');
+    await db.query('UPDATE rooms SET owner_id = ?, updated_at = NOW() WHERE id = ? AND owner_id = ?', [newOwnerId, roomId, currentOwnerId]);
+    return await this.getById(roomId);
   }
   
   /**

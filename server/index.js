@@ -28,7 +28,11 @@ function parseEnvFilePath() {
 
 // 加载环境变量
 const envFilePath = parseEnvFilePath();
-require('dotenv').config({ path: envFilePath });
+try {
+  require('dotenv').config({ path: envFilePath });
+} catch (e) {
+  console.log(`ℹ️ 未找到.env文件 (${envFilePath})，使用系统环境变量`);
+}
 
 const express = require('express');
 const http = require('http');

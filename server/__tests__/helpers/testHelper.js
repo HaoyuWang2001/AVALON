@@ -82,6 +82,16 @@ async function createRoom(hostId, hostNick) {
   return res.body;
 }
 
+async function createRoomWithConfig(hostId, hostNick, roomConfig) {
+  const res = await apiPost('/api/rooms/create', {
+    hostOpenId: hostId,
+    hostNickName: hostNick || makeNickName(hostId),
+    hostAvatarUrl: '',
+    roomConfig
+  });
+  return res.body;
+}
+
 async function joinRoom(roomId, userId, seatNumber, nick) {
   const res = await apiPost('/api/rooms/join', {
     roomId,
@@ -221,6 +231,59 @@ async function createRoomAndStartGame(playerCount) {
   return { roomId, gameId, players: enrichedPlayers, hostId };
 }
 
+/**
+ * Build a roomConfig with specific good/evil role arrays for Lancelot variant testing.
+ */
+function buildLancelotVariantConfig(variant) {
+  const baseConfig = buildMinimalRoomConfig();
+  if (variant === 'blue') {
+    baseConfig.roles = {
+      good: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'lancelotBlue'],
+      evil: ['morgana', 'assassin', 'mordred', 'oberon']
+    };
+  } else if (variant === 'red') {
+    baseConfig.roles = {
+      good: ['merlin', 'percival', 'loyal', 'loyal', 'loyal'],
+      evil: ['lancelotRed', 'morgana', 'assassin', 'mordred', 'oberon']
+    };
+  }
+  return baseConfig;
+}
+
+/**
+ * Create a 10-player room with a specific Lancelot variant and start the game.
+ */
+async function createLancelotGame(variant) {
+  const hostId = makeUserId();
+  const hostNick = makeNickName(hostId);
+  const roomConfig = buildLancelotVariantConfig(variant);
+  const createResult = await createRoomWithConfig(hostId, hostNick, roomConfig);
+  if (!createResult.success) throw new Error(`Failed to create room: ${JSON.stringify(createResult)}`);
+  const roomId = createResult.roomId;
+  const players = [{ openId: hostId, nickName: hostNick, seatNumber: 1 }];
+
+  for (let i = 1; i < 10; i++) {
+    const uid = makeUserId();
+    const result = await joinRoom(roomId, uid, i + 1, makeNickName(uid));
+    if (!result.success) throw new Error(`Failed to join: ${JSON.stringify(result)}`);
+    players.push({ openId: uid, nickName: makeNickName(uid), seatNumber: i + 1 });
+  }
+
+  for (const p of players) {
+    await toggleReady(roomId, p.openId, true);
+  }
+
+  const startResult = await startGame(roomId);
+  if (!startResult.success) throw new Error(`Failed to start: ${JSON.stringify(startResult)}`);
+  const gameId = startResult.gameId;
+  const gameState = await getGameState(gameId);
+  const enrichedPlayers = players.map(p => {
+    const gp = gameState.game.players.find(gp => gp.openId === p.openId);
+    return { ...p, role: gp.role, side: gp.side };
+  });
+  return { roomId, gameId, players: enrichedPlayers, hostId, variant };
+}
+
 module.exports = {
   setRequest,
   request,
@@ -231,6 +294,7 @@ module.exports = {
   apiGet,
   apiPost,
   createRoom,
+  createRoomWithConfig,
   joinRoom,
   getRoom,
   toggleReady,
@@ -248,4 +312,5 @@ module.exports = {
   getLatestMessages,
   createRoomWithPlayers,
   createRoomAndStartGame,
+  createLancelotGame,
 };

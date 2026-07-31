@@ -1,0 +1,572 @@
+# AVALON 后端端到端测试文档
+
+## 1. 测试目标
+
+在无真人用户条件下，由单人驱动自动化测试，端到端验证后端服务从创建房间到游戏结束的完整生命周期。
+
+- 覆盖 5-12 人全部基础版型，对每个玩家数分别跑完整游戏流程。
+- 覆盖单 Lancelot 变体配置（仅 lancelotBlue 或仅 lancelotRed）。
+- 覆盖两条胜负路径：好人胜利（3 次任务成功 + 刺客刺杀阶段未命中梅林）与坏人胜利（3 次任务失败 或 刺杀命中梅林）。
+- 覆盖 Socket.io 实时通信广播。
+- 覆盖边界与并发场景。
+- 使用独立测试数据库，绝不触碰生产数据。
+
+## 2. 测试模式
+
+### 2.1 环境拓扑
+
+测试运行在腾讯云服务器上，复用已部署的 Docker 基础设施：
+
+```
+┌──────────────────────────────────────────────────┐
+│                  腾讯云服务器                      │
+│                                                    │
+│  ┌──────────────┐       ┌───────────────────┐    │
+│  │  MySQL 容器   │       │  生产后端容器        │    │
+│  │  (avalon-     │       │  端口 8082         │    │
+│  │   mysql)      │       │  DB=avalon_db      │    │
+│  │  端口 3306    │       │  ← 测试不触碰       │    │
+│  │               │       ├───────────────────┤    │
+│  │  avalon_db    │       │  测试后端容器        │    │
+│  │  avalon_db    │       │  (avalon-server-   │    │
+│  │  _test ←─────┼───────┤   test)            │    │
+│  │  (临时)       │       │  DB=avalon_db_test │    │
+│  └──────────────┘       │  端口 0(随机)       │    │
+│                         │  不对外暴露          │    │
+│                         │  Jest 在容器内运行   │    │
+│                         └───────────────────┘    │
+│                                                    │
+│  Docker 网络: avalon-net                           │
+└──────────────────────────────────────────────────┘
+```
+
+### 2.2 仅 MySQL 模式
+
+后端仅支持 MySQL 存储模式。内存存储模式已移除。若数据库初始化失败，服务直接退出。
+
+### 2.3 gameId 与 roomId
+
+| 标识符 | 生成时机 | 格式 | 用途 |
+|--------|---------|------|------|
+| `roomId` | 创建房间时 | 6 位数字字符串 | 房间操作 API |
+| `gameId` | 游戏启动时（`POST /api/games/start`） | UUID | 游戏操作 API |
+
+所有游戏类 API 使用 `gameId`，所有房间类 API 使用 `roomId`。
+
+### 2.4 测试数据库生命周期
+
+```
+globalSetup:
+  1. root 连接 MySQL
+  2. DROP DATABASE IF EXISTS avalon_db_test
+  3. CREATE DATABASE avalon_db_test
+  4. GRANT ALL ON avalon_db_test.* TO avalon_test_user
+  5. 执行建表 DDL（8 张表 + role_configurations 种子数据）
+  6. require('index.js') 启动测试后端（DB_NAME=avalon_db_test, PORT=0）
+  7. 等待 listening，写 port 到临时文件
+
+globalTeardown:
+  1. server.close() + db.closePool()
+  2. root 连接 MySQL
+  3. DROP DATABASE IF EXISTS avalon_db_test
+  4. 删除临时文件
+```
+
+## 3. 游戏规则与状态机
+
+### 3.1 角色配置
+
+#### 标准配置（5-12 人）
+
+| N | 角色数组 | good | evil |
+|---|---------|------|------|
+| 5 | merlin, percival, loyal, morgana, assassin | 3 | 2 |
+| 6 | merlin, percival, loyal, loyal, morgana, assassin | 4 | 2 |
+| 7 | merlin, percival, loyal, loyal, morgana, assassin, oberon | 4 | 3 |
+| 8 | merlin, percival, loyal, loyal, loyal, morgana, assassin, minion | 5 | 3 |
+| 9 | merlin, percival, loyal, loyal, loyal, loyal, morgana, assassin, mordred | 6 | 3 |
+| 10 | merlin, percival, loyal, loyal, loyal, loyal, morgana, assassin, mordred, oberon | 6 | 4 |
+| 11 | merlin, percival, loyal, loyal, loyal, loyal, lancelotBlue, morgana, mordred, oberon, lancelotRed | 7 | 4 |
+| 12 | merlin, percival, loyal, loyal, loyal, loyal, lancelotBlue, morgana, assassin, mordred, oberon, lancelotRed | 7 | 5 |
+
+#### 单 Lancelot 变体配置（10 人）
+
+用于验证系统在仅有一个 Lancelot 角色时正常工作。通过 roomConfig 自定义传入，非默认配置。
+
+| 变体 | 角色数组 | good | evil |
+|------|---------|------|------|
+| 仅 lancelotBlue | merlin, percival, loyal, loyal, loyal, lancelotBlue, morgana, assassin, mordred, oberon | 6 | 4 |
+| 仅 lancelotRed | merlin, percival, loyal, loyal, loyal, lancelotRed, morgana, assassin, mordred, oberon | 5 | 5 |
+
+### 3.2 队伍大小
+
+| N | R1 | R2 | R3 | R4 | R5 |
+|---|----|----|----|----|----|
+| 5 | 2 | 3 | 2 | 3 | 3 |
+| 6 | 2 | 3 | 4 | 3 | 4 |
+| 7 | 2 | 3 | 3 | 4 | 4 |
+| 8 | 3 | 4 | 4 | 5 | 5 |
+| 9 | 3 | 4 | 4 | 5 | 5 |
+| 10 | 3 | 4 | 4 | 5 | 5 |
+| 11 | 3 | 4 | 5 | 6 | 6 |
+| 12 | 3 | 4 | 5 | 6 | 6 |
+
+### 3.3 投票规则
+
+#### 队伍投票（castVote）
+
+全体 N 人参与投票（approve/reject）。
+- approve 多数 → 进入任务投票阶段
+- reject 多数 → leader 轮转，回 teamSelection
+
+#### 任务投票（castMissionVote）
+
+仅被提名的任务队成员参与投票（success/fail）。仅坏人角色可投 fail。
+
+任务成功判定：
+
+```
+基础规则：
+  failCount === 0                       → 成功
+  teamSize > 1 && failCount === 1       → 成功
+  其他                                   → 失败
+
+双重失败规则（7+ 人局第 4 轮）：
+  playerCount >= 7 && currentRound === 4 && failCount < 2  → 成功
+  playerCount >= 7 && currentRound === 4 && failCount >= 2 → 失败
+```
+
+### 3.4 胜负条件
+
+| 结果 | 条件 |
+|------|------|
+| 好人胜 | 3 次任务成功 → 进入刺杀阶段 → 刺客未命中梅林 → gameEnd (good) |
+| 坏人胜 | 3 次任务失败 → gameEnd (evil) |
+| 坏人胜 | 刺杀命中梅林 → gameEnd (evil) |
+
+### 3.5 刺杀梅林机制
+
+#### 刺杀者
+
+- **有 assassin 的对局**：仅 role === 'assassin' 的玩家可发起刺杀。
+- **无 assassin 的对局**（11 人标准配置）：仅 role === 'morgana' 的玩家可发起刺杀。
+
+#### 时机
+
+游戏任意非 gameEnd 阶段均可发起。
+
+#### 流程
+
+```
+1. 刺客（或莫甘娜）调用 assassinate API，指定目标
+2. 游戏强制进入 assassination 阶段（无论之前在哪个阶段）
+3. 判定结果：
+   - 命中（target.role === 'merlin'）→ gameEnd, winner='evil'
+   - 未命中（target.role !== 'merlin'）→ gameEnd, winner='good'
+4. 无论结果如何，执行刺杀后必定进入 gameEnd
+```
+
+#### 次数
+
+当前：一次刺杀即结束游戏（命中 → 坏人胜，未命中 → 好人胜）。
+
+> **后续扩展**（暂未实现）：房间配置中增加"允许多次开刀"选项。启用后，刺客可多次尝试直到刺中梅林；未命中时游戏留在 assassination 阶段，刺客可再次发起。
+
+### 3.6 状态机
+
+```
+roleReveal →[advancePhase]→ teamSelection →[submitNomination]→ teamVote
+  →[castVote 全员，approve 多]→ missionVote
+  →[castVote 全员，reject 多]→ teamSelection (leader 轮转)
+
+missionVote →[castMissionVote 仅任务队]:
+  ├─ 成功≥3 → assassination 阶段
+  ├─ 失败≥3 → gameEnd (evil)
+  └─ 否则 → teamSelection (下一轮, leader 轮转)
+
+任意非gameEnd阶段 →[assassinate]→ 强制进入 assassination 阶段
+  ├─ 命中梅林 → gameEnd (evil)
+  └─ 未命中   → gameEnd (good)
+
+assassination 阶段（好人3次成功后自动进入 或 刺客主动发起）:
+  →[assassinate 命中]→ gameEnd (evil)
+  →[assassinate 未中]→ gameEnd (good)
+
+gameEnd →[end]→ 游戏结束，房间重置
+```
+
+## 4. 测试阶段
+
+### 阶段 0：健康检查 — `01_health.test.js`
+
+| 用例 | 断言 |
+|------|------|
+| `GET /hello` | 200，文本 "hello" |
+| `GET /api/health` | 200，`database.initialized === true`，`database.connected === true` |
+| 响应格式 | `content-type` 匹配 `json` |
+
+### 阶段 1：房间生命周期 — `02_rooms.test.js`
+
+| 用例 | 断言 |
+|------|------|
+| 创建房间 | host 调 create，返回 `success:true`，`roomId` 匹配 `^\d{6}$` |
+| 缺少 roomConfig | 400 |
+| 无效角色名 | 400 |
+| 获取房间 | `GET /api/rooms/:roomId`，`room._id === roomId` |
+| 不存在房间 | 404 |
+| 加入房间 | 指定座位加入，`success:true` |
+| 座位冲突 | 重复座位被拒 |
+| 准备/取消准备 | `toggleReady` 切换 isReady |
+| 退出房间 | 玩家从 players 移除 |
+| 房间列表 | `GET /api/rooms`，返回 `rooms` 数组 |
+
+### 阶段 2：游戏启动 — `03_games_start.test.js`（参数化 5-12）
+
+对每个 N：
+
+| 用例 | 断言 |
+|------|------|
+| 不足 5 人拒绝 | 4 人全 ready → start 失败 |
+| 未全 ready 拒绝 | 有人未 ready → start 失败 |
+| 成功启动 | N 人全 ready → `gameId` 为 UUID |
+| 游戏状态 | `getGameState(gameId)` → `players.length === N` |
+| 初始阶段 | `currentPhase === 'roleReveal'`，`currentRound === 1`，`teamLeaderIndex === 0` |
+| 角色分配 | 每玩家有 role 和 side，`side ∈ {good, evil}` |
+| 至少 2 坏人 | `evil count >= 2` |
+| 玩家角色查询 | `getGameState(gameId, openId)` 返回 `playerRole` 与该玩家 role 一致 |
+| advancePhase | `roleReveal → teamSelection`，第二次调用失败 |
+| 不存在游戏 | `getGameState('invalid-uuid')` → 404 |
+
+### 阶段 2b：单 Lancelot 变体 — `03b_lancelot_variant.test.js`
+
+使用自定义 roomConfig 创建 10 人房间，验证仅有一个 Lancelot 时系统正常工作。
+
+| 变体 | roomConfig roles.good | roomConfig roles.evil | 断言 |
+|------|----------------------|----------------------|------|
+| 仅 lancelotBlue | merlin, percival, loyal×3, lancelotBlue | morgana, assassin, mordred, oberon | 角色分配正确；getRoleSide('lancelotBlue') === 'good'；完整游戏流程跑通 |
+| 仅 lancelotRed | merlin, percival, loyal×3 | lancelotRed, morgana, assassin, mordred, oberon | 角色分配正确；getRoleSide('lancelotRed') === 'evil'；完整游戏流程跑通 |
+
+每个变体执行完整游戏流程（好人胜利路径），验证：
+- 所有玩家被正确分配角色
+- lancelotBlue/lancelotRed 的 side 正确
+- 队伍提名、投票、任务投票全流程正常
+- 刺杀阶段正常执行
+
+### 阶段 3a：好人胜利完整流程 — `04_games_flow_good.test.js`（参数化 5-12）
+
+对每个 N，完整走完一局好人胜：
+
+```
+createRoomAndStartGame(N) → advancePhase(gameId)
+→ 循环:
+    leader = players[teamLeaderIndex]
+    teamSize = TEAM_SIZES[N][currentRound-1]
+    submitNomination(gameId, leader.openId, team)
+    全员 castVote: 多数 approve
+    仅任务队成员 castMissionVote: 全投 success
+    若 7+ 人且 R4，验证双重失败规则不触发（全投 success 时 failCount=0）
+    → mission success
+    若 successCount >= 3 → assassination 阶段
+→ assassination 阶段:
+    找到刺客角色玩家（assassin 或 11 人时的 morgana）
+    刺客刺杀 → 选非梅林目标 → 未命中
+    → gameEnd, winner='good'
+→ endGame(gameId)
+```
+
+关键断言：
+- `currentPhase === 'gameEnd'`
+- `gameResult.winner === 'good'`
+- `missionResults.filter(success).length >= 3`
+
+### 阶段 3b：坏人胜利路径 — `05_games_flow_evil.test.js`（参数化 [5, 10]）
+
+**路径 1：3 次任务失败**
+```
+createRoomAndStartGame(N) → advancePhase
+→ 循环:
+    leader 提名含至少 1 个 evil 的队伍
+    全员 castVote('approve')
+    任务队成员 castMissionVote: evil 投 fail, good 投 success
+    若 7+ 人且 R4，需 >=2 个 evil 在队伍中投 fail 才能使任务失败
+    → mission 失败
+    若 failMissionCount >= 3 → gameEnd, winner='evil'
+```
+
+**路径 2：刺杀命中梅林（任意阶段发起）**
+```
+createRoomAndStartGame(N) → advancePhase
+→ 找到刺客角色玩家（assassin 或 11 人时的 morgana）
+→ 找到 merlin 角色玩家
+→ 刺客在 teamSelection 阶段直接发起刺杀梅林
+→ 游戏强制进入 assassination 阶段 → 命中 → gameEnd, winner='evil'
+```
+
+**边界：**
+- 好人玩家发起刺杀被拒（非刺客/非莫甘娜）
+- 游戏结束后刺杀被拒
+- 11 人局验证莫甘娜可发起刺杀
+
+### 阶段 4：消息系统 — `06_messages.test.js`
+
+| 用例 | 断言 |
+|------|------|
+| 发送 text | `success:true`，`message.content` 正确 |
+| 发送 system/action | `success:true` |
+| 内容超长（>1000 字） | 400 |
+| 无效消息类型 | 400 |
+| 拉取消息 | `messages.length >= 3` |
+| limit 参数 | `messages.length <= limit` |
+| 时间顺序 | 按创建时间升序 |
+| latest 端点 | 返回最新 N 条 |
+| 缺少参数 | 400 |
+
+### 阶段 4b：Socket.io 实时通信 — `07_socket.test.js`
+
+| 用例 | 断言 |
+|------|------|
+| 多客户端连接 | 3 个 client 均 `connected === true` |
+| joinRoom 广播 | 其他 client 收到 `playerJoined` |
+| roomUpdate 广播 | 房间内 client 收到 `roomUpdated` |
+| gameUpdate 广播 | 房间内 client 收到 `gameUpdated` |
+| message 广播 | 房间内 client 收到 `newMessage` |
+| leaveRoom 广播 | 其他 client 收到 `playerLeft` |
+| disconnect | 断开后 `connected === false` |
+
+### 阶段 5：边界与并发 — `08_edge_cases.test.js`
+
+| 用例 | 断言 |
+|------|------|
+| 满员拒绝 | 12 人满，第 13 人被拒 |
+| 重复加入 | 同 openId 再 join 返回"已在房间中" |
+| 不足 5 人 start | 失败 |
+| 未全 ready start | 失败 |
+| 不存在房间 | get/join/start 均 404 或失败 |
+| 不存在游戏 | getGameState 404 |
+| 无效 vote 值 | 失败 |
+| advancePhase 不存在游戏 | 失败 |
+| assassinate 不存在游戏 | 失败 |
+| 非刺客发起刺杀 | 失败 |
+| 好人发起刺杀 | 失败 |
+| 非队长提名 | 失败 |
+| 非 teamVote 阶段投票 | 失败 |
+| 游戏结束后刺杀 | 失败 |
+| 快速循环 | 5 次 create-join-leave 无泄漏 |
+
+### 阶段 6：单元测试 — `09_game_logic.test.js`
+
+| 用例 | 断言 |
+|------|------|
+| getRoleConfiguration | 每个 N 返回恰好 N 个角色 |
+| 角色包含 | 所有配置含 merlin + percival |
+| evil 数量 | 所有配置 evil >= 2 |
+| 5 人精确配置 | `['merlin','percival','loyal','morgana','assassin']` |
+| lancelot 对 | 11/12 人含 lancelotBlue + lancelotRed |
+| assassin 存在 | 10/12 人含 assassin，11 人不含 |
+| getRoleSide | 10 个角色正确分类 |
+| getTeamSize | 5/8/12 人全表验证 |
+| shuffleArray | 长度不变、元素不变、不修改原数组 |
+
+## 5. 测试基础设施
+
+### 5.1 文件清单
+
+| 文件 | 用途 |
+|------|------|
+| `server/.env.test` | 测试环境变量 |
+| `server/Dockerfile.test` | 测试容器镜像（含 devDependencies） |
+| `docker-compose.test.yml` | 测试编排（avalon-net 外部网络） |
+| `scripts/init-test-user.sql` | 一次性创建 avalon_test_user |
+| `server/__tests__/helpers/globalSetup.js` | 创建测试库 + DDL + 启动后端 |
+| `server/__tests__/helpers/globalTeardown.js` | 关停后端 + 删除测试库 |
+| `server/__tests__/helpers/setupRequest.js` | 读 port + 创建 supertest agent |
+| `server/__tests__/helpers/testHelper.js` | API 调用封装 + 工作流辅助 |
+| `server/__tests__/helpers/socketHelper.js` | Socket.io 客户端封装 |
+| `server/jest.config.js` | Jest 配置 |
+
+### 5.2 测试辅助函数
+
+`testHelper.js` 提供：
+
+| 函数 | 说明 |
+|------|------|
+| `makeUserId()` | 生成唯一测试用户 ID |
+| `makeNickName(userId)` | 生成测试昵称 |
+| `createRoom(hostId, hostNick)` | 创建房间（使用默认 roomConfig） |
+| `createRoomWithConfig(hostId, hostNick, roomConfig)` | 创建房间（自定义 roomConfig，用于 Lancelot 变体测试） |
+| `joinRoom(roomId, userId, seat, nick)` | 加入房间 |
+| `toggleReady(roomId, userId, isReady)` | 切换准备 |
+| `leaveRoom(roomId, userId)` | 退出房间 |
+| `startGame(roomId)` | 启动游戏，返回 `{ gameId, game }` |
+| `getGameState(gameId, openId?)` | 获取游戏状态 |
+| `advancePhase(gameId)` | 推进 roleReveal → teamSelection |
+| `submitNomination(gameId, openId, team)` | 提名队伍 |
+| `castVote(gameId, openId, vote)` | 队伍投票（全员） |
+| `castMissionVote(gameId, openId, vote, role)` | 任务投票（仅任务队） |
+| `assassinate(gameId, killerOpenId, targetOpenId)` | 刺杀梅林（刺客或莫甘娜发起） |
+| `endGame(gameId)` | 结束游戏 |
+| `sendMessage(roomId, openId, nick, content, type)` | 发送消息 |
+| `getMessages(roomId, limit, beforeTime?)` | 拉取消息 |
+| `createRoomWithPlayers(n)` | 创建 N 人房间并全 ready |
+| `createRoomAndStartGame(n)` | 创建 N 人房间 + 启动游戏，返回含 gameId 和玩家角色 |
+
+### 5.3 测试文件清单
+
+| 文件 | 阶段 | 参数化 |
+|------|------|--------|
+| `01_health.test.js` | 0 | — |
+| `02_rooms.test.js` | 1 | — |
+| `03_games_start.test.js` | 2 | 5-12 |
+| `03b_lancelot_variant.test.js` | 2b | 2 变体 |
+| `04_games_flow_good.test.js` | 3a | 5-12 |
+| `05_games_flow_evil.test.js` | 3b | [5, 10] |
+| `06_messages.test.js` | 4 | — |
+| `07_socket.test.js` | 4b | — |
+| `08_edge_cases.test.js` | 5 | — |
+| `09_game_logic.test.js` | 6 | — |
+
+## 6. 执行方式
+
+### 6.1 前置条件
+
+1. MySQL 容器（`avalon-mysql`）运行中，在 `avalon-net` 网络。
+2. 一次性创建测试用户：
+
+```bash
+docker exec -i avalon-mysql mysql -u root -p${MYSQL_ROOT_PASSWORD} \
+  < scripts/init-test-user.sql
+```
+
+### 6.2 运行测试
+
+```bash
+docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
+```
+
+### 6.3 清理
+
+```bash
+docker compose -f docker-compose.test.yml down
+```
+
+### 6.4 本地开发（需本地 MySQL）
+
+```bash
+cd server
+export DB_HOST=127.0.0.1 DB_PORT=3306 DB_USER=root DB_ROOT_PASS=... DB_NAME=avalon_db_test
+npm test
+```
+
+## 7. API 接口索引
+
+### 房间 API（`/api/rooms`）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/create` | 创建房间 |
+| GET | `/:roomId` | 获取房间 |
+| GET | `/` | 列表 |
+| POST | `/join` | 加入 |
+| POST | `/leave` | 退出 |
+| POST | `/toggleReady` | 准备 |
+| POST | `/updateSeatNumber` | 换座 |
+| POST | `/kickPlayer` | 踢人 |
+| POST | `/:roomId/disband` | 解散 |
+| POST | `/:roomId/randomSeats` | 随机座位 |
+| PUT | `/:roomId/config` | 更新配置 |
+
+### 游戏 API（`/api/games`）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/start` | 启动游戏 → 返回 gameId |
+| GET | `/:gameId` | 获取状态 |
+| POST | `/:gameId/advancePhase` | 推进阶段 |
+| POST | `/submitNomination` | 提名队伍 |
+| POST | `/castVote` | 队伍投票（全员） |
+| POST | `/castMissionVote` | 任务投票（仅任务队） |
+| POST | `/:gameId/assassinate` | 刺杀梅林（仅刺客/莫甘娜；强制进入刺杀阶段；执行后 gameEnd） |
+| POST | `/end` | 结束游戏 |
+| GET | `/stats/summary` | 统计 |
+| GET | `/history/:roomId` | 历史 |
+| GET | `/recent/games` | 最近 |
+
+### 消息 API（`/api/messages`）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/send` | 发送（≤1000 字） |
+| GET | `/:roomId` | 拉取（分页） |
+| GET | `/:roomId/latest` | 最新 N 条 |
+
+### 其他
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/health` | 健康检查 |
+| GET | `/hello` | 存活探测 |
+| GET | `/api/users/:openId` | 获取/创建用户 |
+| GET | `/api/players/:openId/currentRoom` | 当前房间 |
+
+### Socket.io 事件
+
+| 方向 | 事件 | 说明 |
+|------|------|------|
+| C→S | `joinRoom` | 加入房间 |
+| S→C | `playerJoined` | 广播加入 |
+| C→S | `leaveRoom` | 离开房间 |
+| S→C | `playerLeft` | 广播离开 |
+| C→S | `roomUpdate` | 房间更新 |
+| S→C | `roomUpdated` | 广播更新 |
+| C→S | `gameUpdate` | 游戏更新 |
+| S→C | `gameUpdated` | 广播更新 |
+| C→S | `message` | 发送消息 |
+| S→C | `newMessage` | 广播消息 |
+
+## 8. 刺杀机制详细设计
+
+### 8.1 刺杀者判定
+
+```
+查找游戏中 role === 'assassin' 的玩家:
+  ├─ 存在 → 仅该玩家可发起刺杀
+  └─ 不存在 → 查找 role === 'morgana' 的玩家:
+       ├─ 存在 → 仅该玩家可发起刺杀
+       └─ 不存在 → 无刺杀者（理论上不应发生）
+```
+
+### 8.2 assassinate API 行为
+
+```
+POST /api/games/:gameId/assassinate
+请求体: { killerOpenId, targetOpenId }
+
+校验:
+  1. 游戏存在
+  2. currentPhase !== 'gameEnd'
+  3. killerOpenId 是刺杀者（assassin 或 11 人局的 morgana）
+
+执行:
+  1. 强制 currentPhase = 'assassination'（无论之前在哪个阶段）
+  2. 查询 targetOpenId 的角色
+  3. 命中（role === 'merlin'）:
+     → currentPhase = 'gameEnd'
+     → gameResult = { winner: 'evil', reason: '刺杀命中梅林' }
+  4. 未命中:
+     → currentPhase = 'gameEnd'
+     → gameResult = { winner: 'good', reason: '刺杀未命中梅林' }
+```
+
+### 8.3 好人 3 次任务成功后的处理
+
+```
+castMissionVote 中 successCount >= 3:
+  → currentPhase = 'assassination'（自动进入刺杀阶段）
+  → 等待刺客调用 assassinate API
+```
+
+### 8.4 后续扩展（暂未实现）
+
+| 选项 | 说明 |
+|------|------|
+| 多次开刀 | 房间配置 `rules.allowMultiStab`。启用后：未命中时 game 不结束，留在 assassination 阶段，刺客可再次发起。命中时才 gameEnd。 |
