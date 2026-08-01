@@ -72,6 +72,7 @@
         </view>
         <view wx:elif="{{!item.occupied}}" class="seat-action">
           <text wx:if="{{currentUser && (currentUser.seatNumber < 1 || !currentUserReady)}}" class="btn-round btn-purple" catchtap="takeSeat" data-seat="{{item.number}}">入座</text>
+        </view>
       </view>
     </view>
     <view wx:else class="empty-hint">等待配置房间...</view>
@@ -99,8 +100,8 @@
       <text class="card-title">观战区 ({{spectatorPlayers.length}})</text>
       <text wx:if="{{currentUser && currentUser.seatNumber >= 0}}" class="btn-round btn-purple" bindtap="becomeSpectator">进入观战区</text>
     </view>
-    <scroll-view scroll-x class="waiting-scroll">
-      <view wx:if="{{spectatorPlayers.length > 0}}" class="waiting-list">
+    <scroll-view scroll-x class="waiting-scroll" wx:if="{{spectatorPlayers.length > 0}}">
+      <view class="waiting-list">
         <view wx:for="{{spectatorPlayers}}" wx:key="openId" class="waiting-item" bindtap="onPlayerAction" data-id="{{item.openId}}">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="waiting-avatar"></image>
         <text class="waiting-name">{{item.nickName || '玩家'}}</text>
@@ -513,3 +514,4 @@
       </view>
     </view>
   </view>
+</view>
