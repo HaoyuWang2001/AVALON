@@ -152,12 +152,13 @@ class GameModel {
         }
         const shuffledRoles = this.shuffleArray(roles);
         
-        // 4. 创建游戏记录
+        // 4. 创建游戏记录（首位车长 = 当前时钟分钟 % 玩家人数）
+        const firstLeaderIndex = playerCount > 0 ? (new Date().getMinutes() % playerCount) : 0;
         await connection.execute(
           `INSERT INTO games (id, room_id, owner_id, current_phase, current_round, 
                               team_leader_index, failed_nominations, status, created_at, updated_at)
-           VALUES (?, ?, ?, 'roleReveal', 1, 0, 0, 'active', NOW(), NOW())`,
-          [gameId, roomId, ownerId]
+           VALUES (?, ?, ?, 'roleReveal', 1, ?, 0, 'active', NOW(), NOW())`,
+          [gameId, roomId, ownerId, firstLeaderIndex]
         );
         
         // 5. 添加游戏玩家角色
@@ -192,7 +193,7 @@ class GameModel {
           players: playersWithRoles,
           currentPhase: 'roleReveal',
           currentRound: 1,
-          teamLeaderIndex: 0,
+          teamLeaderIndex: firstLeaderIndex,
           nominatedTeam: [],
           teamVotes: {},
           missionVotes: {},
@@ -220,7 +221,7 @@ class GameModel {
     try {
       // 获取游戏基本信息
       const games = await db.query(
-        `SELECT id as gameId, room_id as roomId, current_phase as currentPhase, current_round as currentRound,
+        `SELECT id as gameId, room_id as roomId, owner_id as ownerId, current_phase as currentPhase, current_round as currentRound,
                 team_leader_index as teamLeaderIndex, nominated_team as nominatedTeam,
                 failed_nominations as failedNominations, assassination,
                 game_result as gameResult,
@@ -257,7 +258,7 @@ class GameModel {
         [game.roomId, gameId]
       );
       
-      game.players = players;
+      game.players = players.map(p => ({ ...p, isHost: p.openId === game.ownerId }));
       
       // 获取当前回合的投票信息
       const teamVotes = await db.query(
@@ -314,9 +315,8 @@ class GameModel {
       }
 
       // 读取房间配置（视野判定 + 湖仙）
-      const [roomRows] = await db.query('SELECT room_config FROM rooms WHERE id = ?', [game.roomId]);
+      const roomRows = await db.query('SELECT room_config FROM rooms WHERE id = ?', [game.roomId]);
       const roomConfig = roomRows.length ? parseJson(roomRows[0].room_config) : null;
-      console.log('[debug:vision] roomId=', game.roomId, 'roomRows=', roomRows.length, 'rules=', JSON.stringify((roomConfig && roomConfig.rules) || {}));
       const rules = (roomConfig && roomConfig.rules) || {};
 
       // 湖仙落位：首车主 seat-1 取模（确定性）；仅在启用湖仙时有效
@@ -333,7 +333,7 @@ class GameModel {
         const requester = players.find(p => p.openId === openId);
         game.vision = { seen: buildVision(requester, players, roomConfig) };
         game.players = players.map(p => {
-          const entry = { openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl, seatNumber: p.seatNumber };
+          const entry = { openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl, seatNumber: p.seatNumber, isHost: p.openId === game.ownerId };
           if (p.openId === openId) {
             entry.role = p.role;
             entry.side = p.side;
