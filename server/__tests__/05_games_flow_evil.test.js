@@ -34,7 +34,7 @@ describe('05 — Evil Win Paths', () => {
           if (gs.currentPhase === 'teamSelection') {
             const leader = players[gs.teamLeaderIndex];
             const teamSize = getTeamSize(n, gs.currentRound);
-            // 尽量把全部坏人塞进队伍，确保任务失败（队伍需 >=2 张失败票才能失败）
+            // 尽量把全部坏人塞进队伍，确保任务失败（普通轮 1 坏票即失败；7+ 保护轮需 ≥2 坏票）
             const evilP = players.filter(p => p.side === 'evil');
             const goodP = players.filter(p => p.side === 'good');
             const team = [...evilP.slice(0, teamSize), ...goodP].slice(0, teamSize).map(p => p.openId);

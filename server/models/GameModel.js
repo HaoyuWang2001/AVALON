@@ -492,14 +492,14 @@ class GameModel {
 
           const failCount = votes.filter(v => v.vote_value === 'fail').length;
 
-          // 判断任务是否成功
+          // 判断任务是否成功（1 张坏票即失败；仅 7+ 人局第 4 轮保护轮需 2 张坏票）
           const playerCount = game[0].player_count;
           const requiresDoubleFail = playerCount >= 7 && game[0].current_round === 4;
           let success;
           if (requiresDoubleFail) {
             success = failCount < 2;
           } else {
-            success = failCount === 0 || (teamSize > 1 && failCount === 1);
+            success = failCount === 0;
           }
 
           // 保存任务结果

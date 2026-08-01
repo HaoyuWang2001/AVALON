@@ -61,7 +61,7 @@ globalSetup:
   2. DROP DATABASE IF EXISTS avalon_db_test
   3. CREATE DATABASE avalon_db_test
   4. GRANT ALL ON avalon_db_test.* TO avalon_test_user
-  5. 执行建表 DDL（8 张表 + role_configurations 种子数据）
+  5. 执行建表 DDL（9 张表，含 role_configurations 种子数据）
   6. require('index.js') 启动测试后端（DB_NAME=avalon_db_test, PORT=0）
   7. 等待 listening，写 port 到临时文件
 
@@ -123,18 +123,20 @@ globalTeardown:
 
 仅被提名的任务队成员参与投票（success/fail）。仅坏人角色可投 fail。
 
-任务成功判定：
+任务失败判定（**一张坏票即失败**，除保护轮外）：
 
 ```
-基础规则：
-  failCount === 0                       → 成功
-  teamSize > 1 && failCount === 1       → 成功
-  其他                                   → 失败
+基础规则（5-6 人局全部轮次 + 7+ 人局非保护轮次）：
+  failCount >= 1 → 任务失败（一张坏票即失败）
+  failCount === 0 → 任务成功
 
-双重失败规则（7+ 人局第 4 轮）：
-  playerCount >= 7 && currentRound === 4 && failCount < 2  → 成功
-  playerCount >= 7 && currentRound === 4 && failCount >= 2 → 失败
+保护轮规则（7+ 人局第 4 轮，称为"保护轮"）：
+  playerCount >= 7 && currentRound === 4 && failCount >= 2 → 任务失败
+  playerCount >= 7 && currentRound === 4 && failCount < 2  → 任务成功
 ```
+
+> 说明：仅 ≥7 人局第 4 轮是保护轮（需 2 张坏票才失败）。其余所有轮次 —— 含 5-6 人局
+> 的全部轮次、以及 7+ 人局的第 1/2/3/5 轮 —— 均为 1 张坏票即任务失败。
 
 ### 3.4 胜负条件
 
@@ -254,7 +256,8 @@ gameEnd →[end]→ 游戏结束，房间重置
 
 ### 阶段 3a：好人胜利完整流程 — `04_games_flow_good.test.js`（参数化 5-12）
 
-对每个 N，完整走完一局好人胜：
+对每个 N，完整走完一局好人胜。房间由 `createRoomAndStartGame(N)` 创建，使用**按人数的标准角色板**
+（5-12 人见 §3.1；11 人板无 assassin，由 morgana 行使刺杀）。
 
 ```
 createRoomAndStartGame(N) → advancePhase(gameId)
@@ -285,7 +288,7 @@ createRoomAndStartGame(N) → advancePhase(gameId)
 ```
 createRoomAndStartGame(N) → advancePhase
 → 循环:
-    leader 提名含至少 1 个 evil 的队伍
+    leader 提名尽量包含坏人角色（普通轮至少 1 名即失败；7+ 保护轮需 ≥2 名）
     全员 castVote('approve')
     任务队成员 castMissionVote: evil 投 fail, good 投 success
     若 7+ 人且 R4，需 >=2 个 evil 在队伍中投 fail 才能使任务失败
@@ -326,7 +329,7 @@ createRoomAndStartGame(N) → advancePhase
 | 用例 | 断言 |
 |------|------|
 | 多客户端连接 | 3 个 client 均 `connected === true` |
-| joinRoom 广播 | 其他 client 收到 `playerJoined` |
+| joinRoom 广播 | 已在房间内的其他 client 收到 `playerJoined`（观察者须先入房） |
 | roomUpdate 广播 | 房间内 client 收到 `roomUpdated` |
 | gameUpdate 广播 | 房间内 client 收到 `gameUpdated` |
 | message 广播 | 房间内 client 收到 `newMessage` |
@@ -392,8 +395,12 @@ createRoomAndStartGame(N) → advancePhase
 |------|------|
 | `makeUserId()` | 生成唯一测试用户 ID |
 | `makeNickName(userId)` | 生成测试昵称 |
-| `createRoom(hostId, hostNick)` | 创建房间（使用默认 roomConfig） |
-| `createRoomWithConfig(hostId, hostNick, roomConfig)` | 创建房间（自定义 roomConfig，用于 Lancelot 变体测试） |
+| `createRoom(hostId, hostNick)` | 创建房间（使用最小自定义 roomConfig） |
+| `createRoomWithConfig(hostId, hostNick, roomConfig)` | 创建房间（自定义 roomConfig） |
+| `buildMinimalRoomConfig()` | 最小自定义房间配置（11 角色，含 assassin；房间类用例使用） |
+| `buildStandardRoomConfig(playerCount)` | 按人数返回标准角色板（5-12 人，与 role_configurations 一致） |
+| `buildLancelotVariantConfig(variant)` | 构建单 Lancelot 变体（blue/red）的 roomConfig |
+| `createLancelotGame(variant)` | 创建 10 人单 Lancelot 变体局并启动（blue/red） |
 | `joinRoom(roomId, userId, seat, nick)` | 加入房间 |
 | `toggleReady(roomId, userId, isReady)` | 切换准备 |
 | `leaveRoom(roomId, userId)` | 退出房间 |
@@ -407,8 +414,8 @@ createRoomAndStartGame(N) → advancePhase
 | `endGame(gameId)` | 结束游戏 |
 | `sendMessage(roomId, openId, nick, content, type)` | 发送消息 |
 | `getMessages(roomId, limit, beforeTime?)` | 拉取消息 |
-| `createRoomWithPlayers(n)` | 创建 N 人房间并全 ready |
-| `createRoomAndStartGame(n)` | 创建 N 人房间 + 启动游戏，返回含 gameId 和玩家角色 |
+| `createRoomWithPlayers(n, roomConfig?)` | 创建 N 人房间并全 ready（可选自定义 roomConfig） |
+| `createRoomAndStartGame(n)` | 创建 N 人房间 + 启动游戏（使用**按人数的标准角色板**，11 人无 assassin、莫甘娜开刀），返回含 gameId 和玩家角色 |
 
 ### 5.3 测试文件清单
 
