@@ -77,6 +77,9 @@ const io = new Server(server, {
   }
 });
 
+const socket = require('./config/socket');
+socket.setIO(io);
+
 app.use(cors());
 app.use(express.json());
 

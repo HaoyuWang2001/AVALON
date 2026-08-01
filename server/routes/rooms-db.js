@@ -2,6 +2,12 @@
 const express = require('express');
 const { RoomModel } = require('../models');
 const db = require('../config/db');
+const socket = require('../config/socket');
+
+function emitRoom(roomId) {
+  const io = socket.getIO();
+  if (io) io.to(roomId).emit('roomUpdated', { roomId });
+}
 
 function createRouter() {
   const router = express.Router();
@@ -44,6 +50,7 @@ function createRouter() {
         hostWxNickName || ''
       );
       
+      emitRoom(room._id);
       res.json({
         success: true,
         roomId: room._id,
@@ -120,6 +127,7 @@ function createRouter() {
         customNickName || ''
       );
       
+      emitRoom(roomId);
       res.json({
         success: true,
         message: '加入房间成功',
@@ -174,6 +182,7 @@ function createRouter() {
       
       const room = await RoomModel.leave(roomId, openId);
       
+      emitRoom(roomId);
       res.json({ 
         success: true, 
         room,
@@ -202,6 +211,7 @@ function createRouter() {
       
       const room = await RoomModel.toggleReady(roomId, openId, isReady);
       
+      emitRoom(roomId);
       res.json({ 
         success: true, 
         room,
@@ -230,6 +240,7 @@ function createRouter() {
       
       const room = await RoomModel.updateSeatNumber(roomId, openId, newSeatNumber);
       
+      emitRoom(roomId);
       res.json({ 
         success: true, 
         room,
@@ -266,6 +277,7 @@ function createRouter() {
       
       const room = await RoomModel.kickPlayer(roomId, playerId, mode || 'room');
       
+      emitRoom(roomId);
       res.json({ 
         success: true, 
         room,
@@ -292,6 +304,7 @@ function createRouter() {
 
       const room = await RoomModel.updateConfig(roomId, roomConfig);
 
+      emitRoom(roomId);
       res.json({ success: true, room, message: '配置已更新' });
     } catch (error) {
       console.error('修改配置API错误:', error);
@@ -352,6 +365,7 @@ function createRouter() {
       const { roomId } = req.params;
       const { playerId, banned } = req.body;
       const room = await RoomModel.banFromSeating(roomId, playerId, banned);
+      emitRoom(roomId);
       res.json({ success: true, room, message: banned ? '已禁止上座' : '已允许上座' });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -364,6 +378,7 @@ function createRouter() {
       const { roomId } = req.params;
       const { currentOwnerId, newOwnerId } = req.body;
       const room = await RoomModel.transferOwner(roomId, currentOwnerId, newOwnerId);
+      emitRoom(roomId);
       res.json({ success: true, room, message: '房主已转让' });
     } catch (error) {
       if (error.message.includes('仅房主')) return res.status(403).json({ success: false, message: error.message });
@@ -377,6 +392,8 @@ function createRouter() {
       const { roomId } = req.params;
       const { openId } = req.body;
       const result = await RoomModel.disband(roomId, openId);
+      const io = socket.getIO();
+      if (io) io.to(roomId).emit('roomDeleted', { roomId });
       res.json(result);
     } catch (error) {
       if (error.message.includes('仅房主')) {
@@ -398,6 +415,7 @@ function createRouter() {
       if (!room) return res.status(404).json({ success: false, message: '房间不存在' });
       if (room.ownerId !== openId) return res.status(403).json({ success: false, message: '仅房主可操作' });
       const result = await RoomModel.randomSeats(roomId);
+      emitRoom(roomId);
       res.json({ success: true, room: result, message: '座位已随机打乱' });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });

@@ -1,6 +1,12 @@
 // 游戏逻辑API路由（数据库版本）
 const express = require('express');
 const { GameModel, RoomModel } = require('../models');
+const socket = require('../config/socket');
+
+function emitGame(roomId, gameId) {
+  const io = socket.getIO();
+  if (io) io.to(roomId).emit('gameUpdated', { roomId, gameId });
+}
 
 function createRouter() {
   const router = express.Router();
@@ -22,6 +28,8 @@ function createRouter() {
       // GameModel.start() now returns { gameId, ... }; fallback for old style
       const gameId = game.gameId || game.roomId;
       
+      emitGame(roomId, gameId);
+
       res.json({
         success: true,
         gameId,
@@ -101,6 +109,8 @@ function createRouter() {
       
       const result = await GameModel.submitNomination(gameId, openId, nominatedTeam);
       
+      emitGame(req.body.roomId || null, req.body.gameId);
+
       res.json({ 
         success: true, 
         game: result.game 
@@ -152,6 +162,8 @@ function createRouter() {
       
       const result = await GameModel.castVote(gameId, openId, vote);
       
+      emitGame(req.body.roomId || null, req.body.gameId);
+
       res.json({ 
         success: true, 
         game: result.game 
@@ -202,6 +214,8 @@ function createRouter() {
       
       const result = await GameModel.castMissionVote(gameId, openId, vote, playerRole);
       
+      emitGame(req.body.roomId || null, req.body.gameId);
+
       res.json({ 
         success: true, 
         game: result.game 
@@ -331,6 +345,12 @@ function createRouter() {
           success: false, 
           message: '缺少游戏ID' 
         });
+      }
+      
+      const db = require('../config/db');
+      const [gameRecord] = await db.query('SELECT room_id FROM games WHERE id = ?', [gameId]);
+      if (gameRecord) {
+        emitGame(gameRecord.room_id, gameId);
       }
       
       const success = await GameModel.end(gameId);

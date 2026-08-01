@@ -217,11 +217,36 @@ class ApiService {
   }
 
   connectSocket(roomId, playerId) {
-    const socketUrl = 'wss://haoyu-wang141.top:8082';
-    return wx.connectSocket({
-      url: socketUrl,
-      method: 'GET'
+    const WSSURL = 'wss://haoyu-wang141.top:8082';
+    if (this._socketTask) this.disconnectSocket();
+    const task = wx.connectSocket({ url: WSSURL });
+    this._socketTask = task;
+    this._socketRoomId = roomId;
+    this._socketHandlers = {};
+    task.onOpen(() => { task.send({ data: JSON.stringify({ type: 'joinRoom', roomId, playerId }) }); });
+    task.onMessage((res) => {
+      try {
+        const msg = JSON.parse(res.data);
+        if (msg.type && this._socketHandlers[msg.type]) {
+          this._socketHandlers[msg.type].forEach(fn => fn(msg));
+        }
+      } catch (e) {}
     });
+    task.onClose(() => { this._socketTask = null; });
+    task.onError(() => { this._socketTask = null; });
+    return task;
+  }
+
+  onSocketMessage(type, fn) {
+    if (!this._socketHandlers[type]) this._socketHandlers[type] = [];
+    this._socketHandlers[type].push(fn);
+  }
+
+  disconnectSocket() {
+    if (this._socketTask) {
+      try { this._socketTask.close(); } catch (e) {}
+      this._socketTask = null;
+    }
   }
 
   async getUserProfile(openId) {

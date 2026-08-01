@@ -29,19 +29,18 @@ Page({
       userInfo: app.globalData.userInfo,
     });
 
+    api.onSocketMessage('gameUpdated', () => { this.fetchGameState(); });
+    api.connectSocket(roomId || '', app.globalData.openId);
     this.initGamePolling();
   },
 
   onUnload() {
-    if (this.gamePolling) {
-      clearInterval(this.gamePolling);
-    }
+    if (this.gamePolling) clearInterval(this.gamePolling);
+    api.disconnectSocket();
   },
 
   initGamePolling() {
-    this.gamePolling = setInterval(() => {
-      this.fetchGameState();
-    }, 1000);
+    this.gamePolling = setInterval(() => { this.fetchGameState(); }, 5000);
   },
 
   fetchGameState() {
