@@ -122,20 +122,16 @@ page { background: #F3F4F6; }
 .seat-action { display: flex; flex-direction: column; gap: 8rpx; flex-shrink: 0; align-items: center; }
 
 /* ─── Card 4: Waiting Area ─── */
-.waiting-list { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.waiting-scroll { width: 100%; white-space: nowrap; }
+.waiting-list { display: inline-flex; flex-wrap: nowrap; gap: 12rpx; }
 .waiting-item {
-  display: flex; flex-direction: column; align-items: center; gap: 8rpx;
-  background: #F9FAFB; padding: 14rpx 16rpx; border-radius: 10rpx;
+  display: inline-flex; flex-direction: column; align-items: center; gap: 8rpx;
+  background: #F9FAFB; padding: 14rpx 16rpx; border-radius: 10rpx; flex-shrink: 0;
 }
 .waiting-avatar { width: 60rpx; height: 60rpx; border-radius: 50%; background: #F3F4F6; }
 .waiting-name { font-size: 22rpx; color: #374151; text-align: center; max-width: 120rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ─── Card 5: Spectator ─── */
-.spectator-list { display: flex; flex-wrap: wrap; gap: 16rpx; }
-.spectator-item { display: flex; align-items: center; gap: 8rpx; background: #F9FAFB; padding: 8rpx 14rpx; border-radius: 10rpx; }
-.spectator-avatar { width: 40rpx; height: 40rpx; border-radius: 50%; background: #F3F4F6; }
-.spectator-name { font-size: 22rpx; color: #6B7280; max-width: 100rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
 .empty-hint { text-align: center; font-size: 24rpx; color: #D1D5DB; padding: 30rpx 0; }
 
 /* ═══════ Config Modal CSS (from index.wxss) ═══════ */

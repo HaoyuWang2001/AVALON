@@ -57,7 +57,7 @@ Page({
     canStartGame: false,
     startHint: '',
     seatsFull: false,
-    infoCollapsed: false,
+    currentUserReady: false,
     spectatorMax: 0,
 
     showConfig: false,
@@ -194,7 +194,8 @@ Page({
           gameStarted: room.gameStarted || false,
           seatedSeats: seats,
           spectatorMax: specMax,
-          seatsFull: seats.length > 0 && seats.every(s => s.occupied)
+          seatsFull: seats.length > 0 && seats.every(s => s.occupied),
+          currentUserReady: currentUser ? readyPlayers.includes(currentUser.openId) : false
         });
 
         let canStart = playerCount > 0;
@@ -225,7 +226,10 @@ Page({
   takeSeat(e) {
     if (!this._guard()) return;
     const seatNum = e.currentTarget.dataset.seat;
-    api.updateSeatNumber(this.data.roomId, seatNum).catch(() => {});
+    wx.showLoading({ title: '入座中...', mask: true });
+    api.updateSeatNumber(this.data.roomId, seatNum).then(() => {
+      this.fetchRoomInfo();
+    }).finally(() => wx.hideLoading());
   },
 
   randomTakeSeat() {
@@ -238,17 +242,26 @@ Page({
     }
     if (emptySeats.length === 0) return;
     const seat = emptySeats[Math.floor(Math.random() * emptySeats.length)];
-    api.updateSeatNumber(this.data.roomId, seat).catch(() => {});
+    wx.showLoading({ title: '入座中...', mask: true });
+    api.updateSeatNumber(this.data.roomId, seat).then(() => {
+      this.fetchRoomInfo();
+    }).finally(() => wx.hideLoading());
   },
 
   leaveSeat() {
     if (!this._guard()) return;
-    api.updateSeatNumber(this.data.roomId, 0).catch(() => {});
+    wx.showLoading({ title: '请稍候...', mask: true });
+    api.updateSeatNumber(this.data.roomId, 0).then(() => {
+      this.fetchRoomInfo();
+    }).finally(() => wx.hideLoading());
   },
 
   becomeSpectator() {
     if (!this._guard()) return;
-    api.updateSeatNumber(this.data.roomId, -1).catch(() => {});
+    wx.showLoading({ title: '请稍候...', mask: true });
+    api.updateSeatNumber(this.data.roomId, -1).then(() => {
+      this.fetchRoomInfo();
+    }).finally(() => wx.hideLoading());
   },
 
   // ─── Ready / Start / Disband ───
@@ -256,7 +269,10 @@ Page({
   toggleReady() {
     if (!this._guard()) return;
     const isReady = this.data.readyPlayers.includes(app.globalData.openId);
-    api.toggleReady(this.data.roomId, !isReady).catch(() => {});
+    wx.showLoading({ title: '请稍候...', mask: true });
+    api.toggleReady(this.data.roomId, !isReady).then(() => {
+      this.fetchRoomInfo();
+    }).finally(() => wx.hideLoading());
   },
 
   startGame() {
@@ -382,12 +398,6 @@ Page({
     });
   },
 
-  // ─── Info Card ───
-
-  toggleInfoCard() {
-    this.setData({ infoCollapsed: !this.data.infoCollapsed });
-  },
-
   // ─────────── Config Modal ───────────
 
   openConfig() {
@@ -480,6 +490,10 @@ Page({
     }
     this.applyDefaultConfig(n);
     this.computeAll();
+  },
+
+  backToLobby() {
+    wx.reLaunch({ url: '/pages/index/index' });
   },
 
   modifyConfig() {

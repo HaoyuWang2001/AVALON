@@ -3,11 +3,11 @@
   <!-- Top Bar (always visible) -->
   <view class="top-bar">
     <text class="btn-round btn-topbar-left {{isHost ? 'btn-disband' : 'btn-exit'}}" bindtap="{{isHost ? 'disbandRoom' : 'exitRoom'}}">{{isHost ? '解散房间' : '退出房间'}}</text>
-    <text class="btn-round btn-topbar-right btn-purple" bindtap="toggleInfoCard">{{infoCollapsed ? '展开' : '收起房间'}}</text>
+    <text class="btn-round btn-topbar-right btn-purple" bindtap="backToLobby">暂回大厅</text>
   </view>
 
-  <!-- Card 1: Room Info (collapsible) -->
-  <view class="card room-info-card" wx:if="{{!infoCollapsed}}">
+  <!-- Card 1: Room Info -->
+  <view class="card room-info-card">
     <view class="info-top-row">
       <text class="info-label">会议ID：</text>
       <view class="info-btns">
@@ -30,7 +30,7 @@
   </view>
 
   <!-- Card 2: Host Control -->
-  <view class="card host-card" wx:if="{{currentUser && currentUser.seatNumber >= 1 && isHost}}">
+  <view class="card host-card" wx:if="{{currentUser && isHost}}">
     <view class="card-header">
       <text class="card-title">🎮 房主控制台</text>
     </view>
@@ -71,10 +71,10 @@
           <text>{{item.isReady ? '已准备' : '未准备'}}</text>
         </view>
         <view wx:elif="{{!item.occupied}}" class="seat-action">
-          <text wx:if="{{currentUser && currentUser.seatNumber < 1}}" class="btn-round btn-purple" catchtap="takeSeat" data-seat="{{item.number}}">入座</text>
-        </view>
+          <text wx:if="{{currentUser && (currentUser.seatNumber < 1 || !currentUserReady)}}" class="btn-round btn-purple" catchtap="takeSeat" data-seat="{{item.number}}">入座</text>
       </view>
-    </view>
+    </scroll-view>
+  </view>
     <view wx:else class="empty-hint">等待配置房间...</view>
   </view>
 
@@ -84,7 +84,8 @@
       <text class="card-title">等待区 ({{unseatedPlayers.length}})</text>
       <text wx:if="{{currentUser && currentUser.seatNumber != 0}}" class="btn-round btn-purple" bindtap="leaveSeat">进入等待区</text>
     </view>
-    <view class="waiting-list">
+    <scroll-view scroll-x class="waiting-scroll">
+      <view class="waiting-list">
       <view wx:for="{{unseatedPlayers}}" wx:key="openId" class="waiting-item" bindtap="onPlayerAction" data-id="{{item.openId}}">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="waiting-avatar"></image>
         <text class="waiting-name">{{item.nickName || item.wxNickName || '玩家'}}</text>
@@ -98,12 +99,14 @@
       <text class="card-title">观战区 ({{spectatorPlayers.length}})</text>
       <text wx:if="{{currentUser && currentUser.seatNumber >= 0}}" class="btn-round btn-purple" bindtap="becomeSpectator">进入观战区</text>
     </view>
-    <view wx:if="{{spectatorPlayers.length > 0}}" class="spectator-list">
-        <view wx:for="{{spectatorPlayers}}" wx:key="openId" class="spectator-item" bindtap="onPlayerAction" data-id="{{item.openId}}">
-        <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="spectator-avatar"></image>
-        <text class="spectator-name">{{item.nickName || '玩家'}}</text>
+    <scroll-view scroll-x class="waiting-scroll">
+      <view wx:if="{{spectatorPlayers.length > 0}}" class="waiting-list">
+        <view wx:for="{{spectatorPlayers}}" wx:key="openId" class="waiting-item" bindtap="onPlayerAction" data-id="{{item.openId}}">
+        <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="waiting-avatar"></image>
+        <text class="waiting-name">{{item.nickName || '玩家'}}</text>
       </view>
-    </view>
+      </view>
+    </scroll-view>
     <view wx:else class="empty-hint">暂无观战玩家</view>
   </view>
 
