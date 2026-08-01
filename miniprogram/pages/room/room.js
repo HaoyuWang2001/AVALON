@@ -327,6 +327,15 @@ Page({
 
   // ─── Player Actions ───
 
+  onSeatRowTap(e) {
+    const { id, seat } = e.currentTarget.dataset;
+    if (!id && seat && this.data.currentUser && (this.data.currentUser.seatNumber < 1 || !this.data.currentUserReady)) {
+      this.takeSeat({ currentTarget: { dataset: { seat } } });
+      return;
+    }
+    this.onPlayerAction(e);
+  },
+
   onPlayerAction(e) {
     if (!this.data.isHost) return;
     const playerId = e.currentTarget.dataset.id;

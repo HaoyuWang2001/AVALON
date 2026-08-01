@@ -50,7 +50,7 @@
       <text wx:if="{{currentUser && currentUser.seatNumber < 1}}" class="btn-round btn-purple btn-random-seat" bindtap="randomTakeSeat">随机入座</text>
     </view>
     <view class="seats-section" wx:if="{{seatedSeats && seatedSeats.length > 0}}">
-      <view wx:for="{{seatedSeats}}" wx:key="number" class="seat-row {{item.occupied ? 'seat-filled' : 'seat-empty'}} {{item.isSelf ? 'seat-self' : ''}}" bindtap="onPlayerAction" data-id="{{item.player ? item.player.openId : ''}}">
+      <view wx:for="{{seatedSeats}}" wx:key="number" class="seat-row {{item.occupied ? 'seat-filled' : 'seat-empty'}} {{item.isSelf ? 'seat-self' : ''}}" bindtap="onSeatRowTap" data-id="{{item.player ? item.player.openId : ''}}" data-seat="{{item.number}}">
         <view class="seat-num">{{item.number}}</view>
         <image wx:if="{{item.occupied}}" src="{{item.player.avatarUrl || '/images/default-avatar.png'}}" class="seat-avatar"></image>
         <view wx:else class="seat-avatar seat-avatar-empty"></view>
@@ -70,9 +70,7 @@
           <view class="status-dot {{item.isReady ? 'dot-green' : 'dot-yellow'}}"></view>
           <text>{{item.isReady ? '已准备' : '未准备'}}</text>
         </view>
-        <view wx:elif="{{!item.occupied}}" class="seat-action">
-          <text wx:if="{{currentUser && (currentUser.seatNumber < 1 || !currentUserReady)}}" class="btn-round btn-purple" catchtap="takeSeat" data-seat="{{item.number}}">入座</text>
-        </view>
+        <view wx:elif="{{!item.occupied}}" class="seat-action"></view>
       </view>
     </view>
     <view wx:else class="empty-hint">等待配置房间...</view>
