@@ -433,11 +433,49 @@ Page({
 
     this.applyDefaultConfig(n);
     this.computeAll();
+    this._configSnapshot = JSON.parse(JSON.stringify(room.roomConfig));
     this.setData({ showConfig: true });
   },
 
   closeConfig() {
+    this._revertConfig();
     this.setData({ showConfig: false });
+  },
+
+  finishConfig() {
+    this.saveConfig();
+    this.setData({ showConfig: false });
+  },
+
+  _revertConfig() {
+    if (!this._configSnapshot) return;
+    const rc = this._configSnapshot;
+    const roles = rc.roles || { good: [], evil: [] };
+    const n = (roles.good || []).length + (roles.evil || []).length;
+    const selected = {};
+    GOOD_ROLES.forEach(r => { selected[r] = (roles.good || []).includes(r); });
+    EVIL_ROLES.forEach(r => { selected[r] = (roles.evil || []).includes(r); });
+    this.setData({ selectedRoles: selected, playerCount: n || 5 });
+    if (rc.rules) this.setData({ rules: { ...this.data.rules, ...rc.rules } });
+    if (rc.spectator) { this.setData({ allowSpectator: rc.spectator.allow !== false, maxSpectators: rc.spectator.max || 0 }); }
+    if (rc.meta) { this.setData({ roomName: rc.meta.roomName || '', roomDescription: rc.meta.roomDescription || '' }); }
+    if (rc.limits) {
+      const l = rc.limits;
+      if (l.speechTimeout !== undefined) {
+        const idx = SPEECH_OPTIONS.indexOf(l.speechTimeout === null ? '不限' : l.speechTimeout + '秒');
+        if (idx >= 0) this.setData({ speechTimeoutIndex: idx });
+      }
+      if (l.roundTimeout !== undefined) {
+        const idx = ROUND_OPTIONS.indexOf(l.roundTimeout === null ? '不限' : l.roundTimeout + '秒');
+        if (idx >= 0) this.setData({ roundTimeoutIndex: idx });
+      }
+      if (l.voteTimeout !== undefined) {
+        const idx = VOTE_OPTIONS.indexOf(l.voteTimeout === null ? '不限' : l.voteTimeout + '秒');
+        if (idx >= 0) this.setData({ voteTimeoutIndex: idx });
+      }
+    }
+    this.applyDefaultConfig(n);
+    this.computeAll();
   },
 
   modifyConfig() {
@@ -456,7 +494,6 @@ Page({
     this.setData({ playerCount: n });
     this.applyDefaultConfig(n);
     this.computeAll();
-    this.saveConfig();
   },
 
   applyDefaultConfig(n) {
@@ -497,7 +534,6 @@ Page({
     current[role] = !current[role];
     this.setData({ selectedRoles: current });
     this.computeAll();
-    this.saveConfig();
   },
 
   // ─────────── Page 2: Must-Set Rules ───────────

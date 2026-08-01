@@ -492,7 +492,7 @@
             </view>
 
             <view class="create-section">
-              <button class="create-btn" bindtap="closeConfig" disabled="{{roleWarning !== ''}}">完成</button>
+              <button class="create-btn" bindtap="finishConfig" disabled="{{roleWarning !== ''}}">完成</button>
             </view>
             <view style="height:60rpx"></view>
           </scroll-view>
