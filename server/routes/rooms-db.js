@@ -147,7 +147,9 @@ function createRouter() {
       
       if (error.message.includes('游戏已开始') || 
           error.message.includes('房间已满') || 
-          error.message.includes('座位已被占用')) {
+          error.message.includes('座位已被占用') ||
+          error.message.includes('观战区已满') ||
+          error.message.includes('不允许观战')) {
         return res.status(400).json({ 
           success: false, 
           message: error.message 
@@ -255,7 +257,17 @@ function createRouter() {
     } catch (error) {
       console.error('更新座位号API错误:', error);
       
-      if (error.message.includes('座位已被占用')) {
+      if (error.message.includes('房间不存在')) {
+        return res.status(404).json({ 
+          success: false, 
+          message: error.message 
+        });
+      }
+
+      if (error.message.includes('座位已被占用') ||
+          error.message.includes('禁止上座') ||
+          error.message.includes('观战区已满') ||
+          error.message.includes('不允许观战')) {
         return res.status(400).json({ 
           success: false, 
           message: error.message 

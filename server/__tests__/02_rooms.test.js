@@ -204,11 +204,13 @@ describe('02 — Room Management', () => {
       const hostId = makeUserId();
       const result = await createRoom(hostId, 'Host');
       const roomId = result.roomId;
-      await joinRoom(roomId, makeUserId(), 2, 'P2');
-      await leaveRoom(roomId, result.room.players[1].openId);
+      const uid = makeUserId();
+      await joinRoom(roomId, uid, 2, 'P2');
+      await leaveRoom(roomId, uid);
       const room = await getRoom(roomId);
       expect(room.success).toBe(true);
       expect(room.room.ownerId).toBe(hostId);
+      expect(room.room.players.find(p => p.openId === uid)).toBeUndefined();
     });
   });
 
@@ -576,8 +578,8 @@ describe('02 — Room Management', () => {
       await createRoom(makeUserId(), 'StatsHost');
       const res = await roomStats();
       expect(res.success).toBe(true);
-      expect(res.stats.totalRooms).toBeGreaterThanOrEqual(1);
-      expect(res.stats.totalPlayers).toBeGreaterThanOrEqual(1);
+      expect(Number(res.stats.totalRooms)).toBeGreaterThanOrEqual(1);
+      expect(Number(res.stats.totalPlayers)).toBeGreaterThanOrEqual(1);
       expect(typeof res.stats.roomsByStatus).toBe('object');
     });
 
@@ -585,6 +587,8 @@ describe('02 — Room Management', () => {
       const hostId = makeUserId();
       const result = await createRoom(hostId, 'CleanMe');
       const roomId = result.roomId;
+      // 等过秒边界，确保 updated_at < NOW()（TIMESTAMP 秒级精度）
+      await new Promise(r => setTimeout(r, 1100));
       const res = await cleanupRooms(0);
       expect(res.success).toBe(true);
       const room = await getRoom(roomId);
