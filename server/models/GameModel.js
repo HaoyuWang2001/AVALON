@@ -316,6 +316,7 @@ class GameModel {
       // 读取房间配置（视野判定 + 湖仙）
       const [roomRows] = await db.query('SELECT room_config FROM rooms WHERE id = ?', [game.roomId]);
       const roomConfig = roomRows.length ? parseJson(roomRows[0].room_config) : null;
+      console.log('[debug:vision] roomId=', game.roomId, 'roomRows=', roomRows.length, 'rules=', JSON.stringify((roomConfig && roomConfig.rules) || {}));
       const rules = (roomConfig && roomConfig.rules) || {};
 
       // 湖仙落位：首车主 seat-1 取模（确定性）；仅在启用湖仙时有效
