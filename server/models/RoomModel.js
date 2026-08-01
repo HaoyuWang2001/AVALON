@@ -489,14 +489,14 @@ class RoomModel {
   static async getActiveRooms(limit = 50) {
     try {
       const rooms = await db.query(
-        `SELECT r.id as roomId, r.host_open_id as hostOpenId, r.game_started as gameStarted,
+        `SELECT r.id as roomId, r.owner_id as hostOpenId, r.game_started as gameStarted,
                 r.created_at as createdAt, r.updated_at as updatedAt,
-                COUNT(p.id) as playerCount,
+                COUNT(p.open_id) as playerCount,
                 SUM(CASE WHEN p.is_ready THEN 1 ELSE 0 END) as readyCount
          FROM rooms r
          LEFT JOIN room_players p ON r.id = p.room_id
          WHERE r.updated_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
-         GROUP BY r.id, r.host_open_id, r.game_started, r.created_at, r.updated_at
+         GROUP BY r.id, r.owner_id, r.game_started, r.created_at, r.updated_at
           ORDER BY r.updated_at DESC
           LIMIT ${parseInt(limit)}`,
         []
