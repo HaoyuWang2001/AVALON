@@ -425,8 +425,10 @@ class RoomModel {
   static async banFromSeating(roomId, playerId, banned) {
     try {
       await db.query(
-        'UPDATE room_players SET banned_from_seating = ? WHERE room_id = ? AND open_id = ?',
-        [banned, roomId, playerId]
+        banned
+          ? 'UPDATE room_players SET is_ready = FALSE, seat_number = IF(seat_number >= 1, 0, seat_number), banned_from_seating = ? WHERE room_id = ? AND open_id = ?'
+          : 'UPDATE room_players SET banned_from_seating = ? WHERE room_id = ? AND open_id = ?',
+        banned ? [banned, roomId, playerId] : [banned, roomId, playerId]
       );
       await db.query('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
       return await this.getById(roomId);
