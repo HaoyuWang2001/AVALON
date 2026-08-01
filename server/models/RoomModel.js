@@ -76,6 +76,12 @@ class RoomModel {
       }
     }
 
+    // 兰斯洛特转换确定性控制（测试/观战用，可选）
+    if ('lancelotSwapForce' in roomConfig.rules &&
+        !['switch', 'keep'].includes(roomConfig.rules.lancelotSwapForce)) {
+      throw new Error('lancelotSwapForce 必须是 switch 或 keep');
+    }
+
     return true;
   }
 

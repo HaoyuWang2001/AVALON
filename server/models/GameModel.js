@@ -31,6 +31,7 @@ const LANCELOT_BLUE = 'lancelotBlue';
 /**
  * 兰斯洛特身份转换抽卡：完成轮次 ∈ [lancelotSwapRound, 4] 时触发。
  * 默认卡组 2 张转换 / 5 张不转（Math.random < 2/7 视为抽中转换）。
+ * 测试/确定性控制：rules.lancelotSwapForce = 'switch' | 'keep'（缺省走随机）。
  * 单兰翻转；双兰（初始异侧）同时互换。
  */
 async function maybeLancelotSwap(connection, gameId, completedRound, rules) {
@@ -43,7 +44,10 @@ async function maybeLancelotSwap(connection, gameId, completedRound, rules) {
   );
   if (lancelots.length === 0) return;
 
-  const switched = Math.random() < (2 / 7);
+  let switched;
+  if (rules.lancelotSwapForce === 'switch') switched = true;
+  else if (rules.lancelotSwapForce === 'keep') switched = false;
+  else switched = Math.random() < (2 / 7);
   if (!switched) return;
 
   for (const l of lancelots) {

@@ -99,7 +99,7 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
 
   // ─────────── 兰斯洛特身份转换：单兰翻转 ───────────
   it('单兰斯洛特抽中转换卡 → 阵营翻转', async () => {
-    const config = withConfigOverrides(buildCustomBoard9(), { rules: { lancelotSwapRound: 1 } });
+    const config = withConfigOverrides(buildCustomBoard9(), { rules: { lancelotSwapRound: 1, lancelotSwapForce: 'switch' } });
     const { gameId, players } = await setupGame(config);
     const blue = players.find(p => p.role === 'lancelotBlue');
     expect(blue.side).toBe('good');
@@ -107,9 +107,7 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     const size = TEAM_SIZES[n][0];
     await driveToMissionVote(gameId, players, buildTeam(players, size, blue.openId));
 
-    const spy = jest.spyOn(Math, 'random').mockReturnValue(0.1); // 抽中转换卡
     await completeMission(gameId, players, () => 'success');
-    spy.mockRestore();
 
     const state = await getGameState(gameId);
     expect(state.game.currentRound).toBe(2);
@@ -118,7 +116,7 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
 
   // ─────────── 兰斯洛特身份转换：双兰互换 ───────────
   it('双兰斯洛特抽中转换卡 → 同时互换', async () => {
-    const config = withConfigOverrides(buildStandardRoomConfig(11), { rules: { lancelotSwapRound: 1 } });
+    const config = withConfigOverrides(buildStandardRoomConfig(11), { rules: { lancelotSwapRound: 1, lancelotSwapForce: 'switch' } });
     const { gameId, players } = await setupGame(config);
     const blue = players.find(p => p.role === 'lancelotBlue');
     const red = players.find(p => p.role === 'lancelotRed');
@@ -128,9 +126,7 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     const size = TEAM_SIZES[n][0];
     await driveToMissionVote(gameId, players, buildTeam(players, size, blue.openId));
 
-    const spy = jest.spyOn(Math, 'random').mockReturnValue(0.1);
     await completeMission(gameId, players, () => 'success');
-    spy.mockRestore();
 
     const state = await getGameState(gameId);
     expect(state.game.players.find(p => p.role === 'lancelotBlue').side).toBe('evil');
@@ -139,16 +135,14 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
 
   // ─────────── 未抽中转换卡：阵营不变 ───────────
   it('未抽中转换卡 → 阵营不变', async () => {
-    const config = withConfigOverrides(buildCustomBoard9(), { rules: { lancelotSwapRound: 1 } });
+    const config = withConfigOverrides(buildCustomBoard9(), { rules: { lancelotSwapRound: 1, lancelotSwapForce: 'keep' } });
     const { gameId, players } = await setupGame(config);
     const blue = players.find(p => p.role === 'lancelotBlue');
     const n = players.length;
     const size = TEAM_SIZES[n][0];
     await driveToMissionVote(gameId, players, buildTeam(players, size, blue.openId));
 
-    const spy = jest.spyOn(Math, 'random').mockReturnValue(0.9); // 未抽中
     await completeMission(gameId, players, () => 'success');
-    spy.mockRestore();
 
     const state = await getGameState(gameId);
     expect(state.game.players.find(p => p.role === 'lancelotBlue').side).toBe('good');
@@ -157,14 +151,12 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
   // ─────────── fail 权限按当前阵营（转换后） ───────────
   it('转换后蓝兰变坏可投 fail；红兰变好不能投 fail', async () => {
     // 单兰：蓝兰变坏 → 可 fail
-    const cfg = withConfigOverrides(buildCustomBoard9(), { rules: { lancelotSwapRound: 1 } });
+    const cfg = withConfigOverrides(buildCustomBoard9(), { rules: { lancelotSwapRound: 1, lancelotSwapForce: 'switch' } });
     const g1 = await setupGame(cfg);
     const blue = g1.players.find(p => p.role === 'lancelotBlue');
     const n = g1.players.length;
     await driveToMissionVote(g1.gameId, g1.players, buildTeam(g1.players, TEAM_SIZES[n][0], blue.openId));
-    const spy = jest.spyOn(Math, 'random').mockReturnValue(0.1);
     await completeMission(g1.gameId, g1.players, () => 'success');
-    spy.mockRestore();
     expect((await getGameState(g1.gameId)).game.players.find(p => p.role === 'lancelotBlue').side).toBe('evil');
 
     // 第 2 轮把变坏的蓝兰放上车 → 可投 fail
@@ -173,15 +165,13 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     expect(failOk.success).toBe(true);
 
     // 双兰：红兰变好 → 不能投 fail
-    const cfg2 = withConfigOverrides(buildStandardRoomConfig(11), { rules: { lancelotSwapRound: 1 } });
+    const cfg2 = withConfigOverrides(buildStandardRoomConfig(11), { rules: { lancelotSwapRound: 1, lancelotSwapForce: 'switch' } });
     const g2 = await setupGame(cfg2);
     const blue2 = g2.players.find(p => p.role === 'lancelotBlue');
     const red2 = g2.players.find(p => p.role === 'lancelotRed');
     const n2 = g2.players.length;
     await driveToMissionVote(g2.gameId, g2.players, buildTeam(g2.players, TEAM_SIZES[n2][0], blue2.openId));
-    const spy2 = jest.spyOn(Math, 'random').mockReturnValue(0.1);
     await completeMission(g2.gameId, g2.players, () => 'success');
-    spy2.mockRestore();
     expect((await getGameState(g2.gameId)).game.players.find(p => p.role === 'lancelotRed').side).toBe('good');
 
     // 第 2 轮把变好的红兰放上车 → 投 fail 被拒

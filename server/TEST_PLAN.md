@@ -284,7 +284,8 @@ roleReveal → discussion → [submitNomination] → teamVote
 | `rules.oberonKnowsRedLancelot` | bool | true | **奥伯伦是否知道红兰斯洛特身份（可选）** |
 | `rules.merlinKnowsLancelotSide` | bool | true | **梅林能否分辨蓝/红兰各自阵营（兰斯洛特恒可见；可选）** |
 | `rules.lancelotsKnowEachOther` | bool | false | 蓝↔红兰斯洛特互认（初始角色，reveal 固化） |
-| `rules.lancelotSwapRound` | int | 2 | 兰斯洛特转换激活轮 |
+| `rules.lancelotSwapRound` | int | 2 | 兰斯洛特转换激活轮（0=不转换） |
+| `rules.lancelotSwapForce` | string? | — | 兰斯洛特抽卡确定性控制（测试/观战用）：`'switch'`/`'keep'`，缺省随机 2/7 |
 | `rules.ladyOfTheLake` | bool | false | 湖仙启用 |
 | `rules.ladyOfTheLakeRound` | int | 2 | 湖仙激活轮 |
 | `rules.maxFailedNominations` | int | 3 | 流车阈值（触发强制发车） |
@@ -402,7 +403,8 @@ roleReveal → discussion → [submitNomination] → teamVote
 | 未抽中 | mock 随机 | 阵营不变 |
 | fail 权限按当前阵营 | 转换后 | 变坏的蓝兰可投 fail；变好的红兰不能投 fail |
 
-> **确定性**：兰斯洛特抽卡用 `jest.spyOn(Math,'random')` 强制抽中/未抽中。
+> **确定性**：兰斯洛特抽卡用 `rules.lancelotSwapForce = 'switch'/'keep'` 强制抽中/未抽中（服务端在独立进程，
+> 无法用 jest mock 控制，故经配置注入）。
 
 ### 阶段 3a：好人胜利完整流程 — `04a_games_flow_good.test.js`（参数化 5-12）
 
@@ -474,7 +476,7 @@ createRoomAndStartGame(N) → advancePhase
 - **兰斯洛特转换后投票选项**：转换后 lancelotBlue 可投 fail、lancelotRed 不可投 fail（权限按当前阵营）。
 
 > **确定性（兰斯洛特抽卡）**：抽卡是随机（默认 2 转/5 不转）。针对性测试用
-> `jest.spyOn(Math,'random')` 在触发前固定返回值，强制抽中/未抽中转换卡。
+> `rules.lancelotSwapForce = 'switch'/'keep'` 强制抽中/未抽中转换卡。
 
 ### 阶段 4：消息系统 — `06_messages.test.js`
 
@@ -587,8 +589,7 @@ createRoomAndStartGame(N) → advancePhase
 | `createRoomAndStartGame(n)` | 创建 N 人房间 + 启动游戏（使用**按人数的标准角色板**，11 人无 assassin、莫甘娜开刀），返回含 gameId 和玩家角色 |
 
 > 规划中（随新流程 §3 实现后补充）：`setSpeakingOrder` / `advanceSpeaker` / `preTeam` /
-> `lakeInspect` / `lakePass` 及兰斯洛特抽卡控制 `mockLancelotDraw(switchCard)`（内部用
-> `jest.spyOn(Math,'random')` 固定随机）。
+> `lakeInspect` / `lakePass` 及兰斯洛特抽卡控制 `lancelotSwapForce('switch'|'keep')`（经 `rules.lancelotSwapForce` 注入配置）。
 
 ### 6.3 测试文件清单
 
