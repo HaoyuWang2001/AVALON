@@ -115,6 +115,10 @@ Page({
     this.initRoomPolling();
   },
 
+  onShow() {
+    if (this.data.roomId) this.fetchRoomInfo();
+  },
+
   onUnload() {
     if (this.roomPolling) clearInterval(this.roomPolling);
     if (this.leaving) this.leaveRoom();

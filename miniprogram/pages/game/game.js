@@ -34,6 +34,16 @@ Page({
     this.initGamePolling();
   },
 
+  onShow() {
+    this.fetchGameState();
+    if (!api._socketTask && this.data.roomId) {
+      api.connectSocket(this.data.roomId, app.globalData.openId);
+      api.onSocketMessage('gameUpdated', () => { this.fetchGameState(); });
+    }
+  },
+
+  onHide() {},
+
   onUnload() {
     if (this.gamePolling) clearInterval(this.gamePolling);
     api.disconnectSocket();
