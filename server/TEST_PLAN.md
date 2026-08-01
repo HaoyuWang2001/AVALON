@@ -280,8 +280,9 @@ roleReveal → discussion → [submitNomination] → teamVote
 |------|------|------|------|
 | `roles.good` / `roles.evil` | string[] | — | 各阵营角色列表 |
 | `rules.evilKnowsEachOther` | bool | true | 坏人互认：睁眼狼（morgana/assassin/minion/mordred）互知身份；oberon 互隐；**不含 lancelotRed** |
-| `rules.evilsKnowRedLancelot` | bool | false | **睁眼狼是否知道红兰斯洛特身份（新增，可选）** |
-| `rules.oberonKnowsRedLancelot` | bool | false | **奥伯伦是否知道红兰斯洛特身份（新增，可选）** |
+| `rules.evilsKnowRedLancelot` | bool | false | **睁眼狼是否知道红兰斯洛特身份（可选）** |
+| `rules.oberonKnowsRedLancelot` | bool | false | **奥伯伦是否知道红兰斯洛特身份（可选）** |
+| `rules.merlinKnowsLancelotSide` | bool | true | **梅林能否分辨蓝/红兰各自阵营（兰斯洛特恒可见；可选）** |
 | `rules.lancelotsKnowEachOther` | bool | true | 蓝↔红兰斯洛特互知（初始角色，reveal 固化） |
 | `rules.lancelotSwapRound` | int | 2 | 兰斯洛特转换激活轮 |
 | `rules.ladyOfTheLake` | bool | false | 湖仙启用 |
@@ -360,7 +361,8 @@ roleReveal → discussion → [submitNomination] → teamVote
 | T11 | `evilKnowsEachOther=true` | 全部 10 板 | 睁眼狼互知身份（morgana/assassin/minion/mordred），oberon 互隐，**不含 lancelotRed** |
 | T12 | `evilKnowsEachOther=false` | 全部 10 板 | 睁眼狼视角仅自己 |
 | T13 | 派西维尔 | 全部 10 板 | percival 视角 = {自己, merlin, morgana}（不区分身份） |
-| T14 | `merlinVision.canSee` | 全部 10 板 | merlin 视角 = 自己 + canSee 角色（**除莫德雷德**），身份不显示 |
+| T14 | `merlinVision.canSee` + 兰斯洛特恒可见 | 全部 10 板 | merlin 视角 = 自己 + canSee 角色（除莫德雷德，无身份）+ 兰斯洛特（默认可辨阵营） |
+| T14b | `merlinKnowsLancelotSide=false` | 含兰斯洛特板 | 梅林看到兰斯洛特但不辨阵营（无 role/side） |
 | T15 | `merlinVision.canIdentify=[assassin]` | 自定义 10 人 | assassin 显示具体身份 |
 | T16 | `ladyOfTheLake=true` | 自定义 10 人 | `lakeHolderOpenId === players[(首车主 seat-1) mod N]` |
 | T17/T18 | `evilsKnowRedLancelot` true/false | 含 lancelotRed 的板（自定义10、标准11/12） | 睁眼狼视角含/不含红兰身份 |

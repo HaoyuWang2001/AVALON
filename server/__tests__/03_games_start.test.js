@@ -4,7 +4,7 @@ const {
 } = require('./helpers/testHelper');
 
 const EVIL_OPEN_EYES = ['morgana', 'assassin', 'minion', 'mordred'];
-const CAN_SEE_DEFAULT = ['assassin', 'morgana', 'minion', 'oberon', 'lancelotRed'];
+const CAN_SEE_DEFAULT = ['assassin', 'morgana', 'minion', 'oberon'];
 
 const BOARD_STANDARDS = [5, 6, 7, 8, 9, 10, 11, 12].map(n => ({
   name: `std${n}`,
@@ -194,22 +194,47 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
 
   // ─────────────── C3 梅林（全部板） ───────────────
   describe.each(BOARDS)('C3 梅林 $name', ({ config }) => {
-    it('T14 merlin 视角 = 自己 + canSee 角色（除莫德雷德），身份不显示', async () => {
+    it('T14 merlin 视角 = 自己 + canSee 角色 + 兰斯洛特（默认可辨阵营）', async () => {
       const cfg = config();
       const { gameId, players } = await startBoard(cfg);
       const merlin = players.find(p => p.role === 'merlin');
       const canSee = (cfg.merlinVision && cfg.merlinVision.canSee) || CAN_SEE_DEFAULT;
-      const expected = [merlin.openId, ...players.filter(p => canSee.includes(p.role)).map(p => p.openId)].sort();
+      const lancelots = players.filter(p => p.role === 'lancelotBlue' || p.role === 'lancelotRed');
+      const expected = [
+        merlin.openId,
+        ...players.filter(p => canSee.includes(p.role)).map(p => p.openId),
+        ...lancelots.map(p => p.openId)
+      ].sort();
       const seen = await visionOf(gameId, merlin.openId);
       const seenIds = seen.map(s => s.openId).sort();
       expect(seenIds).toEqual(expected);
       for (const s of seen) {
-        if (s.openId !== merlin.openId) {
+        if (s.openId !== merlin.openId && !lancelots.some(l => l.openId === s.openId)) {
           expect(s.side).toBe('evil');
           expect(s.role).toBeUndefined();
         }
       }
+      // 兰斯洛特默认可辨阵营（merlinKnowsLancelotSide 默认 true）
+      for (const l of lancelots) {
+        const entry = seen.find(s => s.openId === l.openId);
+        if (entry) {
+          expect(entry.role).toBe(l.role);
+          expect(entry.side).toBe(l.side);
+        }
+      }
     });
+  });
+
+  it('T14b merlinKnowsLancelotSide=false：梅林看到兰斯洛特但不辨阵营', async () => {
+    const cfg = withConfigOverrides(buildCustomBoard10(), { rules: { merlinKnowsLancelotSide: false } });
+    const { gameId, players } = await startBoard(cfg);
+    const merlin = players.find(p => p.role === 'merlin');
+    const red = players.find(p => p.role === 'lancelotRed');
+    const seen = await visionOf(gameId, merlin.openId);
+    const entry = seen.find(s => s.openId === red.openId);
+    expect(entry).toBeDefined();
+    expect(entry.role).toBeUndefined();
+    expect(entry.side).toBeUndefined();
   });
 
   it('T15 canIdentify=[assassin]：梅林可见 assassin 具体身份', async () => {

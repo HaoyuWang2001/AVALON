@@ -69,8 +69,8 @@ class RoomModel {
       }
     }
 
-    // 可选布尔配置（红兰可见性）
-    for (const key of ['evilsKnowRedLancelot', 'oberonKnowsRedLancelot']) {
+    // 可选布尔配置（红兰可见性 / 梅林兰斯洛特阵营）
+    for (const key of ['evilsKnowRedLancelot', 'oberonKnowsRedLancelot', 'merlinKnowsLancelotSide']) {
       if (key in roomConfig.rules && typeof roomConfig.rules[key] !== 'boolean') {
         throw new Error(`${key} 必须是布尔值`);
       }

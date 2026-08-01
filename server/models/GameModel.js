@@ -31,7 +31,7 @@ const LANCELOT_BLUE = 'lancelotBlue';
 function buildVision(requester, players, roomConfig) {
   const rules = (roomConfig && roomConfig.rules) || {};
   const merlinVision = (roomConfig && roomConfig.merlinVision) || {};
-  const canSee = merlinVision.canSee || [];
+  const canSee = (merlinVision.canSee && merlinVision.canSee.length) ? merlinVision.canSee : ['assassin', 'morgana', 'minion', 'oberon'];
   const canIdentify = merlinVision.canIdentify || [];
 
   const seen = [];
@@ -86,8 +86,16 @@ function buildVision(requester, players, roomConfig) {
     // 梅林：见 canSee 内的坏人角色（莫德雷德不在 canSee 默认），身份按 canIdentify
     for (const p of players) {
       if (p.openId === requester.openId) continue;
+      if (p.role === LANCELOT_BLUE || p.role === LANCELOT_RED) continue;
       if (canSee.includes(p.role)) {
         add(p, canIdentify.includes(p.role) ? 'role' : 'side');
+      }
+    }
+    // 兰斯洛特恒可见；merlinKnowsLancelotSide 控制是否分辨具体阵营（默认 true）
+    const knowsLancelotSide = rules.merlinKnowsLancelotSide !== false;
+    for (const p of players) {
+      if (p.role === LANCELOT_BLUE || p.role === LANCELOT_RED) {
+        add(p, knowsLancelotSide ? 'role' : 'none');
       }
     }
   }

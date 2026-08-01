@@ -34,7 +34,8 @@
     </view>
     <view class="current-room-btns">
       <button class="btn-small btn-primary" bindtap="backToRoom">回到房间</button>
-      <button class="btn-small btn-danger" bindtap="exitCurrentRoom">退出房间</button>
+      <button wx:if="{{isCurrentRoomHost}}" class="btn-small btn-danger" bindtap="disbandCurrentRoom">解散房间</button>
+      <button wx:else class="btn-small btn-danger" bindtap="exitCurrentRoom">退出房间</button>
     </view>
   </view>
 
@@ -194,7 +195,7 @@
             </view>
             <view class="rule-row">
               <view class="rule-col">
-                <text class="rule-label">失败详情</text>
+                <text class="rule-label">任务失败详情</text>
                 <text class="rule-desc">任务失败时显示几票失败 or 仅知成败</text>
               </view>
               <view class="segment">
@@ -245,6 +246,27 @@
                 <text>{{rules.lancelotSwapRound === 0 ? '不转换' : '第 ' + rules.lancelotSwapRound + ' 轮'}}</text>
               </picker>
             </view>
+            <view class="rule-row" wx:if="{{selectedRoles.lancelotRed}}">
+              <view class="rule-col">
+                <text class="rule-label">睁眼狼知红兰</text>
+                <text class="rule-desc">睁眼狼（莫甘娜/刺客/爪牙/莫德雷德）是否知道红兰身份</text>
+              </view>
+              <switch checked="{{rules.evilsKnowRedLancelot}}" data-field="evilsKnowRedLancelot" bindchange="onRuleToggle" color="#8B5CF6"/>
+            </view>
+            <view class="rule-row" wx:if="{{selectedRoles.oberon}}">
+              <view class="rule-col">
+                <text class="rule-label">奥伯伦知红兰</text>
+                <text class="rule-desc">奥伯伦是否知道红兰身份</text>
+              </view>
+              <switch checked="{{rules.oberonKnowsRedLancelot}}" data-field="oberonKnowsRedLancelot" bindchange="onRuleToggle" color="#8B5CF6"/>
+            </view>
+            <view class="rule-row" wx:if="{{selectedRoles.lancelotBlue && selectedRoles.lancelotRed}}">
+              <view class="rule-col">
+                <text class="rule-label">梅林辨兰阵营</text>
+                <text class="rule-desc">梅林能否分辨蓝/红兰各自阵营（仍能看到双兰）</text>
+              </view>
+              <switch checked="{{rules.merlinKnowsLancelotSide}}" data-field="merlinKnowsLancelotSide" bindchange="onRuleToggle" color="#8B5CF6"/>
+            </view>
           </view>
         </scroll-view>
       </swiper-item>
@@ -252,113 +274,8 @@
       <!-- Page 3: 保留位 -->
       <swiper-item hidden="{{true}}"></swiper-item>
 
-      <!-- Page 4: 梅林视野 (conditional) -->
-      <swiper-item hidden="{{!selectedRoles.merlin}}">
-        <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
-          <view class="config-section">
-            <view class="section-title">👁️ 梅林能看到的人</view>
-            <scroll-view class="role-scroll" scroll-x show-scrollbar="{{false}}">
-            <view class="role-scroll-row">
-              <view wx:if="{{selectedRoles.assassin}}"
-                class="role-card role-evil {{merlinCanSee.assassin ? 'role-selected' : ''}}"
-                data-role="assassin" bindtap="onCanSeeToggle">
-                <view class="role-img-placeholder"><image src="/images/avalon-red.png" class="role-img"/></view>
-                <text class="role-name">刺客</text>
-                <view class="role-check {{merlinCanSee.assassin ? 'check-on' : ''}}"><text wx:if="{{merlinCanSee.assassin}}">✓</text></view>
-              </view>
-              <view wx:if="{{selectedRoles.morgana}}"
-                class="role-card role-evil {{merlinCanSee.morgana ? 'role-selected' : ''}}"
-                data-role="morgana" bindtap="onCanSeeToggle">
-                <view class="role-img-placeholder"><image src="/images/avalon-red.png" class="role-img"/></view>
-                <text class="role-name">莫甘娜</text>
-                <view class="role-check {{merlinCanSee.morgana ? 'check-on' : ''}}"><text wx:if="{{merlinCanSee.morgana}}">✓</text></view>
-              </view>
-              <view wx:if="{{selectedRoles.oberon}}"
-                class="role-card role-evil {{merlinCanSee.oberon ? 'role-selected' : ''}}"
-                data-role="oberon" bindtap="onCanSeeToggle">
-                <view class="role-img-placeholder"><image src="/images/avalon-red.png" class="role-img"/></view>
-                <text class="role-name">奥伯伦</text>
-                <view class="role-check {{merlinCanSee.oberon ? 'check-on' : ''}}"><text wx:if="{{merlinCanSee.oberon}}">✓</text></view>
-              </view>
-              <view wx:if="{{selectedRoles.minion}}"
-                class="role-card role-evil {{merlinCanSee.minion ? 'role-selected' : ''}}"
-                data-role="minion" bindtap="onCanSeeToggle">
-                <view class="role-img-placeholder"><image src="/images/avalon-red.png" class="role-img"/></view>
-                <text class="role-name">爪牙</text>
-                <view class="role-check {{merlinCanSee.minion ? 'check-on' : ''}}"><text wx:if="{{merlinCanSee.minion}}">✓</text></view>
-              </view>
-              <view wx:if="{{selectedRoles.lancelotRed}}"
-                class="role-card role-evil {{merlinCanSee.lancelotRed ? 'role-selected' : ''}}"
-                data-role="lancelotRed" bindtap="onCanSeeToggle">
-                <view class="role-img-placeholder"><image src="/images/avalon-red.png" class="role-img"/></view>
-                <text class="role-name">红兰</text>
-                <view class="role-check {{merlinCanSee.lancelotRed ? 'check-on' : ''}}"><text wx:if="{{merlinCanSee.lancelotRed}}">✓</text></view>
-              </view>
-              <view wx:if="{{selectedRoles.lancelotBlue}}"
-                class="role-card role-evil {{merlinCanSee.lancelotBlue ? 'role-selected' : ''}}"
-                data-role="lancelotBlue" bindtap="onCanSeeToggle">
-                <view class="role-img-placeholder"><image src="/images/avalon-red.png" class="role-img"/></view>
-                <text class="role-name">蓝兰</text>
-                <view class="role-check {{merlinCanSee.lancelotBlue ? 'check-on' : ''}}"><text wx:if="{{merlinCanSee.lancelotBlue}}">✓</text></view>
-              </view>
-            </view>
-            </scroll-view>
-          </view>
 
-          <view class="config-section">
-            <view class="section-title">🔍 梅林能分辨具体身份</view>
-            <scroll-view class="role-scroll" scroll-x show-scrollbar="{{false}}">
-            <view class="role-scroll-row">
-              <view wx:if="{{merlinCanSee.assassin && selectedRoles.assassin}}"
-                class="role-card role-evil {{merlinCanIdentify.assassin ? 'role-selected' : ''}}"
-                data-role="assassin" bindtap="onCanIdentifyToggle">
-                <view class="role-img-placeholder"><image src="/images/avalon-red.png" class="role-img"/></view>
-                <text class="role-name">刺客</text>
-                <view class="role-check {{merlinCanIdentify.assassin ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.assassin}}">✓</text></view>
-              </view>
-              <view wx:if="{{merlinCanSee.morgana && selectedRoles.morgana}}"
-                class="role-card role-evil {{merlinCanIdentify.morgana ? 'role-selected' : ''}}"
-                data-role="morgana" bindtap="onCanIdentifyToggle">
-                <view class="role-img-placeholder"><image src="/images/avalon-red.png" class="role-img"/></view>
-                <text class="role-name">莫甘娜</text>
-                <view class="role-check {{merlinCanIdentify.morgana ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.morgana}}">✓</text></view>
-              </view>
-              <view wx:if="{{merlinCanSee.oberon && selectedRoles.oberon}}"
-                class="role-card role-evil {{merlinCanIdentify.oberon ? 'role-selected' : ''}}"
-                data-role="oberon" bindtap="onCanIdentifyToggle">
-                <view class="role-img-placeholder"><image src="/images/avalon-red.png" class="role-img"/></view>
-                <text class="role-name">奥伯伦</text>
-                <view class="role-check {{merlinCanIdentify.oberon ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.oberon}}">✓</text></view>
-              </view>
-              <view wx:if="{{merlinCanSee.minion && selectedRoles.minion}}"
-                class="role-card role-evil {{merlinCanIdentify.minion ? 'role-selected' : ''}}"
-                data-role="minion" bindtap="onCanIdentifyToggle">
-                <view class="role-img-placeholder"><image src="/images/avalon-red.png" class="role-img"/></view>
-                <text class="role-name">爪牙</text>
-                <view class="role-check {{merlinCanIdentify.minion ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.minion}}">✓</text></view>
-              </view>
-              <view wx:if="{{merlinCanSee.lancelotRed && selectedRoles.lancelotRed}}"
-                class="role-card role-evil {{merlinCanIdentify.lancelotRed ? 'role-selected' : ''}}"
-                data-role="lancelotRed" bindtap="onCanIdentifyToggle">
-                <view class="role-img-placeholder"><image src="/images/avalon-red.png" class="role-img"/></view>
-                <text class="role-name">红兰</text>
-                <view class="role-check {{merlinCanIdentify.lancelotRed ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.lancelotRed}}">✓</text></view>
-              </view>
-              <view wx:if="{{merlinCanSee.lancelotBlue && selectedRoles.lancelotBlue}}"
-                class="role-card role-evil {{merlinCanIdentify.lancelotBlue ? 'role-selected' : ''}}"
-                data-role="lancelotBlue" bindtap="onCanIdentifyToggle">
-                <view class="role-img-placeholder"><image src="/images/avalon-red.png" class="role-img"/></view>
-                <text class="role-name">蓝兰</text>
-                <view class="role-check {{merlinCanIdentify.lancelotBlue ? 'check-on' : ''}}"><text wx:if="{{merlinCanIdentify.lancelotBlue}}">✓</text></view>
-              </view>
-            </view>
-            </scroll-view>
-          </view>
-          <view style="height:40rpx"></view>
-        </scroll-view>
-      </swiper-item>
-
-      <!-- Page 5: 时间+信息+创建 -->
+      <!-- Page 4: 时间+信息+创建 -->
       <swiper-item>
         <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
           <view class="config-section">

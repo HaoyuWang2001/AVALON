@@ -71,7 +71,7 @@ function buildMinimalRoomConfig() {
     limits: { speechTimeout: null, roundTimeout: null, voteTimeout: null },
     meta: { roomName: 'Test Room', roomDescription: '', tags: [] },
     merlinVision: {
-      canSee: ['assassin', 'morgana', 'minion', 'oberon', 'lancelotRed'],
+      canSee: ['assassin', 'morgana', 'minion', 'oberon'],
       canIdentify: []
     }
   };

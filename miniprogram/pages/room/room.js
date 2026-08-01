@@ -38,7 +38,8 @@ function buildDefaultRule() {
     evilKnowsEachOther: true, lancelotsKnowEachOther: true, lancelotSwapRound: 2,
     ladyOfTheLake: false, ladyOfTheLakeRound: 2, maxFailedNominations: 3,
     oberonMustFailMission: false, redLancelotMustFailMission: false,
-    voteVisibility: 'public', missionFailDetail: 'count'
+    voteVisibility: 'public', missionFailDetail: 'count',
+    evilsKnowRedLancelot: false, oberonKnowsRedLancelot: false, merlinKnowsLancelotSide: true
   };
 }
 
@@ -78,9 +79,6 @@ Page({
     rules: buildDefaultRule(),
     ladyOfTheLake: false,
     ladyOfTheLakeRound: 2,
-
-    merlinCanSee: { assassin: true, morgana: true, minion: true, oberon: true, lancelotRed: true, lancelotBlue: false },
-    merlinCanIdentify: { lancelotRed: false, lancelotBlue: false },
 
     speechTimeoutIndex: 0,
     roundTimeoutIndex: 0,
@@ -535,7 +533,6 @@ Page({
     def.good.forEach(r => { if (r !== 'loyal') selected[r] = true; });
     def.evil.forEach(r => { selected[r] = true; });
 
-    const canSee = { assassin: true, morgana: true, minion: true, oberon: true, lancelotRed: true, lancelotBlue: false };
     const rules = buildDefaultRule();
     const hasLancelot = selected.lancelotBlue || selected.lancelotRed;
     rules.redLancelotMustFailMission = hasLancelot;
@@ -546,11 +543,6 @@ Page({
       rules: rules,
       ladyOfTheLake: n >= 10,
       ladyOfTheLakeRound: n >= 10 ? 2 : 2,
-      merlinCanSee: { ...canSee },
-      merlinCanIdentify: {
-        lancelotRed: selected.lancelotRed || false,
-        lancelotBlue: selected.lancelotBlue || false
-      },
       speechTimeoutIndex: 0,
       roundTimeoutIndex: 0,
       voteTimeoutIndex: 0,
@@ -616,30 +608,7 @@ Page({
     this.saveConfig();
   },
 
-  // ─────────── Page 5: Merlin Vision ───────────
-
-  onCanSeeToggle(e) {
-    const role = e.currentTarget.dataset.role;
-    const canSee = this.data.merlinCanSee;
-    canSee[role] = !canSee[role];
-    if (!canSee[role]) {
-      const canIdentify = this.data.merlinCanIdentify;
-      delete canIdentify[role];
-      this.setData({ merlinCanIdentify: canIdentify });
-    }
-    this.setData({ merlinCanSee: canSee });
-    this.saveConfig();
-  },
-
-  onCanIdentifyToggle(e) {
-    const role = e.currentTarget.dataset.role;
-    const canIdentify = this.data.merlinCanIdentify;
-    canIdentify[role] = !canIdentify[role];
-    this.setData({ merlinCanIdentify: canIdentify });
-    this.saveConfig();
-  },
-
-  // ─────────── Page 6: Limits + Meta ───────────
+  // ─────────── Page 5: Limits + Meta ───────────
 
   onLimitChange(e) {
     const { field } = e.currentTarget.dataset;
@@ -753,18 +722,6 @@ Page({
     });
   },
 
-  getMerlinVision() {
-    const canSee = [];
-    const canIdentify = [];
-    Object.keys(this.data.merlinCanSee).forEach(role => {
-      if (this.data.merlinCanSee[role]) canSee.push(role);
-    });
-    Object.keys(this.data.merlinCanIdentify).forEach(role => {
-      if (this.data.merlinCanIdentify[role]) canIdentify.push(role);
-    });
-    return { canSee, canIdentify };
-  },
-
   getRoomConfig() {
     const good = [];
     const evil = [];
@@ -793,7 +750,6 @@ Page({
       },
       limits,
       meta,
-      merlinVision: this.getMerlinVision(),
       spectator: {
         allow: this.data.allowSpectator,
         max: this.data.maxSpectators
