@@ -43,6 +43,11 @@ async function apiPost(path, body) {
   return res;
 }
 
+async function apiPut(path, body) {
+  const res = await request().put(path).send(body);
+  return res;
+}
+
 // ---- Room workflow helpers ----
 
 function buildMinimalRoomConfig() {
@@ -138,10 +143,62 @@ async function leaveRoom(roomId, userId) {
   return res.body;
 }
 
+async function updateSeatNumber(roomId, userId, newSeatNumber) {
+  const res = await apiPost('/api/rooms/updateSeatNumber', { roomId, openId: userId, newSeatNumber });
+  return res.body;
+}
+
+async function kickPlayer(roomId, playerId, mode, openId) {
+  const res = await apiPost('/api/rooms/kickPlayer', { roomId, playerId, mode: mode || 'room', openId });
+  return res.body;
+}
+
+async function banSeat(roomId, playerId, banned, openId) {
+  const res = await apiPost(`/api/rooms/${roomId}/banSeat`, { playerId, banned, openId });
+  return res.body;
+}
+
+async function updateRoomConfig(roomId, roomConfig, openId) {
+  const res = await apiPut(`/api/rooms/${roomId}/config`, { roomConfig, openId });
+  return res.body;
+}
+
+async function transferOwner(roomId, currentOwnerId, newOwnerId) {
+  const res = await apiPost(`/api/rooms/${roomId}/transferOwner`, { currentOwnerId, newOwnerId });
+  return res.body;
+}
+
+async function disband(roomId, openId) {
+  const res = await apiPost(`/api/rooms/${roomId}/disband`, { openId });
+  return res.body;
+}
+
+async function randomSeats(roomId, openId) {
+  const res = await apiPost(`/api/rooms/${roomId}/randomSeats`, { openId });
+  return res.body;
+}
+
+async function roomStats() {
+  const res = await apiGet('/api/rooms/stats/summary');
+  return res.body;
+}
+
+async function cleanupRooms(hours) {
+  const res = await apiPost('/api/rooms/cleanup', { hours: hours || 24 });
+  return res.body;
+}
+
+// 在最小配置基础上附加观战配置
+function buildConfigWithSpectator(spectator) {
+  const config = buildMinimalRoomConfig();
+  config.spectator = spectator;
+  return config;
+}
+
 // ---- Game workflow helpers (all use gameId, not roomId) ----
 
-async function startGame(roomId) {
-  const res = await apiPost('/api/games/start', { roomId });
+async function startGame(roomId, openId) {
+  const res = await apiPost('/api/games/start', { roomId, openId });
   return res.body;
 }
 
@@ -238,7 +295,7 @@ async function createRoomWithPlayers(playerCount, roomConfig) {
  */
 async function createRoomAndStartGame(playerCount) {
   const { roomId, players, hostId } = await createRoomWithPlayers(playerCount, buildStandardRoomConfig(playerCount));
-  const startResult = await startGame(roomId);
+  const startResult = await startGame(roomId, hostId);
   if (!startResult.success) throw new Error(`Failed to start game: ${JSON.stringify(startResult)}`);
   const gameId = startResult.gameId;
   const gameState = await getGameState(gameId);
@@ -292,7 +349,7 @@ async function createLancelotGame(variant) {
     await toggleReady(roomId, p.openId, true);
   }
 
-  const startResult = await startGame(roomId);
+  const startResult = await startGame(roomId, hostId);
   if (!startResult.success) throw new Error(`Failed to start: ${JSON.stringify(startResult)}`);
   const gameId = startResult.gameId;
   const gameState = await getGameState(gameId);
@@ -312,12 +369,23 @@ module.exports = {
   makeNickName,
   apiGet,
   apiPost,
+  apiPut,
   createRoom,
   createRoomWithConfig,
+  buildConfigWithSpectator,
   joinRoom,
   getRoom,
   toggleReady,
   leaveRoom,
+  updateSeatNumber,
+  kickPlayer,
+  banSeat,
+  updateRoomConfig,
+  transferOwner,
+  disband,
+  randomSeats,
+  roomStats,
+  cleanupRooms,
   startGame,
   getGameState,
   advancePhase,

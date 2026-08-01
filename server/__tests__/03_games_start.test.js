@@ -69,7 +69,7 @@ describe('03 — Game Start & Role Assignment', () => {
 
     it('should reject start with fewer than 5 players', async () => {
       const setup = await createRoomWithPlayers(4);
-      const res = await startGame(setup.roomId);
+      const res = await startGame(setup.roomId, setup.hostId);
       expect(res.success).toBe(false);
     });
   });
@@ -78,7 +78,7 @@ describe('03 — Game Start & Role Assignment', () => {
     const { roomId, players } = await createRoomWithPlayers(5);
     const { toggleReady } = require('./helpers/testHelper');
     await toggleReady(roomId, players[0].openId, false);
-    const res = await startGame(roomId);
+    const res = await startGame(roomId, players[0].openId);
     expect(res.success).toBe(false);
   });
 

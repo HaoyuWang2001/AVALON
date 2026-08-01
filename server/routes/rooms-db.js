@@ -190,6 +190,12 @@ function createRouter() {
       });
     } catch (error) {
       console.error('离开房间API错误:', error);
+      if (error.message.includes('房间不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+      if (error.message.includes('房主不能离开')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
       res.status(500).json({ 
         success: false, 
         message: error.message || '离开房间失败' 
@@ -266,21 +272,25 @@ function createRouter() {
   // 踢出玩家（房主操作）
   router.post('/kickPlayer', async (req, res) => {
     try {
-      const { roomId, playerId, mode } = req.body;
+      const { roomId, playerId, mode, openId } = req.body;
       
-      if (!roomId || !playerId) {
+      if (!roomId || !playerId || !openId) {
         return res.status(400).json({ 
           success: false, 
           message: '缺少必要参数' 
         });
       }
+
+      const room = await RoomModel.getById(roomId);
+      if (!room) return res.status(404).json({ success: false, message: '房间不存在' });
+      if (room.ownerId !== openId) return res.status(403).json({ success: false, message: '仅房主可操作' });
       
-      const room = await RoomModel.kickPlayer(roomId, playerId, mode || 'room');
+      const updated = await RoomModel.kickPlayer(roomId, playerId, mode || 'room');
       
       emitRoom(roomId);
       res.json({ 
         success: true, 
-        room,
+        room: updated,
         message: mode === 'unseat' ? '已踢到未入座区' : '已踢出房间'
       });
     } catch (error) {
@@ -296,11 +306,18 @@ function createRouter() {
   router.put('/:roomId/config', async (req, res) => {
     try {
       const { roomId } = req.params;
-      const { roomConfig } = req.body;
+      const { roomConfig, openId } = req.body;
 
       if (!roomConfig) {
         return res.status(400).json({ success: false, message: '缺少房间配置' });
       }
+      if (!openId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+
+      const current = await RoomModel.getById(roomId);
+      if (!current) return res.status(404).json({ success: false, message: '房间不存在' });
+      if (current.ownerId !== openId) return res.status(403).json({ success: false, message: '仅房主可操作' });
 
       const room = await RoomModel.updateConfig(roomId, roomConfig);
 
@@ -363,10 +380,16 @@ function createRouter() {
   router.post('/:roomId/banSeat', async (req, res) => {
     try {
       const { roomId } = req.params;
-      const { playerId, banned } = req.body;
-      const room = await RoomModel.banFromSeating(roomId, playerId, banned);
+      const { playerId, banned, openId } = req.body;
+      if (!playerId || openId == null) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+      const room = await RoomModel.getById(roomId);
+      if (!room) return res.status(404).json({ success: false, message: '房间不存在' });
+      if (room.ownerId !== openId) return res.status(403).json({ success: false, message: '仅房主可操作' });
+      const updated = await RoomModel.banFromSeating(roomId, playerId, banned);
       emitRoom(roomId);
-      res.json({ success: true, room, message: banned ? '已禁止上座' : '已允许上座' });
+      res.json({ success: true, room: updated, message: banned ? '已禁止上座' : '已允许上座' });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }

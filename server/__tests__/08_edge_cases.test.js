@@ -47,14 +47,14 @@ describe('08 — Edge Cases & Validation', () => {
         await joinRoom(roomId, pid, i, `P${i}`);
         await toggleReady(roomId, pid, true);
       }
-      const res = await apiPost('/api/games/start', { roomId });
+      const res = await apiPost('/api/games/start', { roomId, openId: uid });
       expect(res.body.success).toBe(false);
     });
 
     it('should reject start when not all ready', async () => {
       const setup = await createRoomWithPlayers(5);
       await toggleReady(setup.roomId, setup.players[1].openId, false);
-      const res = await apiPost('/api/games/start', { roomId: setup.roomId });
+      const res = await apiPost('/api/games/start', { roomId: setup.roomId, openId: setup.players[0].openId });
       expect(res.body.success).toBe(false);
     });
   });
@@ -75,7 +75,7 @@ describe('08 — Edge Cases & Validation', () => {
     });
 
     it('should fail start on nonexistent room', async () => {
-      const res = await apiPost('/api/games/start', { roomId: '000000' });
+      const res = await apiPost('/api/games/start', { roomId: '000000', openId: makeUserId() });
       expect(res.body.success).toBe(false);
     });
 

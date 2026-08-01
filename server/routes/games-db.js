@@ -24,16 +24,30 @@ function emitGame(roomId, gameId) {
 function createRouter() {
   const router = express.Router();
   
-  // 开始游戏
+  // 开始游戏（仅房主）
   router.post('/start', async (req, res) => {
     try {
-      const { roomId } = req.body;
+      const { roomId, openId } = req.body;
       
       if (!roomId) {
         return res.status(400).json({ 
           success: false, 
           message: '缺少房间ID' 
         });
+      }
+      if (!openId) {
+        return res.status(400).json({ 
+          success: false, 
+          message: '缺少必要参数' 
+        });
+      }
+
+      const room = await RoomModel.getById(roomId);
+      if (!room) {
+        return res.status(404).json({ success: false, message: '房间不存在' });
+      }
+      if (room.ownerId !== openId) {
+        return res.status(403).json({ success: false, message: '仅房主可开始游戏' });
       }
       
       const game = await GameModel.start(roomId);

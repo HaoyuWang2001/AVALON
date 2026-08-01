@@ -57,6 +57,18 @@ class RoomModel {
       throw new Error('missionFailDetail 必须是 count 或 binary');
     }
 
+    if (roomConfig.spectator !== undefined && roomConfig.spectator !== null) {
+      if (typeof roomConfig.spectator !== 'object') {
+        throw new Error('spectator 必须是对象');
+      }
+      if (typeof roomConfig.spectator.allow !== 'boolean') {
+        throw new Error('spectator.allow 必须是布尔值');
+      }
+      if (typeof roomConfig.spectator.max !== 'number' || roomConfig.spectator.max < 0 || !Number.isInteger(roomConfig.spectator.max)) {
+        throw new Error('spectator.max 必须是非负整数');
+      }
+    }
+
     return true;
   }
 
@@ -199,6 +211,21 @@ class RoomModel {
   }
   
   /**
+   * 校验观战（seat=-1）是否允许：根据 roomConfig.spectator 判定
+   * @param {Object|null} roomConfig 房间配置
+   * @param {number} observerCount 当前观战人数
+   */
+  static _assertSpectatorAllowed(roomConfig, observerCount) {
+    const spectator = roomConfig && roomConfig.spectator;
+    if (spectator && spectator.allow === false) {
+      throw new Error('该房间不允许观战');
+    }
+    if (spectator && typeof spectator.max === 'number' && spectator.max > 0 && observerCount >= spectator.max) {
+      throw new Error('观战区已满');
+    }
+  }
+
+  /**
    * 加入房间
    * @param {string} roomId 房间ID
    * @param {Object} userInfo 用户信息
@@ -217,12 +244,19 @@ class RoomModel {
     
     try {
       await db.transaction(async (connection) => {
-        const [rooms] = await connection.execute('SELECT game_started FROM rooms WHERE id = ? FOR UPDATE', [roomId]);
+        const [rooms] = await connection.execute('SELECT game_started, room_config FROM rooms WHERE id = ? FOR UPDATE', [roomId]);
         if (rooms.length === 0) throw new Error('房间不存在');
         if (rooms[0].game_started) throw new Error('游戏已开始');
         
         const [alreadyJoined] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND open_id = ?', [roomId, openId]);
         if (alreadyJoined[0].count > 0) throw new Error('已在房间中');
+
+        const roomConfig = rooms[0].room_config ? (typeof rooms[0].room_config === 'string' ? JSON.parse(rooms[0].room_config) : rooms[0].room_config) : null;
+        
+        if (seat === -1) {
+          const [observerCount] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND seat_number = -1', [roomId]);
+          this._assertSpectatorAllowed(roomConfig, observerCount[0].count);
+        }
         
         if (seat >= 1) {
           const [occupiedSeats] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND seat_number = ?', [roomId, seat]);
@@ -248,7 +282,7 @@ class RoomModel {
   }
   
   /**
-   * 离开房间
+   * 离开房间（仅非房主玩家可离开；房主禁止离开，房间任意时刻必须有房主）
    * @param {string} roomId 房间ID
    * @param {string} openId 用户openId
    * @returns {Promise<Object>} 更新后的房间信息
@@ -256,15 +290,19 @@ class RoomModel {
   static async leave(roomId, openId) {
     try {
       await db.transaction(async (connection) => {
+        const [roomRows] = await connection.execute(
+          'SELECT owner_id FROM rooms WHERE id = ? FOR UPDATE',
+          [roomId]
+        );
+        if (roomRows.length === 0) {
+          throw new Error('房间不存在');
+        }
+        if (roomRows[0].owner_id === openId) {
+          throw new Error('房主不能离开房间，请转让房主或解散房间');
+        }
         await connection.execute('DELETE FROM room_players WHERE room_id = ? AND open_id = ?', [roomId, openId]);
         await connection.execute('UPDATE users SET current_room_id = NULL WHERE open_id = ?', [openId]);
-        
-        const [remainingPlayers] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ?', [roomId]);
-        if (remainingPlayers[0].count === 0) {
-          await connection.execute('DELETE FROM rooms WHERE id = ?', [roomId]);
-        } else {
-          await connection.execute('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
-        }
+        await connection.execute('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
       });
       
       return await this.getById(roomId);
@@ -311,6 +349,15 @@ class RoomModel {
   static async updateSeatNumber(roomId, openId, newSeatNumber) {
     try {
       await db.transaction(async (connection) => {
+        const [rooms] = await connection.execute('SELECT room_config FROM rooms WHERE id = ? FOR UPDATE', [roomId]);
+        if (rooms.length === 0) throw new Error('房间不存在');
+        const roomConfig = rooms[0].room_config ? (typeof rooms[0].room_config === 'string' ? JSON.parse(rooms[0].room_config) : rooms[0].room_config) : null;
+
+        if (newSeatNumber === -1) {
+          const [observerCount] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND seat_number = -1', [roomId]);
+          this._assertSpectatorAllowed(roomConfig, observerCount[0].count);
+        }
+
         if (newSeatNumber >= 1) {
           const [banCheck] = await connection.execute(
             'SELECT banned_from_seating FROM room_players WHERE room_id = ? AND open_id = ?',
