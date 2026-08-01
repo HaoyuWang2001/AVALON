@@ -457,6 +457,7 @@ Page({
     this.applyDefaultConfig(n);
     this.computeAll();
     this._configSnapshot = JSON.parse(JSON.stringify(room.roomConfig));
+    this.setData({ logicalPage: 0, swiperPage: 0 });
     if (this.roomPolling) clearInterval(this.roomPolling);
     this.setData({ showConfig: true });
   },

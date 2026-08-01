@@ -113,6 +113,18 @@ class RoomModel {
 
       this.validateRoomConfig(roomConfig);
 
+      const oldRoles = room.roomConfig?.roles || { good: [], evil: [] };
+      const newRoles = roomConfig.roles || { good: [], evil: [] };
+      const oldCount = (oldRoles.good?.length || 0) + (oldRoles.evil?.length || 0);
+      const newCount = (newRoles.good?.length || 0) + (newRoles.evil?.length || 0);
+
+      if (newCount < oldCount) {
+        await db.query(
+          'UPDATE room_players SET seat_number = 0, is_ready = FALSE WHERE room_id = ? AND seat_number >= 1 AND seat_number > ?',
+          [roomId, newCount]
+        );
+      }
+
       await db.query(
         'UPDATE rooms SET room_config = ?, updated_at = NOW() WHERE id = ?',
         [JSON.stringify(roomConfig), roomId]
