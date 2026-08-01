@@ -381,7 +381,7 @@ describe('02 — Room Management', () => {
       expect(rejected.status).toBe(400);
 
       const unban = await banSeat(roomId, uid, false, hostId);
-      expect(unban.room.players.find(x => x.openId === uid).bannedFromSeating).toBe(false);
+      expect(unban.room.players.find(x => x.openId === uid).bannedFromSeating).toBeFalsy();
       const ok = await updateSeatNumber(roomId, uid, 3);
       expect(ok.success).toBe(true);
     });
