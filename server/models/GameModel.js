@@ -263,7 +263,7 @@ class GameModel {
       await db.transaction(async (connection) => {
         // 验证游戏状态和队长身份
         const [game] = await connection.execute(
-          `SELECT current_phase, team_leader_index, room_id,
+          `SELECT current_phase, current_round, team_leader_index, room_id,
                   (SELECT COUNT(*) FROM game_players WHERE game_id = ?) as player_count
            FROM games WHERE id = ? FOR UPDATE`,
           [gameId, gameId]

@@ -72,6 +72,23 @@ function buildMinimalRoomConfig() {
   };
 }
 
+// 标准角色配置（与 role_configurations / GameModel.getRoleConfiguration 一致）
+function buildStandardRoomConfig(playerCount) {
+  const config = buildMinimalRoomConfig();
+  const roles = {
+    5:  { good: ['merlin', 'percival', 'loyal'], evil: ['morgana', 'assassin'] },
+    6:  { good: ['merlin', 'percival', 'loyal', 'loyal'], evil: ['morgana', 'assassin'] },
+    7:  { good: ['merlin', 'percival', 'loyal', 'loyal'], evil: ['morgana', 'assassin', 'oberon'] },
+    8:  { good: ['merlin', 'percival', 'loyal', 'loyal', 'loyal'], evil: ['morgana', 'assassin', 'minion'] },
+    9:  { good: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal'], evil: ['morgana', 'assassin', 'mordred'] },
+    10: { good: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal'], evil: ['morgana', 'assassin', 'mordred', 'oberon'] },
+    11: { good: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'lancelotBlue'], evil: ['morgana', 'mordred', 'oberon', 'lancelotRed'] },
+    12: { good: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'lancelotBlue'], evil: ['morgana', 'assassin', 'mordred', 'oberon', 'lancelotRed'] }
+  };
+  config.roles = roles[playerCount] || config.roles;
+  return config;
+}
+
 async function createRoom(hostId, hostNick) {
   const res = await apiPost('/api/rooms/create', {
     hostOpenId: hostId,
@@ -190,10 +207,12 @@ async function getLatestMessages(roomId, limit) {
  * Create a room with N players, all joined and ready.
  * Returns { roomId, players: [{openId, nickName, seatNumber}], hostId }
  */
-async function createRoomWithPlayers(playerCount) {
+async function createRoomWithPlayers(playerCount, roomConfig) {
   const hostId = makeUserId();
   const hostNick = makeNickName(hostId);
-  const createResult = await createRoom(hostId, hostNick);
+  const createResult = roomConfig
+    ? await createRoomWithConfig(hostId, hostNick, roomConfig)
+    : await createRoom(hostId, hostNick);
   if (!createResult.success) throw new Error(`Failed to create room: ${JSON.stringify(createResult)}`);
   const roomId = createResult.roomId;
   const players = [{ openId: hostId, nickName: hostNick, seatNumber: 1 }];
@@ -218,7 +237,7 @@ async function createRoomWithPlayers(playerCount) {
  * players have openId, nickName, seatNumber, role, side resolved from game state.
  */
 async function createRoomAndStartGame(playerCount) {
-  const { roomId, players, hostId } = await createRoomWithPlayers(playerCount);
+  const { roomId, players, hostId } = await createRoomWithPlayers(playerCount, buildStandardRoomConfig(playerCount));
   const startResult = await startGame(roomId);
   if (!startResult.success) throw new Error(`Failed to start game: ${JSON.stringify(startResult)}`);
   const gameId = startResult.gameId;
