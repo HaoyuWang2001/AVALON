@@ -35,13 +35,20 @@ function buildVision(requester, players, roomConfig) {
   const canIdentify = merlinVision.canIdentify || [];
 
   const seen = [];
-  const add = (p, withRole) => {
+  const add = (p, mode) => {
     if (seen.some(s => s.openId === p.openId)) return;
-    seen.push({ openId: p.openId, ...(withRole ? { role: p.role, side: p.side } : {}) });
+    const entry = { openId: p.openId };
+    if (mode === 'role') {
+      entry.role = p.role;
+      entry.side = p.side;
+    } else if (mode === 'side') {
+      entry.side = p.side;
+    }
+    seen.push(entry);
   };
 
   // 自己恒可见
-  add(requester, true);
+  add(requester, 'role');
   const role = requester.role;
 
   if (EVIL_OPEN_EYES.includes(role)) {
@@ -50,9 +57,9 @@ function buildVision(requester, players, roomConfig) {
       for (const p of players) {
         if (p.openId === requester.openId) continue;
         if (EVIL_OPEN_EYES.includes(p.role)) {
-          add(p, true);
+          add(p, 'role');
         } else if (p.role === LANCELOT_RED && rules.evilsKnowRedLancelot) {
-          add(p, true);
+          add(p, 'role');
         }
       }
     }
@@ -60,7 +67,7 @@ function buildVision(requester, players, roomConfig) {
     // 奥伯伦闭眼：仅当配置允许时可见红兰
     if (rules.oberonKnowsRedLancelot) {
       for (const p of players) {
-        if (p.openId !== requester.openId && p.role === LANCELOT_RED) add(p, true);
+        if (p.openId !== requester.openId && p.role === LANCELOT_RED) add(p, 'role');
       }
     }
   } else if (role === LANCELOT_RED || role === LANCELOT_BLUE) {
@@ -68,19 +75,19 @@ function buildVision(requester, players, roomConfig) {
     if (rules.lancelotsKnowEachOther) {
       const otherRole = role === LANCELOT_RED ? LANCELOT_BLUE : LANCELOT_RED;
       const p = players.find(x => x.role === otherRole);
-      if (p) add(p, true);
+      if (p) add(p, 'role');
     }
   } else if (role === 'percival') {
-    // 派西维尔：见梅林+莫甘娜，不区分谁是谁（不显示身份）
+    // 派西维尔：见梅林+莫甘娜，不区分谁是谁（不显示身份/阵营）
     for (const p of players) {
-      if (p.role === 'merlin' || p.role === 'morgana') add(p, false);
+      if (p.role === 'merlin' || p.role === 'morgana') add(p, 'none');
     }
   } else if (role === 'merlin') {
-    // 梅林：见 canSee 内的坏人角色（莫德雷德不在 canSee 默认），canIdentify 内显示具体身份
+    // 梅林：见 canSee 内的坏人角色（莫德雷德不在 canSee 默认），身份按 canIdentify
     for (const p of players) {
       if (p.openId === requester.openId) continue;
       if (canSee.includes(p.role)) {
-        add(p, canIdentify.includes(p.role));
+        add(p, canIdentify.includes(p.role) ? 'role' : 'side');
       }
     }
   }
