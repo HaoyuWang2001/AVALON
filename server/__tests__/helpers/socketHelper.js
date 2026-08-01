@@ -13,10 +13,19 @@ function createClient(port) {
       forceNew: true
     });
 
-    client.on('connect', () => resolve(client));
-    client.on('connect_error', (err) => reject(err));
+    const timer = setTimeout(() => {
+      client.close();
+      reject(new Error('Socket connection timeout'));
+    }, 5000);
 
-    setTimeout(() => reject(new Error('Socket connection timeout')), 5000);
+    client.on('connect', () => {
+      clearTimeout(timer);
+      resolve(client);
+    });
+    client.on('connect_error', (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
   });
 }
 

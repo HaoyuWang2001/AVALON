@@ -30,6 +30,9 @@ describe('07 — Socket.io Real-time Communication', () => {
 
   it('should broadcast playerJoined on joinRoom', async () => {
     const roomId = 'test_join_room';
+    // Observer joins first so it receives the actor's playerJoined broadcast
+    await joinRoomAndConfirm(clients[1], roomId, 'observer');
+
     const promise = waitForEvent(clients[1], 'playerJoined');
     clients[0].emit('joinRoom', { roomId, playerId: 'player_a' });
     const data = await promise;
@@ -38,8 +41,8 @@ describe('07 — Socket.io Real-time Communication', () => {
 
   it('should broadcast roomUpdated on roomUpdate', async () => {
     const roomId = 'test_room_update';
-    clients[0].emit('joinRoom', { roomId, playerId: 'p1' });
-    clients[1].emit('joinRoom', { roomId, playerId: 'p2' });
+    await joinRoomAndConfirm(clients[1], roomId, 'p2');
+    await joinRoomAndConfirm(clients[0], roomId, 'p1');
 
     const promise = waitForEvent(clients[1], 'roomUpdated');
     clients[0].emit('roomUpdate', { roomId, action: 'toggleReady', playerId: 'p1' });
@@ -49,8 +52,8 @@ describe('07 — Socket.io Real-time Communication', () => {
 
   it('should broadcast gameUpdated on gameUpdate', async () => {
     const roomId = 'test_game_update';
-    clients[0].emit('joinRoom', { roomId, playerId: 'p3' });
-    clients[1].emit('joinRoom', { roomId, playerId: 'p4' });
+    await joinRoomAndConfirm(clients[1], roomId, 'p4');
+    await joinRoomAndConfirm(clients[0], roomId, 'p3');
 
     const promise = waitForEvent(clients[1], 'gameUpdated');
     clients[0].emit('gameUpdate', { roomId, phase: 'teamSelection' });
@@ -60,8 +63,8 @@ describe('07 — Socket.io Real-time Communication', () => {
 
   it('should broadcast newMessage on message', async () => {
     const roomId = 'test_message';
-    clients[0].emit('joinRoom', { roomId, playerId: 'p5' });
-    clients[2].emit('joinRoom', { roomId, playerId: 'p6' });
+    await joinRoomAndConfirm(clients[2], roomId, 'p6');
+    await joinRoomAndConfirm(clients[0], roomId, 'p5');
 
     const promise = waitForEvent(clients[2], 'newMessage');
     clients[0].emit('message', { roomId, content: 'Hello Socket', type: 'text' });
@@ -71,8 +74,8 @@ describe('07 — Socket.io Real-time Communication', () => {
 
   it('should broadcast playerLeft on leaveRoom', async () => {
     const roomId = 'leave_socket_test';
-    clients[0].emit('joinRoom', { roomId, playerId: 'leaver' });
-    clients[1].emit('joinRoom', { roomId, playerId: 'observer' });
+    await joinRoomAndConfirm(clients[1], roomId, 'observer');
+    await joinRoomAndConfirm(clients[0], roomId, 'leaver');
 
     const promise = waitForEvent(clients[1], 'playerLeft');
     clients[0].emit('leaveRoom', { roomId, playerId: 'leaver' });
@@ -87,3 +90,15 @@ describe('07 — Socket.io Real-time Communication', () => {
     expect(extra.connected).toBe(false);
   });
 });
+
+/**
+ * Emit joinRoom and wait for the server's own playerJoined confirmation.
+ * Since socket.io delivers events per-connection in order, awaiting the
+ * joining client's own playerJoined guarantees the server has processed the
+ * join before the next step. This avoids cross-socket ordering races.
+ */
+function joinRoomAndConfirm(client, roomId, playerId) {
+  const joined = waitForEvent(client, 'playerJoined');
+  client.emit('joinRoom', { roomId, playerId });
+  return joined;
+}

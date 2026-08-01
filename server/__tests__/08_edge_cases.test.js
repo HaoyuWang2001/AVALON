@@ -102,12 +102,12 @@ describe('08 — Edge Cases & Validation', () => {
 
     it('should reject advancePhase on nonexistent game', async () => {
       const res = await advancePhase('00000000-0000-0000-0000-000000000000');
-      expect(res.body.success).toBe(false);
+      expect(res.success).toBe(false);
     });
 
     it('should reject assassinate on nonexistent game', async () => {
       const res = await assassinate('00000000-0000-0000-0000-000000000000', 'a', 'b');
-      expect(res.body.success).toBe(false);
+      expect(res.success).toBe(false);
     });
 
     it('should reject submitNomination when not teamSelection', async () => {

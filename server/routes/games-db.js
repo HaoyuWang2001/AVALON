@@ -3,6 +3,19 @@ const express = require('express');
 const { GameModel, RoomModel } = require('../models');
 const socket = require('../config/socket');
 
+// mysql2 默认会把 JSON 列解析为 JS 对象，因此读取时需兼容 string 与 object
+function parseJson(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch (e) {
+      return value;
+    }
+  }
+  return value;
+}
+
 function emitGame(roomId, gameId) {
   const io = socket.getIO();
   if (io) io.to(roomId).emit('gameUpdated', { roomId, gameId });
@@ -408,7 +421,7 @@ function createRouter() {
 
       const parsedHistory = history.map(record => ({
         ...record,
-        gameResult: record.gameResult ? JSON.parse(record.gameResult) : null
+        gameResult: record.gameResult ? parseJson(record.gameResult) : null
       }));
 
       res.json({ 
@@ -447,7 +460,7 @@ function createRouter() {
 
       const parsed = recentGames.map(g => ({
         ...g,
-        gameResult: g.gameResult ? JSON.parse(g.gameResult) : null
+        gameResult: g.gameResult ? parseJson(g.gameResult) : null
       }));
 
       res.json({ 

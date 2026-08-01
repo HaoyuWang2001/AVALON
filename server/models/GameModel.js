@@ -2,6 +2,19 @@
 const db = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
 
+// mysql2 默认会把 JSON 列解析为 JS 对象，因此读取时需兼容 string 与 object
+function parseJson(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch (e) {
+      return value;
+    }
+  }
+  return value;
+}
+
 class GameModel {
   /**
    * 开始游戏
@@ -151,13 +164,13 @@ class GameModel {
       
       // 解析JSON字段
       if (game.nominatedTeam) {
-        game.nominatedTeam = JSON.parse(game.nominatedTeam);
+        game.nominatedTeam = parseJson(game.nominatedTeam);
       }
       if (game.gameResult) {
-        game.gameResult = JSON.parse(game.gameResult);
+        game.gameResult = parseJson(game.gameResult);
       }
       if (game.assassination) {
-        game.assassination = JSON.parse(game.assassination);
+        game.assassination = parseJson(game.assassination);
       }
       
       // 获取游戏玩家
@@ -215,7 +228,7 @@ class GameModel {
         round: result.round,
         success: result.success === 1,
         failCount: result.failCount,
-        team: result.team ? JSON.parse(result.team) : []
+        team: result.team ? parseJson(result.team) : []
       }));
       
       // 如果指定了玩家，返回玩家角色
@@ -250,7 +263,7 @@ class GameModel {
       await db.transaction(async (connection) => {
         // 验证游戏状态和队长身份
         const [game] = await connection.execute(
-          `SELECT current_phase, team_leader_index, 
+          `SELECT current_phase, team_leader_index, room_id,
                   (SELECT COUNT(*) FROM game_players WHERE game_id = ?) as player_count
            FROM games WHERE id = ? FOR UPDATE`,
           [gameId, gameId]
@@ -264,10 +277,12 @@ class GameModel {
           throw new Error('当前不是队伍选择阶段');
         }
         
-        // 验证队长身份
+        // 验证队长身份（与 startGame 分配队长时使用相同的座位号排序）
         const [players] = await connection.execute(
-          `SELECT open_id FROM game_players WHERE game_id = ? ORDER BY open_id`,
-          [gameId]
+          `SELECT gp.open_id FROM game_players gp
+           LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
+           ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
+          [game[0].room_id]
         );
         
         const teamLeaderIndex = game[0].team_leader_index;
@@ -427,7 +442,7 @@ class GameModel {
         }
 
         // 验证只有任务队成员才能投票
-        const nominatedTeam = game[0].nominated_team ? JSON.parse(game[0].nominated_team) : [];
+        const nominatedTeam = game[0].nominated_team ? parseJson(game[0].nominated_team) : [];
         if (!nominatedTeam.includes(openId)) {
           throw new Error('只有任务队成员才能投票');
         }
