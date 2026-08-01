@@ -22,6 +22,8 @@ services:
       - WX_APPID=test_appid
       - WX_SECRET=test_secret
     command: ["npm", "test"]
+    volumes:
+      - ./mysql/DDL.sql:/mysql/DDL.sql:ro
     networks:
       - avalon-net
 
