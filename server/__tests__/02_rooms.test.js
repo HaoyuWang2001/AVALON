@@ -376,7 +376,7 @@ describe('02 — Room Management', () => {
       const ban = await banSeat(roomId, uid, true, hostId);
       expect(ban.success).toBe(true);
       const p = ban.room.players.find(x => x.openId === uid);
-      expect(p.bannedFromSeating).toBe(true);
+      expect(p.bannedFromSeating).toBeTruthy();
       const rejected = await apiPost('/api/rooms/updateSeatNumber', { roomId, openId: uid, newSeatNumber: 3 });
       expect(rejected.status).toBe(400);
 

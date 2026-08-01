@@ -184,7 +184,7 @@ async function roomStats() {
 }
 
 async function cleanupRooms(hours) {
-  const res = await apiPost('/api/rooms/cleanup', { hours: hours || 24 });
+  const res = await apiPost('/api/rooms/cleanup', { hours: hours == null ? 24 : hours });
   return res.body;
 }
 
