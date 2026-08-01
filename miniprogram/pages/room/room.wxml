@@ -511,6 +511,5 @@
         </view>
         <view class="nav-btn btn-square {{logicalPage === visiblePages.length - 1 ? 'nav-disabled' : ''}}" bindtap="nextPage">下一步 ▶</view>
       </view>
-      </view>
-    </scroll-view>
+    </view>
   </view>
