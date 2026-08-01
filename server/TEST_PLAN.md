@@ -6,6 +6,7 @@
 
 - 覆盖 5-12 人全部基础版型，对每个玩家数分别跑完整游戏流程。
 - 覆盖单 Lancelot 变体配置（仅 lancelotBlue 或仅 lancelotRed）。
+- 覆盖特殊规则：强制发车（流车阈值）、湖仙验人、兰斯洛特身份转换及其对投票选项的影响。
 - 覆盖两条胜负路径：好人胜利（3 次任务成功 + 刺客刺杀阶段未命中梅林）与坏人胜利（3 次任务失败 或 刺杀命中梅林）。
 - 覆盖 Socket.io 实时通信广播。
 - 覆盖边界与并发场景。
@@ -72,9 +73,98 @@ globalTeardown:
   4. 删除临时文件
 ```
 
-## 3. 游戏规则与状态机
+## 3. 完整游戏状态与主流程
 
-### 3.1 角色配置
+> 本章描述游戏正常运行时的完整状态与流程，是后续各测试阶段（§5）的设计依据。
+> 各测试套件的**具体测试目标**由人工决定；本文档先固化规则本身。
+
+### 3.1 阶段定义
+
+| 阶段 | 说明 |
+|------|------|
+| roleReveal | 查看身份；生成首位车长；湖仙落位；角色互知信息在此固化 |
+| discussion | 车长预选车队、指定发言顺序、轮流发言（计时仅前端）、车长总结发言 |
+| submitNomination（动作） | 车长确定车队，调用后直接进入 teamVote，不单独停留 |
+| teamVote | 全体玩家投票（approve/reject）；>半数发车，≤半数流车 |
+| missionVote | 车上成员投 success/fail（判定见 §4.3），任务结果驱动进入下一轮 |
+| lakeInspection（子阶段） | 湖仙验人；仅当湖仙激活且触发条件满足时插入，阻塞 |
+| assassination | 好人 3 次任务成功后进入；刺客/莫甘娜开刀 |
+| gameEnd | 游戏结束，房间重置 |
+
+### 3.2 主流程状态机
+
+```
+roleReveal → discussion → [submitNomination] → teamVote
+  ├─ 发车(>半数) → missionVote
+  │     ├─ 成功≥3 → assassination →[assassinate]→ gameEnd
+  │     ├─ 失败≥3 → gameEnd (evil)
+  │     └─ 否则 → 轮次转换触发链 → discussion(下一轮, 号牌+1)
+  └─ 流车(≤半数) → discussion(round 不变, 号牌+1, 流车数+1)
+       └─ 流车数达 maxFailedNominations → 强制发车(见 3.4.1)
+```
+
+#### 轮次转换触发链（发车成功后、进入下一轮 discussion 前，顺序固定）
+
+```
+完成轮次 r ∈ [ladyOfTheLakeRound, 4] 且启用湖仙:
+  ① 湖仙验人(阻塞 lakeInspection 子阶段) → 持有者验人/跳过 → 令牌传给被查验者
+完成轮次 r ∈ [lancelotSwapRound, 4] 且存在兰斯洛特:
+  ② 抽卡 1 张(不放回) → 抽中转则更新阵营(见 3.4.3)
+→ 进入下一轮 discussion
+```
+
+### 3.3 每轮详流程（discussion）
+
+- 车长预选车队：任意人数/可空；本局玩家可见、**不入库**、可随时随意更改（内存态 + socket 广播）。
+- 指定发言顺序：由车长选择，服务端跟踪当前发言人。
+- 轮流发言：按序进行；若配置 `limits.speechTimeout`，由**前端倒计时**（服务端不下发 deadline、不强制打断；测试不覆盖计时）。
+- 车长总结发言。
+- 车长正式选车：`submitNomination`（动作）→ teamVote。
+
+### 3.4 特殊规则
+
+#### 3.4.1 强制发车
+
+流车数达 `rules.maxFailedNominations` 后，下一车由**在任车主**强制发车：
+
+- 跳过 discussion 与 teamVote，仅 submitNomination → missionVote。
+- 任务结束后进入下一轮，流车数重置为 0。
+- 游戏状态需暴露 `forcedSend` 标志供前端识别。
+
+#### 3.4.2 湖仙（Lady of the Lake）
+
+- 激活：`rules.ladyOfTheLake === true`；触发窗口为**完成轮次 r ∈ [ladyOfTheLakeRound, 4]** 的每次轮次转换。
+- 落位：初始持有者 = 首位车长号牌 - 1（取模回绕到 N）。
+- 验人：持有者选择一名**未当过湖仙**的在局玩家，获知其**当前阵营**（good/evil，不显示具体身份）；结果仅持有者可见。
+- 传递：查验后令牌**传给被查验者**；可跳过（令牌不传递、继续持有）。
+- 终止：当全部在局玩家都当过湖仙后，湖仙停止触发。
+
+#### 3.4.3 兰斯洛特（Lancelot）
+
+- 触发窗口：**完成轮次 r ∈ [lancelotSwapRound, 4]** 的每次轮次转换抽卡 1 张（不放回）。
+- 卡组：默认 2 张转换 / 5 张不转（共 7 张）；窗口内最多抽 4 次，局内不会抽空；后续比例由房主配置。
+- 单兰斯洛特：抽中转换卡 → 该兰斯洛特阵营翻转。
+- 双兰斯洛特：蓝红两兰斯洛特**始终异侧**；抽中转换卡 → 同时互换（蓝→坏、红→好）。
+- 转换效果：更新 `game_players.side`；**mission-fail 投票权限按当前阵营判定**（转换后 lancelotBlue 可投 fail、lancelotRed 不可投 fail）——即"投票选项变化"。
+- 互知固化：对其他角色的知晓信息在 roleReveal 阶段**固化**，不随兰斯洛特转换更新。
+
+#### 3.4.4 触发顺序
+
+湖仙验人在前、兰斯洛特抽卡在后（见 §3.2 触发链）。
+
+### 3.5 游戏内完整状态
+
+- **DB 持久化**：`games`（phase/round/teamLeaderIndex/nominatedTeam/failedNominations/assassination/gameResult）、`game_players`（role/side，**side 可更新**）、`votes`、`mission_results`、`role_configurations`。
+- **内存态（不入库，游戏结束清空）**：讨论态 `preTeam`/`speakingOrder`/`currentSpeaker`；湖仙 `holder`/`history`；`forcedSend` 标志。刷新可查（`getGameState` 合并返回）。
+
+### 3.6 首位车长与湖仙落位
+
+- 首位车长：`teamLeaderIndex = 当前时钟分钟 % 玩家人数`（开局即 roleReveal 阶段生成，此后流车/进入下一轮时号牌 +1 轮转）。
+- 湖仙初始持有者 index = `(teamLeaderIndex - 1 + N) % N`（即首位车长号牌 - 1，取模回绕）。
+
+## 4. 游戏规则与配置
+
+### 4.1 角色配置
 
 #### 标准配置（5-12 人）
 
@@ -98,7 +188,7 @@ globalTeardown:
 | 仅 lancelotBlue | merlin, percival, loyal, loyal, loyal, lancelotBlue, morgana, assassin, mordred, oberon | 6 | 4 |
 | 仅 lancelotRed | merlin, percival, loyal, loyal, loyal, lancelotRed, morgana, assassin, mordred, oberon | 5 | 5 |
 
-### 3.2 队伍大小
+### 4.2 队伍大小
 
 | N | R1 | R2 | R3 | R4 | R5 |
 |---|----|----|----|----|----|
@@ -111,17 +201,18 @@ globalTeardown:
 | 11 | 3 | 4 | 5 | 6 | 6 |
 | 12 | 3 | 4 | 5 | 6 | 6 |
 
-### 3.3 投票规则
+### 4.3 投票规则
 
 #### 队伍投票（castVote）
 
 全体 N 人参与投票（approve/reject）。
-- approve 多数 → 进入任务投票阶段
-- reject 多数 → leader 轮转，回 teamSelection
+- approve > 半数（发车）→ 进入任务投票阶段 missionVote
+- approve ≤ 半数（流车）→ leader 号牌 +1 轮转，回 discussion（round 不变，流车数 +1）；流车数达阈值触发强制发车（见 §3.4.1）
 
 #### 任务投票（castMissionVote）
 
-仅被提名的任务队成员参与投票（success/fail）。仅坏人角色可投 fail。
+仅被提名的任务队成员参与投票（success/fail）。仅**当前阵营为 evil** 的成员可投 fail
+（兰斯洛特发生身份转换后，按 `game_players.side` 当前阵营判定，而非角色名）。
 
 任务失败判定（**一张坏票即失败**，除保护轮外）：
 
@@ -138,7 +229,7 @@ globalTeardown:
 > 说明：仅 ≥7 人局第 4 轮是保护轮（需 2 张坏票才失败）。其余所有轮次 —— 含 5-6 人局
 > 的全部轮次、以及 7+ 人局的第 1/2/3/5 轮 —— 均为 1 张坏票即任务失败。
 
-### 3.4 胜负条件
+### 4.4 胜负条件
 
 | 结果 | 条件 |
 |------|------|
@@ -146,7 +237,7 @@ globalTeardown:
 | 坏人胜 | 3 次任务失败 → gameEnd (evil) |
 | 坏人胜 | 刺杀命中梅林 → gameEnd (evil) |
 
-### 3.5 刺杀梅林机制
+### 4.5 刺杀梅林机制
 
 #### 刺杀者
 
@@ -174,30 +265,7 @@ globalTeardown:
 
 > **后续扩展**（暂未实现）：房间配置中增加"允许多次开刀"选项。启用后，刺客可多次尝试直到刺中梅林；未命中时游戏留在 assassination 阶段，刺客可再次发起。
 
-### 3.6 状态机
-
-```
-roleReveal →[advancePhase]→ teamSelection →[submitNomination]→ teamVote
-  →[castVote 全员，approve 多]→ missionVote
-  →[castVote 全员，reject 多]→ teamSelection (leader 轮转)
-
-missionVote →[castMissionVote 仅任务队]:
-  ├─ 成功≥3 → assassination 阶段
-  ├─ 失败≥3 → gameEnd (evil)
-  └─ 否则 → teamSelection (下一轮, leader 轮转)
-
-任意非gameEnd阶段 →[assassinate]→ 强制进入 assassination 阶段
-  ├─ 命中梅林 → gameEnd (evil)
-  └─ 未命中   → gameEnd (good)
-
-assassination 阶段（好人3次成功后自动进入 或 刺客主动发起）:
-  →[assassinate 命中]→ gameEnd (evil)
-  →[assassinate 未中]→ gameEnd (good)
-
-gameEnd →[end]→ 游戏结束，房间重置
-```
-
-## 4. 测试阶段
+## 5. 测试阶段
 
 ### 阶段 0：健康检查 — `01_health.test.js`
 
@@ -232,12 +300,15 @@ gameEnd →[end]→ 游戏结束，房间重置
 | 未全 ready 拒绝 | 有人未 ready → start 失败 |
 | 成功启动 | N 人全 ready → `gameId` 为 UUID |
 | 游戏状态 | `getGameState(gameId)` → `players.length === N` |
-| 初始阶段 | `currentPhase === 'roleReveal'`，`currentRound === 1`，`teamLeaderIndex === 0` |
+| 初始阶段 | `currentPhase === 'roleReveal'`，`currentRound === 1`，`teamLeaderIndex === 当前分钟 % N`（容差 ±1） |
 | 角色分配 | 每玩家有 role 和 side，`side ∈ {good, evil}` |
 | 至少 2 坏人 | `evil count >= 2` |
 | 玩家角色查询 | `getGameState(gameId, openId)` 返回 `playerRole` 与该玩家 role 一致 |
-| advancePhase | `roleReveal → teamSelection`，第二次调用失败 |
+| advancePhase | `roleReveal → discussion`，第二次调用失败 |
 | 不存在游戏 | `getGameState('invalid-uuid')` → 404 |
+
+> **确定性（首位车长）**：`teamLeaderIndex = 当前时钟分钟 % N`。测试在 startGame 前记录分钟 `m`，
+> 断言 `teamLeaderIndex ∈ { m % N, (m+1) % N }`（容差 ±1，容忍跨分钟竞态）。
 
 ### 阶段 2b：单 Lancelot 变体 — `03b_lancelot_variant.test.js`
 
@@ -257,14 +328,14 @@ gameEnd →[end]→ 游戏结束，房间重置
 ### 阶段 3a：好人胜利完整流程 — `04_games_flow_good.test.js`（参数化 5-12）
 
 对每个 N，完整走完一局好人胜。房间由 `createRoomAndStartGame(N)` 创建，使用**按人数的标准角色板**
-（5-12 人见 §3.1；11 人板无 assassin，由 morgana 行使刺杀）。
+（5-12 人见 §4.1；11 人板无 assassin，由 morgana 行使刺杀）。
 
 ```
-createRoomAndStartGame(N) → advancePhase(gameId)
+createRoomAndStartGame(N) → advancePhase(gameId)   // roleReveal → discussion
 → 循环:
     leader = players[teamLeaderIndex]
     teamSize = TEAM_SIZES[N][currentRound-1]
-    submitNomination(gameId, leader.openId, team)
+    submitNomination(gameId, leader.openId, team)   // 正式选车 → teamVote
     全员 castVote: 多数 approve
     仅任务队成员 castMissionVote: 全投 success
     若 7+ 人且 R4，验证双重失败规则不触发（全投 success 时 failCount=0）
@@ -282,11 +353,14 @@ createRoomAndStartGame(N) → advancePhase(gameId)
 - `gameResult.winner === 'good'`
 - `missionResults.filter(success).length >= 3`
 
+> 说明：标准 11/12 人板含兰斯洛特，轮次转换时抽卡自动发生（§3.4.3），因全员投 success 不受影响；
+> 若房间配置启用湖仙，轮次转换时需先驱动 `lakeInspection` 子阶段（§3.4.2）后再继续。
+
 ### 阶段 3b：坏人胜利路径 — `05_games_flow_evil.test.js`（参数化 [5, 10]）
 
 **路径 1：3 次任务失败**
 ```
-createRoomAndStartGame(N) → advancePhase
+createRoomAndStartGame(N) → advancePhase   // roleReveal → discussion
 → 循环:
     leader 提名尽量包含坏人角色（普通轮至少 1 名即失败；7+ 保护轮需 ≥2 名）
     全员 castVote('approve')
@@ -301,7 +375,7 @@ createRoomAndStartGame(N) → advancePhase
 createRoomAndStartGame(N) → advancePhase
 → 找到刺客角色玩家（assassin 或 11 人时的 morgana）
 → 找到 merlin 角色玩家
-→ 刺客在 teamSelection 阶段直接发起刺杀梅林
+→ 刺客在 discussion 阶段直接发起刺杀梅林
 → 游戏强制进入 assassination 阶段 → 命中 → gameEnd, winner='evil'
 ```
 
@@ -309,6 +383,19 @@ createRoomAndStartGame(N) → advancePhase
 - 好人玩家发起刺杀被拒（非刺客/非莫甘娜）
 - 游戏结束后刺杀被拒
 - 11 人局验证莫甘娜可发起刺杀
+
+### 阶段 3c：特殊规则针对性 E2E（目标用例示例，具体套件目标由人工决定）
+
+针对独立流程构造完整端到端用例：
+
+- **强制发车**：连续流车至 `maxFailedNominations`，验证下一车由在任车主强制提交、跳过 teamVote 直接 missionVote，且流车数重置。
+- **湖仙验人**：激活轮次正确性；持有者验人返回目标**当前阵营**且仅持有者可见；不可查已当过湖仙者；每轮一次；令牌传给被查验者；全员当过湖仙后停止。
+- **兰斯洛特（1 个）**：仅 lancelotBlue 或仅 lancelotRed 时，抽中转换卡则阵营翻转，mission-fail 投票选项随之变化。
+- **兰斯洛特（2 个）**：蓝红始终异侧；抽中转换卡则同时互换（蓝→坏、红→好）。
+- **兰斯洛特转换后投票选项**：转换后 lancelotBlue 可投 fail、lancelotRed 不可投 fail（权限按当前阵营）。
+
+> **确定性（兰斯洛特抽卡）**：抽卡是随机（默认 2 转/5 不转）。针对性测试用
+> `jest.spyOn(Math,'random')` 在触发前固定返回值，强制抽中/未抽中转换卡。
 
 ### 阶段 4：消息系统 — `06_messages.test.js`
 
@@ -370,9 +457,9 @@ createRoomAndStartGame(N) → advancePhase
 | getTeamSize | 5/8/12 人全表验证 |
 | shuffleArray | 长度不变、元素不变、不修改原数组 |
 
-## 5. 测试基础设施
+## 6. 测试基础设施
 
-### 5.1 文件清单
+### 6.1 文件清单
 
 | 文件 | 用途 |
 |------|------|
@@ -387,7 +474,7 @@ createRoomAndStartGame(N) → advancePhase
 | `server/__tests__/helpers/socketHelper.js` | Socket.io 客户端封装 |
 | `server/jest.config.js` | Jest 配置 |
 
-### 5.2 测试辅助函数
+### 6.2 测试辅助函数
 
 `testHelper.js` 提供：
 
@@ -406,10 +493,10 @@ createRoomAndStartGame(N) → advancePhase
 | `leaveRoom(roomId, userId)` | 退出房间 |
 | `startGame(roomId)` | 启动游戏，返回 `{ gameId, game }` |
 | `getGameState(gameId, openId?)` | 获取游戏状态 |
-| `advancePhase(gameId)` | 推进 roleReveal → teamSelection |
-| `submitNomination(gameId, openId, team)` | 提名队伍 |
+| `advancePhase(gameId)` | 推进 roleReveal → discussion |
+| `submitNomination(gameId, openId, team)` | 正式选车（discussion → teamVote） |
 | `castVote(gameId, openId, vote)` | 队伍投票（全员） |
-| `castMissionVote(gameId, openId, vote, role)` | 任务投票（仅任务队） |
+| `castMissionVote(gameId, openId, vote, role)` | 任务投票（仅任务队；按当前阵营判定） |
 | `assassinate(gameId, killerOpenId, targetOpenId)` | 刺杀梅林（刺客或莫甘娜发起） |
 | `endGame(gameId)` | 结束游戏 |
 | `sendMessage(roomId, openId, nick, content, type)` | 发送消息 |
@@ -417,7 +504,11 @@ createRoomAndStartGame(N) → advancePhase
 | `createRoomWithPlayers(n, roomConfig?)` | 创建 N 人房间并全 ready（可选自定义 roomConfig） |
 | `createRoomAndStartGame(n)` | 创建 N 人房间 + 启动游戏（使用**按人数的标准角色板**，11 人无 assassin、莫甘娜开刀），返回含 gameId 和玩家角色 |
 
-### 5.3 测试文件清单
+> 规划中（随新流程 §3 实现后补充）：`setSpeakingOrder` / `advanceSpeaker` / `preTeam` /
+> `lakeInspect` / `lakePass` 及兰斯洛特抽卡控制 `mockLancelotDraw(switchCard)`（内部用
+> `jest.spyOn(Math,'random')` 固定随机）。
+
+### 6.3 测试文件清单
 
 | 文件 | 阶段 | 参数化 |
 |------|------|--------|
@@ -432,9 +523,9 @@ createRoomAndStartGame(N) → advancePhase
 | `08_edge_cases.test.js` | 5 | — |
 | `09_game_logic.test.js` | 6 | — |
 
-## 6. 执行方式
+## 7. 执行方式
 
-### 6.1 前置条件
+### 7.1 前置条件
 
 1. MySQL 容器（`avalon-mysql`）运行中，在 `avalon-net` 网络。
 2. 一次性创建测试用户：
@@ -444,19 +535,19 @@ docker exec -i avalon-mysql mysql -u root -p${MYSQL_ROOT_PASSWORD} \
   < scripts/init-test-user.sql
 ```
 
-### 6.2 运行测试
+### 7.2 运行测试
 
 ```bash
 docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
 ```
 
-### 6.3 清理
+### 7.3 清理
 
 ```bash
 docker compose -f docker-compose.test.yml down
 ```
 
-### 6.4 本地开发（需本地 MySQL）
+### 7.4 本地开发（需本地 MySQL）
 
 ```bash
 cd server
@@ -464,7 +555,7 @@ export DB_HOST=127.0.0.1 DB_PORT=3306 DB_USER=root DB_ROOT_PASS=... DB_NAME=aval
 npm test
 ```
 
-## 7. API 接口索引
+## 8. API 接口索引
 
 ### 房间 API（`/api/rooms`）
 
@@ -486,13 +577,18 @@ npm test
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/start` | 启动游戏 → 返回 gameId |
-| GET | `/:gameId` | 获取状态 |
-| POST | `/:gameId/advancePhase` | 推进阶段 |
-| POST | `/submitNomination` | 提名队伍 |
+| POST | `/start` | 启动游戏 → 返回 gameId（含首位车长/湖仙落位） |
+| GET | `/:gameId` | 获取状态（合并内存态：preTeam/发言序/湖仙/forcedSend） |
+| POST | `/:gameId/advancePhase` | 推进 roleReveal → discussion |
+| POST | `/setSpeakingOrder` | 车长指定发言顺序（仅车长；内存态） |
+| POST | `/advanceSpeaker` | 推进当前发言人（前端触发；内存态） |
+| POST | `/preTeam` | 更新车长预点车（仅车长；任意人数，不入库） |
+| POST | `/submitNomination` | 正式选车（discussion → teamVote） |
 | POST | `/castVote` | 队伍投票（全员） |
 | POST | `/castMissionVote` | 任务投票（仅任务队） |
 | POST | `/:gameId/assassinate` | 刺杀梅林（仅刺客/莫甘娜；强制进入刺杀阶段；执行后 gameEnd） |
+| POST | `/:gameId/lake/inspect` | 湖仙验人（仅持有者；返回目标当前阵营） |
+| POST | `/:gameId/lake/pass` | 传递湖仙令牌（默认被查验者/下一位） |
 | POST | `/end` | 结束游戏 |
 | GET | `/stats/summary` | 统计 |
 | GET | `/history/:roomId` | 历史 |
@@ -529,10 +625,15 @@ npm test
 | S→C | `gameUpdated` | 广播更新 |
 | C→S | `message` | 发送消息 |
 | S→C | `newMessage` | 广播消息 |
+| C→S | `preTeam` | 预点车变更（房间可见，不入库） |
+| S→C | `preTeamUpdated` | 广播预点车 |
+| S→C | `speakerChanged` | 广播当前发言人 |
+| S→C | `lakeUpdated` | 广播湖仙状态（持有者/已用） |
+| S→C | `forcedSend` | 广播强制发车状态 |
 
-## 8. 刺杀机制详细设计
+## 9. 刺杀机制详细设计
 
-### 8.1 刺杀者判定
+### 9.1 刺杀者判定
 
 ```
 查找游戏中 role === 'assassin' 的玩家:
@@ -542,7 +643,7 @@ npm test
        └─ 不存在 → 无刺杀者（理论上不应发生）
 ```
 
-### 8.2 assassinate API 行为
+### 9.2 assassinate API 行为
 
 ```
 POST /api/games/:gameId/assassinate
@@ -564,7 +665,7 @@ POST /api/games/:gameId/assassinate
      → gameResult = { winner: 'good', reason: '刺杀未命中梅林' }
 ```
 
-### 8.3 好人 3 次任务成功后的处理
+### 9.3 好人 3 次任务成功后的处理
 
 ```
 castMissionVote 中 successCount >= 3:
@@ -572,7 +673,7 @@ castMissionVote 中 successCount >= 3:
   → 等待刺客调用 assassinate API
 ```
 
-### 8.4 后续扩展（暂未实现）
+### 9.4 后续扩展（暂未实现）
 
 | 选项 | 说明 |
 |------|------|
