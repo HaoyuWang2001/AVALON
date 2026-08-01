@@ -73,8 +73,7 @@
         <view wx:elif="{{!item.occupied}}" class="seat-action">
           <text wx:if="{{currentUser && (currentUser.seatNumber < 1 || !currentUserReady)}}" class="btn-round btn-purple" catchtap="takeSeat" data-seat="{{item.number}}">入座</text>
       </view>
-    </scroll-view>
-  </view>
+    </view>
     <view wx:else class="empty-hint">等待配置房间...</view>
   </view>
 
@@ -91,6 +90,7 @@
         <text class="waiting-name">{{item.nickName || item.wxNickName || '玩家'}}</text>
       </view>
     </view>
+    </scroll-view>
   </view>
 
   <!-- Card 5: Spectator Area -->
@@ -511,6 +511,6 @@
         </view>
         <view class="nav-btn btn-square {{logicalPage === visiblePages.length - 1 ? 'nav-disabled' : ''}}" bindtap="nextPage">下一步 ▶</view>
       </view>
-    </view>
+      </view>
+    </scroll-view>
   </view>
-</view>
