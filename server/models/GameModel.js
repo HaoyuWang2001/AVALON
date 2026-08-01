@@ -28,6 +28,33 @@ const LANCELOT_BLUE = 'lancelotBlue';
  * @param {Object|null} roomConfig 房间配置
  * @returns {Array<{openId, role?, side?}>} seen 列表
  */
+/**
+ * 兰斯洛特身份转换抽卡：完成轮次 ∈ [lancelotSwapRound, 4] 时触发。
+ * 默认卡组 2 张转换 / 5 张不转（Math.random < 2/7 视为抽中转换）。
+ * 单兰翻转；双兰（初始异侧）同时互换。
+ */
+async function maybeLancelotSwap(connection, gameId, completedRound, rules) {
+  const swapRound = rules.lancelotSwapRound;
+  if (typeof swapRound !== 'number' || completedRound < swapRound || completedRound > 4) return;
+
+  const [lancelots] = await connection.execute(
+    `SELECT open_id, side FROM game_players WHERE game_id = ? AND role IN ('lancelotBlue','lancelotRed')`,
+    [gameId]
+  );
+  if (lancelots.length === 0) return;
+
+  const switched = Math.random() < (2 / 7);
+  if (!switched) return;
+
+  for (const l of lancelots) {
+    const newSide = l.side === 'good' ? 'evil' : 'good';
+    await connection.execute(
+      'UPDATE game_players SET side = ? WHERE game_id = ? AND open_id = ?',
+      [newSide, gameId, l.open_id]
+    );
+  }
+}
+
 function buildVision(requester, players, roomConfig) {
   const rules = (roomConfig && roomConfig.rules) || {};
   const merlinVision = (roomConfig && roomConfig.merlinVision) || {};
@@ -52,20 +79,20 @@ function buildVision(requester, players, roomConfig) {
   const role = requester.role;
 
   if (EVIL_OPEN_EYES.includes(role)) {
-    // 睁眼狼互知（evilKnowsEachOther）；oberon 互隐；lancelotRed 视 evilsKnowRedLancelot
+    // 睁眼狼互知（evilKnowsEachOther）；oberon 互隐；lancelotRed 视 evilsKnowRedLancelot（默认 true）
     if (rules.evilKnowsEachOther) {
       for (const p of players) {
         if (p.openId === requester.openId) continue;
         if (EVIL_OPEN_EYES.includes(p.role)) {
           add(p, 'role');
-        } else if (p.role === LANCELOT_RED && rules.evilsKnowRedLancelot) {
+        } else if (p.role === LANCELOT_RED && rules.evilsKnowRedLancelot !== false) {
           add(p, 'role');
         }
       }
     }
   } else if (role === OBERON) {
-    // 奥伯伦闭眼：仅当配置允许时可见红兰
-    if (rules.oberonKnowsRedLancelot) {
+    // 奥伯伦闭眼：仅当配置允许时可见红兰（默认 true）
+    if (rules.oberonKnowsRedLancelot !== false) {
       for (const p of players) {
         if (p.openId !== requester.openId && p.role === LANCELOT_RED) add(p, 'role');
       }
@@ -544,7 +571,7 @@ class GameModel {
       await db.transaction(async (connection) => {
         // 获取游戏状态
         const [game] = await connection.execute(
-          `SELECT current_phase, current_round, team_leader_index, nominated_team,
+          `SELECT current_phase, current_round, team_leader_index, nominated_team, room_id,
                   (SELECT COUNT(*) FROM game_players WHERE game_id = ?) as player_count
            FROM games WHERE id = ? FOR UPDATE`,
           [gameId, gameId]
@@ -564,11 +591,32 @@ class GameModel {
           throw new Error('只有任务队成员才能投票');
         }
 
-        // 验证坏人才能投失败票
-        if (vote === 'fail') {
-          const isEvil = ['mordred', 'morgana', 'assassin', 'minion', 'oberon', 'lancelotRed'].includes(playerRole);
-          if (!isEvil) {
-            throw new Error('只有坏人才能破坏任务');
+        // 读取房间规则（必败机制）
+        const roomRows = await connection.execute('SELECT room_config FROM rooms WHERE id = ?', [game[0].room_id]);
+        const roomConfig = roomRows[0].length ? parseJson(roomRows[0][0].room_config) : null;
+        const rules = (roomConfig && roomConfig.rules) || {};
+
+        // 查询投票者当前阵营与角色（按 openId，保证可信度）
+        const [gpRows] = await connection.execute(
+          'SELECT side, role FROM game_players WHERE game_id = ? AND open_id = ?',
+          [gameId, openId]
+        );
+        if (gpRows.length === 0) {
+          throw new Error('玩家不在此游戏中');
+        }
+        const currentSide = gpRows[0].side;
+        const role = gpRows[0].role;
+
+        // 好人必须投成功（固定规则，按当前阵营 side）
+        if (vote === 'fail' && currentSide !== 'evil') {
+          throw new Error('只有坏人才能破坏任务');
+        }
+        // 必败强制：红兰/奥伯伦（当前为 evil 时）必须投失败
+        if (vote === 'success' && currentSide === 'evil') {
+          const mustFail = (role === 'lancelotRed' && rules.redLancelotMustFailMission) ||
+                           (role === 'oberon' && rules.oberonMustFailMission);
+          if (mustFail) {
+            throw new Error('你当前阵营为坏人，必须投失败票');
           }
         }
         
@@ -665,7 +713,8 @@ class GameModel {
               [gameId]
             );
           } else {
-            // 进入下一回合
+            // 进入下一回合（先触发兰斯洛特转换抽卡，再推进）
+            await maybeLancelotSwap(connection, gameId, game[0].current_round, rules);
             const newRound = game[0].current_round + 1;
             const newTeamLeaderIndex = (game[0].team_leader_index + 1) % game[0].player_count;
 

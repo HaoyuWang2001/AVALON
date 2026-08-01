@@ -280,10 +280,10 @@ roleReveal → discussion → [submitNomination] → teamVote
 |------|------|------|------|
 | `roles.good` / `roles.evil` | string[] | — | 各阵营角色列表 |
 | `rules.evilKnowsEachOther` | bool | true | 坏人互认：睁眼狼（morgana/assassin/minion/mordred）互知身份；oberon 互隐；**不含 lancelotRed** |
-| `rules.evilsKnowRedLancelot` | bool | false | **睁眼狼是否知道红兰斯洛特身份（可选）** |
-| `rules.oberonKnowsRedLancelot` | bool | false | **奥伯伦是否知道红兰斯洛特身份（可选）** |
+| `rules.evilsKnowRedLancelot` | bool | true | **睁眼狼是否知道红兰斯洛特身份（可选）** |
+| `rules.oberonKnowsRedLancelot` | bool | true | **奥伯伦是否知道红兰斯洛特身份（可选）** |
 | `rules.merlinKnowsLancelotSide` | bool | true | **梅林能否分辨蓝/红兰各自阵营（兰斯洛特恒可见；可选）** |
-| `rules.lancelotsKnowEachOther` | bool | true | 蓝↔红兰斯洛特互知（初始角色，reveal 固化） |
+| `rules.lancelotsKnowEachOther` | bool | false | 蓝↔红兰斯洛特互认（初始角色，reveal 固化） |
 | `rules.lancelotSwapRound` | int | 2 | 兰斯洛特转换激活轮 |
 | `rules.ladyOfTheLake` | bool | false | 湖仙启用 |
 | `rules.ladyOfTheLakeRound` | int | 2 | 湖仙激活轮 |
@@ -388,7 +388,23 @@ roleReveal → discussion → [submitNomination] → teamVote
 - 队伍提名、投票、任务投票全流程正常
 - 刺杀阶段正常执行
 
-### 阶段 3a：好人胜利完整流程 — `04_games_flow_good.test.js`（参数化 5-12）
+### 阶段 3：通用游戏机制 — `04_games_flow.test.js`
+
+与好人/坏人胜利路径无关的通用机制（任务投票规则、兰斯洛特转换等）：
+
+| 用例 | 参数/规则 | 断言 |
+|------|-----------|------|
+| 好人必须投成功（固定规则） | `side:good` | 当前阵营为 good 者投 `fail` 被拒（按当前阵营，不看身份） |
+| 必败强制（红兰） | `redLancelotMustFailMission=true` | 红兰投 `success` 被拒（必须 fail） |
+| 必败强制（奥伯伦） | `oberonMustFailMission=true` | 奥伯伦投 `success` 被拒 |
+| 单兰翻转 | `lancelotSwapRound` + mock 随机 | 抽中转换卡 → 蓝兰 good→evil |
+| 双兰互换 | `lancelotSwapRound` + mock 随机 | 抽中转换卡 → 蓝→evil、红→good |
+| 未抽中 | mock 随机 | 阵营不变 |
+| fail 权限按当前阵营 | 转换后 | 变坏的蓝兰可投 fail；变好的红兰不能投 fail |
+
+> **确定性**：兰斯洛特抽卡用 `jest.spyOn(Math,'random')` 强制抽中/未抽中。
+
+### 阶段 3a：好人胜利完整流程 — `04a_games_flow_good.test.js`（参数化 5-12）
 
 对每个 N，完整走完一局好人胜。房间由 `createRoomAndStartGame(N)` 创建，使用**按人数的标准角色板**
 （5-12 人见 §4.1；11 人板无 assassin，由 morgana 行使刺杀）。
@@ -419,7 +435,7 @@ createRoomAndStartGame(N) → advancePhase(gameId)   // roleReveal → discussio
 > 说明：标准 11/12 人板含兰斯洛特，轮次转换时抽卡自动发生（§3.4.3），因全员投 success 不受影响；
 > 若房间配置启用湖仙，轮次转换时需先驱动 `lakeInspection` 子阶段（§3.4.2）后再继续。
 
-### 阶段 3b：坏人胜利路径 — `05_games_flow_evil.test.js`（参数化 [5, 10]）
+### 阶段 3b：坏人胜利路径 — `04b_games_flow_evil.test.js`（参数化 [5, 10]）
 
 **路径 1：3 次任务失败**
 ```
@@ -582,8 +598,9 @@ createRoomAndStartGame(N) → advancePhase
 | `02_rooms.test.js` | 1 | — |
 | `03_games_start.test.js` | 2 | 5-12 |
 | `03b_lancelot_variant.test.js` | 2b | 2 变体 |
-| `04_games_flow_good.test.js` | 3a | 5-12 |
-| `05_games_flow_evil.test.js` | 3b | [5, 10] |
+| `04_games_flow.test.js` | 3（通用机制） | — |
+| `04a_games_flow_good.test.js` | 3a | 5-12 |
+| `04b_games_flow_evil.test.js` | 3b | [5, 10] |
 | `06_messages.test.js` | 4 | — |
 | `07_socket.test.js` | 4b | — |
 | `08_edge_cases.test.js` | 5 | — |

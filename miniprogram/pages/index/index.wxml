@@ -232,7 +232,7 @@
             <view class="section-title">⚔️ 兰斯洛特配置</view>
             <view class="rule-row" hidden="{{!selectedRoles.lancelotBlue || !selectedRoles.lancelotRed}}">
               <view class="rule-col">
-                <text class="rule-label">兰斯互知身份</text>
+                <text class="rule-label">兰斯互认身份</text>
                 <text class="rule-desc">蓝兰与红兰在视野中知道对方身份</text>
               </view>
               <switch checked="{{rules.lancelotsKnowEachOther}}" data-field="lancelotsKnowEachOther" bindchange="onRuleToggle" color="#8B5CF6"/>

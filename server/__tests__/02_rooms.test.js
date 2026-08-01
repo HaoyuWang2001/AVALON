@@ -1,5 +1,6 @@
 const {
   makeUserId, createRoom, createRoomWithConfig, buildConfigWithSpectator,
+  buildStandardRoomConfig, withConfigOverrides,
   joinRoom, getRoom, toggleReady, leaveRoom, updateSeatNumber,
   kickPlayer, banSeat, updateRoomConfig, transferOwner, disband,
   randomSeats, roomStats, cleanupRooms, startGame, apiGet, apiPost,
@@ -74,6 +75,40 @@ describe('02 — Room Management', () => {
       const res = await apiPost('/api/rooms/create', { hostOpenId: hostId, hostNickName: 'H', roomConfig: validConfig() });
       expect(res.status).toBe(400);
       expect(res.body.message).toMatch(/其他房间/);
+    });
+  });
+
+  // ─────────────── 配置验收（兰斯洛特相关参数） ───────────────
+  describe('配置验收（兰斯洛特相关参数）', () => {
+    it('02.x1 含全部兰斯洛特字段的配置可创建并往返', async () => {
+      const config = withConfigOverrides(buildStandardRoomConfig(12), {
+        rules: {
+          lancelotsKnowEachOther: true,
+          evilsKnowRedLancelot: false,
+          oberonKnowsRedLancelot: false,
+          merlinKnowsLancelotSide: false,
+          lancelotSwapRound: 3,
+          redLancelotMustFailMission: true,
+          oberonMustFailMission: true
+        }
+      });
+      const result = await createRoomWithConfig(makeUserId(), 'Host', config);
+      expect(result.success).toBe(true);
+      const room = await getRoom(result.roomId);
+      const rules = room.room.roomConfig.rules;
+      expect(rules.lancelotsKnowEachOther).toBe(true);
+      expect(rules.evilsKnowRedLancelot).toBe(false);
+      expect(rules.oberonKnowsRedLancelot).toBe(false);
+      expect(rules.merlinKnowsLancelotSide).toBe(false);
+      expect(rules.lancelotSwapRound).toBe(3);
+      expect(rules.redLancelotMustFailMission).toBe(true);
+      expect(rules.oberonMustFailMission).toBe(true);
+    });
+
+    it('02.x2 新可选字段非法类型 → 400', async () => {
+      const config = withConfigOverrides(buildStandardRoomConfig(12), { rules: { evilsKnowRedLancelot: 'yes' } });
+      const res = await apiPost('/api/rooms/create', { hostOpenId: makeUserId(), hostNickName: 'T', roomConfig: config });
+      expect(res.status).toBe(400);
     });
   });
 

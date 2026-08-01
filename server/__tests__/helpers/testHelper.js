@@ -58,7 +58,7 @@ function buildMinimalRoomConfig() {
     },
     rules: {
       evilKnowsEachOther: true,
-      lancelotsKnowEachOther: true,
+      lancelotsKnowEachOther: false,
       lancelotSwapRound: 2,
       ladyOfTheLake: false,
       ladyOfTheLakeRound: 2,
@@ -66,7 +66,10 @@ function buildMinimalRoomConfig() {
       oberonMustFailMission: false,
       redLancelotMustFailMission: false,
       voteVisibility: 'anonymous',
-      missionFailDetail: 'count'
+      missionFailDetail: 'count',
+      evilsKnowRedLancelot: true,
+      oberonKnowsRedLancelot: true,
+      merlinKnowsLancelotSide: true
     },
     limits: { speechTimeout: null, roundTimeout: null, voteTimeout: null },
     meta: { roomName: 'Test Room', roomDescription: '', tags: [] },

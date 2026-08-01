@@ -147,7 +147,7 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
   // ─────────────── C1 坏人互认（evilKnowsEachOther，全部板） ───────────────
   describe.each(BOARDS)('C1 坏人互认 $name', ({ config }) => {
     it('T11 evilKnowsEachOther=true：睁眼狼互知身份，oberon/lancelotRed 不参与', async () => {
-      const cfg = config();
+      const cfg = withConfigOverrides(config(), { rules: { evilsKnowRedLancelot: false } });
       const { gameId, players } = await startBoard(cfg);
       const openEye = players.find(p => EVIL_OPEN_EYES.includes(p.role));
       expect(openEye).toBeDefined();

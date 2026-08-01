@@ -35,11 +35,11 @@ const TEAM_SIZES = {
 
 function buildDefaultRule() {
   return {
-    evilKnowsEachOther: true, lancelotsKnowEachOther: true, lancelotSwapRound: 2,
+    evilKnowsEachOther: true, lancelotsKnowEachOther: false, lancelotSwapRound: 2,
     ladyOfTheLake: false, ladyOfTheLakeRound: 2, maxFailedNominations: 3,
     oberonMustFailMission: false, redLancelotMustFailMission: false,
     voteVisibility: 'public', missionFailDetail: 'count',
-    evilsKnowRedLancelot: false, oberonKnowsRedLancelot: false, merlinKnowsLancelotSide: true
+    evilsKnowRedLancelot: true, oberonKnowsRedLancelot: true, merlinKnowsLancelotSide: true
   };
 }
 
