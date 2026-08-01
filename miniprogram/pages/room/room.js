@@ -457,16 +457,19 @@ Page({
     this.applyDefaultConfig(n);
     this.computeAll();
     this._configSnapshot = JSON.parse(JSON.stringify(room.roomConfig));
+    if (this.roomPolling) clearInterval(this.roomPolling);
     this.setData({ showConfig: true });
   },
 
   closeConfig() {
     this._revertConfig();
+    this.initRoomPolling();
     this.setData({ showConfig: false });
   },
 
   finishConfig() {
     this.saveConfig();
+    this.initRoomPolling();
     this.setData({ showConfig: false });
   },
 
