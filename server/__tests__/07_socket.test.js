@@ -56,9 +56,9 @@ describe('07 — Socket.io Real-time Communication', () => {
     await joinRoomAndConfirm(clients[0], roomId, 'p3');
 
     const promise = waitForEvent(clients[1], 'gameUpdated');
-    clients[0].emit('gameUpdate', { roomId, phase: 'teamSelection' });
+    clients[0].emit('gameUpdate', { roomId, phase: 'discussion' });
     const data = await promise;
-    expect(data.phase).toBe('teamSelection');
+    expect(data.phase).toBe('discussion');
   });
 
   it('should broadcast newMessage on message', async () => {

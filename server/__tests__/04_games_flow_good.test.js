@@ -30,8 +30,8 @@ describe('04 — Good Win Full Game Flow', () => {
 
         if (gs.currentPhase === 'gameEnd') break;
 
-        // If rejected back to teamSelection, nominate again
-        if (gs.currentPhase === 'teamSelection') {
+        // If rejected back to discussion, nominate again
+        if (gs.currentPhase === 'discussion') {
           const leader = players[gs.teamLeaderIndex];
           const teamSize = getTeamSize(n, gs.currentRound);
           const team = players.slice(0, teamSize).map(p => p.openId);
@@ -52,7 +52,7 @@ describe('04 — Good Win Full Game Flow', () => {
         }
 
         state = await getGameState(gameId);
-        if (state.game.currentPhase === 'teamSelection') continue;
+        if (state.game.currentPhase === 'discussion') continue;
         if (state.game.currentPhase === 'gameEnd') break;
         if (state.game.currentPhase === 'assassination') {
           goodMissionCount = 3;

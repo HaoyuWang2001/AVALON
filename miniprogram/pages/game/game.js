@@ -245,7 +245,7 @@ Page({
   getPhaseText(phase) {
     const phaseMap = {
       'roleReveal': '角色揭示',
-      'teamSelection': '队伍选择',
+      'discussion': '讨论阶段',
       'teamVote': '队伍投票',
       'missionVote': '任务投票',
       'missionResult': '任务结果',

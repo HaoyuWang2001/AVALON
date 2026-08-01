@@ -36,7 +36,7 @@
   </view>
 
   <!-- 队伍选择阶段 -->
-  <view wx:if="{{currentPhase === 'teamSelection'}}" class="card">
+  <view wx:if="{{currentPhase === 'discussion'}}" class="card">
     <view class="subtitle text-center">选择任务队伍</view>
     <view class="text-center text-muted mb-3">
       队长: {{getTeamLeaderName()}} (第{{teamLeaderIndex + 1}}位玩家)

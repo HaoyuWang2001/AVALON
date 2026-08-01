@@ -188,6 +188,15 @@ roleReveal → discussion → [submitNomination] → teamVote
 | 仅 lancelotBlue | merlin, percival, loyal, loyal, loyal, lancelotBlue, morgana, assassin, mordred, oberon | 6 | 4 |
 | 仅 lancelotRed | merlin, percival, loyal, loyal, loyal, lancelotRed, morgana, assassin, mordred, oberon | 5 | 5 |
 
+#### 验证用扩展板子（套件 03）
+
+用于角色视野/湖仙落位等针对性验证，通过 roomConfig 自定义传入：
+
+| N | 角色数组 | good | evil | 说明 |
+|---|---------|------|------|------|
+| 10 | merlin, percival, loyal×4, morgana, assassin, mordred, lancelotRed | 6 | 4 | 单兰斯洛特（红）；睁眼狼=morgana/assassin/mordred |
+| 9 | merlin, percival, loyal×3, lancelotBlue, morgana, assassin, mordred | 6 | 3 | 单兰斯洛特（蓝） |
+
 ### 4.2 队伍大小
 
 | N | R1 | R2 | R3 | R4 | R5 |
@@ -265,6 +274,31 @@ roleReveal → discussion → [submitNomination] → teamVote
 
 > **后续扩展**（暂未实现）：房间配置中增加"允许多次开刀"选项。启用后，刺客可多次尝试直到刺中梅林；未命中时游戏留在 assassination 阶段，刺客可再次发起。
 
+### 4.6 房间配置字段（roomConfig）
+
+| 字段 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `roles.good` / `roles.evil` | string[] | — | 各阵营角色列表 |
+| `rules.evilKnowsEachOther` | bool | true | 坏人互认：睁眼狼（morgana/assassin/minion/mordred）互知身份；oberon 互隐；**不含 lancelotRed** |
+| `rules.evilsKnowRedLancelot` | bool | false | **睁眼狼是否知道红兰斯洛特身份（新增，可选）** |
+| `rules.oberonKnowsRedLancelot` | bool | false | **奥伯伦是否知道红兰斯洛特身份（新增，可选）** |
+| `rules.lancelotsKnowEachOther` | bool | true | 蓝↔红兰斯洛特互知（初始角色，reveal 固化） |
+| `rules.lancelotSwapRound` | int | 2 | 兰斯洛特转换激活轮 |
+| `rules.ladyOfTheLake` | bool | false | 湖仙启用 |
+| `rules.ladyOfTheLakeRound` | int | 2 | 湖仙激活轮 |
+| `rules.maxFailedNominations` | int | 3 | 流车阈值（触发强制发车） |
+| `rules.oberonMustFailMission` / `rules.redLancelotMustFailMission` | bool | false | 奥伯伦/红兰必须投失败 |
+| `rules.voteVisibility` | enum | public | 投票可见性 public/anonymous |
+| `rules.missionFailDetail` | enum | count | 任务失败详情 count/binary |
+| `merlinVision.canSee` | string[] | [assassin,morgana,minion,oberon,lancelotRed] | 梅林可见的坏人角色（**除莫德雷德**） |
+| `merlinVision.canIdentify` | string[] | [] | 梅林可识别具体身份的角色 |
+| `limits.speechTimeout` / `roundTimeout` / `voteTimeout` | int? | null | 超时秒数（null=不限；发言计时仅前端） |
+| `meta.roomName` / `roomDescription` / `tags` | — | — | 房间元信息 |
+| `spectator.allow` | bool | true | 允许观战 |
+| `spectator.max` | int | 0 | 观战上限（0=不限） |
+
+> 新增 `evilsKnowRedLancelot` / `oberonKnowsRedLancelot` 为**可选字段**（缺省按上述默认），仅当出现时校验布尔。前端 `getRoomConfig()` 需补充发送这两个字段（后端完成后适配）。
+
 ## 5. 测试阶段
 
 ### 阶段 0：健康检查 — `01_health.test.js`
@@ -297,25 +331,45 @@ roleReveal → discussion → [submitNomination] → teamVote
 
 > 观战上限来自 `roomConfig.spectator = { allow, max }`（`max=0` 不限）；授权相关端点（kick/ban/config/start）均校验房主。
 
-### 阶段 2：游戏启动 — `03_games_start.test.js`（参数化 5-12）
+### 阶段 2：游戏启动、角色分配与视野 — `03_games_start.test.js`
 
-对每个 N：
+#### A 开局校验（单测）
 
 | 用例 | 断言 |
 |------|------|
-| 不足 5 人拒绝 | 4 人全 ready → start 失败 |
-| 未全 ready 拒绝 | 有人未 ready → start 失败 |
-| 成功启动 | N 人全 ready → `gameId` 为 UUID |
-| 游戏状态 | `getGameState(gameId)` → `players.length === N` |
-| 初始阶段 | `currentPhase === 'roleReveal'`，`currentRound === 1`，`teamLeaderIndex === 当前分钟 % N`（容差 ±1） |
-| 角色分配 | 每玩家有 role 和 side，`side ∈ {good, evil}` |
-| 至少 2 坏人 | `evil count >= 2` |
-| 玩家角色查询 | `getGameState(gameId, openId)` 返回 `playerRole` 与该玩家 role 一致 |
-| advancePhase | `roleReveal → discussion`，第二次调用失败 |
-| 不存在游戏 | `getGameState('invalid-uuid')` → 404 |
+| T1 未全 ready | 有人未 ready → start 失败 |
+| T2 不存在 room | start 失败 |
+| T3 advancePhase | roleReveal → discussion（无鉴权；房主或固定倒计时触发），第二次调用失败 |
+
+#### B 基础开局/状态（参数化全部 10 块板：标准 5-12 + 自定义 10 人/9 人）
+
+| 用例 | 断言 |
+|------|------|
+| T4 开局成功 | `gameId` 为 UUID |
+| T5 玩家状态 | `players.length === N`；每人 openId/nickName/seatNumber/isHost/role/side；座位 1..N 唯一 |
+| T6 首位车长 | `teamLeaderIndex === 当前分钟 % N`（容差 ±1，start 前记录分钟 m） |
+| T7 每玩家有 role | role 为合法字符串 |
+| T8 每玩家 side | `side ∈ {good, evil}` |
+| T9 玩家数 | `players.length === roles.good+roles.evil` 数量 |
+| T10 getGameState | 无 openId 全量（含全部 role/side）；有 openId 他人 role/side **隐藏** + `game.vision` 结构 |
+
+#### C 角色视野（按板可验性）
+
+| 用例 | 参数/功能 | 板子 | 断言 |
+|------|-----------|------|------|
+| T11 | `evilKnowsEachOther=true` | 全部 10 板 | 睁眼狼互知身份（morgana/assassin/minion/mordred），oberon 互隐，**不含 lancelotRed** |
+| T12 | `evilKnowsEachOther=false` | 全部 10 板 | 睁眼狼视角仅自己 |
+| T13 | 派西维尔 | 全部 10 板 | percival 视角 = {自己, merlin, morgana}（不区分身份） |
+| T14 | `merlinVision.canSee` | 全部 10 板 | merlin 视角 = 自己 + canSee 角色（**除莫德雷德**），身份不显示 |
+| T15 | `merlinVision.canIdentify=[assassin]` | 自定义 10 人 | assassin 显示具体身份 |
+| T16 | `ladyOfTheLake=true` | 自定义 10 人 | `lakeHolderOpenId === players[(首车主 seat-1) mod N]` |
+| T17/T18 | `evilsKnowRedLancelot` true/false | 含 lancelotRed 的板（自定义10、标准11/12） | 睁眼狼视角含/不含红兰身份 |
+| T19/T20 | `oberonKnowsRedLancelot` true/false | 含 oberon+lancelotRed 的板（标准12） | oberon 视角含/不含红兰身份 |
+| T21/T22 | `lancelotsKnowEachOther` true/false | 双兰板（标准11/12） | 蓝↔红互见/互不见（初始角色） |
 
 > **确定性（首位车长）**：`teamLeaderIndex = 当前时钟分钟 % N`。测试在 startGame 前记录分钟 `m`，
 > 断言 `teamLeaderIndex ∈ { m % N, (m+1) % N }`（容差 ±1，容忍跨分钟竞态）。
+> **视野**：`getGameState(gameId, openId)` 返回 `game.vision.seen`（自己恒可见；其余按角色+配置）。
 
 ### 阶段 2b：单 Lancelot 变体 — `03b_lancelot_variant.test.js`
 
@@ -493,6 +547,9 @@ createRoomAndStartGame(N) → advancePhase
 | `createRoomWithConfig(hostId, hostNick, roomConfig)` | 创建房间（自定义 roomConfig） |
 | `buildMinimalRoomConfig()` | 最小自定义房间配置（11 角色，含 assassin；房间类用例使用） |
 | `buildStandardRoomConfig(playerCount)` | 按人数返回标准角色板（5-12 人，与 role_configurations 一致） |
+| `buildCustomBoard10()` | 自定义 10 人板（单红兰：merlin,percival,loyal×4,morgana,assassin,mordred,lancelotRed） |
+| `buildCustomBoard9()` | 自定义 9 人板（单蓝兰：merlin,percival,loyal×3,lancelotBlue,morgana,assassin,mordred） |
+| `withConfigOverrides(base, overrides)` | 在基础配置上覆盖 rules/merlinVision/ladyOfTheLake 等（深拷贝） |
 | `buildLancelotVariantConfig(variant)` | 构建单 Lancelot 变体（blue/red）的 roomConfig |
 | `createLancelotGame(variant)` | 创建 10 人单 Lancelot 变体局并启动（blue/red） |
 | `joinRoom(roomId, userId, seat, nick)` | 加入房间 |
@@ -585,7 +642,7 @@ npm test
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | POST | `/start` | 启动游戏 → 返回 gameId（含首位车长/湖仙落位） |
-| GET | `/:gameId` | 获取状态（合并内存态：preTeam/发言序/湖仙/forcedSend） |
+| GET | `/:gameId` | 获取状态（合并内存态：preTeam/发言序/湖仙/forcedSend；带 openId 返回玩家视角 `game.vision`，他人 role/side 隐藏；启用湖仙返回 `lakeHolderOpenId`） |
 | POST | `/:gameId/advancePhase` | 推进 roleReveal → discussion |
 | POST | `/setSpeakingOrder` | 车长指定发言顺序（仅车长；内存态） |
 | POST | `/advanceSpeaker` | 推进当前发言人（前端触发；内存态） |

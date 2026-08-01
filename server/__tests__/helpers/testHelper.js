@@ -71,7 +71,7 @@ function buildMinimalRoomConfig() {
     limits: { speechTimeout: null, roundTimeout: null, voteTimeout: null },
     meta: { roomName: 'Test Room', roomDescription: '', tags: [] },
     merlinVision: {
-      canSee: ['assassin', 'morgana', 'minion', 'oberon', 'lancelotRed', 'lancelotBlue'],
+      canSee: ['assassin', 'morgana', 'minion', 'oberon', 'lancelotRed'],
       canIdentify: []
     }
   };
@@ -91,6 +91,41 @@ function buildStandardRoomConfig(playerCount) {
     12: { good: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal', 'lancelotBlue'], evil: ['morgana', 'assassin', 'mordred', 'oberon', 'lancelotRed'] }
   };
   config.roles = roles[playerCount] || config.roles;
+  return config;
+}
+
+// 自定义 10 人板（单红兰斯洛特）：merlin, percival, loyal×4, morgana, assassin, mordred, lancelotRed
+function buildCustomBoard10() {
+  const config = buildMinimalRoomConfig();
+  config.roles = {
+    good: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'loyal'],
+    evil: ['morgana', 'assassin', 'mordred', 'lancelotRed']
+  };
+  return config;
+}
+
+// 自定义 9 人板（单蓝兰斯洛特）：merlin, percival, loyal×3, lancelotBlue, morgana, assassin, mordred
+function buildCustomBoard9() {
+  const config = buildMinimalRoomConfig();
+  config.roles = {
+    good: ['merlin', 'percival', 'loyal', 'loyal', 'loyal', 'lancelotBlue'],
+    evil: ['morgana', 'assassin', 'mordred']
+  };
+  return config;
+}
+
+// 在基础配置上覆盖 rules / merlinVision 等（浅合并 rules 与 merlinVision）
+function withConfigOverrides(baseConfig, overrides) {
+  const config = JSON.parse(JSON.stringify(baseConfig));
+  if (overrides.rules) {
+    config.rules = { ...config.rules, ...overrides.rules };
+  }
+  if (overrides.merlinVision) {
+    config.merlinVision = { ...config.merlinVision, ...overrides.merlinVision };
+  }
+  if (overrides.roles) config.roles = overrides.roles;
+  if (overrides.ladyOfTheLake !== undefined) config.rules.ladyOfTheLake = overrides.ladyOfTheLake;
+  if (overrides.ladyOfTheLakeRound !== undefined) config.rules.ladyOfTheLakeRound = overrides.ladyOfTheLakeRound;
   return config;
 }
 
@@ -293,8 +328,8 @@ async function createRoomWithPlayers(playerCount, roomConfig) {
  * Returns { roomId, gameId, players, hostId }.
  * players have openId, nickName, seatNumber, role, side resolved from game state.
  */
-async function createRoomAndStartGame(playerCount) {
-  const { roomId, players, hostId } = await createRoomWithPlayers(playerCount, buildStandardRoomConfig(playerCount));
+async function createRoomAndStartGame(playerCount, roomConfig) {
+  const { roomId, players, hostId } = await createRoomWithPlayers(playerCount, roomConfig || buildStandardRoomConfig(playerCount));
   const startResult = await startGame(roomId, hostId);
   if (!startResult.success) throw new Error(`Failed to start game: ${JSON.stringify(startResult)}`);
   const gameId = startResult.gameId;
@@ -373,6 +408,10 @@ module.exports = {
   createRoom,
   createRoomWithConfig,
   buildConfigWithSpectator,
+  buildStandardRoomConfig,
+  buildCustomBoard10,
+  buildCustomBoard9,
+  withConfigOverrides,
   joinRoom,
   getRoom,
   toggleReady,

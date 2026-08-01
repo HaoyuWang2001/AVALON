@@ -31,7 +31,7 @@ describe('05 — Evil Win Paths', () => {
 
           if (gs.currentPhase === 'gameEnd') break;
 
-          if (gs.currentPhase === 'teamSelection') {
+          if (gs.currentPhase === 'discussion') {
             const leader = players[gs.teamLeaderIndex];
             const teamSize = getTeamSize(n, gs.currentRound);
             // 尽量把全部坏人塞进队伍，确保任务失败（普通轮 1 坏票即失败；7+ 保护轮需 ≥2 坏票）
@@ -54,7 +54,7 @@ describe('05 — Evil Win Paths', () => {
           }
 
           state = await getGameState(gameId);
-          if (state.game.currentPhase === 'teamSelection') continue;
+          if (state.game.currentPhase === 'discussion') continue;
           if (state.game.currentPhase === 'gameEnd') break;
 
           if (state.game.currentPhase === 'missionVote') {

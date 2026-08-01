@@ -15,6 +15,79 @@ function parseJson(value) {
   return value;
 }
 
+// 睁眼狼（互相睁眼互知身份的坏人）；lancelotRed 不属于睁眼狼
+const EVIL_OPEN_EYES = ['morgana', 'assassin', 'minion', 'mordred'];
+const OBERON = 'oberon';
+const LANCELOT_RED = 'lancelotRed';
+const LANCELOT_BLUE = 'lancelotBlue';
+
+/**
+ * 计算某玩家的视野（角色揭示阶段固化）。
+ * @param {Object} requester 请求者 {openId, role, side}
+ * @param {Array} players 全部玩家 [{openId, role, side, ...}]
+ * @param {Object|null} roomConfig 房间配置
+ * @returns {Array<{openId, role?, side?}>} seen 列表
+ */
+function buildVision(requester, players, roomConfig) {
+  const rules = (roomConfig && roomConfig.rules) || {};
+  const merlinVision = (roomConfig && roomConfig.merlinVision) || {};
+  const canSee = merlinVision.canSee || [];
+  const canIdentify = merlinVision.canIdentify || [];
+
+  const seen = [];
+  const add = (p, withRole) => {
+    if (seen.some(s => s.openId === p.openId)) return;
+    seen.push({ openId: p.openId, ...(withRole ? { role: p.role, side: p.side } : {}) });
+  };
+
+  // 自己恒可见
+  add(requester, true);
+  const role = requester.role;
+
+  if (EVIL_OPEN_EYES.includes(role)) {
+    // 睁眼狼互知（evilKnowsEachOther）；oberon 互隐；lancelotRed 视 evilsKnowRedLancelot
+    if (rules.evilKnowsEachOther) {
+      for (const p of players) {
+        if (p.openId === requester.openId) continue;
+        if (EVIL_OPEN_EYES.includes(p.role)) {
+          add(p, true);
+        } else if (p.role === LANCELOT_RED && rules.evilsKnowRedLancelot) {
+          add(p, true);
+        }
+      }
+    }
+  } else if (role === OBERON) {
+    // 奥伯伦闭眼：仅当配置允许时可见红兰
+    if (rules.oberonKnowsRedLancelot) {
+      for (const p of players) {
+        if (p.openId !== requester.openId && p.role === LANCELOT_RED) add(p, true);
+      }
+    }
+  } else if (role === LANCELOT_RED || role === LANCELOT_BLUE) {
+    // 兰斯洛特互知（初始角色，reveal 固化）
+    if (rules.lancelotsKnowEachOther) {
+      const otherRole = role === LANCELOT_RED ? LANCELOT_BLUE : LANCELOT_RED;
+      const p = players.find(x => x.role === otherRole);
+      if (p) add(p, true);
+    }
+  } else if (role === 'percival') {
+    // 派西维尔：见梅林+莫甘娜，不区分谁是谁（不显示身份）
+    for (const p of players) {
+      if (p.role === 'merlin' || p.role === 'morgana') add(p, false);
+    }
+  } else if (role === 'merlin') {
+    // 梅林：见 canSee 内的坏人角色（莫德雷德不在 canSee 默认），canIdentify 内显示具体身份
+    for (const p of players) {
+      if (p.openId === requester.openId) continue;
+      if (canSee.includes(p.role)) {
+        add(p, canIdentify.includes(p.role));
+      }
+    }
+  }
+
+  return seen;
+}
+
 class GameModel {
   /**
    * 开始游戏
@@ -239,7 +312,35 @@ class GameModel {
           playerRole = player.role;
         }
       }
-      
+
+      // 读取房间配置（视野判定 + 湖仙）
+      const [roomRows] = await db.query('SELECT room_config FROM rooms WHERE id = ?', [game.roomId]);
+      const roomConfig = roomRows.length ? parseJson(roomRows[0].room_config) : null;
+      const rules = (roomConfig && roomConfig.rules) || {};
+
+      // 湖仙落位：首车主 seat-1 取模（确定性）；仅在启用湖仙时有效
+      const playerCount = players.length;
+      if (rules.ladyOfTheLake && playerCount > 0) {
+        const holderIndex = (game.teamLeaderIndex - 1 + playerCount) % playerCount;
+        game.lakeHolderOpenId = players[holderIndex] ? players[holderIndex].openId : null;
+      } else {
+        game.lakeHolderOpenId = null;
+      }
+
+      if (openId && playerRole) {
+        // 玩家视角：隐藏他人角色/阵营，附 vision
+        const requester = players.find(p => p.openId === openId);
+        game.vision = { seen: buildVision(requester, players, roomConfig) };
+        game.players = players.map(p => {
+          const entry = { openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl, seatNumber: p.seatNumber };
+          if (p.openId === openId) {
+            entry.role = p.role;
+            entry.side = p.side;
+          }
+          return entry;
+        });
+      }
+
       return {
         success: true,
         game,
@@ -273,7 +374,7 @@ class GameModel {
           throw new Error('游戏不存在');
         }
         
-        if (game[0].current_phase !== 'teamSelection') {
+        if (game[0].current_phase !== 'discussion') {
           throw new Error('当前不是队伍选择阶段');
         }
         
@@ -395,7 +496,7 @@ class GameModel {
 
             await connection.execute(
               `UPDATE games 
-               SET current_phase = 'teamSelection',
+               SET current_phase = 'discussion',
                    team_leader_index = ?,
                    nominated_team = NULL,
                    failed_nominations = ?,
@@ -554,7 +655,7 @@ class GameModel {
 
             await connection.execute(
               `UPDATE games 
-               SET current_phase = 'teamSelection',
+               SET current_phase = 'discussion',
                    current_round = ?,
                    team_leader_index = ?,
                    nominated_team = NULL,
@@ -647,7 +748,7 @@ class GameModel {
 
         await connection.execute(
           `UPDATE games 
-           SET current_phase = 'teamSelection',
+           SET current_phase = 'discussion',
                updated_at = NOW()
            WHERE id = ?`,
           [gameId]

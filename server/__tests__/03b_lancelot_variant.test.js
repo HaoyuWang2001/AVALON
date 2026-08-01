@@ -60,11 +60,11 @@ describe('03b — Lancelot Single-Role Variants (10 players)', () => {
         const gs = state.game;
 
         if (gs.currentPhase === 'gameEnd') break;
-        if (gs.currentPhase !== 'teamSelection' && gs.currentPhase !== 'teamVote'
+        if (gs.currentPhase !== 'discussion' && gs.currentPhase !== 'teamVote'
             && gs.currentPhase !== 'missionVote') break;
 
         // Handle team selection / re-try
-        if (gs.currentPhase === 'teamSelection') {
+        if (gs.currentPhase === 'discussion') {
           const leader = players[gs.teamLeaderIndex];
           const teamSize = getTeamSize(10, gs.currentRound);
           const team = players.slice(0, teamSize).map(p => p.openId);

@@ -110,7 +110,7 @@ describe('08 — Edge Cases & Validation', () => {
       expect(res.success).toBe(false);
     });
 
-    it('should reject submitNomination when not teamSelection', async () => {
+    it('should reject submitNomination when not discussion', async () => {
       const { gameId, players } = await createRoomAndStartGame(5);
       const res = await submitNomination(gameId, players[0].openId, [players[0].openId]);
       expect(res.success).toBe(false);
