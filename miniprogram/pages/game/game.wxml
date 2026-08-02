@@ -9,6 +9,7 @@
       </view>
       <view>
         <button size="mini" class="btn btn-primary" bindtap="viewRole">查看角色</button>
+        <button size="mini" class="btn btn-primary" style="margin-left: 20rpx;" bindtap="viewVision">视野</button>
         <button size="mini" class="btn" style="margin-left: 20rpx; background-color: #f8f9fa;" bindtap="viewGameHistory">历史</button>
       </view>
     </view>
@@ -38,6 +39,9 @@
   <!-- 队伍选择阶段 -->
   <view wx:if="{{currentPhase === 'discussion'}}" class="card">
     <view class="subtitle text-center">选择任务队伍</view>
+    <view class="text-center text-muted mb-3" style="color: #e74c3c;" wx:if="{{forcedSend}}">
+      本轮为强制发车（已连续流车达上限）：队长选定队伍后直接发车，无队伍投票
+    </view>
     <view class="text-center text-muted mb-3">
       队长: {{getTeamLeaderName()}} (第{{teamLeaderIndex + 1}}位玩家)
     </view>

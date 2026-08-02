@@ -168,11 +168,13 @@ class ApiService {
     return this.request(`/games/${gameId}?openId=${openId}`);
   }
 
-  async submitNomination(gameId, nominatedTeam) {
+  async submitNomination(gameId, nominatedTeam, forcedCar) {
     const openId = this.openId || getApp().globalData.openId;
+    const data = { gameId, openId, nominatedTeam };
+    if (forcedCar !== undefined) data.forcedCar = forcedCar;
     return this.request('/games/submitNomination', {
       method: 'POST',
-      data: { gameId, openId, nominatedTeam }
+      data
     });
   }
 

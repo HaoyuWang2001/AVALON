@@ -15,6 +15,8 @@ Page({
     teamVotes: {},
     missionVotes: {},
     missionResults: [],
+    forcedSend: false,
+    vision: null,
     showRoleModal: false,
     showVoteModal: false,
     showMissionModal: false,
@@ -67,6 +69,8 @@ Page({
           teamVotes: res.game.teamVotes || {},
           missionVotes: res.game.missionVotes || {},
           missionResults: res.game.missionResults || [],
+          forcedSend: !!res.game.forcedSend,
+          vision: res.game.vision || null,
         });
 
         if (res.game.currentPhase === 'gameEnd') {
@@ -120,6 +124,28 @@ Page({
     });
   },
 
+  viewVision() {
+    const { vision, gameState } = this.data;
+    const players = gameState && gameState.players ? gameState.players : [];
+    if (!vision || !vision.players || vision.players.length === 0) {
+      wx.showModal({ title: '你的视野', content: '本局你暂时看不到其他玩家', showCancel: false, confirmText: '知道了' });
+      return;
+    }
+    const roleLabel = {
+      merlin: '梅林', percival: '派西', loyal: '忠臣', lancelotBlue: '蓝兰', lancelotRed: '红兰',
+      morgana: '莫甘娜', assassin: '刺客', mordred: '莫德雷德', minion: '爪牙', oberon: '奥伯伦'
+    };
+    const lines = vision.players.map(p => {
+      const np = players.find(x => x.openId === p.openId);
+      const name = np ? np.nickName : '?';
+      let label = name;
+      if (p.role) label += `（${roleLabel[p.role] || p.role}）`;
+      else if (p.side) label += `（${p.side === 'evil' ? '坏人' : '好人'}）`;
+      return label;
+    });
+    wx.showModal({ title: '你能看到的玩家', content: lines.join('\n'), showCancel: false, confirmText: '知道了' });
+  },
+
   nominatePlayer(e) {
     const playerId = e.currentTarget.dataset.id;
     const { nominatedTeam } = this.data;
@@ -159,11 +185,15 @@ Page({
   },
 
   submitNomination() {
-    const { gameId, nominatedTeam } = this.data;
+    const { gameId, nominatedTeam, forcedSend } = this.data;
     const isLeader = this.checkIfTeamLeader();
     if (!isLeader) return;
-    api.submitNomination(gameId, nominatedTeam).then(res => {
-      console.log('提名提交成功:', res);
+    api.submitNomination(gameId, nominatedTeam, forcedSend ? true : undefined).then(res => {
+      if (res && res.success === false) {
+        wx.showToast({ title: res.message || '提交失败', icon: 'none' });
+      } else {
+        console.log('提名提交成功:', res);
+      }
     }).catch(err => {
       console.error('提名提交失败:', err);
     });

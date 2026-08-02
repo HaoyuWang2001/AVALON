@@ -214,12 +214,12 @@
               </view>
               <switch checked="{{rules.oberonMustFailMission}}" data-field="oberonMustFailMission" bindchange="onRuleToggle" color="#8B5CF6"/>
             </view>
-            <view class="rule-row" hidden="{{!selectedRoles.lancelotRed}}">
+            <view class="rule-row" hidden="{{!selectedRoles.lancelotBlue && !selectedRoles.lancelotRed}}">
               <view class="rule-col">
-                <text class="rule-label">红兰必须任务失败</text>
-                <text class="rule-desc">若被选入任务队伍，必须投失败票</text>
+                <text class="rule-label">兰斯洛特必须任务失败</text>
+                <text class="rule-desc">当前为坏人阵营的兰斯洛特若被选入任务队伍，必须投失败票</text>
               </view>
-              <switch checked="{{rules.redLancelotMustFailMission}}" data-field="redLancelotMustFailMission" bindchange="onRuleToggle" color="#8B5CF6"/>
+              <switch checked="{{rules.lancelotMustFail}}" data-field="lancelotMustFail" bindchange="onRuleToggle" color="#8B5CF6"/>
             </view>
           </view>
         </scroll-view>
