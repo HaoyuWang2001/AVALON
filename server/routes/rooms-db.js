@@ -59,7 +59,7 @@ function createRouter() {
     } catch (error) {
       console.error('创建房间API错误:', error);
 
-      if (error.message.includes('缺少') || error.message.includes('未知角色') || error.message.includes('必须是')) {
+      if (error.message.includes('缺少') || error.message.includes('未知角色') || error.message.includes('必须是') || error.message.includes('必须为')) {
         return res.status(400).json({ success: false, message: error.message });
       }
 
@@ -341,7 +341,7 @@ function createRouter() {
       if (error.message.includes('房间不存在')) {
         return res.status(404).json({ success: false, message: error.message });
       }
-      if (error.message.includes('游戏已开始') || error.message.includes('缺少') || error.message.includes('未知角色') || error.message.includes('必须是')) {
+      if (error.message.includes('游戏已开始') || error.message.includes('缺少') || error.message.includes('未知角色') || error.message.includes('必须是') || error.message.includes('必须为')) {
         return res.status(400).json({ success: false, message: error.message });
       }
 

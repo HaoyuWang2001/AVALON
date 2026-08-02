@@ -263,8 +263,10 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     const { gameId, players } = await setupGame(buildCustomBoard10());
     await advancePhase(gameId);
     const before = await getGameState(gameId);
+    console.log('[dbg13] before leader', before.game.teamLeaderIndex, 'round', before.game.currentRound, 'phase', before.game.currentPhase);
     const n = players.length;
     const after = await rejectRound(gameId, players);
+    console.log('[dbg13] after leader', after.game.teamLeaderIndex, 'round', after.game.currentRound, 'phase', after.game.currentPhase, 'fn', after.game.failedNominations);
     expect(after.game.currentPhase).toBe('discussion');
     expect(after.game.currentRound).toBe(1);
     expect(after.game.teamLeaderIndex).toBe((before.game.teamLeaderIndex + 1) % n);
@@ -273,6 +275,7 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
 
   it('04-14 发车成功：round+1、leader+1、流车数=0', async () => {
     const { gameId, players } = await setupGame(buildCustomBoard10());
+    await advancePhase(gameId);
     await rejectRound(gameId, players); // 先制造流车数 1
     const n = players.length;
     const st = await getGameState(gameId);
@@ -290,6 +293,7 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
   // ─────────── 强制发车 ───────────
   it('04-15 强制发车：达阈值→forcedCar=true 直接 missionVote→下一轮、流车数0', async () => {
     const { gameId, players } = await setupGame(buildCustomBoard10());
+    await advancePhase(gameId);
     for (let k = 0; k < 3; k++) await rejectRound(gameId, players);
     const forced = await getGameState(gameId);
     expect(forced.game.failedNominations).toBe(3);
