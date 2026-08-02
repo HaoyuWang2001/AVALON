@@ -208,12 +208,34 @@ if (process.env.NODE_ENV !== 'production') {
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
+  // 新观众/断线重连：拉取当前游戏状态推送（恢复 current/history/投票可见性）
+  async function pushCurrentGameState(roomId, playerId) {
+    try {
+      const gameRows = await db.query(
+        `SELECT id FROM games WHERE room_id = ? AND status = 'active' ORDER BY created_at DESC LIMIT 1`,
+        [roomId]
+      );
+      if (gameRows.length === 0) return;
+      const GameModel = require('./models/GameModel');
+      const state = await GameModel.getState(gameRows[0].id, playerId);
+      socket.emit('gameState', { roomId, gameId: gameRows[0].id, state });
+    } catch (error) {
+      console.error('推送游戏状态失败:', error);
+    }
+  }
+
   socket.on('joinRoom', (data) => {
     const { roomId, playerId } = data;
     socket.join(roomId);
     socket.roomId = roomId;
     socket.playerId = playerId;
     io.to(roomId).emit('playerJoined', { playerId });
+    pushCurrentGameState(roomId, playerId);
+  });
+
+  socket.on('requestState', (data) => {
+    const { roomId, playerId } = data;
+    pushCurrentGameState(roomId, playerId);
   });
 
   socket.on('leaveRoom', (data) => {
