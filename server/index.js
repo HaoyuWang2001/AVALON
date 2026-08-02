@@ -330,7 +330,7 @@ startServer();
 module.exports = { 
   app, 
   server,
-  io, 
+  wss, 
   db,
   dbInitialized
 };
