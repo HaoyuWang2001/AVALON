@@ -43,7 +43,7 @@
       本轮为强制发车（已连续流车达上限）：队长选定队伍后直接发车，无队伍投票
     </view>
     <view class="text-center text-muted mb-3">
-      队长: {{getTeamLeaderName()}} (第{{teamLeaderIndex + 1}}位玩家)
+      队长: {{getTeamLeaderName()}}
     </view>
     <view class="text-center text-muted mb-4">
       需要选择 {{getRequiredTeamSize()}} 人执行任务
@@ -51,7 +51,7 @@
 
     <!-- 玩家列表 -->
     <view class="players-list">
-      <view wx:for="{{gameState.players}}" wx:key="openId" class="player-item {{nominatedTeam.includes(item.openId) ? 'selected' : ''}} {{checkIfTeamLeader() ? 'selectable' : ''}}" bindtap="nominatePlayer" data-id="{{item.openId}}">
+      <view wx:for="{{allPlayers}}" wx:key="openId" class="player-item {{nominatedTeam.includes(item.openId) ? 'selected' : ''}} {{checkIfTeamLeader() ? 'selectable' : ''}}" bindtap="nominatePlayer" data-id="{{item.openId}}">
         <image src="{{item.avatarUrl}}" class="player-avatar"></image>
         <view class="player-info">
           <view class="player-name">{{item.nickName}}</view>
@@ -95,7 +95,7 @@
     </view>
 
     <view class="text-center text-muted mt-4">
-      投票进度: {{getVoteCount()}}/{{gameState.players.length || 0}}
+      投票进度: {{getVoteCount()}}/{{allPlayers.length || 0}}
     </view>
   </view>
 
@@ -159,7 +159,7 @@
     <!-- 玩家角色揭示 -->
     <view class="players-reveal">
       <view class="text-center mb-4">玩家角色:</view>
-      <view wx:for="{{gameState.players}}" wx:key="openId" class="player-reveal-item {{getPlayerSide(item.role)}}">
+      <view wx:for="{{allPlayers}}" wx:key="openId" class="player-reveal-item {{getPlayerSide(item.role)}}">
         <image src="{{item.avatarUrl}}" class="player-reveal-avatar"></image>
         <view class="player-reveal-info">
           <view class="player-reveal-name">{{item.nickName}}</view>

@@ -57,16 +57,15 @@ describe('03b — Lancelot Single-Role Variants (10 players)', () => {
       while (goodMissionCount < 3 && round < maxRounds) {
         round++;
         const state = await getGameState(gameId);
-        const gs = state.game;
 
-        if (gs.currentPhase === 'gameEnd') break;
-        if (gs.currentPhase !== 'discussion' && gs.currentPhase !== 'teamVote'
-            && gs.currentPhase !== 'missionVote') break;
+        if (state.current.phase === 'gameEnd') break;
+        if (state.current.phase !== 'discussion' && state.current.phase !== 'teamVote'
+            && state.current.phase !== 'missionVote') break;
 
         // Handle team selection / re-try
-        if (gs.currentPhase === 'discussion') {
-          const leader = players[gs.teamLeaderIndex];
-          const teamSize = getTeamSize(10, gs.currentRound);
+        if (state.current.phase === 'discussion') {
+          const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
+          const teamSize = getTeamSize(10, state.current.round);
           const team = players.slice(0, teamSize).map(p => p.openId);
           const nomResult = await submitNomination(gameId, leader.openId, team);
           if (!nomResult.success) continue;
@@ -75,8 +74,8 @@ describe('03b — Lancelot Single-Role Variants (10 players)', () => {
         await maybeCastTeamVotes(gameId, players);
 
         const s2 = await getGameState(gameId);
-        if (s2.game.currentPhase === 'missionVote') {
-          const missionTeam = (s2.game.nominatedTeam || []);
+        if (s2.current.phase === 'missionVote') {
+          const missionTeam = (s2.current.nominatedTeam || []);
           for (const openId of missionTeam) {
             const p = players.find(pp => pp.openId === openId);
             if (p) {
@@ -85,20 +84,20 @@ describe('03b — Lancelot Single-Role Variants (10 players)', () => {
           }
 
           const s3 = await getGameState(gameId);
-          if (s3.game.currentPhase === 'gameEnd') break;
-          if (s3.game.currentPhase === 'assassination') {
+          if (s3.current.phase === 'gameEnd') break;
+          if (s3.current.phase === 'assassination') {
             goodMissionCount = 3;
             break;
           }
-          if (s3.game.missionResults) {
-            goodMissionCount = s3.game.missionResults.filter(r => r.success).length;
+          if (s3.history.missions) {
+            goodMissionCount = s3.history.missions.filter(r => r.success).length;
           }
         }
       }
 
       // Assassination phase
       let st = await getGameState(gameId);
-      if (st.game.currentPhase === 'assassination') {
+      if (st.current.phase === 'assassination') {
         const assassinPlayer = players.find(p => p.role === 'assassin');
         const morganaPlayer = players.find(p => p.role === 'morgana');
         const killer = assassinPlayer || morganaPlayer;
@@ -111,9 +110,9 @@ describe('03b — Lancelot Single-Role Variants (10 players)', () => {
       }
 
       st = await getGameState(gameId);
-      if (st.game.currentPhase === 'gameEnd' && st.game.gameResult) {
+      if (st.current.phase === 'gameEnd' && st.basic.result) {
         // Accept either winner since we're testing system works, not specific outcome
-        expect(['good', 'evil']).toContain(st.game.gameResult.winner);
+        expect(['good', 'evil']).toContain(st.basic.result.winner);
       }
 
       await endGame(gameId);
@@ -128,7 +127,7 @@ function getTeamSize(pc, round) {
 
 async function maybeCastTeamVotes(gameId, players) {
   const state = await require('./helpers/testHelper').getGameState(gameId);
-  if (state.game.currentPhase !== 'teamVote') return;
+  if (state.current.phase !== 'teamVote') return;
   const n = players.length;
   const { castVote } = require('./helpers/testHelper');
   for (let i = 0; i < Math.floor(n / 2) + 1; i++) {

@@ -319,7 +319,7 @@ async function createRoomAndStartGame(playerCount, roomConfig) {
   const gameState = await getGameState(gameId);
   if (!gameState.success) throw new Error(`Failed to get game state: ${JSON.stringify(gameState)}`);
   const enrichedPlayers = players.map(p => {
-    const gp = gameState.game.players.find(gp => gp.openId === p.openId);
+    const gp = gameState.players.find(gp => gp.openId === p.openId);
     return { ...p, role: gp.role, side: gp.side };
   });
   return { roomId, gameId, players: enrichedPlayers, hostId };
@@ -372,7 +372,7 @@ async function createLancelotGame(variant) {
   const gameId = startResult.gameId;
   const gameState = await getGameState(gameId);
   const enrichedPlayers = players.map(p => {
-    const gp = gameState.game.players.find(gp => gp.openId === p.openId);
+    const gp = gameState.players.find(gp => gp.openId === p.openId);
     return { ...p, role: gp.role, side: gp.side };
   });
   return { roomId, gameId, players: enrichedPlayers, hostId, variant };

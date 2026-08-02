@@ -10,7 +10,8 @@ Page({
     playerRole: null,
     currentPhase: '',
     currentRound: 1,
-    teamLeaderIndex: 0,
+    teamLeaderOpenId: '',
+    allPlayers: [],
     nominatedTeam: [],
     teamVotes: {},
     missionVotes: {},
@@ -58,23 +59,24 @@ Page({
   fetchGameState() {
     const { gameId } = this.data;
     api.getGameState(gameId).then(res => {
-      if (res.success && res.game) {
+      if (res.success && res.current) {
         this.setData({
-          gameState: res.game,
-          playerRole: res.playerRole,
-          currentPhase: res.game.currentPhase || 'roleReveal',
-          currentRound: res.game.currentRound || 1,
-          teamLeaderIndex: res.game.teamLeaderIndex || 0,
-          nominatedTeam: res.game.nominatedTeam || [],
-          teamVotes: res.game.teamVotes || {},
-          missionVotes: res.game.missionVotes || {},
-          missionResults: res.game.missionResults || [],
-          forcedSend: !!res.game.forcedSend,
-          vision: res.game.vision || null,
+          gameState: res.current,
+          playerRole: res.player ? res.player.role : null,
+          currentPhase: res.current.phase || 'roleReveal',
+          currentRound: res.current.round || 1,
+          teamLeaderOpenId: res.current.teamLeaderOpenId || '',
+          nominatedTeam: res.current.nominatedTeam || [],
+          teamVotes: res.current.teamVotes || {},
+          missionVotes: res.current.missionVotes || {},
+          missionResults: res.history ? res.history.missions || [] : [],
+          forcedSend: !!res.current.forcedSend,
+          vision: res.player ? res.player.vision || null : null,
+          allPlayers: res.players || [],
         });
 
-        if (res.game.currentPhase === 'gameEnd') {
-          this.showGameEndResult(res.game.gameResult);
+        if (res.current.phase === 'gameEnd') {
+          this.showGameEndResult(res.basic ? res.basic.result : null);
         }
       }
     }).catch(err => {
@@ -125,8 +127,8 @@ Page({
   },
 
   viewVision() {
-    const { vision, gameState } = this.data;
-    const players = gameState && gameState.players ? gameState.players : [];
+    const { vision, allPlayers } = this.data;
+    const players = allPlayers || [];
     if (!vision || !vision.players || vision.players.length === 0) {
       wx.showModal({ title: '你的视野', content: '本局你暂时看不到其他玩家', showCancel: false, confirmText: '知道了' });
       return;
@@ -200,11 +202,8 @@ Page({
   },
 
   checkIfTeamLeader() {
-    const { gameState } = this.data;
-    if (!gameState || !gameState.players) return false;
-
-    const currentLeader = gameState.players[gameState.teamLeaderIndex];
-    return currentLeader?.openId === app.globalData.openId;
+    const { teamLeaderOpenId } = this.data;
+    return !!teamLeaderOpenId && teamLeaderOpenId === app.globalData.openId;
   },
 
   castVote(e) {
@@ -294,18 +293,17 @@ Page({
   },
 
   getTeamLeaderName() {
-    const { gameState, teamLeaderIndex } = this.data;
-    if (!gameState || !gameState.players || !gameState.players[teamLeaderIndex]) {
-      return '未知';
-    }
-    return gameState.players[teamLeaderIndex].nickName;
+    const { allPlayers, teamLeaderOpenId } = this.data;
+    if (!allPlayers || !teamLeaderOpenId) return '未知';
+    const leader = allPlayers.find(p => p.openId === teamLeaderOpenId);
+    return leader ? leader.nickName : '未知';
   },
 
   getNominatedPlayers() {
-    const { gameState, nominatedTeam } = this.data;
-    if (!gameState || !gameState.players) return [];
+    const { allPlayers, nominatedTeam } = this.data;
+    if (!allPlayers || !nominatedTeam) return [];
 
-    return gameState.players.filter(player =>
+    return allPlayers.filter(player =>
       nominatedTeam.includes(player.openId)
     );
   },

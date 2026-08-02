@@ -34,12 +34,11 @@ describe('04b — Evil Win Paths', () => {
       while (failMissionCount < 3 && round < maxRounds) {
         round++;
         let state = await getGameState(gameId);
-        const gs = state.game;
-        if (gs.currentPhase === 'gameEnd') break;
+        if (state.current.phase === 'gameEnd') break;
 
-        if (gs.currentPhase === 'discussion') {
-          const leader = players[gs.teamLeaderIndex];
-          const teamSize = getTeamSize(players.length, gs.currentRound);
+        if (state.current.phase === 'discussion') {
+          const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
+          const teamSize = getTeamSize(players.length, state.current.round);
           const evilP = players.filter(p => p.side === 'evil');
           const goodP = players.filter(p => p.side === 'good');
           const team = [...evilP.slice(0, teamSize), ...goodP].slice(0, teamSize).map(p => p.openId);
@@ -48,18 +47,18 @@ describe('04b — Evil Win Paths', () => {
         }
 
         state = await getGameState(gameId);
-        if (state.game.currentPhase === 'teamVote') {
+        if (state.current.phase === 'teamVote') {
           const half = Math.floor(players.length / 2) + 1;
           for (let i = 0; i < half; i++) await castVote(gameId, players[i].openId, 'approve');
           for (let i = half; i < players.length; i++) await castVote(gameId, players[i].openId, 'reject');
         }
 
         state = await getGameState(gameId);
-        if (state.game.currentPhase === 'discussion') continue;
-        if (state.game.currentPhase === 'gameEnd') break;
+        if (state.current.phase === 'discussion') continue;
+        if (state.current.phase === 'gameEnd') break;
 
-        if (state.game.currentPhase === 'missionVote') {
-          const missionTeam = state.game.nominatedTeam || [];
+        if (state.current.phase === 'missionVote') {
+          const missionTeam = state.current.nominatedTeam || [];
           for (const openId of missionTeam) {
             const p = players.find(pp => pp.openId === openId);
             if (p) {
@@ -68,15 +67,15 @@ describe('04b — Evil Win Paths', () => {
             }
           }
           state = await getGameState(gameId);
-          if (state.game.missionResults) {
-            failMissionCount = state.game.missionResults.filter(r => !r.success).length;
+          if (state.history.missions) {
+            failMissionCount = state.history.missions.filter(r => !r.success).length;
           }
         }
       }
 
       const finalState = await getGameState(gameId);
-      expect(finalState.game.currentPhase).toBe('gameEnd');
-      expect(finalState.game.gameResult.winner).toBe('evil');
+      expect(finalState.current.phase).toBe('gameEnd');
+      expect(finalState.basic.result.winner).toBe('evil');
       await endGame(gameId);
     });
   });
@@ -96,9 +95,9 @@ describe('04b — Evil Win Paths', () => {
       const assResult = await assassinate(gId, killer.openId, merlin.openId);
       expect(assResult.success).toBe(true);
       const state = await getGameState(gId);
-      expect(state.game.currentPhase).toBe('gameEnd');
-      expect(state.game.gameResult.winner).toBe('evil');
-      expect(state.game.gameResult.reason).toContain('梅林');
+      expect(state.current.phase).toBe('gameEnd');
+      expect(state.basic.result.winner).toBe('evil');
+      expect(state.basic.result.reason).toContain('梅林');
       await endGame(gId);
     });
 
@@ -152,7 +151,7 @@ describe('04b — Evil Win Paths', () => {
     const assResult = await assassinate(gId, morgana.openId, merlin.openId);
     expect(assResult.success).toBe(true);
     const state = await getGameState(gId);
-    expect(state.game.gameResult.winner).toBe('evil');
+    expect(state.basic.result.winner).toBe('evil');
     await endGame(gId);
   });
 });

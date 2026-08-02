@@ -38,46 +38,45 @@ describe('04a — Good Win Full Game Flow', () => {
       while (goodMissionCount < 3 && round < maxRounds) {
         round++;
         let state = await getGameState(gameId);
-        const gs = state.game;
-        if (gs.currentPhase === 'gameEnd') break;
+        if (state.current.phase === 'gameEnd') break;
 
-        if (gs.currentPhase === 'discussion') {
-          const leader = players[gs.teamLeaderIndex];
-          const teamSize = getTeamSize(players.length, gs.currentRound);
+        if (state.current.phase === 'discussion') {
+          const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
+          const teamSize = getTeamSize(players.length, state.current.round);
           const team = players.slice(0, teamSize).map(p => p.openId);
           const nomResult = await submitNomination(gameId, leader.openId, team);
           expect(nomResult.success).toBe(true);
           state = await getGameState(gameId);
         }
 
-        if (state.game.currentPhase === 'teamVote') {
+        if (state.current.phase === 'teamVote') {
           const half = Math.floor(players.length / 2) + 1;
           for (let i = 0; i < half; i++) await castVote(gameId, players[i].openId, 'approve');
           for (let i = half; i < players.length; i++) await castVote(gameId, players[i].openId, 'reject');
         }
 
         state = await getGameState(gameId);
-        if (state.game.currentPhase === 'discussion') continue;
-        if (state.game.currentPhase === 'gameEnd') break;
-        if (state.game.currentPhase === 'assassination') { goodMissionCount = 3; break; }
+        if (state.current.phase === 'discussion') continue;
+        if (state.current.phase === 'gameEnd') break;
+        if (state.current.phase === 'assassination') { goodMissionCount = 3; break; }
 
-        if (state.game.currentPhase === 'missionVote') {
-          const missionTeam = state.game.nominatedTeam || [];
+        if (state.current.phase === 'missionVote') {
+          const missionTeam = state.current.nominatedTeam || [];
           for (const openId of missionTeam) {
             const p = players.find(pp => pp.openId === openId);
             if (p) await castMissionVote(gameId, openId, 'success', p.role);
           }
           state = await getGameState(gameId);
-          if (state.game.currentPhase === 'gameEnd') break;
-          if (state.game.currentPhase === 'assassination') { goodMissionCount = 3; break; }
-          if (state.game.missionResults) {
-            goodMissionCount = state.game.missionResults.filter(r => r.success).length;
+          if (state.current.phase === 'gameEnd') break;
+          if (state.current.phase === 'assassination') { goodMissionCount = 3; break; }
+          if (state.history.missions) {
+            goodMissionCount = state.history.missions.filter(r => r.success).length;
           }
         }
       }
 
       let state = await getGameState(gameId);
-      if (state.game.currentPhase === 'assassination') {
+      if (state.current.phase === 'assassination') {
         const assassinPlayer = players.find(p => p.role === 'assassin');
         const morganaPlayer = players.find(p => p.role === 'morgana');
         const killer = assassinPlayer || morganaPlayer;
@@ -90,8 +89,8 @@ describe('04a — Good Win Full Game Flow', () => {
       }
 
       state = await getGameState(gameId);
-      expect(state.game.currentPhase).toBe('gameEnd');
-      expect(state.game.gameResult.winner).toBe('good');
+      expect(state.current.phase).toBe('gameEnd');
+      expect(state.basic.result.winner).toBe('good');
 
       await endGame(gameId);
     });

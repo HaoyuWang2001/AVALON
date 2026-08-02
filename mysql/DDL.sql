@@ -68,6 +68,9 @@ CREATE TABLE games (
     team_leader_index INT DEFAULT 0 COMMENT '当前队长索引',
     nominated_team JSON COMMENT '提名的队伍',
     failed_nominations INT DEFAULT 0 COMMENT '连续失败提名次数',
+    lake_holder_open_id VARCHAR(64) NULL COMMENT '当前湖仙持有者',
+    pre_nominated_team JSON NULL COMMENT '讨论期预提名队伍（一次设置不可改）',
+    speaking_order VARCHAR(10) DEFAULT 'asc' COMMENT '发言顺序：asc/desc',
     assassination JSON NULL COMMENT '刺杀记录: {killer, target, correct, phase, round}',
     game_result JSON COMMENT '游戏结果',
     status VARCHAR(20) DEFAULT 'active' COMMENT '状态：active=进行中, ended=正常结束, abandoned=异常结束',
@@ -109,10 +112,11 @@ CREATE TABLE votes (
     vote_type ENUM('team', 'mission') NOT NULL COMMENT '投票类型',
     vote_value VARCHAR(20) NOT NULL COMMENT '投票值',
     round INT NOT NULL COMMENT '第几回合',
+    car_index INT NOT NULL DEFAULT 1 COMMENT '本轮第几次提名（车次），1起',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '投票时间',
-    UNIQUE KEY uk_vote_unique (game_id, open_id, vote_type, round),
+    UNIQUE KEY uk_vote_unique (game_id, open_id, vote_type, round, car_index),
     FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
-    INDEX idx_game_round (game_id, round, vote_type),
+    INDEX idx_game_round (game_id, round, vote_type, car_index),
     INDEX idx_open_id (open_id),
     INDEX idx_created_at (created_at),
     CHECK (vote_value IN ('approve', 'reject', 'success', 'fail')),
@@ -137,6 +141,56 @@ CREATE TABLE mission_results (
     CHECK (round BETWEEN 1 AND 5),
     CHECK (fail_count >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='任务结果表';
+
+-- =============================================
+-- 7b. game_cars表：每次提名（车）的归档记录
+-- =============================================
+CREATE TABLE game_cars (
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
+    game_id VARCHAR(36) NOT NULL COMMENT 'FK→games.id',
+    round INT NOT NULL COMMENT '回合数',
+    car_index INT NOT NULL COMMENT '本轮第几次提名（车次），1起',
+    team_leader_open_id VARCHAR(64) NOT NULL COMMENT '本次提名的队长',
+    nominated_team JSON NOT NULL COMMENT '提名队伍',
+    team_votes JSON NULL COMMENT '队伍投票快照 {openId: approve/reject}',
+    outcome VARCHAR(10) NOT NULL COMMENT '结果：pending=投票中, send=发车, reject=流车',
+    mission_votes JSON NULL COMMENT '任务投票快照 {openId: success/fail}',
+    mission_success BOOLEAN NULL COMMENT '任务是否成功（仅 outcome=send 有效）',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '归档时间',
+    UNIQUE KEY uk_game_round_car (game_id, round, car_index),
+    FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+    INDEX idx_game_id (game_id),
+    CHECK (outcome IN ('pending', 'send', 'reject'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='每次提名归档表';
+
+-- =============================================
+-- 7c. lake_history表：湖仙验人记录
+-- =============================================
+CREATE TABLE lake_history (
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
+    game_id VARCHAR(36) NOT NULL COMMENT 'FK→games.id',
+    round INT NOT NULL COMMENT '验人发生的回合',
+    inspector_open_id VARCHAR(64) NOT NULL COMMENT '验人者（湖仙持有者）',
+    target_open_id VARCHAR(64) NOT NULL COMMENT '被查验者',
+    result VARCHAR(10) NOT NULL COMMENT '被查验者当前阵营：good/evil',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '验人时间',
+    FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+    INDEX idx_game_id (game_id),
+    CHECK (result IN ('good', 'evil'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='湖仙验人记录表';
+
+-- =============================================
+-- 7d. lancelot_swap_history表：兰斯洛特转换抽卡记录
+-- =============================================
+CREATE TABLE lancelot_swap_history (
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
+    game_id VARCHAR(36) NOT NULL COMMENT 'FK→games.id',
+    round INT NOT NULL COMMENT '发生转换的回合',
+    switched BOOLEAN NOT NULL COMMENT '是否发生阵营转换',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '记录时间',
+    FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+    INDEX idx_game_id (game_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='兰斯洛特转换抽卡记录表';
 
 -- =============================================
 -- 8. game_visions表：游戏玩家视野（开局冻结，不随兰斯洛特转换变化）

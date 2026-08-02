@@ -35,15 +35,15 @@ async function startBoard(config) {
   if (!start.success) throw new Error(`start failed: ${JSON.stringify(start)}`);
   const gameId = start.gameId;
   const state = await getGameState(gameId);
-  const fullPlayers = state.game.players.map(p => ({
+  const fullPlayers = state.players.map(p => ({
     openId: p.openId, role: p.role, side: p.side, seatNumber: p.seatNumber
   }));
-  return { gameId, roomId, hostId, players: fullPlayers, m, leaderIndex: state.game.teamLeaderIndex };
+  return { gameId, roomId, hostId, players: fullPlayers, m, leaderIndex: fullPlayers.findIndex(p => p.openId === state.current.teamLeaderOpenId) };
 }
 
 async function visionOf(gameId, openId) {
   const state = await getGameState(gameId, openId);
-  return state.game.vision ? state.game.vision.players : [];
+  return state.player.vision ? state.player.vision.players : [];
 }
 
 describe('03 — Game Start, Role Assignment & Vision', () => {
@@ -67,7 +67,7 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
       const { gameId } = await startBoard(buildCustomBoard10());
       const r1 = await advancePhase(gameId);
       expect(r1.success).toBe(true);
-      expect(r1.game.currentPhase).toBe('discussion');
+      expect(r1.current.phase).toBe('discussion');
       const r2 = await advancePhase(gameId);
       expect(r2.success).toBe(false);
     });
@@ -95,8 +95,8 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
     it('T5 玩家状态正确', async () => {
       const state = await getGameState(gameId);
       const N = players.length;
-      expect(state.game.players.length).toBe(N);
-      for (const p of state.game.players) {
+      expect(state.players.length).toBe(N);
+      for (const p of state.players) {
         expect(typeof p.openId).toBe('string');
         expect(typeof p.nickName).toBe('string');
         expect(typeof p.seatNumber).toBe('number');
@@ -104,7 +104,7 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
         expect(typeof p.role).toBe('string');
         expect(typeof p.side).toBe('string');
       }
-      const seats = state.game.players.map(p => p.seatNumber);
+      const seats = state.players.map(p => p.seatNumber);
       expect(new Set(seats).size).toBe(N);
       expect(seats.every(s => s >= 1 && s <= N)).toBe(true);
     });
@@ -130,10 +130,10 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
 
     it('T10 getGameState 全量/玩家视角', async () => {
       const full = await getGameState(gameId);
-      expect(full.game.players.every(p => typeof p.role === 'string')).toBe(true);
+      expect(full.players.every(p => typeof p.role === 'string')).toBe(true);
       const view = await getGameState(gameId, players[0].openId);
-      expect(Array.isArray(view.game.vision.players)).toBe(true);
-      for (const p of view.game.players) {
+      expect(Array.isArray(view.player.vision.players)).toBe(true);
+      for (const p of view.players) {
         if (p.openId === players[0].openId) {
           expect(p.role).toBe(players[0].role);
         } else {
@@ -255,9 +255,9 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
     const cfg = withConfigOverrides(buildCustomBoard10(), { ladyOfTheLake: true, ladyOfTheLakeRound: 2 });
     const { gameId, players, leaderIndex } = await startBoard(cfg);
     const state = await getGameState(gameId);
-    expect(state.game.lakeHolderOpenId).toBeDefined();
+    expect(state.current.lakeHolderOpenId).toBeDefined();
     const expected = players[(leaderIndex - 1 + players.length) % players.length].openId;
-    expect(state.game.lakeHolderOpenId).toBe(expected);
+    expect(state.current.lakeHolderOpenId).toBe(expected);
   });
 
   // ─────────────── C5 兰斯洛特相关 ───────────────

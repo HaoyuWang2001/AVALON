@@ -138,10 +138,7 @@ function createRouter() {
       
       emitGame(req.body.roomId || null, req.body.gameId);
 
-      res.json({ 
-        success: true, 
-        game: result.game 
-      });
+      res.json(result);
     } catch (error) {
       console.error('提交提名API错误:', error);
       
@@ -192,10 +189,7 @@ function createRouter() {
       
       emitGame(req.body.roomId || null, req.body.gameId);
 
-      res.json({ 
-        success: true, 
-        game: result.game 
-      });
+      res.json(result);
     } catch (error) {
       console.error('队伍投票API错误:', error);
       
@@ -244,10 +238,7 @@ function createRouter() {
       
       emitGame(req.body.roomId || null, req.body.gameId);
 
-      res.json({ 
-        success: true, 
-        game: result.game 
-      });
+      res.json(result);
     } catch (error) {
       console.error('任务投票API错误:', error);
       
@@ -289,10 +280,7 @@ function createRouter() {
 
       const result = await GameModel.advancePhase(gameId);
 
-      res.json({ 
-        success: true, 
-        game: result.game 
-      });
+      res.json(result);
     } catch (error) {
       console.error('推进阶段API错误:', error);
 
@@ -317,6 +305,77 @@ function createRouter() {
     }
   });
 
+  // 设置讨论阶段（发言顺序 + 预提名队伍，每轮一次）
+  router.post('/setDiscussion', async (req, res) => {
+    try {
+      const { gameId, openId, speakingOrder, preNominatedTeam } = req.body;
+
+      if (!gameId || !openId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+      if (!['asc', 'desc'].includes(speakingOrder)) {
+        return res.status(400).json({ success: false, message: 'speakingOrder 必须是 asc 或 desc' });
+      }
+
+      const result = await GameModel.setDiscussion(gameId, openId, speakingOrder, preNominatedTeam);
+
+      emitGame(req.body.roomId || null, req.body.gameId);
+
+      res.json(result);
+    } catch (error) {
+      console.error('设置讨论阶段API错误:', error);
+
+      if (error.message.includes('游戏不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+
+      if (error.message.includes('当前不是讨论阶段') ||
+          error.message.includes('只有队长才能设置发言') ||
+          error.message.includes('不可更改') ||
+          error.message.includes('speakingOrder') ||
+          error.message.includes('预提名队伍')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
+      res.status(500).json({ success: false, message: error.message || '设置讨论阶段失败' });
+    }
+  });
+
+  // 放弃游戏（仅房主，无胜负结果）
+  router.post('/:gameId/abandon', async (req, res) => {
+    try {
+      const { gameId } = req.params;
+      const { openId } = req.body;
+
+      if (!gameId || !openId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+
+      const db = require('../config/db');
+      const [gameRecord] = await db.query('SELECT room_id FROM games WHERE id = ?', [gameId]);
+      if (gameRecord && gameRecord.room_id) {
+        emitGame(gameRecord.room_id, gameId);
+      }
+
+      await GameModel.abandon(gameId, openId);
+
+      res.json({ success: true, message: '游戏已放弃' });
+    } catch (error) {
+      console.error('放弃游戏API错误:', error);
+
+      if (error.message.includes('游戏不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+
+      if (error.message.includes('仅房主可放弃游戏') ||
+          error.message.includes('游戏已结束')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
+      res.status(500).json({ success: false, message: error.message || '放弃游戏失败' });
+    }
+  });
+
   // 刺客刺杀梅林
   router.post('/:gameId/assassinate', async (req, res) => {
     try {
@@ -332,10 +391,7 @@ function createRouter() {
 
       const result = await GameModel.assassinate(gameId, killerOpenId, targetOpenId);
 
-      res.json({ 
-        success: true, 
-        game: result.game 
-      });
+      res.json(result);
     } catch (error) {
       console.error('刺杀API错误:', error);
 

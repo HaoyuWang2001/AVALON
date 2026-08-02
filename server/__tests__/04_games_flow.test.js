@@ -24,13 +24,13 @@ async function setupGame(config) {
 
 async function driveToMissionVote(gameId, players, team) {
   let state = await getGameState(gameId);
-  if (state.game.currentPhase === 'roleReveal') {
+  if (state.current.phase === 'roleReveal') {
     await advancePhase(gameId);
     state = await getGameState(gameId);
   }
-  const leader = players[state.game.teamLeaderIndex];
+  const leader = players[leaderIndex(state, players)];
   const n = players.length;
-  const size = TEAM_SIZES[n][state.game.currentRound - 1];
+  const size = TEAM_SIZES[n][state.current.round - 1];
   if (team.length !== size) throw new Error(`team size ${team.length} != ${size}`);
   const nom = await submitNomination(gameId, leader.openId, team);
   if (!nom.success) throw new Error('nomination failed: ' + JSON.stringify(nom));
@@ -38,13 +38,13 @@ async function driveToMissionVote(gameId, players, team) {
   for (let i = 0; i < half; i++) await castVote(gameId, players[i].openId, 'approve');
   for (let i = half; i < n; i++) await castVote(gameId, players[i].openId, 'reject');
   const s = await getGameState(gameId);
-  if (s.game.currentPhase !== 'missionVote') throw new Error('not missionVote: ' + s.game.currentPhase);
+  if (s.current.phase !== 'missionVote') throw new Error('not missionVote: ' + s.current.phase);
   return s;
 }
 
 async function completeMission(gameId, players, voteFn) {
   const state = await getGameState(gameId);
-  const team = state.game.nominatedTeam || [];
+  const team = state.current.nominatedTeam || [];
   for (const openId of team) {
     const p = players.find(x => x.openId === openId);
     const r = await castMissionVote(gameId, openId, voteFn(p), p.role);
@@ -61,7 +61,7 @@ function buildTeam(players, size, mustIncludeId) {
 // 打完当前一轮：按 failCount 个坏票
 async function playRound(gameId, players, failCount) {
   const state = await getGameState(gameId);
-  const round = state.game.currentRound;
+  const round = state.current.round;
   const n = players.length;
   const size = TEAM_SIZES[n][round - 1];
   const evils = players.filter(p => p.side === 'evil');
@@ -69,7 +69,7 @@ async function playRound(gameId, players, failCount) {
   const team = [...mustInclude, ...players.map(p => p.openId).filter(id => !mustInclude.includes(id))].slice(0, size);
   await driveToMissionVote(gameId, players, team);
   const st = await getGameState(gameId);
-  const missionTeam = st.game.nominatedTeam || [];
+  const missionTeam = st.current.nominatedTeam || [];
   let failsCast = 0;
   for (const oid of missionTeam) {
     const p = players.find(x => x.openId === oid);
@@ -87,16 +87,16 @@ async function advanceToRound4(gameId, players) {
   await playRound(gameId, players, 1);
   await playRound(gameId, players, 0);
   const state = await getGameState(gameId);
-  if (state.game.currentRound !== 4) throw new Error('not round 4: ' + state.game.currentRound);
+  if (state.current.round !== 4) throw new Error('not round 4: ' + state.current.round);
   return state;
 }
 
 // 流车一轮（reject 多数）
 async function rejectRound(gameId, players) {
   const st = await getGameState(gameId);
-  const leader = players[st.game.teamLeaderIndex];
+  const leader = players[leaderIndex(st, players)];
   const n = players.length;
-  const size = TEAM_SIZES[n][st.game.currentRound - 1];
+  const size = TEAM_SIZES[n][st.current.round - 1];
   const team = buildTeam(players, size, leader.openId);
   const nom = await submitNomination(gameId, leader.openId, team);
   if (!nom.success) throw new Error('nom failed: ' + JSON.stringify(nom));
@@ -108,11 +108,15 @@ async function rejectRound(gameId, players) {
 
 async function visionOf(gameId, openId) {
   const state = await getGameState(gameId, openId);
-  return state.game.vision ? state.game.vision.players : [];
+  return state.player.vision ? state.player.vision.players : [];
 }
 
 function lancelotSide(state, role) {
-  return state.game.players.find(p => p.role === role).side;
+  return state.players.find(p => p.role === role).side;
+}
+
+function leaderIndex(state, players) {
+  return players.findIndex(p => p.openId === state.current.teamLeaderOpenId);
 }
 
 describe('04 — 通用游戏机制（与胜负路径无关）', () => {
@@ -227,14 +231,14 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
   it('04-8 0 坏票 → 任务成功', async () => {
     const { gameId, players } = await setupGame(buildCustomBoard10());
     const after = await playRound(gameId, players, 0);
-    expect(after.game.missionResults[0].success).toBe(true);
+    expect(after.history.missions[0].success).toBe(true);
   });
 
   it('04-9 普通轮 ≥1 坏票失败（1 与 2 均验）', async () => {
     for (const fails of [1, 2]) {
       const { gameId, players } = await setupGame(buildCustomBoard10());
       const after = await playRound(gameId, players, fails);
-      expect(after.game.missionResults[0].success).toBe(false);
+      expect(after.history.missions[0].success).toBe(false);
     }
   });
 
@@ -242,7 +246,7 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     const { gameId, players } = await setupGame(buildStandardRoomConfig(7));
     await advanceToRound4(gameId, players);
     const after = await playRound(gameId, players, 1);
-    const r4 = after.game.missionResults.find(r => r.round === 4);
+    const r4 = after.history.missions.find(r => r.round === 4);
     expect(r4.success).toBe(true);
   });
 
@@ -251,7 +255,7 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
       const { gameId, players } = await setupGame(buildStandardRoomConfig(7));
       await advanceToRound4(gameId, players);
       const after = await playRound(gameId, players, fails);
-      const r4 = after.game.missionResults.find(r => r.round === 4);
+      const r4 = after.history.missions.find(r => r.round === 4);
       expect(r4.success).toBe(false);
     }
   });
@@ -260,7 +264,7 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     const { gameId, players } = await setupGame(buildStandardRoomConfig(5));
     await advanceToRound4(gameId, players);
     const after = await playRound(gameId, players, 1);
-    const r4 = after.game.missionResults.find(r => r.round === 4);
+    const r4 = after.history.missions.find(r => r.round === 4);
     expect(r4.success).toBe(false);
   });
 
@@ -271,10 +275,10 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     const before = await getGameState(gameId);
     const n = players.length;
     const after = await rejectRound(gameId, players);
-    expect(after.game.currentPhase).toBe('discussion');
-    expect(after.game.currentRound).toBe(1);
-    expect(after.game.teamLeaderIndex).toBe((before.game.teamLeaderIndex + 1) % n);
-    expect(after.game.failedNominations).toBe(1);
+    expect(after.current.phase).toBe('discussion');
+    expect(after.current.round).toBe(1);
+    expect(leaderIndex(after, players)).toBe((leaderIndex(before, players) + 1) % n);
+    expect(after.current.failedNominations).toBe(1);
   });
 
   it('04-14 发车成功：round+1、leader+1、流车数=0', async () => {
@@ -283,15 +287,15 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     await rejectRound(gameId, players); // 先制造流车数 1
     const n = players.length;
     const st = await getGameState(gameId);
-    const leader = players[st.game.teamLeaderIndex];
-    const size = TEAM_SIZES[n][st.game.currentRound - 1];
+    const leader = players[leaderIndex(st, players)];
+    const size = TEAM_SIZES[n][st.current.round - 1];
     await driveToMissionVote(gameId, players, buildTeam(players, size, leader.openId));
     const before = await getGameState(gameId);
     await completeMission(gameId, players, () => 'success');
     const after = await getGameState(gameId);
-    expect(after.game.currentRound).toBe(before.game.currentRound + 1);
-    expect(after.game.teamLeaderIndex).toBe((before.game.teamLeaderIndex + 1) % n);
-    expect(after.game.failedNominations).toBe(0);
+    expect(after.current.round).toBe(before.current.round + 1);
+    expect(leaderIndex(after, players)).toBe((leaderIndex(before, players) + 1) % n);
+    expect(after.current.failedNominations).toBe(0);
   });
 
   // ─────────── 强制发车 ───────────
@@ -300,12 +304,12 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     await advancePhase(gameId);
     for (let k = 0; k < 3; k++) await rejectRound(gameId, players);
     const forced = await getGameState(gameId);
-    expect(forced.game.failedNominations).toBe(3);
-    expect(forced.game.forcedSend).toBe(true);
+    expect(forced.current.failedNominations).toBe(3);
+    expect(forced.current.forcedSend).toBe(true);
 
     const n = players.length;
-    const leader = players[forced.game.teamLeaderIndex];
-    const size = TEAM_SIZES[n][forced.game.currentRound - 1];
+    const leader = players[leaderIndex(forced, players)];
+    const size = TEAM_SIZES[n][forced.current.round - 1];
     const team = buildTeam(players, size, leader.openId);
 
     const withoutFlag = await submitNomination(gameId, leader.openId, team);
@@ -314,11 +318,11 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     const ok = await submitNomination(gameId, leader.openId, team, true);
     expect(ok.success).toBe(true);
     const st2 = await getGameState(gameId);
-    expect(st2.game.currentPhase).toBe('missionVote');
+    expect(st2.current.phase).toBe('missionVote');
 
     await completeMission(gameId, players, () => 'success');
     const st3 = await getGameState(gameId);
-    expect(st3.game.failedNominations).toBe(0);
+    expect(st3.current.failedNominations).toBe(0);
   });
 
   // ─────────── 转换轮次边界 ───────────
@@ -438,8 +442,8 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     const n = players.length;
     await driveToMissionVote(gameId, players, buildTeam(players, TEAM_SIZES[n][0], players[0].openId));
     const view = await getGameState(gameId, players[0].openId);
-    expect(view.game.teamVotes.approve || view.game.teamVotes.reject).toBeDefined();
-    expect(view.game.teamVotes[players[0].openId]).toBeUndefined();
+    expect(view.current.teamVotes.approve || view.current.teamVotes.reject).toBeDefined();
+    expect(view.current.teamVotes[players[0].openId]).toBeUndefined();
   });
 
   it('04-23 voteVisibility=public：结束后逐人票型', async () => {
@@ -448,8 +452,8 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     const n = players.length;
     await driveToMissionVote(gameId, players, buildTeam(players, TEAM_SIZES[n][0], players[0].openId));
     const view = await getGameState(gameId, players[0].openId);
-    expect(view.game.teamVotes[players[0].openId]).toBe('approve');
-    expect(view.game.teamVotes[players[1].openId]).toBeDefined();
+    expect(view.current.teamVotes[players[0].openId]).toBe('approve');
+    expect(view.current.teamVotes[players[1].openId]).toBeDefined();
   });
 
   it('04-24 投票中：玩家仅见自己票（未投为空、已投可见）', async () => {
@@ -461,32 +465,32 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     const team = buildTeam(players, size, leader.openId);
     await advancePhase(gameId);
     const st = await getGameState(gameId);
-    const gameLeader = players[st.game.teamLeaderIndex];
+    const gameLeader = players[leaderIndex(st, players)];
     await submitNomination(gameId, gameLeader.openId, team);
 
     const before = await getGameState(gameId, players[3].openId);
-    expect(before.game.teamVotes[players[3].openId]).toBeUndefined();
+    expect(before.current.teamVotes[players[3].openId]).toBeUndefined();
 
     await castVote(gameId, players[3].openId, 'approve');
     const after = await getGameState(gameId, players[3].openId);
-    expect(after.game.teamVotes[players[3].openId]).toBe('approve');
-    expect(after.game.teamVotes[players[0].openId]).toBeUndefined();
+    expect(after.current.teamVotes[players[3].openId]).toBe('approve');
+    expect(after.current.teamVotes[players[0].openId]).toBeUndefined();
   });
 
   // ─────────── missionFailDetail ───────────
-  it('04-25 missionFailDetail=binary：missionResults 无 failCount', async () => {
+  it('04-25 missionFailDetail=binary：missionFailCount=-1（隐藏坏票数）', async () => {
     const config = withConfigOverrides(buildCustomBoard10(), { rules: { missionFailDetail: 'binary' } });
     const { gameId, players } = await setupGame(config);
     await playRound(gameId, players, 1);
     const st = await getGameState(gameId);
-    expect(st.game.missionResults[0].failCount).toBeUndefined();
+    expect(st.history.missions[0].missionFailCount).toBe(-1);
   });
 
-  it('04-26 missionFailDetail=count：含 failCount', async () => {
+  it('04-26 missionFailDetail=count：含真实 failCount', async () => {
     const config = withConfigOverrides(buildCustomBoard10(), { rules: { missionFailDetail: 'count' } });
     const { gameId, players } = await setupGame(config);
     await playRound(gameId, players, 1);
     const st = await getGameState(gameId);
-    expect(st.game.missionResults[0].failCount).toBeDefined();
+    expect(st.history.missions[0].missionFailCount).toBeGreaterThanOrEqual(0);
   });
 });
