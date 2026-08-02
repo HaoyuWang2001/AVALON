@@ -103,6 +103,8 @@ async function rejectRound(gameId, players) {
   const rejectCount = Math.floor(n / 2) + 1;
   for (let i = 0; i < rejectCount; i++) await castVote(gameId, players[i].openId, 'reject');
   for (let i = rejectCount; i < n; i++) await castVote(gameId, players[i].openId, 'approve');
+  const st2 = await getGameState(gameId);
+  console.log('[dbgReject] phase', st2.game.currentPhase, 'leader', st2.game.teamLeaderIndex, 'fn', st2.game.failedNominations, 'round', st2.game.currentRound);
   return getGameState(gameId);
 }
 
