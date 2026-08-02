@@ -552,7 +552,7 @@ class GameModel {
       await db.transaction(async (connection) => {
         // 获取游戏状态
         const [game] = await connection.execute(
-          `SELECT current_phase, current_round, 
+          `SELECT current_phase, current_round, team_leader_index, failed_nominations, 
                   (SELECT COUNT(*) FROM game_players WHERE game_id = ?) as player_count
            FROM games WHERE id = ? FOR UPDATE`,
           [gameId, gameId]

@@ -103,8 +103,6 @@ async function rejectRound(gameId, players) {
   const rejectCount = Math.floor(n / 2) + 1;
   for (let i = 0; i < rejectCount; i++) await castVote(gameId, players[i].openId, 'reject');
   for (let i = rejectCount; i < n; i++) await castVote(gameId, players[i].openId, 'approve');
-  const st2 = await getGameState(gameId);
-  console.log('[dbgReject] phase', st2.game.currentPhase, 'leader', st2.game.teamLeaderIndex, 'fn', st2.game.failedNominations, 'round', st2.game.currentRound);
   return getGameState(gameId);
 }
 
@@ -199,23 +197,29 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
   });
 
   it('04-7 转换后：蓝兰可 fail、红兰只能 success', async () => {
-    const cfg = withConfigOverrides(buildStandardRoomConfig(11), { rules: { lancelotSwapRound: 1, lancelotSwapForce: 'switch' } });
-    const { gameId, players } = await setupGame(cfg);
-    const blue = players.find(p => p.role === 'lancelotBlue');
-    const red = players.find(p => p.role === 'lancelotRed');
-    const n = players.length;
-    await driveToMissionVote(gameId, players, buildTeam(players, TEAM_SIZES[n][0], blue.openId));
-    await completeMission(gameId, players, () => 'success');
-    const st = await getGameState(gameId);
-    expect(lancelotSide(st, 'lancelotBlue')).toBe('evil');
-    expect(lancelotSide(st, 'lancelotRed')).toBe('good');
-
-    await driveToMissionVote(gameId, players, buildTeam(players, TEAM_SIZES[n][1], blue.openId));
-    const failOk = await castMissionVote(gameId, blue.openId, 'fail', blue.role);
+    // 单局：蓝兰变坏后可投 fail
+    const cfgA = withConfigOverrides(buildStandardRoomConfig(11), { rules: { lancelotSwapRound: 1, lancelotSwapForce: 'switch' } });
+    const gA = await setupGame(cfgA);
+    const blueA = gA.players.find(p => p.role === 'lancelotBlue');
+    const nA = gA.players.length;
+    await driveToMissionVote(gA.gameId, gA.players, buildTeam(gA.players, TEAM_SIZES[nA][0], blueA.openId));
+    await completeMission(gA.gameId, gA.players, () => 'success');
+    expect(lancelotSide(await getGameState(gA.gameId), 'lancelotBlue')).toBe('evil');
+    await driveToMissionVote(gA.gameId, gA.players, buildTeam(gA.players, TEAM_SIZES[nA][1], blueA.openId));
+    const failOk = await castMissionVote(gA.gameId, blueA.openId, 'fail', blueA.role);
     expect(failOk.success).toBe(true);
 
-    await driveToMissionVote(gameId, players, buildTeam(players, TEAM_SIZES[n][1], red.openId));
-    const failBad = await castMissionVote(gameId, red.openId, 'fail', red.role);
+    // 双兰：红兰变好后不能投 fail
+    const cfgB = withConfigOverrides(buildStandardRoomConfig(11), { rules: { lancelotSwapRound: 1, lancelotSwapForce: 'switch' } });
+    const gB = await setupGame(cfgB);
+    const blueB = gB.players.find(p => p.role === 'lancelotBlue');
+    const redB = gB.players.find(p => p.role === 'lancelotRed');
+    const nB = gB.players.length;
+    await driveToMissionVote(gB.gameId, gB.players, buildTeam(gB.players, TEAM_SIZES[nB][0], blueB.openId));
+    await completeMission(gB.gameId, gB.players, () => 'success');
+    expect(lancelotSide(await getGameState(gB.gameId), 'lancelotRed')).toBe('good');
+    await driveToMissionVote(gB.gameId, gB.players, buildTeam(gB.players, TEAM_SIZES[nB][1], redB.openId));
+    const failBad = await castMissionVote(gB.gameId, redB.openId, 'fail', redB.role);
     expect(failBad.success).toBe(false);
   });
 
@@ -265,10 +269,8 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     const { gameId, players } = await setupGame(buildCustomBoard10());
     await advancePhase(gameId);
     const before = await getGameState(gameId);
-    console.log('[dbg13] before leader', before.game.teamLeaderIndex, 'round', before.game.currentRound, 'phase', before.game.currentPhase);
     const n = players.length;
     const after = await rejectRound(gameId, players);
-    console.log('[dbg13] after leader', after.game.teamLeaderIndex, 'round', after.game.currentRound, 'phase', after.game.currentPhase, 'fn', after.game.failedNominations);
     expect(after.game.currentPhase).toBe('discussion');
     expect(after.game.currentRound).toBe(1);
     expect(after.game.teamLeaderIndex).toBe((before.game.teamLeaderIndex + 1) % n);
