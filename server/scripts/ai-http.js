@@ -61,6 +61,9 @@ const STANDARD_ROLE_CONFIG = {
 };
 
 function arg(name, def) {
+  const prefix = '--' + name + '=';
+  const eq = process.argv.find(a => a.startsWith(prefix));
+  if (eq) return eq.slice(prefix.length);
   const idx = process.argv.indexOf('--' + name);
   if (idx === -1 || idx + 1 >= process.argv.length) return def;
   return process.argv[idx + 1];
