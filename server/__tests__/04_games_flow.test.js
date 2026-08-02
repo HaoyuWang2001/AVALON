@@ -322,14 +322,13 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
   });
 
   // ─────────── 转换轮次边界 ───────────
-  it.each([[2, [0, 0]], [3, [0, 1, 0]], [4, [0, 1, 0, 1]]])('04-16 swapRound=%i：第%i轮结束才触发', async (swapRound, pattern) => {
+  it.each([[2, [0, 0]], [3, [0, 1, 0]], [4, [0, 1, 0, 2]]])('04-16 swapRound=%i：第%i轮结束才触发', async (swapRound, pattern) => {
     const config = withConfigOverrides(buildCustomBoard9(), { rules: { lancelotSwapRound: swapRound, lancelotSwapForce: 'switch' } });
     const { gameId, players } = await setupGame(config);
     let prev = lancelotSide(await getGameState(gameId), 'lancelotBlue');
     for (let i = 0; i < pattern.length; i++) {
       const after = await playRound(gameId, players, pattern[i]);
       const cur = lancelotSide(after, 'lancelotBlue');
-      console.log(`[dbg16 swapRound=${swapRound}] after round ${i + 1}: side ${cur} (prev ${prev}) round=${after.game.currentRound} phase=${after.game.currentPhase}`);
       if (i + 1 === swapRound) expect(cur).not.toBe(prev);
       else expect(cur).toBe(prev);
       prev = cur;
