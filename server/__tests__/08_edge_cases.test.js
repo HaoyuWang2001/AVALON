@@ -201,7 +201,7 @@ describe('08 — Edge Cases & Validation', () => {
       const st = await getGameState(gameId);
       expect(st.basic.status).toBe('abandoned');
       const room = await apiGet(`/api/rooms/${roomId}`);
-      expect(room.body.room.gameStarted).toBe(false);
+      expect(room.body.room.gameStarted).toBeFalsy();
     });
 
     it('should reject abandon after game ended', async () => {

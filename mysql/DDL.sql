@@ -71,6 +71,7 @@ CREATE TABLE games (
     lake_holder_open_id VARCHAR(64) NULL COMMENT '当前湖仙持有者',
     pre_nominated_team JSON NULL COMMENT '讨论期预提名队伍（一次设置不可改）',
     speaking_order VARCHAR(10) DEFAULT 'asc' COMMENT '发言顺序：asc/desc',
+    discussion_set BOOLEAN DEFAULT FALSE COMMENT '本轮讨论是否已设置发言配置（一次不可改）',
     assassination JSON NULL COMMENT '刺杀记录: {killer, target, correct, phase, round}',
     game_result JSON COMMENT '游戏结果',
     status VARCHAR(20) DEFAULT 'active' COMMENT '状态：active=进行中, ended=正常结束, abandoned=异常结束',

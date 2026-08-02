@@ -285,7 +285,7 @@ class GameModel {
     try {
       await db.transaction(async (connection) => {
         const [game] = await connection.execute(
-          `SELECT current_phase, current_round, team_leader_index, pre_nominated_team, room_id
+          `SELECT current_phase, current_round, team_leader_index, pre_nominated_team, speaking_order, discussion_set, room_id
            FROM games WHERE id = ? FOR UPDATE`,
           [gameId]
         );
@@ -312,7 +312,7 @@ class GameModel {
         }
 
         // 每轮讨论仅可设置一次（不可更改）
-        if (game[0].pre_nominated_team !== null && game[0].pre_nominated_team !== undefined) {
+        if (game[0].discussion_set) {
           throw new Error('本轮发言配置已设置，不可更改');
         }
 
@@ -337,7 +337,7 @@ class GameModel {
 
         await connection.execute(
           `UPDATE games 
-           SET speaking_order = ?, pre_nominated_team = ?, updated_at = NOW()
+           SET speaking_order = ?, pre_nominated_team = ?, discussion_set = TRUE, updated_at = NOW()
            WHERE id = ?`,
           [speakingOrder, preTeamJson, gameId]
         );
@@ -861,6 +861,7 @@ class GameModel {
                    lake_holder_open_id = ?,
                    pre_nominated_team = NULL,
                    speaking_order = 'asc',
+                   discussion_set = FALSE,
                    updated_at = NOW()
                WHERE id = ?`,
               [newTeamLeaderIndex, failedNominations, lakeHolderOpenId, gameId]
@@ -1069,6 +1070,7 @@ class GameModel {
                    lake_holder_open_id = ?,
                    pre_nominated_team = NULL,
                    speaking_order = 'asc',
+                   discussion_set = FALSE,
                    updated_at = NOW()
                WHERE id = ?`,
               [newRound, newTeamLeaderIndex, lakeHolderOpenId, gameId]
@@ -1156,12 +1158,13 @@ class GameModel {
           throw new Error('当前阶段无法推进');
         }
 
-        // 进入讨论：重置讨论态（预提名/发言序）
+        // 进入讨论：重置讨论态（预提名/发言序/已设置标记）
         await connection.execute(
           `UPDATE games 
            SET current_phase = 'discussion',
                pre_nominated_team = NULL,
                speaking_order = 'asc',
+               discussion_set = FALSE,
                updated_at = NOW()
            WHERE id = ?`,
           [gameId]
