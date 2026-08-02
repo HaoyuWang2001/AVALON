@@ -265,26 +265,37 @@ class RoomModel {
       await db.transaction(async (connection) => {
         const [rooms] = await connection.execute('SELECT game_started, room_config FROM rooms WHERE id = ? FOR UPDATE', [roomId]);
         if (rooms.length === 0) throw new Error('房间不存在');
-        if (rooms[0].game_started) throw new Error('游戏已开始');
+        const gameStarted = !!rooms[0].game_started;
+        
+        // 游戏进行中：仅允许以观战者身份加入（自动落座 -1）
+        let effectiveSeat = seat;
+        if (gameStarted) {
+          if (seat >= 1) throw new Error('游戏已开始');
+          effectiveSeat = -1;
+        }
         
         const [alreadyJoined] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND open_id = ?', [roomId, openId]);
         if (alreadyJoined[0].count > 0) throw new Error('已在房间中');
 
         const roomConfig = rooms[0].room_config ? (typeof rooms[0].room_config === 'string' ? JSON.parse(rooms[0].room_config) : rooms[0].room_config) : null;
         
-        if (seat === -1) {
+        if (effectiveSeat === -1) {
           const [observerCount] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND seat_number = -1', [roomId]);
-          this._assertSpectatorAllowed(roomConfig, observerCount[0].count);
+          try {
+            this._assertSpectatorAllowed(roomConfig, observerCount[0].count);
+          } catch (e) {
+            throw new Error(gameStarted ? '游戏已开始且观战区已满' : e.message);
+          }
         }
         
-        if (seat >= 1) {
-          const [occupiedSeats] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND seat_number = ?', [roomId, seat]);
-          if (occupiedSeats[0].count > 0) throw new Error(`${seat}号座位已被占用`);
+        if (effectiveSeat >= 1) {
+          const [occupiedSeats] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND seat_number = ?', [roomId, effectiveSeat]);
+          if (occupiedSeats[0].count > 0) throw new Error(`${effectiveSeat}号座位已被占用`);
         }
         
         await connection.execute(
           'INSERT INTO room_players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_ready, created_at) VALUES (?, ?, ?, ?, ?, ?, FALSE, NOW())',
-          [roomId, openId, nickName, wxNickName, userInfo.avatarUrl || '', seat]
+          [roomId, openId, nickName, wxNickName, userInfo.avatarUrl || '', effectiveSeat]
         );
         await connection.execute(
           'INSERT INTO users (open_id, current_room_id, updated_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE current_room_id = VALUES(current_room_id), updated_at = NOW()',

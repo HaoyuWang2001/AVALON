@@ -245,6 +245,53 @@ describe('06 — Edge Cases & Validation', () => {
     });
   });
 
+  describe('Spectator & Game Start', () => {
+    it('开局前观战者存在不影响开局（人数排除 seat -1）', async () => {
+      const { roomId } = await createRoomWithPlayers(5, buildConfigWithSpectator({ allow: true, max: 3 }));
+      // 加入观战者（seat -1）
+      await joinRoom(roomId, makeUserId(), -1, 'Observer');
+      await joinRoom(roomId, makeUserId(), -1, 'Observer2');
+      // 5 名坐席玩家均已 ready（createRoomWithPlayers 已处理），房主开局
+      const { getRoom } = require('./helpers/testHelper');
+      const room = await getRoom(roomId);
+      const start = await apiPost('/api/games/start', { roomId, openId: room.room.ownerId });
+      expect(start.body.success).toBe(true);
+      const st = await getGameState(start.body.gameId);
+      expect(st.players.length).toBe(5);
+      await endGame(start.body.gameId);
+    });
+
+    it('游戏中：新观战者可加入观战区（seat -1）', async () => {
+      const { createRoomAndStartGame: crsg } = require('./helpers/testHelper');
+      const cfg = buildConfigWithSpectator({ allow: true, max: 2 });
+      const { roomId, gameId } = await crsg(5, cfg);
+      const res = await apiPost('/api/rooms/join', {
+        roomId, userInfo: { openId: makeUserId(), nickName: 'LateObs', avatarUrl: '' }, seatNumber: -1, customNickName: 'LateObs'
+      });
+      expect(res.body.success).toBe(true);
+      await endGame(gameId);
+    });
+
+    it('游戏中：观战区满时提示"游戏已开始且观战区已满"', async () => {
+      const cfg = buildConfigWithSpectator({ allow: true, max: 1 });
+      const { roomId, gameId } = await createRoomAndStartGame(5, cfg);
+      // 已有一个观战者占满（max=1）
+      await apiPost('/api/rooms/join', { roomId, userInfo: { openId: makeUserId(), nickName: 'O1', avatarUrl: '' }, seatNumber: -1, customNickName: 'O1' });
+      const res = await apiPost('/api/rooms/join', { roomId, userInfo: { openId: makeUserId(), nickName: 'O2', avatarUrl: '' }, seatNumber: -1, customNickName: 'O2' });
+      expect(res.body.success).toBe(false);
+      expect(res.body.message || '').toMatch(/游戏已开始且观战区已满/);
+      await endGame(gameId);
+    });
+
+    it('游戏中：非观战身份加入被拒（游戏已开始）', async () => {
+      const { roomId, gameId } = await createRoomAndStartGame(5);
+      const res = await apiPost('/api/rooms/join', { roomId, userInfo: { openId: makeUserId(), nickName: 'Late', avatarUrl: '' }, seatNumber: 2, customNickName: 'Late' });
+      expect(res.body.success).toBe(false);
+      expect(res.body.message || '').toMatch(/游戏已开始/);
+      await endGame(gameId);
+    });
+  });
+
   describe('Rapid Room Cycle', () => {
     it('should handle create-join-leave quickly', async () => {
       for (let i = 0; i < 5; i++) {

@@ -147,10 +147,11 @@ class GameModel {
         
         // 1. 获取房间和玩家信息
         const [roomInfo] = await connection.execute(
-          `SELECT r.owner_id, r.room_config, COUNT(p.open_id) as player_count,
+          `SELECT r.owner_id, r.room_config,
+                  COUNT(p.open_id) as player_count,
                   SUM(CASE WHEN p.is_ready THEN 1 ELSE 0 END) as ready_count
            FROM rooms r
-           LEFT JOIN room_players p ON r.id = p.room_id
+           LEFT JOIN room_players p ON r.id = p.room_id AND p.seat_number >= 1
            WHERE r.id = ? AND r.game_started = FALSE
            GROUP BY r.owner_id, r.room_config
            FOR UPDATE`,
@@ -175,10 +176,10 @@ class GameModel {
           throw new Error('还有玩家未准备');
         }
         
-        // 2. 获取已排序的玩家列表
+        // 2. 获取已排序的玩家列表（仅入座玩家，排除观战/等待区）
         const [players] = await connection.execute(
           `SELECT open_id as openId, nick_name as nickName, avatar_url as avatarUrl, seat_number as seatNumber
-           FROM room_players WHERE room_id = ? ORDER BY seat_number`,
+           FROM room_players WHERE room_id = ? AND seat_number >= 1 ORDER BY seat_number`,
           [roomId]
         );
         
