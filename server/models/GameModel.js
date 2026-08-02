@@ -685,7 +685,7 @@ class GameModel {
         }
         
         // 验证队伍大小
-        const playerCount = game[0].player_count;
+        const playerCount = parseInt(game[0].player_count, 10);
         const requiredSize = this.getTeamSize(playerCount, game[0].current_round);
         if (nominatedTeam.length !== requiredSize) {
           throw new Error(`需要${requiredSize}人`);
@@ -795,7 +795,7 @@ class GameModel {
           [gameId, game[0].current_round, carIndex]
         );
         
-        const playerCount = game[0].player_count;
+        const playerCount = parseInt(game[0].player_count, 10);
         
         if (voteCount[0].count >= playerCount) {
           // 统计投票结果
@@ -980,7 +980,7 @@ class GameModel {
           const failCount = votes.filter(v => v.vote_value === 'fail').length;
 
           // 判断任务是否成功（1 张坏票即失败；仅 7+ 人局第 4 轮保护轮需 2 张坏票）
-          const playerCount = game[0].player_count;
+          const playerCount = parseInt(game[0].player_count, 10);
           const requiresDoubleFail = playerCount >= 7 && game[0].current_round === 4;
           let success;
           if (requiresDoubleFail) {
@@ -1048,7 +1048,7 @@ class GameModel {
             // 进入下一回合（先触发兰斯洛特转换抽卡，再推进；流车数重置 0）
             await maybeLancelotSwap(connection, gameId, game[0].current_round, rules);
             const newRound = game[0].current_round + 1;
-            const newTeamLeaderIndex = (game[0].team_leader_index + 1) % game[0].player_count;
+            const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
             const [newLeaderPlayers] = await connection.execute(
               `SELECT gp.open_id FROM game_players gp
                LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
