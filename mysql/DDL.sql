@@ -156,7 +156,20 @@ CREATE TABLE messages (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天消息表';
 
 -- =============================================
--- 9. role_configurations表：角色配置模板
+-- 9. game_visions表：游戏玩家视野（开局冻结，不随兰斯洛特转换变化）
+-- =============================================
+CREATE TABLE game_visions (
+    game_id VARCHAR(36) NOT NULL COMMENT 'FK→games.id',
+    open_id VARCHAR(64) NOT NULL COMMENT '玩家openId',
+    vision JSON NULL COMMENT '该玩家视野 {seen:[{openId,role?,side?,canIdentity}]}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '生成时间',
+    PRIMARY KEY (game_id, open_id),
+    FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+    INDEX idx_game_id (game_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='游戏玩家视野表';
+
+-- =============================================
+-- 10. role_configurations表：角色配置模板
 -- =============================================
 CREATE TABLE role_configurations (
     player_count INT PRIMARY KEY COMMENT '玩家数量',

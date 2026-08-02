@@ -10,7 +10,7 @@ const VALID_ROLES = [
 const REQUIRED_RULES = [
   'evilKnowsEachOther', 'lancelotsKnowEachOther', 'lancelotSwapRound',
   'ladyOfTheLake', 'ladyOfTheLakeRound', 'maxFailedNominations',
-  'oberonMustFailMission', 'redLancelotMustFailMission',
+  'oberonMustFailMission', 'lancelotMustFail',
   'voteVisibility', 'missionFailDetail'
 ];
 
@@ -55,6 +55,12 @@ class RoomModel {
 
     if (roomConfig.rules.missionFailDetail && !['count', 'binary'].includes(roomConfig.rules.missionFailDetail)) {
       throw new Error('missionFailDetail 必须是 count 或 binary');
+    }
+
+    // lancelotSwapRound 仅允许 1-4（0/5 拒绝）
+    const swapRound = roomConfig.rules.lancelotSwapRound;
+    if (typeof swapRound !== 'number' || !Number.isInteger(swapRound) || swapRound < 1 || swapRound > 4) {
+      throw new Error('lancelotSwapRound 必须为 1-4 的整数');
     }
 
     if (roomConfig.spectator !== undefined && roomConfig.spectator !== null) {

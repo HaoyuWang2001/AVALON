@@ -172,7 +172,7 @@
                 <text class="rule-label">流车上限</text>
                 <text class="rule-desc">每轮最多流车 {{rules.maxFailedNominations}} 次，第 {{rules.maxFailedNominations + 1}} 辆车直接发出</text>
               </view>
-              <picker class="rule-picker" mode="selector" range="{{[1,2,3,4,5]}}" value="{{rules.maxFailedNominations - 1}}" data-field="maxFailedNominations" bindchange="onRulePicker">
+              <picker class="rule-picker" mode="selector" range="{{[1,2,3,4,5]}}" value="{{rules.maxFailedNominations - 1}}" data-field="maxFailedNominations" data-range="{{[1,2,3,4,5]}}" bindchange="onRulePicker">
                 <text>{{rules.maxFailedNominations}} 次</text>
               </picker>
             </view>
@@ -242,8 +242,8 @@
                 <text class="rule-label">兰斯换身轮次</text>
                 <text class="rule-desc">第几轮起抽取身份转换卡（0=不转换）</text>
               </view>
-              <picker class="rule-picker" mode="selector" range="{{[0,1,2,3,4,5]}}" value="{{rules.lancelotSwapRound}}" data-field="lancelotSwapRound" bindchange="onRulePicker">
-                <text>{{rules.lancelotSwapRound === 0 ? '不转换' : '第 ' + rules.lancelotSwapRound + ' 轮'}}</text>
+              <picker class="rule-picker" mode="selector" range="{{[1,2,3,4]}}" value="{{rules.lancelotSwapRound - 1}}" data-field="lancelotSwapRound" data-range="{{[1,2,3,4]}}" bindchange="onRulePicker">
+                <text>第 {{rules.lancelotSwapRound}} 轮</text>
               </picker>
             </view>
             <view class="rule-row" wx:if="{{selectedRoles.lancelotRed}}">

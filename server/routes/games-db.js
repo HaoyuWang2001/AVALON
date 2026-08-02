@@ -125,7 +125,7 @@ function createRouter() {
   // 提交提名队伍
   router.post('/submitNomination', async (req, res) => {
     try {
-      const { gameId, openId, nominatedTeam } = req.body;
+      const { gameId, openId, nominatedTeam, forcedCar } = req.body;
       
       if (!gameId || !openId || !nominatedTeam || !Array.isArray(nominatedTeam)) {
         return res.status(400).json({ 
@@ -134,7 +134,7 @@ function createRouter() {
         });
       }
       
-      const result = await GameModel.submitNomination(gameId, openId, nominatedTeam);
+      const result = await GameModel.submitNomination(gameId, openId, nominatedTeam, forcedCar === true);
       
       emitGame(req.body.roomId || null, req.body.gameId);
 
@@ -154,7 +154,8 @@ function createRouter() {
       
       if (error.message.includes('当前不是队伍选择阶段') ||
           error.message.includes('只有队长才能提名') ||
-          error.message.includes('需要')) {
+          error.message.includes('需要') ||
+          error.message.includes('强制车')) {
         return res.status(400).json({ 
           success: false, 
           message: error.message 

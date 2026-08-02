@@ -68,22 +68,21 @@ function buildVision(requester, players, roomConfig) {
   const seen = [];
   const add = (p, mode) => {
     if (seen.some(s => s.openId === p.openId)) return;
-    const entry = { openId: p.openId };
+    const entry = { openId: p.openId, canIdentity: false };
     if (mode === 'role') {
       entry.role = p.role;
       entry.side = p.side;
+      entry.canIdentity = true;
     } else if (mode === 'side') {
       entry.side = p.side;
     }
     seen.push(entry);
   };
 
-  // 自己恒可见
-  add(requester, 'role');
   const role = requester.role;
 
   if (EVIL_OPEN_EYES.includes(role)) {
-    // 睁眼狼互知（evilKnowsEachOther）；oberon 互隐；lancelotRed 视 evilsKnowRedLancelot（默认 true）
+    // 睁眼狼互认（evilKnowsEachOther）；oberon 互隐；lancelotRed 视 evilsKnowRedLancelot（默认 true）
     if (rules.evilKnowsEachOther) {
       for (const p of players) {
         if (p.openId === requester.openId) continue;
@@ -109,7 +108,7 @@ function buildVision(requester, players, roomConfig) {
       if (p) add(p, 'role');
     }
   } else if (role === 'percival') {
-    // 派西维尔：见梅林+莫甘娜，不区分谁是谁（不显示身份/阵营）
+    // 派西维尔：见梅林+莫甘娜，不区分谁是谁（role/side 置空，canIdentity=false）
     for (const p of players) {
       if (p.role === 'merlin' || p.role === 'morgana') add(p, 'none');
     }
@@ -217,6 +216,20 @@ class GameModel {
             `INSERT INTO game_players (game_id, open_id, role, side, created_at)
              VALUES (?, ?, ?, ?, NOW())`,
             [gameId, player.openId, role, side]
+          );
+        }
+
+        // 5.5 计算并存储玩家视野（开局冻结，用初始 side；不随兰斯洛特转换变化）
+        const playersWithRolesForVision = players.map((player, index) => ({
+          openId: player.openId,
+          role: shuffledRoles[index],
+          side: this.getRoleSide(shuffledRoles[index])
+        }));
+        for (const p of playersWithRolesForVision) {
+          const vision = { players: buildVision(p, playersWithRolesForVision, roomConfig) };
+          await connection.execute(
+            'INSERT INTO game_visions (game_id, open_id, vision, created_at) VALUES (?, ?, ?, NOW())',
+            [gameId, p.openId, JSON.stringify(vision)]
           );
         }
         
@@ -374,10 +387,49 @@ class GameModel {
         game.lakeHolderOpenId = null;
       }
 
+      // forcedSend：流车数达阈值 → 下一车必须为强制车
+      game.forcedSend = game.failedNominations >= (rules.maxFailedNominations || 3);
+
+      // 投票可见性：P14 基础规则 + voteVisibility 配置粒度
+      const voteVisibility = rules.voteVisibility || 'public';
+      const requesterInfo = openId ? players.find(p => p.openId === openId) : null;
+      const isObserver = !!(requesterInfo && requesterInfo.seatNumber === -1);
+
+      const aggregateVotes = (votes) => {
+        const agg = {};
+        for (const v of Object.values(votes)) agg[v] = (agg[v] || 0) + 1;
+        return agg;
+      };
+      const gateVotes = (votes, inVotePhase) => {
+        if (!openId) return votes;
+        if (isObserver) {
+          if (inVotePhase) return {};
+          return voteVisibility === 'anonymous' ? aggregateVotes(votes) : votes;
+        }
+        if (inVotePhase) {
+          return votes[openId] ? { [openId]: votes[openId] } : {};
+        }
+        return voteVisibility === 'anonymous' ? aggregateVotes(votes) : votes;
+      };
+
+      game.teamVotes = gateVotes(game.teamVotes, game.currentPhase === 'teamVote');
+      game.missionVotes = gateVotes(game.missionVotes, game.currentPhase === 'missionVote');
+
+      // missionFailDetail：binary 时不暴露 failCount
+      if (rules.missionFailDetail === 'binary' && Array.isArray(game.missionResults)) {
+        game.missionResults = game.missionResults.map(r => {
+          const { failCount, ...rest } = r;
+          return rest;
+        });
+      }
+
       if (openId && playerRole) {
-        // 玩家视角：隐藏他人角色/阵营，附 vision
-        const requester = players.find(p => p.openId === openId);
-        game.vision = { seen: buildVision(requester, players, roomConfig) };
+        // 玩家视角：隐藏他人角色/阵营，附 vision（开局冻结存储）
+        const visionRows = await db.query(
+          'SELECT vision FROM game_visions WHERE game_id = ? AND open_id = ?',
+          [gameId, openId]
+        );
+        game.vision = visionRows.length ? parseJson(visionRows[0].vision) : { players: [] };
         game.players = players.map(p => {
           const entry = { openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl, seatNumber: p.seatNumber, isHost: p.openId === game.ownerId };
           if (p.openId === openId) {
@@ -406,12 +458,12 @@ class GameModel {
    * @param {Array<string>} nominatedTeam 提名队伍openId数组
    * @returns {Promise<Object>} 更新后的游戏状态
    */
-  static async submitNomination(gameId, openId, nominatedTeam) {
+  static async submitNomination(gameId, openId, nominatedTeam, forcedCar = false) {
     try {
       await db.transaction(async (connection) => {
         // 验证游戏状态和队长身份
         const [game] = await connection.execute(
-          `SELECT current_phase, current_round, team_leader_index, room_id,
+          `SELECT current_phase, current_round, team_leader_index, room_id, failed_nominations,
                   (SELECT COUNT(*) FROM game_players WHERE game_id = ?) as player_count
            FROM games WHERE id = ? FOR UPDATE`,
           [gameId, gameId]
@@ -424,7 +476,14 @@ class GameModel {
         if (game[0].current_phase !== 'discussion') {
           throw new Error('当前不是队伍选择阶段');
         }
-        
+
+        // 读取房间配置（流车阈值）
+        const roomRows = await connection.execute('SELECT room_config FROM rooms WHERE id = ?', [game[0].room_id]);
+        const roomConfig = roomRows[0].length ? parseJson(roomRows[0][0].room_config) : null;
+        const rules = (roomConfig && roomConfig.rules) || {};
+        const maxFailedNominations = rules.maxFailedNominations || 3;
+        const isForced = game[0].failed_nominations >= maxFailedNominations;
+
         // 验证队长身份（与 startGame 分配队长时使用相同的座位号排序）
         const [players] = await connection.execute(
           `SELECT gp.open_id FROM game_players gp
@@ -444,16 +503,34 @@ class GameModel {
         if (nominatedTeam.length !== requiredSize) {
           throw new Error(`需要${requiredSize}人`);
         }
-        
-        // 更新提名队伍和阶段
-        await connection.execute(
-          `UPDATE games 
-           SET current_phase = 'teamVote', 
-               nominated_team = ?,
-               updated_at = NOW()
-           WHERE id = ?`,
-          [JSON.stringify(nominatedTeam), gameId]
-        );
+
+        // 强制车：跳过 teamVote，直接进入 missionVote
+        if (isForced) {
+          if (!forcedCar) {
+            throw new Error('本局为强制车，车长必须显式携带 forcedCar=true');
+          }
+          await connection.execute(
+            `UPDATE games 
+             SET current_phase = 'missionVote', 
+                 nominated_team = ?,
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [JSON.stringify(nominatedTeam), gameId]
+          );
+        } else {
+          if (forcedCar) {
+            throw new Error('本局不是强制车，不能携带 forcedCar');
+          }
+          // 更新提名队伍和阶段
+          await connection.execute(
+            `UPDATE games 
+             SET current_phase = 'teamVote', 
+                 nominated_team = ?,
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [JSON.stringify(nominatedTeam), gameId]
+          );
+        }
       });
       
       return await this.getState(gameId);
@@ -615,9 +692,9 @@ class GameModel {
         if (vote === 'fail' && currentSide !== 'evil') {
           throw new Error('只有坏人才能破坏任务');
         }
-        // 必败强制：红兰/奥伯伦（当前为 evil 时）必须投失败
+        // 必败强制：兰斯洛特（任意，当前为 evil 时）/奥伯伦 必须投失败
         if (vote === 'success' && currentSide === 'evil') {
-          const mustFail = (role === 'lancelotRed' && rules.redLancelotMustFailMission) ||
+          const mustFail = ((role === 'lancelotBlue' || role === 'lancelotRed') && rules.lancelotMustFail) ||
                            (role === 'oberon' && rules.oberonMustFailMission);
           if (mustFail) {
             throw new Error('你当前阵营为坏人，必须投失败票');
@@ -717,7 +794,7 @@ class GameModel {
               [gameId]
             );
           } else {
-            // 进入下一回合（先触发兰斯洛特转换抽卡，再推进）
+            // 进入下一回合（先触发兰斯洛特转换抽卡，再推进；流车数重置 0）
             await maybeLancelotSwap(connection, gameId, game[0].current_round, rules);
             const newRound = game[0].current_round + 1;
             const newTeamLeaderIndex = (game[0].team_leader_index + 1) % game[0].player_count;
@@ -728,6 +805,7 @@ class GameModel {
                    current_round = ?,
                    team_leader_index = ?,
                    nominated_team = NULL,
+                   failed_nominations = 0,
                    updated_at = NOW()
                WHERE id = ?`,
               [newRound, newTeamLeaderIndex, gameId]

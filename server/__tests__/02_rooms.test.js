@@ -16,7 +16,7 @@ function validConfig() {
     rules: {
       evilKnowsEachOther: true, lancelotsKnowEachOther: true, lancelotSwapRound: 2,
       ladyOfTheLake: false, ladyOfTheLakeRound: 2, maxFailedNominations: 3,
-      oberonMustFailMission: false, redLancelotMustFailMission: false,
+      oberonMustFailMission: false, lancelotMustFail: false,
       voteVisibility: 'anonymous', missionFailDetail: 'count'
     },
     limits: { speechTimeout: null, roundTimeout: null, voteTimeout: null },
@@ -64,7 +64,7 @@ describe('02 — Room Management', () => {
     it('02.3 无效角色名返回 400', async () => {
       const res = await apiPost('/api/rooms/create', {
         hostOpenId: makeUserId(), hostNickName: 'T',
-        roomConfig: { roles: { good: ['merlin'], evil: ['invalid_role'] }, rules: { evilKnowsEachOther: true, lancelotsKnowEachOther: true, lancelotSwapRound: 2, ladyOfTheLake: false, ladyOfTheLakeRound: 2, maxFailedNominations: 3, oberonMustFailMission: false, redLancelotMustFailMission: false, voteVisibility: 'anonymous', missionFailDetail: 'count' } }
+        roomConfig: { roles: { good: ['merlin'], evil: ['invalid_role'] }, rules: { evilKnowsEachOther: true, lancelotsKnowEachOther: true, lancelotSwapRound: 2, ladyOfTheLake: false, ladyOfTheLakeRound: 2, maxFailedNominations: 3, oberonMustFailMission: false, lancelotMustFail: false, voteVisibility: 'anonymous', missionFailDetail: 'count' } }
       });
       expect(res.status).toBe(400);
     });
@@ -88,7 +88,7 @@ describe('02 — Room Management', () => {
           oberonKnowsRedLancelot: false,
           merlinKnowsLancelotSide: false,
           lancelotSwapRound: 3,
-          redLancelotMustFailMission: true,
+          lancelotMustFail: true,
           oberonMustFailMission: true
         }
       });
@@ -101,7 +101,7 @@ describe('02 — Room Management', () => {
       expect(rules.oberonKnowsRedLancelot).toBe(false);
       expect(rules.merlinKnowsLancelotSide).toBe(false);
       expect(rules.lancelotSwapRound).toBe(3);
-      expect(rules.redLancelotMustFailMission).toBe(true);
+      expect(rules.lancelotMustFail).toBe(true);
       expect(rules.oberonMustFailMission).toBe(true);
     });
 
@@ -109,6 +109,14 @@ describe('02 — Room Management', () => {
       const config = withConfigOverrides(buildStandardRoomConfig(12), { rules: { evilsKnowRedLancelot: 'yes' } });
       const res = await apiPost('/api/rooms/create', { hostOpenId: makeUserId(), hostNickName: 'T', roomConfig: config });
       expect(res.status).toBe(400);
+    });
+
+    it('02.x3 swapRound 非法值（0/5）→ 400', async () => {
+      for (const bad of [0, 5]) {
+        const config = withConfigOverrides(buildStandardRoomConfig(12), { rules: { lancelotSwapRound: bad } });
+        const res = await apiPost('/api/rooms/create', { hostOpenId: makeUserId(), hostNickName: 'T', roomConfig: config });
+        expect(res.status).toBe(400);
+      }
     });
   });
 

@@ -64,7 +64,7 @@ function buildMinimalRoomConfig() {
       ladyOfTheLakeRound: 2,
       maxFailedNominations: 3,
       oberonMustFailMission: false,
-      redLancelotMustFailMission: false,
+      lancelotMustFail: false,
       voteVisibility: 'anonymous',
       missionFailDetail: 'count',
       evilsKnowRedLancelot: true,
@@ -251,8 +251,10 @@ async function advancePhase(gameId) {
   return res.body;
 }
 
-async function submitNomination(gameId, openId, nominatedTeam) {
-  const res = await apiPost('/api/games/submitNomination', { gameId, openId, nominatedTeam });
+async function submitNomination(gameId, openId, nominatedTeam, forcedCar) {
+  const body = { gameId, openId, nominatedTeam };
+  if (forcedCar !== undefined) body.forcedCar = forcedCar;
+  const res = await apiPost('/api/games/submitNomination', body);
   return res.body;
 }
 

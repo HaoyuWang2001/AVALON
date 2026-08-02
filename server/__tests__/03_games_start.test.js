@@ -43,7 +43,7 @@ async function startBoard(config) {
 
 async function visionOf(gameId, openId) {
   const state = await getGameState(gameId, openId);
-  return state.game.vision ? state.game.vision.seen : [];
+  return state.game.vision ? state.game.vision.players : [];
 }
 
 describe('03 — Game Start, Role Assignment & Vision', () => {
@@ -132,8 +132,7 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
       const full = await getGameState(gameId);
       expect(full.game.players.every(p => typeof p.role === 'string')).toBe(true);
       const view = await getGameState(gameId, players[0].openId);
-      expect(Array.isArray(view.game.vision.seen)).toBe(true);
-      expect(view.game.vision.seen.length).toBeGreaterThanOrEqual(1);
+      expect(Array.isArray(view.game.vision.players)).toBe(true);
       for (const p of view.game.players) {
         if (p.openId === players[0].openId) {
           expect(p.role).toBe(players[0].role);
@@ -154,54 +153,54 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
       const seen = await visionOf(gameId, openEye.openId);
       const seenIds = seen.map(s => s.openId);
       const expected = players.filter(p =>
-        p.openId === openEye.openId || EVIL_OPEN_EYES.includes(p.role)
+        EVIL_OPEN_EYES.includes(p.role) && p.openId !== openEye.openId
       ).map(p => p.openId);
       expect(seenIds.sort()).toEqual([...new Set(expected)].sort());
       for (const s of seen) {
-        expect(typeof s.role).toBe('string');
-        expect(typeof s.side).toBe('string');
+        expect(s.role).toBeDefined();
+        expect(s.side).toBe('evil');
+        expect(s.canIdentity).toBe(true);
       }
-      expect(seen.some(s => s.openId !== openEye.openId && s.role === 'oberon')).toBe(false);
+      expect(seen.some(s => s.role === 'oberon')).toBe(false);
       expect(seen.some(s => s.role === 'lancelotRed')).toBe(false);
     });
 
-    it('T12 evilKnowsEachOther=false：睁眼狼视角仅自己', async () => {
+    it('T12 evilKnowsEachOther=false：睁眼狼互认不可见', async () => {
       const cfg = withConfigOverrides(config(), { rules: { evilKnowsEachOther: false } });
       const { gameId, players } = await startBoard(cfg);
       const openEye = players.find(p => EVIL_OPEN_EYES.includes(p.role));
       const seen = await visionOf(gameId, openEye.openId);
-      expect(seen.map(s => s.openId)).toEqual([openEye.openId]);
+      expect(seen).toEqual([]);
     });
   });
 
   // ─────────────── C2 派西维尔（全部板） ───────────────
   describe.each(BOARDS)('C2 派西维尔 $name', ({ config }) => {
-    it('T13 percival 视角 = {自己, merlin, morgana}（不区分）', async () => {
+    it('T13 percival 视角 = {merlin, morgana}（不区分）', async () => {
       const { gameId, players } = await startBoard(config());
       const percival = players.find(p => p.role === 'percival');
       const merlin = players.find(p => p.role === 'merlin');
       const morgana = players.find(p => p.role === 'morgana');
       const seen = await visionOf(gameId, percival.openId);
       const seenIds = seen.map(s => s.openId).sort();
-      expect(seenIds).toEqual([percival.openId, merlin.openId, morgana.openId].sort());
-      const merlinEntry = seen.find(s => s.openId === merlin.openId);
-      const morganaEntry = seen.find(s => s.openId === morgana.openId);
-      expect(merlinEntry.role).toBeUndefined();
-      expect(morganaEntry.role).toBeUndefined();
-      expect(seen.find(s => s.openId === percival.openId).role).toBe('percival');
+      expect(seenIds).toEqual([merlin.openId, morgana.openId].sort());
+      for (const s of seen) {
+        expect(s.role).toBeUndefined();
+        expect(s.side).toBeUndefined();
+        expect(s.canIdentity).toBe(false);
+      }
     });
   });
 
   // ─────────────── C3 梅林（全部板） ───────────────
   describe.each(BOARDS)('C3 梅林 $name', ({ config }) => {
-    it('T14 merlin 视角 = 自己 + canSee 角色 + 兰斯洛特（默认可辨阵营）', async () => {
+    it('T14 merlin 视角 = canSee 角色 + 兰斯洛特（默认可辨阵营）', async () => {
       const cfg = config();
       const { gameId, players } = await startBoard(cfg);
       const merlin = players.find(p => p.role === 'merlin');
       const canSee = (cfg.merlinVision && cfg.merlinVision.canSee) || CAN_SEE_DEFAULT;
       const lancelots = players.filter(p => p.role === 'lancelotBlue' || p.role === 'lancelotRed');
       const expected = [
-        merlin.openId,
         ...players.filter(p => canSee.includes(p.role)).map(p => p.openId),
         ...lancelots.map(p => p.openId)
       ].sort();
@@ -209,9 +208,10 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
       const seenIds = seen.map(s => s.openId).sort();
       expect(seenIds).toEqual(expected);
       for (const s of seen) {
-        if (s.openId !== merlin.openId && !lancelots.some(l => l.openId === s.openId)) {
+        if (!lancelots.some(l => l.openId === s.openId)) {
           expect(s.side).toBe('evil');
           expect(s.role).toBeUndefined();
+          expect(s.canIdentity).toBe(false);
         }
       }
       // 兰斯洛特默认可辨阵营（merlinKnowsLancelotSide 默认 true）
@@ -220,6 +220,7 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
         if (entry) {
           expect(entry.role).toBe(l.role);
           expect(entry.side).toBe(l.side);
+          expect(entry.canIdentity).toBe(true);
         }
       }
     });
@@ -235,6 +236,7 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
     expect(entry).toBeDefined();
     expect(entry.role).toBeUndefined();
     expect(entry.side).toBeUndefined();
+    expect(entry.canIdentity).toBe(false);
   });
 
   it('T15 canIdentify=[assassin]：梅林可见 assassin 具体身份', async () => {
@@ -293,12 +295,12 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
       expect(entry.role).toBe('lancelotRed');
     });
 
-    it('T20 =false：oberon 视角不含 lancelotRed（仅自己）', async () => {
+    it('T20 =false：oberon 视角不含 lancelotRed（空）', async () => {
       const cfg = withConfigOverrides(config(), { rules: { oberonKnowsRedLancelot: false } });
       const { gameId, players } = await startBoard(cfg);
       const oberon = players.find(p => p.role === 'oberon');
       const seen = await visionOf(gameId, oberon.openId);
-      expect(seen.map(s => s.openId)).toEqual([oberon.openId]);
+      expect(seen).toEqual([]);
     });
   });
 

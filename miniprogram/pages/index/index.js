@@ -37,7 +37,7 @@ function buildDefaultRule() {
   return {
     evilKnowsEachOther: true, lancelotsKnowEachOther: false, lancelotSwapRound: 2,
     ladyOfTheLake: false, ladyOfTheLakeRound: 2, maxFailedNominations: 3,
-    oberonMustFailMission: false, redLancelotMustFailMission: false,
+    oberonMustFailMission: false, lancelotMustFail: false,
     voteVisibility: 'public', missionFailDetail: 'count',
     evilsKnowRedLancelot: true, oberonKnowsRedLancelot: true, merlinKnowsLancelotSide: true
   };
@@ -337,7 +337,7 @@ Page({
 
     const rules = buildDefaultRule();
     const hasLancelot = selected.lancelotBlue || selected.lancelotRed;
-    rules.redLancelotMustFailMission = hasLancelot;
+    rules.lancelotMustFail = hasLancelot;
     rules.oberonMustFailMission = !hasLancelot;
 
     this.setData({
@@ -373,7 +373,8 @@ Page({
   onRulePicker(e) {
     const { field } = e.currentTarget.dataset;
     const rules = this.data.rules;
-    rules[field] = e.detail.value;
+    const range = e.currentTarget.dataset.range;
+    rules[field] = range ? range[e.detail.value] : e.detail.value;
     this.setData({ rules });
   },
 
