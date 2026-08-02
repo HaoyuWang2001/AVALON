@@ -108,9 +108,10 @@ class ApiService {
   }
 
   async kickPlayer(roomId, playerId, mode) {
+    const openId = this.openId || getApp().globalData.openId;
     return this.request('/rooms/kickPlayer', {
       method: 'POST',
-      data: { roomId, playerId, mode: mode || 'room' }
+      data: { roomId, playerId, mode: mode || 'room', openId }
     });
   }
 
@@ -131,9 +132,10 @@ class ApiService {
   }
 
   async banFromSeating(roomId, playerId, banned) {
+    const openId = this.openId || getApp().globalData.openId;
     return this.request(`/rooms/${roomId}/banSeat`, {
       method: 'POST',
-      data: { playerId, banned }
+      data: { playerId, banned, openId }
     });
   }
 
@@ -150,16 +152,18 @@ class ApiService {
   }
 
   async updateRoomConfig(roomId, roomConfig) {
+    const openId = this.openId || getApp().globalData.openId;
     return this.request(`/rooms/${roomId}/config`, {
       method: 'PUT',
-      data: { roomConfig }
+      data: { roomConfig, openId }
     });
   }
 
   async startGame(roomId) {
+    const openId = this.openId || getApp().globalData.openId;
     return this.request('/games/start', {
       method: 'POST',
-      data: { roomId }
+      data: { roomId, openId }
     });
   }
 
@@ -202,20 +206,11 @@ class ApiService {
   }
 
   async sendMessage(roomId, content, type = 'text') {
-    const openId = this.openId || getApp().globalData.openId;
-    const nickName = this.nickName || wx.getStorageSync('customNickName') || '玩家';
-    return this.request('/messages/send', {
-      method: 'POST',
-      data: { roomId, openId, nickName, content, type }
-    });
+    throw new Error('聊天功能已移除');
   }
 
   async getMessages(roomId, limit = 50, beforeTime = null) {
-    let url = `/messages/${roomId}?limit=${limit}`;
-    if (beforeTime) {
-      url += `&beforeTime=${beforeTime}`;
-    }
-    return this.request(url);
+    throw new Error('聊天功能已移除');
   }
 
   connectSocket(roomId, playerId) {

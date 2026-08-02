@@ -53,7 +53,7 @@ Page({
     showConfig: false,
     playerCount: 5,
     logicalPage: 0,
-    visiblePages: [0, 1, 5],
+    visiblePages: [0, 1, 4, 5],
     goodCount: 2,
     evilCount: 2,
     teamSizes: [3,4,4,5,5],
@@ -93,7 +93,8 @@ Page({
     swiperPage: 0,
 
     allowSpectator: true,
-    maxSpectators: 0,
+    maxSpectators: 1,
+    spectatorLimited: false,
 
     goodRoleNames: '',
     evilRoleNames: '',
@@ -397,9 +398,16 @@ Page({
     this.setData({ allowSpectator: !this.data.allowSpectator });
   },
 
+  onSpectatorLimitMode(e) {
+    const limited = e.currentTarget.dataset.val === 'true';
+    let maxSpectators = this.data.maxSpectators;
+    if (limited && (!maxSpectators || maxSpectators < 1)) maxSpectators = 1;
+    this.setData({ spectatorLimited: limited, maxSpectators });
+  },
+
   onSpectatorLimitInput(e) {
-    let val = parseInt(e.detail.value) || 0;
-    if (val < 0) val = 0;
+    let val = parseInt(e.detail.value) || 1;
+    if (val < 1) val = 1;
     if (val > 100) val = 100;
     this.setData({ maxSpectators: val });
   },
@@ -468,13 +476,11 @@ Page({
   computeVisiblePages() {
     const sel = this.data.selectedRoles;
     const hasLancelot = sel.lancelotBlue || sel.lancelotRed;
-    const hasMerlin = sel.merlin;
 
     const pages = [0, 1];
     if (hasLancelot) pages.push(2);
-    if (hasMerlin) pages.push(4);
+    pages.push(4);
     pages.push(5);
-    pages.push(6);
 
     this.setData({
       visiblePages: pages,
@@ -504,7 +510,7 @@ Page({
     if (sel.lancelotRed) evil.push('红兰');
 
     const speech = this.data.speechTimeoutIndex > 0 ? SPEECH_OPTIONS[this.data.speechTimeoutIndex] : '不限';
-    const spec = this.data.allowSpectator ? (this.data.maxSpectators > 0 ? '允许（上限' + this.data.maxSpectators + '人）' : '允许') : '不允许';
+    const spec = this.data.allowSpectator ? (this.data.spectatorLimited ? '允许（上限' + this.data.maxSpectators + '人）' : '允许（不限人数）') : '不允许';
     const lady = this.data.ladyOfTheLake ? '启用（第' + this.data.ladyOfTheLakeRound + '轮）' : '未启用';
 
     this.setData({
@@ -548,7 +554,7 @@ Page({
       meta,
       spectator: {
         allow: this.data.allowSpectator,
-        max: this.data.maxSpectators
+        max: this.data.spectatorLimited ? this.data.maxSpectators : 0
       }
     };
   },

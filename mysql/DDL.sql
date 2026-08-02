@@ -139,24 +139,7 @@ CREATE TABLE mission_results (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='任务结果表';
 
 -- =============================================
--- 8. messages表：聊天消息
--- =============================================
-CREATE TABLE messages (
-    id VARCHAR(36) PRIMARY KEY COMMENT 'UUID主键',
-    room_id VARCHAR(6) NOT NULL COMMENT '房间ID',
-    open_id VARCHAR(64) NOT NULL COMMENT '发送者openId',
-    nick_name VARCHAR(100) NOT NULL COMMENT '发送者昵称',
-    content TEXT NOT NULL COMMENT '消息内容',
-    type VARCHAR(20) DEFAULT 'text' COMMENT '消息类型',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '发送时间',
-    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
-    INDEX idx_room_created (room_id, created_at DESC),
-    INDEX idx_created_at (created_at),
-    INDEX idx_open_id (open_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天消息表';
-
--- =============================================
--- 9. game_visions表：游戏玩家视野（开局冻结，不随兰斯洛特转换变化）
+-- 8. game_visions表：游戏玩家视野（开局冻结，不随兰斯洛特转换变化）
 -- =============================================
 CREATE TABLE game_visions (
     game_id VARCHAR(36) NOT NULL COMMENT 'FK→games.id',
@@ -169,7 +152,7 @@ CREATE TABLE game_visions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='游戏玩家视野表';
 
 -- =============================================
--- 10. role_configurations表：角色配置模板
+-- 9. role_configurations表：角色配置模板
 -- =============================================
 CREATE TABLE role_configurations (
     player_count INT PRIMARY KEY COMMENT '玩家数量',

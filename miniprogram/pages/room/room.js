@@ -60,10 +60,11 @@ Page({
     seatsFull: false,
     currentUserReady: false,
     spectatorMax: 0,
+    spectatorAllowed: true,
 
     showConfig: false,
     logicalPage: 0,
-    visiblePages: [0, 1, 5],
+    visiblePages: [0, 1, 4, 5],
     goodCount: 2,
     evilCount: 2,
     teamSizes: [3,4,4,5,5],
@@ -96,7 +97,8 @@ Page({
     swiperPage: 0,
 
     allowSpectator: true,
-    maxSpectators: 0,
+    maxSpectators: 1,
+    spectatorLimited: false,
 
     goodRoleNames: '',
     evilRoleNames: '',
@@ -156,8 +158,10 @@ Page({
         }
 
         let specMax = 0;
+        let spectatorAllowed = true;
         if (room.roomConfig && room.roomConfig.spectator) {
           specMax = room.roomConfig.spectator.max || 0;
+          spectatorAllowed = room.roomConfig.spectator.allow !== false;
         }
 
         const seatedPlayers = players.filter(p => p.seatNumber >= 1).sort((a, b) => a.seatNumber - b.seatNumber);
@@ -192,6 +196,7 @@ Page({
           gameStarted: room.gameStarted || false,
           seatedSeats: seats,
           spectatorMax: specMax,
+          spectatorAllowed: spectatorAllowed,
           seatsFull: seats.length > 0 && seats.every(s => s.occupied),
           currentUserReady: currentUser ? readyPlayers.includes(currentUser.openId) : false
         });
@@ -407,100 +412,79 @@ Page({
 
   // ─────────── Config Modal ───────────
 
-  openConfig() {
-    const room = this.data.roomInfo;
-    if (!room || !room.roomConfig) return;
-    const rc = room.roomConfig;
-
+  _applyConfig(rc) {
     const roles = rc.roles || { good: [], evil: [] };
-    const goodLen = (roles.good || []).length;
-    const evilLen = (roles.evil || []).length;
-    const n = goodLen + evilLen;
-
+    const n = (roles.good || []).length + (roles.evil || []).length;
     const selected = {};
     GOOD_ROLES.forEach(r => { selected[r] = (roles.good || []).includes(r); });
     EVIL_ROLES.forEach(r => { selected[r] = (roles.evil || []).includes(r); });
 
-    this.setData({ selectedRoles: selected });
-    this.setData({ playerCount: n || 5 });
-    if (rc.rules) this.setData({ rules: { ...this.data.rules, ...rc.rules } });
+    const patch = { selectedRoles: selected, playerCount: n || 5 };
+
+    if (rc.rules) {
+      patch.rules = { ...this.data.rules, ...rc.rules };
+      patch.ladyOfTheLake = !!rc.rules.ladyOfTheLake;
+      patch.ladyOfTheLakeRound = rc.rules.ladyOfTheLakeRound || 2;
+    }
     if (rc.spectator) {
-      this.setData({
-        allowSpectator: rc.spectator.allow !== false,
-        maxSpectators: rc.spectator.max || 0
-      });
+      const max = rc.spectator.max || 0;
+      patch.allowSpectator = rc.spectator.allow !== false;
+      patch.spectatorLimited = max > 0;
+      patch.maxSpectators = max > 0 ? max : 1;
     }
     if (rc.meta) {
-      this.setData({
-        roomName: rc.meta.roomName || '',
-        roomDescription: rc.meta.roomDescription || ''
-      });
+      patch.roomName = rc.meta.roomName || '';
+      patch.roomDescription = rc.meta.roomDescription || '';
     }
     if (rc.limits) {
       const l = rc.limits;
       if (l.speechTimeout !== undefined) {
         const idx = SPEECH_OPTIONS.indexOf(l.speechTimeout === null ? '不限' : l.speechTimeout + '秒');
-        if (idx >= 0) this.setData({ speechTimeoutIndex: idx });
+        if (idx >= 0) patch.speechTimeoutIndex = idx;
       }
       if (l.roundTimeout !== undefined) {
         const idx = ROUND_OPTIONS.indexOf(l.roundTimeout === null ? '不限' : l.roundTimeout + '秒');
-        if (idx >= 0) this.setData({ roundTimeoutIndex: idx });
+        if (idx >= 0) patch.roundTimeoutIndex = idx;
       }
       if (l.voteTimeout !== undefined) {
         const idx = VOTE_OPTIONS.indexOf(l.voteTimeout === null ? '不限' : l.voteTimeout + '秒');
-        if (idx >= 0) this.setData({ voteTimeoutIndex: idx });
+        if (idx >= 0) patch.voteTimeoutIndex = idx;
       }
     }
 
-    this.applyDefaultConfig(n);
+    this.setData(patch);
     this.computeAll();
+  },
+
+  openConfig() {
+    const room = this.data.roomInfo;
+    if (!room || !room.roomConfig) return;
     this._configSnapshot = JSON.parse(JSON.stringify(room.roomConfig));
+    this._applyConfig(this._configSnapshot);
     this.setData({ logicalPage: 0, swiperPage: 0 });
     if (this.roomPolling) clearInterval(this.roomPolling);
     this.setData({ showConfig: true });
   },
 
   closeConfig() {
-    this._revertConfig();
+    if (this._configSnapshot) this._applyConfig(this._configSnapshot);
     this.initRoomPolling();
     this.setData({ showConfig: false });
   },
 
   finishConfig() {
-    this.saveConfig();
-    this.initRoomPolling();
-    this.setData({ showConfig: false });
-  },
-
-  _revertConfig() {
-    if (!this._configSnapshot) return;
-    const rc = this._configSnapshot;
-    const roles = rc.roles || { good: [], evil: [] };
-    const n = (roles.good || []).length + (roles.evil || []).length;
-    const selected = {};
-    GOOD_ROLES.forEach(r => { selected[r] = (roles.good || []).includes(r); });
-    EVIL_ROLES.forEach(r => { selected[r] = (roles.evil || []).includes(r); });
-    this.setData({ selectedRoles: selected, playerCount: n || 5 });
-    if (rc.rules) this.setData({ rules: { ...this.data.rules, ...rc.rules } });
-    if (rc.spectator) { this.setData({ allowSpectator: rc.spectator.allow !== false, maxSpectators: rc.spectator.max || 0 }); }
-    if (rc.meta) { this.setData({ roomName: rc.meta.roomName || '', roomDescription: rc.meta.roomDescription || '' }); }
-    if (rc.limits) {
-      const l = rc.limits;
-      if (l.speechTimeout !== undefined) {
-        const idx = SPEECH_OPTIONS.indexOf(l.speechTimeout === null ? '不限' : l.speechTimeout + '秒');
-        if (idx >= 0) this.setData({ speechTimeoutIndex: idx });
-      }
-      if (l.roundTimeout !== undefined) {
-        const idx = ROUND_OPTIONS.indexOf(l.roundTimeout === null ? '不限' : l.roundTimeout + '秒');
-        if (idx >= 0) this.setData({ roundTimeoutIndex: idx });
-      }
-      if (l.voteTimeout !== undefined) {
-        const idx = VOTE_OPTIONS.indexOf(l.voteTimeout === null ? '不限' : l.voteTimeout + '秒');
-        if (idx >= 0) this.setData({ voteTimeoutIndex: idx });
-      }
-    }
-    this.applyDefaultConfig(n);
-    this.computeAll();
+    const config = this.getRoomConfig();
+    wx.showLoading({ title: '保存中...', mask: true });
+    api.updateRoomConfig(this.data.roomId, config).then(() => {
+      wx.hideLoading();
+      wx.showToast({ title: '已保存', icon: 'success' });
+      this._configSnapshot = JSON.parse(JSON.stringify(config));
+      this.initRoomPolling();
+      this.setData({ showConfig: false });
+    }).catch((err) => {
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '保存失败', icon: 'error' });
+    });
   },
 
   backToLobby() {
@@ -509,11 +493,6 @@ Page({
 
   modifyConfig() {
     this.openConfig();
-  },
-
-  saveConfig() {
-    const config = this.getRoomConfig();
-    api.updateRoomConfig(this.data.roomId, config).catch(() => {});
   },
 
   // ─────────── Page 1: Player Count + Roles ───────────
@@ -566,7 +545,6 @@ Page({
     const rules = this.data.rules;
     rules[field] = !rules[field];
     this.setData({ rules });
-    this.saveConfig();
   },
 
   onRulePicker(e) {
@@ -575,7 +553,6 @@ Page({
     const range = e.currentTarget.dataset.range;
     rules[field] = range ? range[e.detail.value] : e.detail.value;
     this.setData({ rules });
-    this.saveConfig();
   },
 
   onRuleSegment(e) {
@@ -583,30 +560,32 @@ Page({
     const rules = this.data.rules;
     rules[field] = val;
     this.setData({ rules });
-    this.saveConfig();
   },
 
   onLadyToggle() {
     this.setData({ ladyOfTheLake: !this.data.ladyOfTheLake });
-    this.saveConfig();
   },
 
   onLadyRoundChange(e) {
     this.setData({ ladyOfTheLakeRound: e.detail.value });
-    this.saveConfig();
   },
 
   onSpectatorToggle() {
     this.setData({ allowSpectator: !this.data.allowSpectator });
-    this.saveConfig();
+  },
+
+  onSpectatorLimitMode(e) {
+    const limited = e.currentTarget.dataset.val === 'true';
+    let maxSpectators = this.data.maxSpectators;
+    if (limited && (!maxSpectators || maxSpectators < 1)) maxSpectators = 1;
+    this.setData({ spectatorLimited: limited, maxSpectators });
   },
 
   onSpectatorLimitInput(e) {
-    let val = parseInt(e.detail.value) || 0;
-    if (val < 0) val = 0;
+    let val = parseInt(e.detail.value) || 1;
+    if (val < 1) val = 1;
     if (val > 100) val = 100;
     this.setData({ maxSpectators: val });
-    this.saveConfig();
   },
 
   // ─────────── Page 5: Limits + Meta ───────────
@@ -616,7 +595,6 @@ Page({
     const data = {};
     data[field] = e.detail.value;
     this.setData(data);
-    this.saveConfig();
   },
 
   onMetaInput(e) {
@@ -624,7 +602,6 @@ Page({
     const data = {};
     data[field] = e.detail.value;
     this.setData(data);
-    this.saveConfig();
   },
 
   // ─────────── Navigation ───────────
@@ -675,13 +652,11 @@ Page({
   computeVisiblePages() {
     const sel = this.data.selectedRoles;
     const hasLancelot = sel.lancelotBlue || sel.lancelotRed;
-    const hasMerlin = sel.merlin;
 
     const pages = [0, 1];
     if (hasLancelot) pages.push(2);
-    if (hasMerlin) pages.push(4);
+    pages.push(4);
     pages.push(5);
-    pages.push(6);
 
     this.setData({
       visiblePages: pages,
@@ -711,7 +686,7 @@ Page({
     if (sel.lancelotRed) evil.push('红兰');
 
     const speech = this.data.speechTimeoutIndex > 0 ? SPEECH_OPTIONS[this.data.speechTimeoutIndex] : '不限';
-    const spec = this.data.allowSpectator ? (this.data.maxSpectators > 0 ? '允许（上限' + this.data.maxSpectators + '人）' : '允许') : '不允许';
+    const spec = this.data.allowSpectator ? (this.data.spectatorLimited ? '允许（上限' + this.data.maxSpectators + '人）' : '允许（不限人数）') : '不允许';
     const lady = this.data.ladyOfTheLake ? '启用（第' + this.data.ladyOfTheLakeRound + '轮）' : '未启用';
 
     this.setData({
@@ -753,7 +728,7 @@ Page({
       meta,
       spectator: {
         allow: this.data.allowSpectator,
-        max: this.data.maxSpectators
+        max: this.data.spectatorLimited ? this.data.maxSpectators : 0
       }
     };
   }

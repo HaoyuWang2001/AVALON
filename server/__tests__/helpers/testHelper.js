@@ -278,28 +278,6 @@ async function endGame(gameId) {
   return res.body;
 }
 
-// ---- Message helpers ----
-
-async function sendMessage(roomId, openId, nickName, content, type) {
-  const res = await apiPost('/api/messages/send', {
-    roomId, openId, nickName: nickName || makeNickName(openId),
-    content, type: type || 'text'
-  });
-  return res.body;
-}
-
-async function getMessages(roomId, limit, beforeTime) {
-  let path = `/api/messages/${roomId}?limit=${limit || 50}`;
-  if (beforeTime) path += `&beforeTime=${encodeURIComponent(beforeTime)}`;
-  const res = await apiGet(path);
-  return res.body;
-}
-
-async function getLatestMessages(roomId, limit) {
-  const res = await apiGet(`/api/messages/${roomId}/latest?limit=${limit || 20}`);
-  return res.body;
-}
-
 /**
  * Create a room with N players, all joined and ready.
  * Returns { roomId, players: [{openId, nickName, seatNumber}], hostId }
@@ -438,9 +416,6 @@ module.exports = {
   castMissionVote,
   assassinate,
   endGame,
-  sendMessage,
-  getMessages,
-  getLatestMessages,
   createRoomWithPlayers,
   createRoomAndStartGame,
   createLancelotGame,

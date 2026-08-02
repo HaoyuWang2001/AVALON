@@ -61,17 +61,6 @@ describe('07 — Socket.io Real-time Communication', () => {
     expect(data.phase).toBe('discussion');
   });
 
-  it('should broadcast newMessage on message', async () => {
-    const roomId = 'test_message';
-    await joinRoomAndConfirm(clients[2], roomId, 'p6');
-    await joinRoomAndConfirm(clients[0], roomId, 'p5');
-
-    const promise = waitForEvent(clients[2], 'newMessage');
-    clients[0].emit('message', { roomId, content: 'Hello Socket', type: 'text' });
-    const data = await promise;
-    expect(data.content).toBe('Hello Socket');
-  });
-
   it('should broadcast playerLeft on leaveRoom', async () => {
     const roomId = 'leave_socket_test';
     await joinRoomAndConfirm(clients[1], roomId, 'observer');

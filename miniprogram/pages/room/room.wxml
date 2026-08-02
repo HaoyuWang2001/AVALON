@@ -22,7 +22,7 @@
         <text class="stat-value">{{seatedPlayers.length}}/{{playerCount}}</text>
       </view>
       <view class="stat-divider"></view>
-      <view class="info-stat-item">
+      <view class="info-stat-item" wx:if="{{spectatorAllowed}}">
         <text class="stat-label">观战</text>
         <text class="stat-value">{{spectatorPlayers.length}}{{spectatorMax > 0 ? '/' + spectatorMax : ''}}</text>
       </view>
@@ -77,12 +77,12 @@
   </view>
 
   <!-- Card 4: Waiting Area -->
-  <view class="card waiting-card" wx:if="{{unseatedPlayers.length > 0}}">
+  <view class="card waiting-card">
     <view class="card-header">
       <text class="card-title">等待区 ({{unseatedPlayers.length}})</text>
       <text wx:if="{{currentUser && currentUser.seatNumber != 0}}" class="btn-round btn-purple" bindtap="leaveSeat">进入等待区</text>
     </view>
-    <scroll-view scroll-x class="waiting-scroll">
+    <scroll-view scroll-x class="waiting-scroll" wx:if="{{unseatedPlayers.length > 0}}">
       <view class="waiting-list">
       <view wx:for="{{unseatedPlayers}}" wx:key="openId" class="waiting-item" bindtap="onPlayerAction" data-id="{{item.openId}}">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="waiting-avatar"></image>
@@ -90,10 +90,11 @@
       </view>
     </view>
     </scroll-view>
+    <view wx:else class="empty-hint">暂无等待玩家</view>
   </view>
 
   <!-- Card 5: Spectator Area -->
-  <view class="card spectator-card">
+  <view class="card spectator-card" wx:if="{{spectatorAllowed}}">
     <view class="card-header">
       <text class="card-title">观战区 ({{spectatorPlayers.length}})</text>
       <text wx:if="{{currentUser && currentUser.seatNumber >= 0}}" class="btn-round btn-purple" bindtap="becomeSpectator">进入观战区</text>
@@ -361,7 +362,14 @@
               </view>
               <view class="rule-row" wx:if="{{allowSpectator}}">
                 <text class="rule-label">观战人数上限</text>
-                <input class="spectator-input" type="number" maxlength="3" placeholder="0=不限" value="{{maxSpectators || ''}}" data-field="maxSpectators" bindinput="onSpectatorLimitInput"/>
+                <view class="segment">
+                  <view class="segment-item {{!spectatorLimited ? 'segment-active' : ''}}" data-val="false" bindtap="onSpectatorLimitMode">不限</view>
+                  <view class="segment-item {{spectatorLimited ? 'segment-active' : ''}}" data-val="true" bindtap="onSpectatorLimitMode">有限制</view>
+                </view>
+              </view>
+              <view class="rule-row" wx:if="{{allowSpectator && spectatorLimited}}">
+                <text class="rule-label">上限人数</text>
+                <input class="spectator-input" type="number" maxlength="3" placeholder="1-100" value="{{maxSpectators || ''}}" bindinput="onSpectatorLimitInput"/>
               </view>
             </view>
             <view style="height:60rpx"></view>

@@ -116,7 +116,6 @@ function setupRoutes() {
   console.log('📊 使用数据库路由');
   const roomRoutes = require('./routes/rooms-db')();
   const gameRoutes = require('./routes/games-db')();
-  const messageRoutes = require('./routes/messages-db')();
   const userRoutes = require('./routes/users-db')();
   const authRoutes = require('./routes/auth-db')();
   const playerRoutes = require('./routes/players-db')();
@@ -125,7 +124,6 @@ function setupRoutes() {
 
   app.use('/api/rooms', roomRoutes);
   app.use('/api/games', gameRoutes);
-  app.use('/api/messages', messageRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/auth', authRoutes);
   app.use('/api/players', playerRoutes);
@@ -230,10 +228,6 @@ io.on('connection', (socket) => {
 
   socket.on('gameUpdate', (data) => {
     io.to(data.roomId).emit('gameUpdated', data);
-  });
-
-  socket.on('message', (data) => {
-    io.to(data.roomId).emit('newMessage', data);
   });
 
   socket.on('disconnect', () => {

@@ -1,7 +1,6 @@
 // 模型管理器
 const RoomModel = require('./RoomModel');
 const GameModel = require('./GameModel');
-const MessageModel = require('./MessageModel');
 const UserModel = require('./UserModel');
 
 // 数据库状态管理器
@@ -11,7 +10,6 @@ class ModelManager {
     this.models = {
       room: RoomModel,
       game: GameModel,
-      message: MessageModel,
       user: UserModel
     };
   }
@@ -34,7 +32,7 @@ class ModelManager {
   
   /**
    * 获取模型
-   * @param {string} modelName 模型名称 ('room', 'game', 'message')
+   * @param {string} modelName 模型名称 ('room', 'game', 'user')
    * @returns {Object} 模型类
    */
   getModel(modelName) {
@@ -50,17 +48,15 @@ class ModelManager {
    */
   async getAllStats() {
     try {
-      const [roomStats, gameStats, messageStats, userStats] = await Promise.all([
+      const [roomStats, gameStats, userStats] = await Promise.all([
         RoomModel.getStats(),
         GameModel.getStats(),
-        MessageModel.getGlobalStats(),
         UserModel.getStats()
       ]);
       
       return {
         rooms: roomStats,
         games: gameStats,
-        messages: messageStats,
         users: userStats,
         timestamp: new Date().toISOString()
       };
@@ -79,14 +75,10 @@ class ModelManager {
    */
   async cleanup() {
     try {
-      const [roomsCleaned, messagesCleaned] = await Promise.all([
-        RoomModel.cleanupOldRooms(24), // 清理24小时未更新的房间
-        // MessageModel.cleanupOldMessages() 可以根据需要实现
-      ]);
+      const roomsCleaned = await RoomModel.cleanupOldRooms(24); // 清理24小时未更新的房间
       
       return {
         roomsCleaned,
-        messagesCleaned: 0, // 暂时不清理消息
         timestamp: new Date().toISOString()
       };
     } catch (error) {
@@ -123,7 +115,6 @@ class ModelManager {
         models: {
           room: 'ready',
           game: 'ready',
-          message: 'ready',
           user: 'ready'
         },
         timestamp: new Date().toISOString(),
@@ -139,7 +130,6 @@ class ModelManager {
         models: {
           room: 'error',
           game: 'error',
-          message: 'error',
           user: 'error'
         },
         timestamp: new Date().toISOString(),
@@ -155,7 +145,6 @@ const modelManager = new ModelManager();
 module.exports = {
   RoomModel,
   GameModel,
-  MessageModel,
   UserModel,
   modelManager,
   ModelManager
