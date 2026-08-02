@@ -345,7 +345,7 @@ roleReveal → discussion → [submitNomination] → teamVote
 |------|------|
 | T1 未全 ready | 有人未 ready → start 失败 |
 | T2 不存在 room | start 失败 |
-| T3 advancePhase | roleReveal → discussion（无鉴权；房主或固定倒计时触发），第二次调用失败 |
+| T3 confirmReveal | roleReveal → 全员 confirmReveal → 自动进 discussion；未全员停留；幂等；非游戏内玩家被拒；二次确认被拒 |
 
 #### B 基础开局/状态（参数化全部 10 块板：标准 5-12 + 自定义 10 人/9 人）
 
@@ -590,7 +590,8 @@ createRoomAndStartGame(N) → advancePhase
 | `leaveRoom(roomId, userId)` | 退出房间 |
 | `startGame(roomId)` | 启动游戏，返回 `{ gameId, game }` |
 | `getGameState(gameId, openId?)` | 获取游戏状态（新结构 basic/players/current/history） |
-| `advancePhase(gameId)` | 推进 roleReveal → discussion |
+| `advancePhase(gameId)` | 推进 roleReveal → discussion（保留，非 UI 入口） |
+| `confirmReveal(gameId, openId)` | 确认角色揭示（全员确认后自动进入 discussion；幂等） |
 | `setDiscussion(gameId, openId, speakingOrder, preNominatedTeam?)` | 车长设置发言顺序+预提名（每轮一次不可改） |
 | `assassinate(gameId, killerOpenId, targetOpenId)` | 刺杀梅林（刺客/莫甘娜） |
 | `abandonGame(gameId, openId)` | 放弃游戏（仅房主；无胜负结果） |
@@ -677,7 +678,8 @@ npm test
 |------|------|------|
 | POST | `/start` | 启动游戏 → 返回 gameId（含首位车长/湖仙落位） |
 | GET | `/:gameId?openId=` | 获取状态（新结构：`basic`/`players`/`current`/`history`；带 openId 返回玩家视角 `player.role/vision`，他人 role/side 隐藏；`current.teamVotes/missionVotes` 按 voteVisibility/missionFailDetail 门控，P14 投票中仅见自己） |
-| POST | `/:gameId/advancePhase` | 推进 roleReveal → discussion |
+| POST | `/:gameId/advancePhase` | 推进 roleReveal → discussion（保留；非 UI 入口） |
+| POST | `/:gameId/confirmReveal` | 确认角色揭示（全员确认后自动进入 discussion） |
 | POST | `/setDiscussion` | 车长设置发言顺序（asc/desc）+预提名队伍（每轮一次不可改） |
 | POST | `/submitNomination` | 正式选车（discussion → teamVote；记录 game_cars 车次） |
 | POST | `/castVote` | 队伍投票（全员；按 car_index 归档） |
