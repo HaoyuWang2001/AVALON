@@ -491,7 +491,9 @@ createRoomAndStartGame(N) → advancePhase
 
 > 聊天/消息系统已移除（游戏禁止聊天）：消息 API、`messages` 表、`MessageModel`、socket `message`/`newMessage` 均删除。
 
-### 阶段 4：Socket.io 实时通信 — `05_socket.test.js`
+### 阶段 4：WebSocket 实时通信 — `05_socket.test.js`
+
+> 后端使用**原生 `ws`**（非 Socket.io），与微信小程序 `wx.connectSocket` 协议一致：消息均为 JSON 帧 `{ type, ... }`。
 
 | 用例 | 断言 |
 |------|------|
@@ -590,6 +592,8 @@ createRoomAndStartGame(N) → advancePhase
 | `getGameState(gameId, openId?)` | 获取游戏状态（新结构 basic/players/current/history） |
 | `advancePhase(gameId)` | 推进 roleReveal → discussion |
 | `setDiscussion(gameId, openId, speakingOrder, preNominatedTeam?)` | 车长设置发言顺序+预提名（每轮一次不可改） |
+| `assassinate(gameId, killerOpenId, targetOpenId)` | 刺杀梅林（刺客/莫甘娜） |
+| `abandonGame(gameId, openId)` | 放弃游戏（仅房主；无胜负结果） |
 | `submitNomination(gameId, openId, team)` | 正式选车（discussion → teamVote） |
 | `castVote(gameId, openId, vote)` | 队伍投票（全员） |
 | `castMissionVote(gameId, openId, vote, role)` | 任务投票（仅任务队；按当前阵营判定） |
