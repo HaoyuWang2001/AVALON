@@ -12,7 +12,7 @@ function getServerPort() {
   return config.port;
 }
 
-describe('07 — Socket.io Real-time Communication', () => {
+describe('05 — Socket.io Real-time Communication', () => {
   let port;
   let clients;
 

@@ -154,8 +154,12 @@ roleReveal → discussion → [submitNomination] → teamVote
 
 ### 3.5 游戏内完整状态
 
-- **DB 持久化**：`games`（phase/round/teamLeaderIndex/nominatedTeam/failedNominations/assassination/gameResult）、`game_players`（role/side，**side 可更新**）、`votes`、`mission_results`、`role_configurations`。
-- **内存态（不入库，游戏结束清空）**：讨论态 `preTeam`/`speakingOrder`/`currentSpeaker`；湖仙 `holder`/`history`；`forcedSend` 标志。刷新可查（`getGameState` 合并返回）。
+- **DB 持久化**：`games`（phase/round/teamLeaderIndex/nominatedTeam/failedNominations/lakeHolderOpenId/preNominatedTeam/speakingOrder/discussionSet/assassination/gameResult）、`game_players`（role/side，**side 可更新**）、`votes`（含 car_index）、`mission_results`、`game_cars`（每车次归档）、`lake_history`（湖仙验人记录）、`lancelot_swap_history`（转换抽卡记录）、`role_configurations`。
+- **getGameState 新结构**：`{ success, player?, basic, players, current, history }`。
+  - `basic`：gameId/roomId/roomConfig/status/createdAt/endedAt/result。
+  - `current`：round/index(车次)/phase/teamLeaderOpenId/failedNominations/forcedSend/preNominatedTeam/nominatedTeam/teamVotes/missionVotes/lakeHolderOpenId/speakingOrder。
+  - `history`：cars(按轮归档车次)/missions(missionFailCount, binary 时 -1)/lake(验人记录, result 仅验人者可见)/lancelotSwaps。
+  - 无 openId 全量；有 openId 隐藏他人 role/side，`player.role/vision` 仅自己。
 
 ### 3.6 首位车长与湖仙落位
 
@@ -353,7 +357,7 @@ roleReveal → discussion → [submitNomination] → teamVote
 | T7 每玩家有 role | role 为合法字符串 |
 | T8 每玩家 side | `side ∈ {good, evil}` |
 | T9 玩家数 | `players.length === roles.good+roles.evil` 数量 |
-| T10 getGameState | 无 openId 全量（含全部 role/side）；有 openId 他人 role/side **隐藏** + `game.vision` 结构 |
+| T10 getGameState | 无 openId 全量（含全部 role/side）；有 openId 他人 role/side **隐藏** + `player.vision` 结构 |
 
 #### C 角色视野（按板可验性）
 
@@ -372,7 +376,7 @@ roleReveal → discussion → [submitNomination] → teamVote
 
 > **确定性（首位车长）**：`teamLeaderIndex = 当前时钟分钟 % N`。测试在 startGame 前记录分钟 `m`，
 > 断言 `teamLeaderIndex ∈ { m % N, (m+1) % N }`（容差 ±1，容忍跨分钟竞态）。
-> **视野**：`getGameState(gameId, openId)` 返回 `game.vision.seen`（自己恒可见；其余按角色+配置）。
+> **视野**：`getGameState(gameId, openId)` 返回 `player.vision.players`（自己恒可见；其余按角色+配置）。
 
 ### 阶段 2b：单 Lancelot 变体 — `03b_lancelot_variant.test.js`
 
@@ -485,21 +489,9 @@ createRoomAndStartGame(N) → advancePhase
 > **确定性（兰斯洛特抽卡）**：抽卡是随机（默认 2 转/5 不转）。针对性测试用
 > `rules.lancelotSwapForce = 'switch'/'keep'` 强制抽中/未抽中转换卡。
 
-### 阶段 4：消息系统 — `06_messages.test.js`
+> 聊天/消息系统已移除（游戏禁止聊天）：消息 API、`messages` 表、`MessageModel`、socket `message`/`newMessage` 均删除。
 
-| 用例 | 断言 |
-|------|------|
-| 发送 text | `success:true`，`message.content` 正确 |
-| 发送 system/action | `success:true` |
-| 内容超长（>1000 字） | 400 |
-| 无效消息类型 | 400 |
-| 拉取消息 | `messages.length >= 3` |
-| limit 参数 | `messages.length <= limit` |
-| 时间顺序 | 按创建时间升序 |
-| latest 端点 | 返回最新 N 条 |
-| 缺少参数 | 400 |
-
-### 阶段 4b：Socket.io 实时通信 — `07_socket.test.js`
+### 阶段 4：Socket.io 实时通信 — `05_socket.test.js`
 
 | 用例 | 断言 |
 |------|------|
@@ -507,11 +499,14 @@ createRoomAndStartGame(N) → advancePhase
 | joinRoom 广播 | 已在房间内的其他 client 收到 `playerJoined`（观察者须先入房） |
 | roomUpdate 广播 | 房间内 client 收到 `roomUpdated` |
 | gameUpdate 广播 | 房间内 client 收到 `gameUpdated` |
-| message 广播 | 房间内 client 收到 `newMessage` |
 | leaveRoom 广播 | 其他 client 收到 `playerLeft` |
 | disconnect | 断开后 `connected === false` |
+| 房间隔离 | roomA 的广播不泄漏到 roomB |
+| 新观众拿状态 | joinRoom 后收到 `gameState`（新结构，含 current.phase/basic） |
+| 断线重连看票 | 重连后 `current.teamVotes` 必含自己已投的票 |
+| requestState | 显式拉取返回当前游戏状态 |
 
-### 阶段 5：边界与并发 — `08_edge_cases.test.js`
+### 阶段 5：边界与并发 — `06_edge_cases.test.js`
 
 | 用例 | 断言 |
 |------|------|
@@ -530,8 +525,17 @@ createRoomAndStartGame(N) → advancePhase
 | 非 teamVote 阶段投票 | 失败 |
 | 游戏结束后刺杀 | 失败 |
 | 快速循环 | 5 次 create-join-leave 无泄漏 |
+| setDiscussion 阶段限制 | 非 discussion 阶段被拒 |
+| setDiscussion 非法顺序 | 非 asc/desc 被拒 |
+| setDiscussion 非队长 | 非队长被拒 |
+| setDiscussion 一次不可改 | 第二次设置被拒 |
+| setDiscussion 预提名人数 | 队伍大小不符被拒 |
+| abandon 非房主 | 非房主被拒 |
+| abandon 房主 | status=abandoned 且房间重置 |
+| abandon 已结束 | 拒绝 |
+| 并发重复投票 | 并行重复投（同 car_index）仅计一次 |
 
-### 阶段 6：单元测试 — `09_game_logic.test.js`
+### 阶段 6：单元测试 — `07_game_logic.test.js`
 
 | 用例 | 断言 |
 |------|------|
@@ -583,20 +587,20 @@ createRoomAndStartGame(N) → advancePhase
 | `toggleReady(roomId, userId, isReady)` | 切换准备 |
 | `leaveRoom(roomId, userId)` | 退出房间 |
 | `startGame(roomId)` | 启动游戏，返回 `{ gameId, game }` |
-| `getGameState(gameId, openId?)` | 获取游戏状态 |
+| `getGameState(gameId, openId?)` | 获取游戏状态（新结构 basic/players/current/history） |
 | `advancePhase(gameId)` | 推进 roleReveal → discussion |
+| `setDiscussion(gameId, openId, speakingOrder, preNominatedTeam?)` | 车长设置发言顺序+预提名（每轮一次不可改） |
 | `submitNomination(gameId, openId, team)` | 正式选车（discussion → teamVote） |
 | `castVote(gameId, openId, vote)` | 队伍投票（全员） |
 | `castMissionVote(gameId, openId, vote, role)` | 任务投票（仅任务队；按当前阵营判定） |
 | `assassinate(gameId, killerOpenId, targetOpenId)` | 刺杀梅林（刺客或莫甘娜发起） |
 | `endGame(gameId)` | 结束游戏 |
-| `sendMessage(roomId, openId, nick, content, type)` | 发送消息 |
-| `getMessages(roomId, limit, beforeTime?)` | 拉取消息 |
+| `abandonGame(gameId, openId)` | 放弃游戏（仅房主；status=abandoned 无胜负结果） |
 | `createRoomWithPlayers(n, roomConfig?)` | 创建 N 人房间并全 ready（可选自定义 roomConfig） |
 | `createRoomAndStartGame(n)` | 创建 N 人房间 + 启动游戏（使用**按人数的标准角色板**，11 人无 assassin、莫甘娜开刀），返回含 gameId 和玩家角色 |
 
-> 规划中（随新流程 §3 实现后补充）：`setSpeakingOrder` / `advanceSpeaker` / `preTeam` /
-> `lakeInspect` / `lakePass` 及兰斯洛特抽卡控制 `lancelotSwapForce('switch'|'keep')`（经 `rules.lancelotSwapForce` 注入配置）。
+> 兰斯洛特抽卡控制 `lancelotSwapForce('switch'|'keep')`（经 `rules.lancelotSwapForce` 注入配置）。
+> 湖仙验人/令牌（`lakeInspect`/`lakePass`）与发言计时器仍为规划中（内存态）。
 
 ### 6.3 测试文件清单
 
@@ -609,10 +613,9 @@ createRoomAndStartGame(N) → advancePhase
 | `04_games_flow.test.js` | 3（通用机制） | — |
 | `04a_games_flow_good.test.js` | 3a | 10 板 |
 | `04b_games_flow_evil.test.js` | 3b | 10 板 |
-| `06_messages.test.js` | 4 | — |
-| `07_socket.test.js` | 4b | — |
-| `08_edge_cases.test.js` | 5 | — |
-| `09_game_logic.test.js` | 6 | — |
+| `05_socket.test.js` | 4（实时通信） | — |
+| `06_edge_cases.test.js` | 5（边界/并发） | — |
+| `07_game_logic.test.js` | 6（纯逻辑单测） | — |
 
 ## 7. 执行方式
 
@@ -669,29 +672,18 @@ npm test
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | POST | `/start` | 启动游戏 → 返回 gameId（含首位车长/湖仙落位） |
-| GET | `/:gameId` | 获取状态（合并内存态：preTeam/发言序/湖仙/forcedSend；带 openId 返回玩家视角 `game.vision`，他人 role/side 隐藏；启用湖仙返回 `lakeHolderOpenId`） |
+| GET | `/:gameId?openId=` | 获取状态（新结构：`basic`/`players`/`current`/`history`；带 openId 返回玩家视角 `player.role/vision`，他人 role/side 隐藏；`current.teamVotes/missionVotes` 按 voteVisibility/missionFailDetail 门控，P14 投票中仅见自己） |
 | POST | `/:gameId/advancePhase` | 推进 roleReveal → discussion |
-| POST | `/setSpeakingOrder` | 车长指定发言顺序（仅车长；内存态） |
-| POST | `/advanceSpeaker` | 推进当前发言人（前端触发；内存态） |
-| POST | `/preTeam` | 更新车长预点车（仅车长；任意人数，不入库） |
-| POST | `/submitNomination` | 正式选车（discussion → teamVote） |
-| POST | `/castVote` | 队伍投票（全员） |
-| POST | `/castMissionVote` | 任务投票（仅任务队） |
-| POST | `/:gameId/assassinate` | 刺杀梅林（仅刺客/莫甘娜；强制进入刺杀阶段；执行后 gameEnd） |
-| POST | `/:gameId/lake/inspect` | 湖仙验人（仅持有者；返回目标当前阵营） |
-| POST | `/:gameId/lake/pass` | 传递湖仙令牌（默认被查验者/下一位） |
-| POST | `/end` | 结束游戏 |
+| POST | `/setDiscussion` | 车长设置发言顺序（asc/desc）+预提名队伍（每轮一次不可改） |
+| POST | `/submitNomination` | 正式选车（discussion → teamVote；记录 game_cars 车次） |
+| POST | `/castVote` | 队伍投票（全员；按 car_index 归档） |
+| POST | `/castMissionVote` | 任务投票（仅任务队；完成时归档 mission_votes/mission_success） |
+| POST | `/:gameId/assassinate` | 刺杀梅林（仅刺客/莫甘娜；强制进入刺杀阶段；执行后 gameEnd，status=ended） |
+| POST | `/:gameId/abandon` | 放弃游戏（仅房主；status=abandoned 无胜负结果） |
+| POST | `/end` | 结束游戏（status=ended 并重置房间） |
 | GET | `/stats/summary` | 统计 |
 | GET | `/history/:roomId` | 历史 |
 | GET | `/recent/games` | 最近 |
-
-### 消息 API（`/api/messages`）
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/send` | 发送（≤1000 字） |
-| GET | `/:roomId` | 拉取（分页） |
-| GET | `/:roomId/latest` | 最新 N 条 |
 
 ### 其他
 

@@ -4,7 +4,7 @@ const RoomModel = require('../models/RoomModel');
 const buildVision = GameModel.buildVision;
 const parseJson = GameModel.parseJson;
 
-describe('09 — Game Logic Unit Tests', () => {
+describe('07 — Game Logic Unit Tests', () => {
   describe('parseJson', () => {
     it('should parse string JSON', () => {
       expect(parseJson('{"a":1}')).toEqual({ a: 1 });

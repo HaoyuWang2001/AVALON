@@ -6,7 +6,7 @@ const {
   setDiscussion, abandonGame, getGameState
 } = require('./helpers/testHelper');
 
-describe('08 — Edge Cases & Validation', () => {
+describe('06 — Edge Cases & Validation', () => {
   describe('Room Limits', () => {
     it('should reject joining when room is full (12 players)', async () => {
       const hostId = makeUserId();
