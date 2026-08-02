@@ -174,6 +174,14 @@ class ApiService {
     });
   }
 
+  async confirmReveal(gameId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/games/${gameId}/confirmReveal`, {
+      method: 'POST',
+      data: { openId }
+    });
+  }
+
   async setDiscussion(gameId, speakingOrder, preNominatedTeam) {
     const openId = this.openId || getApp().globalData.openId;
     const data = { gameId, openId, speakingOrder };

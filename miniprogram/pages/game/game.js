@@ -9,6 +9,9 @@ Page({
     gameState: null,
     playerRole: null,
     playerSide: null,
+    revealConfirmed: false,
+    revealConfirmedCount: 0,
+    revealTotalCount: 0,
     currentPhase: '',
     currentRound: 1,
     teamLeaderOpenId: '',
@@ -160,6 +163,9 @@ Page({
           maxFailedNominations: maxFailed,
           carIndex: res.current.index || 1,
           lakeHolderOpenId: res.current.lakeHolderOpenId || '',
+          revealConfirmed: res.player ? !!res.player.revealConfirmed : false,
+          revealConfirmedCount: res.current.revealConfirmedCount || 0,
+          revealTotalCount: res.current.revealTotalCount || 0,
           vision: res.player ? res.player.vision || null : null,
           visionList: visionList,
           allPlayers: res.players || [],
@@ -168,8 +174,8 @@ Page({
           carsHistory: res.history ? res.history.cars || [] : [],
           lakeHistory: res.history ? res.history.lake || [] : [],
           lancelotSwaps: res.history ? res.history.lancelotSwaps || [] : [],
-          speakingOrder: res.current.speakingOrder || 'asc',
-          speakingOrderIndex: (res.current.speakingOrder || 'asc') === 'desc' ? 1 : 0,
+          speakingOrder: keepLocal ? this.data.speakingOrder : (res.current.speakingOrder || 'asc'),
+          speakingOrderIndex: keepLocal ? this.data.speakingOrderIndex : ((res.current.speakingOrder || 'asc') === 'desc' ? 1 : 0),
           speakingOrderConfirmed: this._discussionSaved || (res.current.speakingOrder || 'asc') !== 'asc' || !!res.current.preNominatedTeam,
           roundList: roundList,
           flowCars: flowCars,
@@ -190,10 +196,13 @@ Page({
 
   confirmRoleReveal() {
     const { gameId } = this.data;
-    api.advancePhase(gameId).then(() => {
+    api.confirmReveal(gameId).then(() => {
       this.fetchGameState();
+      if (this.data.revealConfirmedCount >= this.data.revealTotalCount) {
+        wx.showToast({ title: '全员已确认，进入讨论', icon: 'success' });
+      }
     }).catch(err => {
-      wx.showToast({ title: (err && err.message) || '进入讨论失败', icon: 'none' });
+      wx.showToast({ title: (err && err.message) || '确认失败', icon: 'none' });
     });
   },
 
@@ -210,7 +219,8 @@ Page({
 
   closeRoleModal() {
     this.setData({ showRoleModal: false });
-    if (this.data.currentPhase === 'roleReveal') {
+    // 角色揭示阶段：关闭角色卡即确认（幂等，可重复）
+    if (this.data.currentPhase === 'roleReveal' && !this.data.revealConfirmed) {
       this.confirmRoleReveal();
     }
   },

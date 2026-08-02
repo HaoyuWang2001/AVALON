@@ -304,6 +304,41 @@ function createRouter() {
     }
   });
 
+  // 确认角色揭示（全员确认后自动进入 discussion）
+  router.post('/:gameId/confirmReveal', async (req, res) => {
+    try {
+      const { gameId } = req.params;
+      const { openId } = req.body;
+
+      if (!gameId || !openId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+
+      const result = await GameModel.confirmReveal(gameId, openId);
+
+      const db = require('../config/db');
+      const [gameRecord] = await db.query('SELECT room_id FROM games WHERE id = ?', [gameId]);
+      if (gameRecord && gameRecord.room_id) {
+        emitGame(gameRecord.room_id, gameId);
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error('确认角色揭示API错误:', error);
+
+      if (error.message.includes('游戏不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+
+      if (error.message.includes('当前不是角色揭示阶段') ||
+          error.message.includes('你不在本局游戏中')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
+      res.status(500).json({ success: false, message: error.message || '确认角色揭示失败' });
+    }
+  });
+
   // 设置讨论阶段（发言顺序 + 预提名队伍，每轮一次）
   router.post('/setDiscussion', async (req, res) => {
     try {

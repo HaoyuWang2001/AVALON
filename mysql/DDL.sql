@@ -94,6 +94,7 @@ CREATE TABLE game_players (
     open_id VARCHAR(64) NOT NULL COMMENT '玩家openId',
     role VARCHAR(50) NOT NULL COMMENT '角色',
     side VARCHAR(10) NOT NULL COMMENT '阵营：good/evil',
+    reveal_confirmed BOOLEAN DEFAULT FALSE COMMENT '角色揭示是否已确认（全员确认后进入讨论）',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '分配时间',
     UNIQUE KEY uk_game_player (game_id, open_id),
     FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,

@@ -64,3 +64,7 @@ CREATE TABLE IF NOT EXISTS lancelot_swap_history (
     FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
     INDEX idx_game_id (game_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='兰斯洛特转换抽卡记录表';
+
+-- 5) game_players 表新增 reveal_confirmed（全员确认后进入讨论）
+ALTER TABLE game_players
+    ADD COLUMN reveal_confirmed BOOLEAN DEFAULT FALSE COMMENT '角色揭示是否已确认（全员确认后进入讨论）' AFTER side;

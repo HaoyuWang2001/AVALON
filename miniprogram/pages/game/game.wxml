@@ -48,13 +48,12 @@
   <!-- 根据游戏阶段显示不同内容 -->
   <!-- 角色揭示阶段 -->
   <view wx:if="{{currentPhase === 'roleReveal'}}" class="card">
-    <view wx:if="{{playerRole}}" class="text-center" style="padding: 40rpx 0;">
-      <view style="font-size: 48rpx; margin-bottom: 30rpx;">🎭</view>
-      <view class="text-muted">点击「查看身份」确认你的角色</view>
-    </view>
-    <view wx:else class="text-center" style="padding: 40rpx 0;">
-      <view style="font-size: 48rpx; margin-bottom: 30rpx;">👀</view>
-      <view class="text-muted">等待玩家确认身份...</view>
+    <view class="text-center" style="padding: 30rpx 0 10rpx;">
+      <view style="font-size: 44rpx; margin-bottom: 16rpx;">🎭</view>
+      <view wx:if="{{playerRole && !revealConfirmed}}" class="text-muted">点击「查看身份」确认你的角色</view>
+      <view wx:if="{{playerRole && revealConfirmed}}" class="text-muted" style="color: #2ecc71;">你已确认身份</view>
+      <view wx:if="{{!playerRole}}" class="text-muted">等待分配角色...</view>
+      <view class="text-muted" style="margin-top: 12rpx;">已确认 {{revealConfirmedCount}}/{{revealTotalCount}} 人</view>
     </view>
   </view>
 
@@ -263,7 +262,9 @@
           <text wx:elif="{{item.side}}" class="role-vision-tag {{item.side === 'evil' ? 'tag-evil' : 'tag-good'}}">{{item.side === 'evil' ? '坏人' : '好人'}}</text>
         </view>
       </view>
-      <button class="btn btn-primary role-card-btn" bindtap="closeRoleModal">隐藏身份</button>
+      <button class="btn btn-primary role-card-btn" bindtap="closeRoleModal" disabled="{{revealConfirmed}}">
+        {{revealConfirmed ? '已确认 ({{revealConfirmedCount}}/{{revealTotalCount}})' : '隐藏身份并确认'}}
+      </button>
     </view>
   </view>
 

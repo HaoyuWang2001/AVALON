@@ -292,6 +292,74 @@ describe('06 — Edge Cases & Validation', () => {
     });
   });
 
+  describe('confirmReveal (全员确认后进入讨论)', () => {
+    async function startFreshGame() {
+      const { roomId, gameId, players } = await createRoomAndStartGame(5);
+      return { roomId, gameId, players };
+    }
+
+    it('未全员确认前停留在 roleReveal；全员确认后自动进入 discussion', async () => {
+      const { gameId, players } = await startFreshGame();
+      // 前 4 人确认，仍在 roleReveal
+      for (let i = 0; i < 4; i++) {
+        const res = await apiPost(`/api/games/${gameId}/confirmReveal`, { openId: players[i].openId });
+        expect(res.body.success).toBe(true);
+        expect(res.body.current.phase).toBe('roleReveal');
+      }
+      const st = await getGameState(gameId);
+      expect(st.current.phase).toBe('roleReveal');
+      expect(st.current.revealConfirmedCount).toBe(4);
+      // 第 5 人确认 → 自动进入 discussion
+      const last = await apiPost(`/api/games/${gameId}/confirmReveal`, { openId: players[4].openId });
+      expect(last.body.success).toBe(true);
+      expect(last.body.current.phase).toBe('discussion');
+      await endGame(gameId);
+    });
+
+    it('confirmReveal 幂等：重复确认不报错', async () => {
+      const { gameId, players } = await startFreshGame();
+      const r1 = await apiPost(`/api/games/${gameId}/confirmReveal`, { openId: players[0].openId });
+      expect(r1.body.success).toBe(true);
+      const r2 = await apiPost(`/api/games/${gameId}/confirmReveal`, { openId: players[0].openId });
+      expect(r2.body.success).toBe(true);
+      const st = await getGameState(gameId);
+      expect(st.current.revealConfirmedCount).toBe(1);
+      await endGame(gameId);
+    });
+
+    it('非游戏内玩家 confirmReveal 被拒', async () => {
+      const { gameId } = await startFreshGame();
+      const outsider = makeUserId();
+      const res = await apiPost(`/api/games/${gameId}/confirmReveal`, { openId: outsider });
+      expect(res.body.success).toBe(false);
+      expect(res.body.message || '').toMatch(/你不在本局游戏中/);
+      await endGame(gameId);
+    });
+
+    it('已进入 discussion 后 confirmReveal 被拒', async () => {
+      const { gameId, players } = await startFreshGame();
+      for (const p of players) {
+        await apiPost(`/api/games/${gameId}/confirmReveal`, { openId: p.openId });
+      }
+      const st = await getGameState(gameId);
+      expect(st.current.phase).toBe('discussion');
+      const res = await apiPost(`/api/games/${gameId}/confirmReveal`, { openId: players[0].openId });
+      expect(res.body.success).toBe(false);
+      expect(res.body.message || '').toMatch(/当前不是角色揭示阶段/);
+      await endGame(gameId);
+    });
+
+    it('advancePhase 不再被玩家用于推进（保留但校验阶段）', async () => {
+      const { gameId } = await startFreshGame();
+      // roleReveal 阶段 advancePhase 仍可被调用（保留）；验证 confirmReveal 才是入口
+      const res = await advancePhase(gameId);
+      expect(res.success).toBe(true);
+      const st = await getGameState(gameId);
+      expect(st.current.phase).toBe('discussion');
+      await endGame(gameId);
+    });
+  });
+
   describe('Room & Game Lifecycle', () => {
     // 打到自然结束（坏人 3 胜）
     async function driveToNaturalEnd(gameId, players) {

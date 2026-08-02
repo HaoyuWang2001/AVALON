@@ -444,7 +444,7 @@ class GameModel {
 
       // 获取游戏玩家
       const players = await db.query(
-        `SELECT gp.open_id as openId, gp.role, gp.side,
+        `SELECT gp.open_id as openId, gp.role, gp.side, gp.reveal_confirmed as revealConfirmed,
                 p.nick_name as nickName, p.avatar_url as avatarUrl, p.seat_number as seatNumber
          FROM game_players gp
          JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
@@ -454,6 +454,7 @@ class GameModel {
       );
 
       const playerCount = players.length;
+      const revealConfirmedCount = players.filter(p => p.revealConfirmed === 1 || p.revealConfirmed === true).length;
       const carIndex = game.failedNominations + 1;
 
       // 当前车次队伍投票 / 任务投票
@@ -584,9 +585,14 @@ class GameModel {
           [gameId, openId]
         );
         const vision = visionRows.length ? parseJson(visionRows[0].vision) : { players: [] };
-        player = { role: requesterInfo ? requesterInfo.role : null, side: requesterInfo ? requesterInfo.side : null, vision };
+        player = {
+          role: requesterInfo ? requesterInfo.role : null,
+          side: requesterInfo ? requesterInfo.side : null,
+          revealConfirmed: requesterInfo ? (requesterInfo.revealConfirmed === 1 || requesterInfo.revealConfirmed === true) : false,
+          vision
+        };
         publicPlayers = fullPlayers.map(p => {
-          const entry = { openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl, seatNumber: p.seatNumber, isHost: p.isHost };
+          const entry = { openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl, seatNumber: p.seatNumber, isHost: p.isHost, revealConfirmed: p.revealConfirmed === 1 || p.revealConfirmed === true };
           if (p.openId === openId) {
             entry.role = p.role;
             entry.side = p.side;
@@ -621,7 +627,9 @@ class GameModel {
         teamVotes: gatedTeamVotes,
         missionVotes: gatedMissionVotes,
         lakeHolderOpenId: game.lakeHolderOpenId || null,
-        speakingOrder: game.speakingOrder || 'asc'
+        speakingOrder: game.speakingOrder || 'asc',
+        revealConfirmedCount,
+        revealTotalCount: playerCount
       };
 
       return {
@@ -1176,6 +1184,77 @@ class GameModel {
       return await this.getState(gameId);
     } catch (error) {
       console.error('推进阶段失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 确认角色揭示（全员确认后自动进入 discussion）。
+   * 仅 game_players 内的玩家可确认（观战者不计入）；幂等；无强制推进。
+   * @param {string} gameId 游戏ID
+   * @param {string} openId 玩家openId
+   * @returns {Promise<Object>} 更新后的游戏状态
+   */
+  static async confirmReveal(gameId, openId) {
+    try {
+      await db.transaction(async (connection) => {
+        const [game] = await connection.execute(
+          `SELECT current_phase, room_id
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId]
+        );
+
+        if (game.length === 0) {
+          throw new Error('游戏不存在');
+        }
+
+        if (game[0].current_phase !== 'roleReveal') {
+          throw new Error('当前不是角色揭示阶段');
+        }
+
+        // 校验 openId 是游戏内玩家
+        const [gp] = await connection.execute(
+          'SELECT open_id FROM game_players WHERE game_id = ? AND open_id = ?',
+          [gameId, openId]
+        );
+        if (gp.length === 0) {
+          throw new Error('你不在本局游戏中');
+        }
+
+        // 幂等标记确认
+        await connection.execute(
+          'UPDATE game_players SET reveal_confirmed = TRUE WHERE game_id = ? AND open_id = ?',
+          [gameId, openId]
+        );
+
+        // 统计已确认 vs 总玩家数
+        const [counts] = await connection.execute(
+          `SELECT COUNT(*) as total,
+                  SUM(CASE WHEN reveal_confirmed THEN 1 ELSE 0 END) as confirmed
+           FROM game_players WHERE game_id = ?`,
+          [gameId]
+        );
+        const total = parseInt(counts[0].total, 10);
+        const confirmed = parseInt(counts[0].confirmed, 10);
+
+        // 全员确认后自动进入讨论：重置讨论态（预提名/发言序/已设置标记）
+        if (total > 0 && confirmed >= total) {
+          await connection.execute(
+            `UPDATE games 
+             SET current_phase = 'discussion',
+                 pre_nominated_team = NULL,
+                 speaking_order = 'asc',
+                 discussion_set = FALSE,
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [gameId]
+          );
+        }
+      });
+
+      return await this.getState(gameId);
+    } catch (error) {
+      console.error('确认角色揭示失败:', error);
       throw error;
     }
   }
