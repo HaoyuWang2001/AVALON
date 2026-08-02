@@ -509,6 +509,11 @@ class GameModel {
           if (!forcedCar) {
             throw new Error('本局为强制车，车长必须显式携带 forcedCar=true');
           }
+          // 新提名重置本轮队伍投票（流车后的重新提名）
+          await connection.execute(
+            'DELETE FROM votes WHERE game_id = ? AND vote_type = ? AND round = ?',
+            [gameId, 'team', game[0].current_round]
+          );
           await connection.execute(
             `UPDATE games 
              SET current_phase = 'missionVote', 
@@ -521,6 +526,11 @@ class GameModel {
           if (forcedCar) {
             throw new Error('本局不是强制车，不能携带 forcedCar');
           }
+          // 新提名重置本轮队伍投票（流车后的重新提名）
+          await connection.execute(
+            'DELETE FROM votes WHERE game_id = ? AND vote_type = ? AND round = ?',
+            [gameId, 'team', game[0].current_round]
+          );
           // 更新提名队伍和阶段
           await connection.execute(
             `UPDATE games 

@@ -329,6 +329,7 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     for (let i = 0; i < pattern.length; i++) {
       const after = await playRound(gameId, players, pattern[i]);
       const cur = lancelotSide(after, 'lancelotBlue');
+      console.log(`[dbg16 swapRound=${swapRound}] after round ${i + 1}: side ${cur} (prev ${prev}) round=${after.game.currentRound} phase=${after.game.currentPhase}`);
       if (i + 1 === swapRound) expect(cur).not.toBe(prev);
       else expect(cur).toBe(prev);
       prev = cur;
