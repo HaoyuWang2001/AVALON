@@ -1391,3 +1391,5 @@ class GameModel {
 }
 
 module.exports = GameModel;
+module.exports.buildVision = buildVision;
+module.exports.parseJson = parseJson;

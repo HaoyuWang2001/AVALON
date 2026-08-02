@@ -1,6 +1,128 @@
 const GameModel = require('../models/GameModel');
+const RoomModel = require('../models/RoomModel');
+
+const buildVision = GameModel.buildVision;
+const parseJson = GameModel.parseJson;
 
 describe('09 — Game Logic Unit Tests', () => {
+  describe('parseJson', () => {
+    it('should parse string JSON', () => {
+      expect(parseJson('{"a":1}')).toEqual({ a: 1 });
+    });
+
+    it('should return objects unchanged', () => {
+      const obj = { a: 1 };
+      expect(parseJson(obj)).toBe(obj);
+    });
+
+    it('should return null for null/undefined', () => {
+      expect(parseJson(null)).toBeNull();
+      expect(parseJson(undefined)).toBeNull();
+    });
+
+    it('should return raw value for invalid JSON string', () => {
+      const raw = 'not-json';
+      expect(parseJson(raw)).toBe(raw);
+    });
+  });
+
+  describe('validateRoomConfig', () => {
+    it('should reject missing config', () => {
+      expect(() => RoomModel.validateRoomConfig(null)).toThrow('缺少房间配置');
+    });
+
+    it('should reject missing roles', () => {
+      expect(() => RoomModel.validateRoomConfig({ rules: {} })).toThrow('缺少角色配置');
+    });
+
+    it('should reject unknown role', () => {
+      const cfg = { roles: { good: ['merlin'], evil: ['invalid_role'] }, rules: {} };
+      expect(() => RoomModel.validateRoomConfig(cfg)).toThrow('未知角色');
+    });
+
+    it('should reject missing required rules', () => {
+      const cfg = { roles: { good: ['merlin'], evil: ['morgana'] }, rules: {} };
+      expect(() => RoomModel.validateRoomConfig(cfg)).toThrow('缺少字段');
+    });
+
+    it('should reject invalid lancelotSwapRound (0 and 5)', () => {
+      const base = { roles: { good: ['merlin'], evil: ['morgana'] } };
+      const req = {
+        evilKnowsEachOther: true, lancelotsKnowEachOther: true, lancelotSwapRound: 2,
+        ladyOfTheLake: false, ladyOfTheLakeRound: 2, maxFailedNominations: 3,
+        oberonMustFailMission: false, lancelotMustFail: false,
+        voteVisibility: 'anonymous', missionFailDetail: 'count'
+      };
+      expect(() => RoomModel.validateRoomConfig({ ...base, rules: { ...req, lancelotSwapRound: 0 } })).toThrow('lancelotSwapRound');
+      expect(() => RoomModel.validateRoomConfig({ ...base, rules: { ...req, lancelotSwapRound: 5 } })).toThrow('lancelotSwapRound');
+      expect(() => RoomModel.validateRoomConfig({ ...base, rules: { ...req, lancelotSwapRound: 3 } })).not.toThrow();
+    });
+  });
+
+  describe('buildVision', () => {
+    const players = [
+      { openId: 'a', role: 'merlin', side: 'good' },
+      { openId: 'b', role: 'percival', side: 'good' },
+      { openId: 'c', role: 'morgana', side: 'evil' },
+      { openId: 'd', role: 'assassin', side: 'evil' },
+      { openId: 'e', role: 'loyal', side: 'good' }
+    ];
+    const defaultCfg = { rules: { evilKnowsEachOther: true, evilsKnowRedLancelot: true } };
+
+    it('merlin sees canSee evil roles (no mordred) with side only', () => {
+      const seen = buildVision({ openId: 'a', role: 'merlin', side: 'good' }, players, defaultCfg);
+      const seenIds = seen.map(s => s.openId);
+      expect(seenIds).toContain('c');
+      expect(seenIds).toContain('d');
+      expect(seen.some(s => s.openId === 'c' && s.side === 'evil')).toBe(true);
+      expect(seen.some(s => s.openId === 'c' && s.role)).toBe(false);
+    });
+
+    it('merlin vision does not include self', () => {
+      const seen = buildVision({ openId: 'a', role: 'merlin', side: 'good' }, players, defaultCfg);
+      expect(seen.some(s => s.openId === 'a')).toBe(false);
+    });
+
+    it('percival sees merlin + morgana without identity', () => {
+      const seen = buildVision({ openId: 'b', role: 'percival', side: 'good' }, players, defaultCfg);
+      const seenIds = seen.map(s => s.openId).sort();
+      expect(seenIds).toEqual(['a', 'c']);
+      expect(seen.every(s => !s.role && !s.side)).toBe(true);
+    });
+
+    it('assassin sees fellow open-eye evils with identity', () => {
+      const seen = buildVision({ openId: 'd', role: 'assassin', side: 'evil' }, players, defaultCfg);
+      const morgana = seen.find(s => s.openId === 'c');
+      expect(morgana).toBeDefined();
+      expect(morgana.role).toBe('morgana');
+      expect(morgana.canIdentity).toBe(true);
+    });
+
+    it('loyal sees nobody', () => {
+      const seen = buildVision({ openId: 'e', role: 'loyal', side: 'good' }, players, defaultCfg);
+      expect(seen.length).toBe(0);
+    });
+
+    it('evilKnowsEachOther=false: open-eye sees only self (no others)', () => {
+      const cfg = { rules: { evilKnowsEachOther: false, evilsKnowRedLancelot: true } };
+      const seen = buildVision({ openId: 'd', role: 'assassin', side: 'evil' }, players, cfg);
+      expect(seen.length).toBe(0);
+    });
+  });
+
+  describe('getTeamSize full table', () => {
+    const expected = {
+      5: [2, 3, 2, 3, 3], 6: [2, 3, 4, 3, 4], 7: [2, 3, 3, 4, 4],
+      8: [3, 4, 4, 5, 5], 9: [3, 4, 4, 5, 5], 10: [3, 4, 4, 5, 5],
+      11: [3, 4, 5, 6, 6], 12: [3, 4, 5, 6, 6]
+    };
+    it.each(Object.keys(expected))('N=%s matches canonical table', (n) => {
+      const row = expected[n];
+      for (let r = 1; r <= 5; r++) {
+        expect(GameModel.getTeamSize(parseInt(n), r)).toBe(row[r - 1]);
+      }
+    });
+  });
   describe('getRoleConfiguration', () => {
     it('should return exactly N roles for each player count', () => {
       for (let n = 5; n <= 12; n++) {

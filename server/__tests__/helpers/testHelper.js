@@ -278,6 +278,16 @@ async function endGame(gameId) {
   return res.body;
 }
 
+async function setDiscussion(gameId, openId, speakingOrder, preNominatedTeam) {
+  const res = await apiPost('/api/games/setDiscussion', { gameId, openId, speakingOrder, preNominatedTeam });
+  return res.body;
+}
+
+async function abandonGame(gameId, openId) {
+  const res = await apiPost(`/api/games/${gameId}/abandon`, { openId });
+  return res.body;
+}
+
 /**
  * Create a room with N players, all joined and ready.
  * Returns { roomId, players: [{openId, nickName, seatNumber}], hostId }
@@ -416,6 +426,8 @@ module.exports = {
   castMissionVote,
   assassinate,
   endGame,
+  setDiscussion,
+  abandonGame,
   createRoomWithPlayers,
   createRoomAndStartGame,
   createLancelotGame,
