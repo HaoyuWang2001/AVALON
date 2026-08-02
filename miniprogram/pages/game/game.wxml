@@ -11,6 +11,7 @@
         <button size="mini" class="btn btn-primary" bindtap="viewRole">查看角色</button>
         <button size="mini" class="btn btn-primary" style="margin-left: 20rpx;" bindtap="viewVision">视野</button>
         <button size="mini" class="btn" style="margin-left: 20rpx; background-color: #f8f9fa;" bindtap="viewGameHistory">历史</button>
+        <button size="mini" class="btn btn-danger" style="margin-left: 20rpx;" bindtap="abandonGame" wx:if="{{isHost}}">放弃</button>
       </view>
     </view>
 
@@ -32,7 +33,7 @@
       <view style="font-size: 48rpx; margin-bottom: 30rpx;">🎭</view>
       <view style="font-size: 36rpx; font-weight: 600; margin-bottom: 20rpx;">你的角色已分配</view>
       <view class="text-muted">点击"查看角色"按钮了解你的身份</view>
-      <view class="text-muted">游戏即将开始...</view>
+      <button class="btn btn-primary" style="margin-top: 30rpx;" bindtap="confirmRoleReveal">确认并开始</button>
     </view>
   </view>
 
@@ -47,6 +48,17 @@
     </view>
     <view class="text-center text-muted mb-4">
       需要选择 {{getRequiredTeamSize()}} 人执行任务
+    </view>
+
+    <!-- 队长设置发言顺序（每轮一次） -->
+    <view wx:if="{{checkIfTeamLeader() && !speakingOrderConfirmed}}" class="speaking-order-box" style="margin-bottom: 20rpx; padding: 20rpx; background: #F8F9FA; border-radius: 12rpx;">
+      <view class="flex-between">
+        <text class="rule-label">发言顺序</text>
+        <picker range="{{speakingOrderOptions}}" range-key="label" value="{{speakingOrderIndex}}" bindchange="onSpeakingOrderChange">
+          <view class="picker-value">{{speakingOrderOptions[speakingOrderIndex].label}}</view>
+        </picker>
+      </view>
+      <button size="mini" class="btn btn-primary" style="margin-top: 16rpx;" bindtap="confirmSpeakingOrder">保存发言设置</button>
     </view>
 
     <!-- 玩家列表 -->
@@ -119,6 +131,25 @@
     </view>
   </view>
 
+  <!-- 刺杀阶段 -->
+  <view wx:if="{{currentPhase === 'assassination'}}" class="card">
+    <view class="subtitle text-center">刺杀梅林</view>
+    <view class="text-center mb-4">
+      <view class="text-muted">好人已完成3个任务，坏人阵营需刺杀梅林翻盘</view>
+      <view wx:if="{{!canAssassinate()}}" class="text-muted" style="margin-top: 10rpx;">等待刺客选择目标...</view>
+      <view wx:else class="text-muted" style="margin-top: 10rpx;">你是坏人，选择你认为的梅林</view>
+    </view>
+    <view class="players-list">
+      <view wx:for="{{allPlayers}}" wx:key="openId" wx:if="{{item.openId !== playerId}}" class="player-item selectable" bindtap="assassinate" data-id="{{item.openId}}">
+        <image src="{{item.avatarUrl}}" class="player-avatar"></image>
+        <view class="player-info">
+          <view class="player-name">{{item.nickName}}</view>
+          <view class="player-status">{{item.openId === userInfo.openId ? '(自己)' : ''}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <!-- 任务结果阶段 -->
   <view wx:if="{{currentPhase === 'missionResult'}}" class="card">
     <view class="subtitle text-center">第{{currentRound}}回合结果</view>
@@ -152,7 +183,7 @@
         {{getGameWinner() === 'good' ? '好人阵营胜利' : '坏人阵营胜利'}}
       </view>
       <view class="text-muted">
-        {{getGameWinner() === 'good' ? '成功完成了3个任务' : '任务失败或梅林被刺杀'}}
+        {{gameResult ? gameResult.reason : (getGameWinner() === 'good' ? '成功完成了3个任务' : '任务失败或梅林被刺杀')}}
       </view>
     </view>
 

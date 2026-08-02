@@ -5,8 +5,7 @@ const db = require('../config/db');
 const socket = require('../config/socket');
 
 function emitRoom(roomId) {
-  const io = socket.getIO();
-  if (io) io.to(roomId).emit('roomUpdated', { roomId });
+  socket.emitToRoom(roomId, 'roomUpdated', { roomId });
 }
 
 function createRouter() {
@@ -427,8 +426,7 @@ function createRouter() {
       const { roomId } = req.params;
       const { openId } = req.body;
       const result = await RoomModel.disband(roomId, openId);
-      const io = socket.getIO();
-      if (io) io.to(roomId).emit('roomDeleted', { roomId });
+      socket.emitToRoom(roomId, 'roomDeleted', { roomId });
       res.json(result);
     } catch (error) {
       if (error.message.includes('仅房主')) {

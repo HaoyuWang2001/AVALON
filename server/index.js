@@ -37,7 +37,7 @@ try {
 const express = require('express');
 const http = require('http');
 const https = require('https');
-const { Server } = require('socket.io');
+const { WebSocketServer } = require('ws');
 const cors = require('cors');
 const fs = require('fs');
 
@@ -70,15 +70,10 @@ if (useHttps) {
   server = http.createServer(app);
 }
 
-const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
-});
+const wss = new WebSocketServer({ server });
 
 const socket = require('./config/socket');
-socket.setIO(io);
+socket.setWSS(wss);
 
 app.use(cors());
 app.use(express.json());
@@ -205,8 +200,15 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
+wss.on('connection', (ws) => {
+  console.log('Client connected:', ws._socket ? ws._socket.remoteAddress : 'unknown');
+  ws.roomId = null;
+  ws.playerId = null;
+
+  // 发送 JSON 帧 {type, ...}
+  function send(msg) {
+    if (ws.readyState === 1) ws.send(JSON.stringify(msg));
+  }
 
   // 新观众/断线重连：拉取当前游戏状态推送（恢复 current/history/投票可见性）
   async function pushCurrentGameState(roomId, playerId) {
@@ -218,42 +220,59 @@ io.on('connection', (socket) => {
       if (gameRows.length === 0) return;
       const GameModel = require('./models/GameModel');
       const state = await GameModel.getState(gameRows[0].id, playerId);
-      socket.emit('gameState', { roomId, gameId: gameRows[0].id, state });
+      send({ type: 'gameState', roomId, gameId: gameRows[0].id, state });
     } catch (error) {
       console.error('推送游戏状态失败:', error);
     }
   }
 
-  socket.on('joinRoom', (data) => {
-    const { roomId, playerId } = data;
-    socket.join(roomId);
-    socket.roomId = roomId;
-    socket.playerId = playerId;
-    io.to(roomId).emit('playerJoined', { playerId });
-    pushCurrentGameState(roomId, playerId);
+  ws.on('message', (raw) => {
+    let msg;
+    try {
+      msg = JSON.parse(raw.toString());
+    } catch (e) {
+      return;
+    }
+    if (!msg || !msg.type) return;
+
+    switch (msg.type) {
+      case 'joinRoom': {
+        const { roomId, playerId } = msg;
+        ws.roomId = roomId;
+        ws.playerId = playerId;
+        socket.broadcastToRoom(roomId, { type: 'playerJoined', playerId });
+        pushCurrentGameState(roomId, playerId);
+        break;
+      }
+      case 'requestState': {
+        const { roomId, playerId } = msg;
+        pushCurrentGameState(roomId || ws.roomId, playerId || ws.playerId);
+        break;
+      }
+      case 'leaveRoom': {
+        const { roomId, playerId } = msg;
+        socket.broadcastToRoom(roomId, { type: 'playerLeft', playerId });
+        break;
+      }
+      case 'roomUpdate': {
+        socket.broadcastToRoom(msg.roomId, { type: 'roomUpdated', ...msg });
+        break;
+      }
+      case 'gameUpdate': {
+        socket.broadcastToRoom(msg.roomId, { type: 'gameUpdated', ...msg });
+        break;
+      }
+      default:
+        break;
+    }
   });
 
-  socket.on('requestState', (data) => {
-    const { roomId, playerId } = data;
-    pushCurrentGameState(roomId, playerId);
+  ws.on('close', () => {
+    console.log('Client disconnected:', ws.playerId || 'unknown');
   });
 
-  socket.on('leaveRoom', (data) => {
-    const { roomId, playerId } = data;
-    socket.leave(roomId);
-    io.to(roomId).emit('playerLeft', { playerId });
-  });
-
-  socket.on('roomUpdate', (data) => {
-    io.to(data.roomId).emit('roomUpdated', data);
-  });
-
-  socket.on('gameUpdate', (data) => {
-    io.to(data.roomId).emit('gameUpdated', data);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+  ws.on('error', (err) => {
+    console.error('WebSocket 错误:', err.message);
   });
 });
 

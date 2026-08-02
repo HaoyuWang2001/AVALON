@@ -583,7 +583,7 @@ class GameModel {
           [gameId, openId]
         );
         const vision = visionRows.length ? parseJson(visionRows[0].vision) : { players: [] };
-        player = { role: requesterInfo ? requesterInfo.role : null, vision };
+        player = { role: requesterInfo ? requesterInfo.role : null, side: requesterInfo ? requesterInfo.side : null, vision };
         publicPlayers = fullPlayers.map(p => {
           const entry = { openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl, seatNumber: p.seatNumber, isHost: p.isHost };
           if (p.openId === openId) {

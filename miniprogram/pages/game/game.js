@@ -8,6 +8,7 @@ Page({
     gameId: '',
     gameState: null,
     playerRole: null,
+    playerSide: null,
     currentPhase: '',
     currentRound: 1,
     teamLeaderOpenId: '',
@@ -18,6 +19,13 @@ Page({
     missionResults: [],
     forcedSend: false,
     vision: null,
+    gameResult: null,
+    playerId: '',
+    isHost: false,
+    speakingOrder: 'asc',
+    speakingOrderIndex: 0,
+    speakingOrderConfirmed: false,
+    speakingOrderOptions: [{ label: '按座位号从1号开始', value: 'asc' }, { label: '从队长开始逆序', value: 'desc' }],
     showRoleModal: false,
     showVoteModal: false,
     showMissionModal: false,
@@ -29,6 +37,7 @@ Page({
     this.setData({
       roomId: roomId || '',
       gameId: gameId || '',
+      playerId: app.globalData.openId || '',
       userInfo: app.globalData.userInfo,
     });
 
@@ -63,6 +72,7 @@ Page({
         this.setData({
           gameState: res.current,
           playerRole: res.player ? res.player.role : null,
+          playerSide: res.player ? res.player.side : null,
           currentPhase: res.current.phase || 'roleReveal',
           currentRound: res.current.round || 1,
           teamLeaderOpenId: res.current.teamLeaderOpenId || '',
@@ -73,6 +83,11 @@ Page({
           forcedSend: !!res.current.forcedSend,
           vision: res.player ? res.player.vision || null : null,
           allPlayers: res.players || [],
+          gameResult: res.basic && res.basic.result ? res.basic.result : null,
+          isHost: !!(res.players || []).some(p => p.openId === (app.globalData.openId || '') && p.isHost),
+          speakingOrder: res.current.speakingOrder || 'asc',
+          speakingOrderIndex: (res.current.speakingOrder || 'asc') === 'desc' ? 1 : 0,
+          speakingOrderConfirmed: res.current.speakingOrder !== 'asc' || !!res.current.preNominatedTeam,
         });
 
         if (res.current.phase === 'gameEnd') {
@@ -81,6 +96,15 @@ Page({
       }
     }).catch(err => {
       console.error('获取游戏状态失败:', err);
+    });
+  },
+
+  confirmRoleReveal() {
+    const { gameId } = this.data;
+    api.advancePhase(gameId).then(() => {
+      this.fetchGameState();
+    }).catch(err => {
+      wx.showToast({ title: (err && err.message) || '进入讨论失败', icon: 'none' });
     });
   },
 
@@ -170,8 +194,26 @@ Page({
     this.submitNomination();
   },
 
+  onSpeakingOrderChange(e) {
+    const index = parseInt(e.detail.value) || 0;
+    this.setData({
+      speakingOrderIndex: index,
+      speakingOrder: this.data.speakingOrderOptions[index] ? this.data.speakingOrderOptions[index].value : 'asc'
+    });
+  },
+
+  confirmSpeakingOrder() {
+    const { gameId, speakingOrder } = this.data;
+    api.setDiscussion(gameId, speakingOrder).then(() => {
+      this.fetchGameState();
+      wx.showToast({ title: '发言设置已保存', icon: 'success' });
+    }).catch(err => {
+      wx.showToast({ title: (err && err.message) || '设置失败', icon: 'none' });
+    });
+  },
+
   getRequiredTeamSize() {
-    const playerCount = this.data.gameState?.players?.length || 5;
+    const playerCount = this.data.allPlayers?.length || 5;
     const round = this.data.currentRound;
     const sizes = {
       5: [2, 3, 2, 3, 3],
@@ -193,11 +235,9 @@ Page({
     api.submitNomination(gameId, nominatedTeam, forcedSend ? true : undefined).then(res => {
       if (res && res.success === false) {
         wx.showToast({ title: res.message || '提交失败', icon: 'none' });
-      } else {
-        console.log('提名提交成功:', res);
       }
     }).catch(err => {
-      console.error('提名提交失败:', err);
+      wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
     });
   },
 
@@ -213,16 +253,17 @@ Page({
     api.castVote(gameId, vote).then(res => {
       console.log('投票成功:', res);
     }).catch(err => {
-      console.error('投票失败:', err);
+      wx.showToast({ title: (err && err.message) || '投票失败', icon: 'none' });
     });
   },
 
   castMissionVote(e) {
     const vote = e.currentTarget.dataset.vote;
-    const { gameId, playerRole } = this.data;
+    const { gameId, playerRole, playerSide } = this.data;
 
     if (vote === 'fail') {
-      const isEvil = ['mordred', 'morgana', 'assassin', 'minion', 'oberon'].includes(playerRole);
+      // 以当前阵营为准（兰斯洛特转换可能改变 side）；后端为最终裁决
+      const isEvil = playerSide === 'evil' || ['mordred', 'morgana', 'assassin', 'minion', 'oberon', 'lancelotRed'].includes(playerRole);
       if (!isEvil) {
         wx.showToast({
           title: '只有坏人才能破坏任务',
@@ -235,7 +276,7 @@ Page({
     api.castMissionVote(gameId, vote, playerRole).then(res => {
       console.log('任务投票成功:', res);
     }).catch(err => {
-      console.error('任务投票失败:', err);
+      wx.showToast({ title: (err && err.message) || '任务投票失败', icon: 'none' });
     });
   },
 
@@ -252,6 +293,46 @@ Page({
       content: historyText,
       showCancel: false,
       confirmText: '关闭'
+    });
+  },
+
+  canAssassinate() {
+    // 与后端一致：assassin 或（无 assassin 时）morgana 可发起刺杀
+    return ['assassin', 'morgana'].includes(this.data.playerRole);
+  },
+
+  assassinate(e) {
+    const targetOpenId = e.currentTarget.dataset.id;
+    const { gameId } = this.data;
+    wx.showModal({
+      title: '刺杀梅林',
+      content: '确认刺杀该玩家为梅林？',
+      success: (res) => {
+        if (res.confirm) {
+          api.assassinate(gameId, targetOpenId).then(() => {
+            this.fetchGameState();
+          }).catch(err => {
+            wx.showToast({ title: (err && err.message) || '刺杀失败', icon: 'none' });
+          });
+        }
+      }
+    });
+  },
+
+  abandonGame() {
+    const { gameId } = this.data;
+    wx.showModal({
+      title: '放弃游戏',
+      content: '确定放弃本局游戏吗？此操作无胜负结果。',
+      success: (res) => {
+        if (res.confirm) {
+          api.abandonGame(gameId).then(() => {
+            wx.navigateBack();
+          }).catch(err => {
+            wx.showToast({ title: (err && err.message) || '放弃失败', icon: 'none' });
+          });
+        }
+      }
     });
   },
 
@@ -319,6 +400,8 @@ Page({
   },
 
   getGameWinner() {
+    const r = this.data.gameResult;
+    if (r && r.winner) return r.winner;
     const successful = this.countSuccessfulMissions();
     if (successful >= 3) return 'good';
     return 'evil';

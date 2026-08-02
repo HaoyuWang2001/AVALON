@@ -1,28 +1,37 @@
-const { io: Client } = require('socket.io-client');
+const WebSocket = require('ws');
 
 /**
- * Create a single Socket.io client connected to the test server.
+ * Create a single WebSocket client connected to the test server.
+ * 与微信小程序 wx.connectSocket 相同的协议：发送/接收 JSON 帧 { type, ... }。
  * @param {number} port - Server port
- * @returns {Promise<import('socket.io-client').Socket>}
+ * @returns {Promise<{socket: WebSocket, send: Function, close: Function}>}
  */
 function createClient(port) {
   return new Promise((resolve, reject) => {
-    const client = Client(`http://localhost:${port}`, {
-      transports: ['websocket'],
-      timeout: 5000,
-      forceNew: true
-    });
-
+    const ws = new WebSocket(`ws://localhost:${port}`);
     const timer = setTimeout(() => {
-      client.close();
-      reject(new Error('Socket connection timeout'));
+      ws.close();
+      reject(new Error('WebSocket connection timeout'));
     }, 5000);
 
-    client.on('connect', () => {
+    ws.on('open', () => {
       clearTimeout(timer);
+      const client = {
+        ws,
+        connected: true,
+        send(type, data = {}) {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type, ...data }));
+          }
+        },
+        disconnect() {
+          try { ws.close(); } catch (e) {}
+          this.connected = false;
+        }
+      };
       resolve(client);
     });
-    client.on('connect_error', (err) => {
+    ws.on('error', (err) => {
       clearTimeout(timer);
       reject(err);
     });
@@ -30,34 +39,42 @@ function createClient(port) {
 }
 
 /**
- * Wait for a specific event on the client within timeout.
- * @param {import('socket.io-client').Socket} client
- * @param {string} event
+ * Wait for a specific message type within timeout.
+ * @param {{ws: WebSocket}} client
+ * @param {string} type - message.type
  * @param {number} timeoutMs
- * @returns {Promise<any>}
+ * @returns {Promise<any>} 消息 payload
  */
-function waitForEvent(client, event, timeoutMs = 5000) {
+function waitForEvent(client, type, timeoutMs = 5000) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
-      client.off(event, handler);
-      reject(new Error(`Timeout waiting for event: ${event}`));
+      client.ws.off('message', handler);
+      reject(new Error(`Timeout waiting for event: ${type}`));
     }, timeoutMs);
 
-    function handler(data) {
-      clearTimeout(timer);
-      client.off(event, handler);
-      resolve(data);
+    function handler(raw) {
+      let msg;
+      try {
+        msg = JSON.parse(raw.toString());
+      } catch (e) {
+        return;
+      }
+      if (msg && msg.type === type) {
+        clearTimeout(timer);
+        client.ws.off('message', handler);
+        resolve(msg);
+      }
     }
 
-    client.on(event, handler);
+    client.ws.on('message', handler);
   });
 }
 
 /**
- * Create N Socket.io clients connected to the server.
+ * Create N WebSocket clients connected to the server.
  * @param {number} port
  * @param {number} count
- * @returns {Promise<import('socket.io-client').Socket[]>}
+ * @returns {Promise<Array>}
  */
 async function connectClients(port, count) {
   const clients = [];
@@ -70,11 +87,11 @@ async function connectClients(port, count) {
 
 /**
  * Disconnect all clients.
- * @param {import('socket.io-client').Socket[]} clients
+ * @param {Array} clients
  */
 function disconnectAll(clients) {
   for (const client of clients) {
-    if (client.connected) {
+    if (client && client.ws && client.ws.readyState === WebSocket.OPEN) {
       client.disconnect();
     }
   }

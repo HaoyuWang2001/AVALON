@@ -167,6 +167,39 @@ class ApiService {
     });
   }
 
+  async advancePhase(gameId) {
+    return this.request(`/games/${gameId}/advancePhase`, {
+      method: 'POST',
+      data: {}
+    });
+  }
+
+  async setDiscussion(gameId, speakingOrder, preNominatedTeam) {
+    const openId = this.openId || getApp().globalData.openId;
+    const data = { gameId, openId, speakingOrder };
+    if (preNominatedTeam !== undefined) data.preNominatedTeam = preNominatedTeam;
+    return this.request('/games/setDiscussion', {
+      method: 'POST',
+      data
+    });
+  }
+
+  async abandonGame(gameId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/games/${gameId}/abandon`, {
+      method: 'POST',
+      data: { openId }
+    });
+  }
+
+  async assassinate(gameId, targetOpenId) {
+    const killerOpenId = this.openId || getApp().globalData.openId;
+    return this.request(`/games/${gameId}/assassinate`, {
+      method: 'POST',
+      data: { killerOpenId, targetOpenId }
+    });
+  }
+
   async getGameState(gameId) {
     const openId = this.openId || getApp().globalData.openId;
     return this.request(`/games/${gameId}?openId=${openId}`);

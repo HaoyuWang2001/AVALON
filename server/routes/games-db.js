@@ -17,8 +17,7 @@ function parseJson(value) {
 }
 
 function emitGame(roomId, gameId) {
-  const io = socket.getIO();
-  if (io) io.to(roomId).emit('gameUpdated', { roomId, gameId });
+  socket.emitToRoom(roomId, 'gameUpdated', { roomId, gameId });
 }
 
 function createRouter() {

@@ -12,7 +12,7 @@ function getServerPort() {
   return config.port;
 }
 
-describe('05 — Socket.io Real-time Communication', () => {
+describe('05 — WebSocket Real-time Communication', () => {
   let port;
   let clients;
 
@@ -38,7 +38,7 @@ describe('05 — Socket.io Real-time Communication', () => {
     await joinRoomAndConfirm(clients[1], roomId, 'observer');
 
     const promise = waitForEvent(clients[1], 'playerJoined');
-    clients[0].emit('joinRoom', { roomId, playerId: 'player_a' });
+    clients[0].send('joinRoom', { roomId, playerId: 'player_a' });
     const data = await promise;
     expect(data.playerId).toBe('player_a');
   });
@@ -49,7 +49,7 @@ describe('05 — Socket.io Real-time Communication', () => {
     await joinRoomAndConfirm(clients[0], roomId, 'p1');
 
     const promise = waitForEvent(clients[1], 'roomUpdated');
-    clients[0].emit('roomUpdate', { roomId, action: 'toggleReady', playerId: 'p1' });
+    clients[0].send('roomUpdate', { roomId, action: 'toggleReady', playerId: 'p1' });
     const data = await promise;
     expect(data.action).toBe('toggleReady');
   });
@@ -60,7 +60,7 @@ describe('05 — Socket.io Real-time Communication', () => {
     await joinRoomAndConfirm(clients[0], roomId, 'p3');
 
     const promise = waitForEvent(clients[1], 'gameUpdated');
-    clients[0].emit('gameUpdate', { roomId, phase: 'discussion' });
+    clients[0].send('gameUpdate', { roomId, phase: 'discussion' });
     const data = await promise;
     expect(data.phase).toBe('discussion');
   });
@@ -71,7 +71,7 @@ describe('05 — Socket.io Real-time Communication', () => {
     await joinRoomAndConfirm(clients[0], roomId, 'leaver');
 
     const promise = waitForEvent(clients[1], 'playerLeft');
-    clients[0].emit('leaveRoom', { roomId, playerId: 'leaver' });
+    clients[0].send('leaveRoom', { roomId, playerId: 'leaver' });
     const data = await promise;
     expect(data.playerId).toBe('leaver');
   });
@@ -91,14 +91,16 @@ describe('05 — Socket.io Real-time Communication', () => {
     await joinRoomAndConfirm(clients[1], roomA, 'a2');
     await joinRoomAndConfirm(clients[2], roomB, 'b1');
 
-    // roomB 的成员不应收到 roomA 的事件
-    const leaked = new Promise((resolve) => {
-      const timer = setTimeout(() => resolve(false), 600);
-      clients[2].once('playerJoined', () => { clearTimeout(timer); resolve(true); });
-    });
-    clients[0].emit('joinRoom', { roomId: roomA, playerId: 'a3' });
-    const isLeaked = await leaked;
-    expect(isLeaked).toBe(false);
+    // roomB 的成员不应收到 roomA 的事件（600ms 内无 playerJoined 则判定未泄漏）
+    clients[0].send('joinRoom', { roomId: roomA, playerId: 'a3' });
+    let leaked = false;
+    try {
+      await waitForEvent(clients[2], 'playerJoined', 600);
+      leaked = true;
+    } catch (e) {
+      leaked = false;
+    }
+    expect(leaked).toBe(false);
   });
 
   // ─────────── 新观众/断线重连：joinRoom 后收到当前游戏状态 ───────────
@@ -131,7 +133,7 @@ describe('05 — Socket.io Real-time Communication', () => {
   it('should return fresh state on explicit requestState', async () => {
     const { roomId, gameId } = await createRoomAndStart10();
     await joinRoomAndConfirm(clients[2], roomId, 'spectator_s2');
-    clients[2].emit('requestState', { roomId, playerId: 'spectator_s2' });
+    clients[2].send('requestState', { roomId, playerId: 'spectator_s2' });
     const state = await waitForEvent(clients[2], 'gameState');
     expect(state.state.basic.gameId).toBe(gameId);
     expect(state.state.basic.status).toBe('active');
@@ -139,14 +141,13 @@ describe('05 — Socket.io Real-time Communication', () => {
 });
 
 /**
- * Emit joinRoom and wait for the server's own playerJoined confirmation.
- * Since socket.io delivers events per-connection in order, awaiting the
- * joining client's own playerJoined guarantees the server has processed the
- * join before the next step. This avoids cross-socket ordering races.
+ * 发送 joinRoom 并等待服务端广播的 playerJoined 确认。
+ * 服务端按连接顺序处理消息，等待自身收到的 playerJoined 可保证 join 已处理，
+ * 避免跨连接竞态。
  */
 function joinRoomAndConfirm(client, roomId, playerId) {
   const joined = waitForEvent(client, 'playerJoined');
-  client.emit('joinRoom', { roomId, playerId });
+  client.send('joinRoom', { roomId, playerId });
   return joined;
 }
 
