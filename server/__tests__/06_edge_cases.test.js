@@ -1,6 +1,6 @@
 const {
   makeUserId, createRoom, joinRoom, toggleReady,
-  createRoomWithPlayers, createRoomAndStartGame,
+  createRoomWithPlayers, createRoomAndStartGame, buildConfigWithSpectator,
   apiPost, apiGet, submitNomination, castVote,
   advancePhase, assassinate, endGame, leaveRoom,
   setDiscussion, abandonGame, getGameState
