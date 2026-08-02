@@ -19,6 +19,10 @@ ALTER TABLE games
     ADD COLUMN speaking_order VARCHAR(10) DEFAULT 'asc' COMMENT '发言顺序：asc/desc' AFTER pre_nominated_team,
     ADD COLUMN discussion_set BOOLEAN DEFAULT FALSE COMMENT '本轮讨论是否已设置发言配置（一次不可改）' AFTER speaking_order;
 
+-- 3b) 老库可能缺失 assassination 列（当前 DDL 已含；这里幂等补列）
+ALTER TABLE games
+    ADD COLUMN assassination JSON NULL COMMENT '刺杀记录: {killer, target, correct, phase, round}' AFTER discussion_set;
+
 -- 4) 新增归档表
 CREATE TABLE IF NOT EXISTS game_cars (
     id INT AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
