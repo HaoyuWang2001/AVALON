@@ -284,12 +284,12 @@ roleReveal → discussion → [submitNomination] → teamVote
 | `rules.oberonKnowsRedLancelot` | bool | true | **奥伯伦是否知道红兰斯洛特身份（可选）** |
 | `rules.merlinKnowsLancelotSide` | bool | true | **梅林能否分辨蓝/红兰各自阵营（兰斯洛特恒可见；可选）** |
 | `rules.lancelotsKnowEachOther` | bool | false | 蓝↔红兰斯洛特互认（初始角色，reveal 固化） |
-| `rules.lancelotSwapRound` | int | 2 | 兰斯洛特转换激活轮（0=不转换） |
+| `rules.lancelotSwapRound` | int | 2 | 兰斯洛特转换激活轮（**仅 1-4**；第 x 轮结束、第 x+1 轮开始触发；0/5 拒绝） |
 | `rules.lancelotSwapForce` | string? | — | 兰斯洛特抽卡确定性控制（测试/观战用）：`'switch'`/`'keep'`，缺省随机 2/7 |
 | `rules.ladyOfTheLake` | bool | false | 湖仙启用 |
 | `rules.ladyOfTheLakeRound` | int | 2 | 湖仙激活轮 |
 | `rules.maxFailedNominations` | int | 3 | 流车阈值（触发强制发车） |
-| `rules.oberonMustFailMission` / `rules.redLancelotMustFailMission` | bool | false | 奥伯伦/红兰必须投失败 |
+| `rules.oberonMustFailMission` / `rules.lancelotMustFail` | bool | false | 奥伯伦/（任意当前为 evil 的）兰斯洛特必须投失败 |
 | `rules.voteVisibility` | enum | public | 投票可见性 public/anonymous |
 | `rules.missionFailDetail` | enum | count | 任务失败详情 count/binary |
 | `merlinVision.canSee` | string[] | [assassin,morgana,minion,oberon,lancelotRed] | 梅林可见的坏人角色（**除莫德雷德**） |
@@ -391,22 +391,29 @@ roleReveal → discussion → [submitNomination] → teamVote
 
 ### 阶段 3：通用游戏机制 — `04_games_flow.test.js`
 
-与好人/坏人胜利路径无关的通用机制（任务投票规则、兰斯洛特转换等）：
+与好人/坏人胜利路径无关的通用机制（26 用例，按目标选板）：
 
 | 用例 | 参数/规则 | 断言 |
 |------|-----------|------|
-| 好人必须投成功（固定规则） | `side:good` | 当前阵营为 good 者投 `fail` 被拒（按当前阵营，不看身份） |
-| 必败强制（红兰） | `redLancelotMustFailMission=true` | 红兰投 `success` 被拒（必须 fail） |
-| 必败强制（奥伯伦） | `oberonMustFailMission=true` | 奥伯伦投 `success` 被拒 |
-| 单兰翻转 | `lancelotSwapRound` + mock 随机 | 抽中转换卡 → 蓝兰 good→evil |
-| 双兰互换 | `lancelotSwapRound` + mock 随机 | 抽中转换卡 → 蓝→evil、红→good |
-| 未抽中 | mock 随机 | 阵营不变 |
-| fail 权限按当前阵营 | 转换后 | 变坏的蓝兰可投 fail；变好的红兰不能投 fail |
+| 04-1 好人必须投成功（参数化全部 good 玩家） | `side:good` | 当前阵营 good 者投 `fail` 被拒 |
+| 04-2/04-3 必败强制 | `lancelotMustFail` / `oberonMustFailMission` | 对应角色投 `success` 被拒、fail 可投 |
+| 04-4/04-5/04-6 转换 | `lancelotSwapRound` + `lancelotSwapForce` | 单兰翻转/双兰互换/未抽中不变（单兰+双兰） |
+| 04-7 转换后 fail 权限 | 当前阵营 | 变坏蓝兰可 fail、变好红兰只能 success |
+| 04-8/04-9 任务判定 | 0/≥1 坏票 | 0→成功；普通轮 ≥1 坏票（1、2 均验）→失败 |
+| 04-10/04-11/04-12 保护轮 | 7+ R4 / 5-6 R4 | R4≥7：1 坏票成功、≥2 坏票失败；5-6 R4：≥1 失败 |
+| 04-13/04-14 状态机 | 流车/发车成功 | 流车：leader+1、round 不变、流车数+1；发车成功：round+1、leader+1、流车数=0 |
+| 04-15 强制发车 | `forcedCar` + `maxFailedNominations` | 达阈值→`forcedCar=true` 直接 missionVote→下一轮、流车数0 |
+| 04-16/04-18 转换边界 | swapRound 1/2/3/4 | 第 x 轮结束才触发；流车不触发；swapRound 非法值 400 |
+| 04-19a/b/c 必败拆分 | `lancelotMustFail` + 转换 | evil 兰必须 fail / 可自选 / 变好必须 success |
+| 04-20 视野固化 | 转换后 | 视野与 reveal 时一致（`game_visions` 冻结） |
+| 04-21 视野结构 | 各角色 | 平民空、派=梅林+莫甘娜、梅林 canSee、睁眼狼含 role+canIdentity |
+| 04-22/23/24 投票可见性 | `voteVisibility` + P14 | 结束后逐人/聚合；投票中玩家仅自己、观众无 |
+| 04-25/26 失败详情 | `missionFailDetail` | binary 无 failCount；count 含 failCount |
 
 > **确定性**：兰斯洛特抽卡用 `rules.lancelotSwapForce = 'switch'/'keep'` 强制抽中/未抽中（服务端在独立进程，
 > 无法用 jest mock 控制，故经配置注入）。
 
-### 阶段 3a：好人胜利完整流程 — `04a_games_flow_good.test.js`（参数化 5-12）
+### 阶段 3a：好人胜利完整流程 — `04a_games_flow_good.test.js`（参数化 10 板：标准 5-12 + 自定义 9/10；兰板 keep 确定性）
 
 对每个 N，完整走完一局好人胜。房间由 `createRoomAndStartGame(N)` 创建，使用**按人数的标准角色板**
 （5-12 人见 §4.1；11 人板无 assassin，由 morgana 行使刺杀）。
@@ -437,7 +444,7 @@ createRoomAndStartGame(N) → advancePhase(gameId)   // roleReveal → discussio
 > 说明：标准 11/12 人板含兰斯洛特，轮次转换时抽卡自动发生（§3.4.3），因全员投 success 不受影响；
 > 若房间配置启用湖仙，轮次转换时需先驱动 `lakeInspection` 子阶段（§3.4.2）后再继续。
 
-### 阶段 3b：坏人胜利路径 — `04b_games_flow_evil.test.js`（参数化 [5, 10]）
+### 阶段 3b：坏人胜利路径 — `04b_games_flow_evil.test.js`（参数化 10 板；兰板 keep 确定性）
 
 **路径 1：3 次任务失败**
 ```
@@ -600,8 +607,8 @@ createRoomAndStartGame(N) → advancePhase
 | `03_games_start.test.js` | 2 | 5-12 |
 | `03b_lancelot_variant.test.js` | 2b | 2 变体 |
 | `04_games_flow.test.js` | 3（通用机制） | — |
-| `04a_games_flow_good.test.js` | 3a | 5-12 |
-| `04b_games_flow_evil.test.js` | 3b | [5, 10] |
+| `04a_games_flow_good.test.js` | 3a | 10 板 |
+| `04b_games_flow_evil.test.js` | 3b | 10 板 |
 | `06_messages.test.js` | 4 | — |
 | `07_socket.test.js` | 4b | — |
 | `08_edge_cases.test.js` | 5 | — |
