@@ -255,11 +255,13 @@ wss.on('connection', (ws) => {
         break;
       }
       case 'roomUpdate': {
-        socket.broadcastToRoom(msg.roomId, { type: 'roomUpdated', ...msg });
+        const { type, ...payload } = msg;
+        socket.broadcastToRoom(msg.roomId, { ...payload, type: 'roomUpdated' });
         break;
       }
       case 'gameUpdate': {
-        socket.broadcastToRoom(msg.roomId, { type: 'gameUpdated', ...msg });
+        const { type, ...payload } = msg;
+        socket.broadcastToRoom(msg.roomId, { ...payload, type: 'gameUpdated' });
         break;
       }
       default:
