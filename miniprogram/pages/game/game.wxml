@@ -1,87 +1,119 @@
 <!--pages/game/game.wxml-->
 <view class="container">
-  <!-- 游戏头部信息 -->
-  <view class="card">
-    <view class="flex-between">
-      <view>
-        <view class="subtitle">第{{currentRound}}回合</view>
-        <view class="text-muted">阶段: {{getPhaseText(currentPhase)}}</view>
+  <!-- 角色揭示提示蒙版（一次性） -->
+  <view class="role-mask" wx:if="{{showRoleMask}}">
+    <view class="role-mask-inner">
+      <view class="role-mask-title">您的身份已发放</view>
+      <view class="role-mask-sub">确保您的周围没有坏坏</view>
+      <button class="btn btn-primary role-mask-btn" bindtap="dismissRoleMask">查看身份</button>
+    </view>
+  </view>
+
+  <!-- 顶部操作栏 -->
+  <view class="top-actions">
+    <text class="top-btn top-home" bindtap="backToHome">暂回首页</text>
+    <text class="top-btn top-destroy" bindtap="abandonGame" wx:if="{{isHost}}">炸掉会议</text>
+  </view>
+
+  <!-- 任务进度卡 -->
+  <view class="card mission-card">
+    <view class="mission-head">
+      <view class="mission-head-info">
+        <text class="mission-phase">{{getPhaseText(currentPhase)}}</text>
+        <text class="mission-lake" wx:if="{{lakeHolderOpenId}}">🏝️ {{getLakeHolderName()}}</text>
       </view>
-      <view>
-        <button size="mini" class="btn btn-primary" bindtap="viewRole">查看角色</button>
-        <button size="mini" class="btn btn-primary" style="margin-left: 20rpx;" bindtap="viewVision">视野</button>
-        <button size="mini" class="btn" style="margin-left: 20rpx; background-color: #f8f9fa;" bindtap="viewGameHistory">历史</button>
-        <button size="mini" class="btn btn-danger" style="margin-left: 20rpx;" bindtap="abandonGame" wx:if="{{isHost}}">放弃</button>
+      <view class="mission-actions">
+        <text class="mini-btn" wx:if="{{playerRole}}" bindtap="openRoleModal">查看身份</text>
+        <text class="mini-btn" bindtap="openInfoModal">历史</text>
       </view>
     </view>
 
-    <!-- 任务进度 -->
-    <view style="margin-top: 30rpx;">
-      <view class="flex-between">
-        <view>任务进度:</view>
-        <view>{{countSuccessfulMissions()}}/3 成功</view>
-      </view>
-      <progress percent="{{getMissionProgress()}}" stroke-width="12" activeColor="#2ecc71" backgroundColor="#ecf0f1" />
+    <view class="rounds">
+      <block wx:for="{{roundList}}" wx:key="round">
+        <view class="round-connector" wx:if="{{index > 0}}"></view>
+        <view class="round-circle {{item.status}} {{item.isCurrent ? 'current' : ''}}"></view>
+      </block>
+    </view>
+
+    <view class="flow-cars">
+      <block wx:for="{{flowCars}}" wx:key="index">
+        <view class="flow-car {{item.state}} {{item.isLast ? 'last' : ''}} {{item.isForced ? 'is-forced' : ''}}">
+          <text class="flow-car-icon">{{item.state === 'failed' ? '✕' : '🚗'}}</text>
+          <text wx:if="{{item.isLast}}" class="flow-car-label">强制车</text>
+        </view>
+      </block>
     </view>
   </view>
 
   <!-- 根据游戏阶段显示不同内容 -->
   <!-- 角色揭示阶段 -->
   <view wx:if="{{currentPhase === 'roleReveal'}}" class="card">
-    <view class="subtitle text-center">角色分配完成</view>
-    <view class="text-center" style="padding: 60rpx 0;">
+    <view wx:if="{{playerRole}}" class="text-center" style="padding: 40rpx 0;">
       <view style="font-size: 48rpx; margin-bottom: 30rpx;">🎭</view>
-      <view style="font-size: 36rpx; font-weight: 600; margin-bottom: 20rpx;">你的角色已分配</view>
-      <view class="text-muted">点击"查看角色"按钮了解你的身份</view>
-      <button class="btn btn-primary" style="margin-top: 30rpx;" bindtap="confirmRoleReveal">确认并开始</button>
+      <view class="text-muted">点击「查看身份」确认你的角色</view>
+    </view>
+    <view wx:else class="text-center" style="padding: 40rpx 0;">
+      <view style="font-size: 48rpx; margin-bottom: 30rpx;">👀</view>
+      <view class="text-muted">等待玩家确认身份...</view>
     </view>
   </view>
 
-  <!-- 队伍选择阶段 -->
+  <!-- 讨论阶段 -->
   <view wx:if="{{currentPhase === 'discussion'}}" class="card">
-    <view class="subtitle text-center">选择任务队伍</view>
-    <view class="text-center text-muted mb-3" style="color: #e74c3c;" wx:if="{{forcedSend}}">
-      本轮为强制发车（已连续流车达上限）：队长选定队伍后直接发车，无队伍投票
-    </view>
-    <view class="text-center text-muted mb-3">
-      队长: {{getTeamLeaderName()}}
-    </view>
-    <view class="text-center text-muted mb-4">
-      需要选择 {{getRequiredTeamSize()}} 人执行任务
-    </view>
+    <view class="subtitle text-center">讨论 · 发车准备</view>
+    <view class="text-center text-muted mb-3" style="color: #e74c3c;" wx:if="{{forcedSend}}">本轮强制发车</view>
 
-    <!-- 队长设置发言顺序（每轮一次） -->
-    <view wx:if="{{checkIfTeamLeader() && !speakingOrderConfirmed}}" class="speaking-order-box" style="margin-bottom: 20rpx; padding: 20rpx; background: #F8F9FA; border-radius: 12rpx;">
-      <view class="flex-between">
-        <text class="rule-label">发言顺序</text>
-        <picker range="{{speakingOrderOptions}}" range-key="label" value="{{speakingOrderIndex}}" bindchange="onSpeakingOrderChange">
-          <view class="picker-value">{{speakingOrderOptions[speakingOrderIndex].label}}</view>
-        </picker>
+    <block wx:if="{{checkIfTeamLeader()}}">
+      <view class="disc-setup">
+        <view class="flex-between" wx:if="{{!speakingOrderConfirmed}}">
+          <text class="rule-label">发车方向</text>
+          <picker range="{{speakingOrderOptions}}" range-key="label" value="{{speakingOrderIndex}}" bindchange="onSpeakingOrderChange">
+            <view class="picker-value">{{speakingOrderOptions[speakingOrderIndex].label}}</view>
+          </picker>
+        </view>
+        <view class="flex-between" wx:else>
+          <text class="rule-label">发车方向</text>
+          <text class="pick-confirmed">{{speakingOrder === 'desc' ? '从队长开始逆序' : '按座位号'}}</text>
+        </view>
+
+        <view class="flex-between mt-2">
+          <text class="rule-label">提名模式</text>
+          <view class="segment">
+            <view class="segment-item {{nominateMode === 'pre' ? 'segment-active' : ''}}" data-mode="pre" bindtap="onNominateModeChange">预提名</view>
+            <view class="segment-item {{nominateMode === 'final' ? 'segment-active' : ''}}" data-mode="final" bindtap="onNominateModeChange">最终提名</view>
+          </view>
+        </view>
+        <view class="text-muted nominate-hint">
+          {{nominateMode === 'pre' ? '点击玩家标记预提名队伍（可留空）' : '点击玩家标记最终发车队伍'}}
+        </view>
+
+        <view class="disc-btns">
+          <button size="mini" class="btn btn-secondary" bindtap="saveDiscussionSettings" disabled="{{speakingOrderConfirmed}}">保存发言设置{{preNominatedTeam.length > 0 ? ' · 预提名' + preNominatedTeam.length + '人' : ''}}</button>
+          <button size="mini" class="btn btn-primary" bindtap="confirmNomination">确认提名 {{nominatedTeam.length}}/{{getRequiredTeamSize()}}</button>
+        </view>
       </view>
-      <button size="mini" class="btn btn-primary" style="margin-top: 16rpx;" bindtap="confirmSpeakingOrder">保存发言设置</button>
-    </view>
+    </block>
+    <block wx:else>
+      <view class="text-center text-muted mb-3">等待队长 {{getTeamLeaderName()}} 准备发车...</view>
+      <view class="info-line" wx:if="{{speakingOrderConfirmed}}">发车方向：{{speakingOrder === 'desc' ? '从队长开始逆序' : '按座位号'}}</view>
+      <view class="info-line" wx:if="{{preNominatedTeam.length > 0}}">预提名：{{getNamesByIds(preNominatedTeam)}}</view>
+      <view class="info-line" wx:if="{{nominatedTeam.length > 0}}">发车队伍：{{getNamesByIds(nominatedTeam)}}</view>
+    </block>
 
-    <!-- 玩家列表 -->
     <view class="players-list">
-      <view wx:for="{{allPlayers}}" wx:key="openId" class="player-item {{nominatedTeam.includes(item.openId) ? 'selected' : ''}} {{checkIfTeamLeader() ? 'selectable' : ''}}" bindtap="nominatePlayer" data-id="{{item.openId}}">
-        <image src="{{item.avatarUrl}}" class="player-avatar"></image>
+      <view wx:for="{{allPlayers}}" wx:key="openId"
+        class="player-item {{preNominatedTeam.includes(item.openId) ? 'pre-selected' : ''}} {{nominatedTeam.includes(item.openId) ? 'selected' : ''}} {{checkIfTeamLeader() ? 'selectable' : ''}}"
+        bindtap="nominatePlayer" data-id="{{item.openId}}">
+        <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="player-avatar"></image>
         <view class="player-info">
           <view class="player-name">{{item.nickName}}</view>
           <view class="player-status">
-            {{nominatedTeam.includes(item.openId) ? '已选中' : '未选中'}}
+            <text wx:if="{{preNominatedTeam.includes(item.openId)}}" class="badge badge-pre">预</text>
+            <text wx:if="{{nominatedTeam.includes(item.openId)}}" class="badge badge-final">选</text>
             {{item.openId === userInfo.openId ? '(自己)' : ''}}
           </view>
         </view>
       </view>
-    </view>
-
-    <!-- 队长提示 -->
-    <view wx:if="{{checkIfTeamLeader()}}" class="text-center mt-4">
-      <view class="text-muted">点击玩家头像选择/取消选择</view>
-      <view class="text-muted">已选择 {{nominatedTeam.length}}/{{getRequiredTeamSize()}} 人</view>
-    </view>
-    <view wx:else class="text-center mt-4">
-      <view class="text-muted">等待队长 {{getTeamLeaderName()}} 选择队伍...</view>
     </view>
   </view>
 
@@ -89,7 +121,6 @@
   <view wx:if="{{currentPhase === 'teamVote'}}" class="card">
     <view class="subtitle text-center">投票是否同意该队伍</view>
 
-    <!-- 被提名队伍 -->
     <view class="nominated-team">
       <view class="text-center mb-4">被提名执行任务的队伍:</view>
       <view class="flex-center" style="flex-wrap: wrap;">
@@ -100,7 +131,6 @@
       </view>
     </view>
 
-    <!-- 投票按钮 -->
     <view class="vote-buttons">
       <button class="btn btn-success" style="width: 45%;" bindtap="castVote" data-vote="approve">同意</button>
       <button class="btn btn-danger" style="width: 45%;" bindtap="castVote" data-vote="reject">反对</button>
@@ -120,7 +150,15 @@
       <view class="text-muted">请选择任务结果:</view>
     </view>
 
-    <!-- 任务投票按钮 -->
+    <view class="nominated-team" wx:if="{{nominatedTeam.length > 0}}">
+      <view class="flex-center" style="flex-wrap: wrap;">
+        <view wx:for="{{getNominatedPlayers()}}" wx:key="openId" class="team-member">
+          <image src="{{item.avatarUrl}}" class="team-member-avatar"></image>
+          <view class="team-member-name">{{item.nickName}}</view>
+        </view>
+      </view>
+    </view>
+
     <view class="vote-buttons">
       <button class="btn btn-success" style="width: 45%;" bindtap="castMissionVote" data-vote="success">任务成功</button>
       <button class="btn btn-danger" style="width: 45%;" bindtap="castMissionVote" data-vote="fail">破坏任务</button>
@@ -187,7 +225,6 @@
       </view>
     </view>
 
-    <!-- 玩家角色揭示 -->
     <view class="players-reveal">
       <view class="text-center mb-4">玩家角色:</view>
       <view wx:for="{{allPlayers}}" wx:key="openId" class="player-reveal-item {{getPlayerSide(item.role)}}">
@@ -204,10 +241,65 @@
     </view>
   </view>
 
+  <!-- 查看身份弹窗 -->
+  <view class="role-modal" wx:if="{{showRoleModal}}">
+    <view class="modal-mask" bindtap="tapCloseRoleModal"></view>
+    <view class="role-modal-body">
+      <view class="role-card-badge">
+        <image wx:if="{{roleCardImg}}" src="{{roleCardImg}}" class="role-card-img" mode="aspectFit"/>
+        <text wx:else class="role-card-emoji">🎴</text>
+      </view>
+      <view class="role-tags">
+        <text class="role-tag role-tag-name">{{getRoleName(playerRole)}}</text>
+        <text class="role-tag {{playerSide === 'evil' ? 'tag-evil' : 'tag-good'}}">{{playerSide === 'evil' ? '坏人阵营' : '好人阵营'}}</text>
+      </view>
+      <view class="role-card-desc">{{getRoleDesc(playerRole)}}</view>
+      <view class="role-vision" wx:if="{{visionList.length > 0}}">
+        <view class="role-vision-title">你的视野</view>
+        <view wx:for="{{visionList}}" wx:key="openId" class="role-vision-item">
+          <image src="{{item.avatar}}" class="role-vision-avatar"></image>
+          <text class="role-vision-name">{{item.name}}</text>
+          <text wx:if="{{item.role}}" class="role-vision-tag">{{getRoleName(item.role)}}</text>
+          <text wx:elif="{{item.side}}" class="role-vision-tag {{item.side === 'evil' ? 'tag-evil' : 'tag-good'}}">{{item.side === 'evil' ? '坏人' : '好人'}}</text>
+        </view>
+      </view>
+      <button class="btn btn-primary role-card-btn" bindtap="closeRoleModal">隐藏身份</button>
+    </view>
+  </view>
 
-  <!-- 调试按钮（仅开发时显示） -->
-  <view wx:if="{{false}}" class="card">
-    <view class="subtitle">调试</view>
-    <button class="btn btn-danger" bindtap="endGame">结束游戏</button>
+  <!-- 历史弹窗 -->
+  <view class="info-modal" wx:if="{{showInfoModal}}">
+    <view class="modal-mask" bindtap="closeInfoModal"></view>
+    <view class="info-modal-body">
+      <view class="info-modal-title">游戏记录</view>
+      <scroll-view scroll-y class="info-modal-scroll">
+        <view class="info-section" wx:if="{{carsHistory.length > 0}}">
+          <view class="info-section-title">车次记录</view>
+          <view wx:for="{{carsHistory}}" wx:key="round" class="info-round">
+            <view class="info-round-title">第{{item.round}}轮</view>
+            <view wx:for="{{item.details}}" wx:for-item="car" wx:key="index" class="info-car">
+              <view class="info-car-line">第{{car.index}}车 · 车主 {{getLeaderName(car.teamLeaderOpenId)}}</view>
+              <view class="info-car-line">票型：同意 {{getApproveCount(car.teamVotes)}} · 反对 {{getRejectCount(car.teamVotes)}}</view>
+              <view class="info-car-line info-car-result">结果：{{getCarOutcome(car)}}</view>
+            </view>
+          </view>
+        </view>
+        <view class="info-section" wx:if="{{lakeHistory.length > 0}}">
+          <view class="info-section-title">湖仙验人</view>
+          <view wx:for="{{lakeHistory}}" wx:key="round" class="info-row">
+            <text>第{{item.round}}轮 {{getLeaderName(item.inspectorOpenId)}} → {{getLeaderName(item.targetOpenId)}}</text>
+            <text wx:if="{{item.result}}" class="{{item.result === 'good' ? 'txt-good' : 'txt-evil'}}">{{item.result === 'good' ? '好人' : '坏人'}}</text>
+            <text wx:else class="txt-muted">保密</text>
+          </view>
+        </view>
+        <view class="info-section" wx:if="{{lancelotSwaps.length > 0}}">
+          <view class="info-section-title">兰斯洛特</view>
+          <view wx:for="{{lancelotSwaps}}" wx:key="round" class="info-row">
+            第{{item.round}}轮 {{item.switched ? '身份转换' : '身份保持'}}
+          </view>
+        </view>
+      </scroll-view>
+      <button class="btn btn-primary info-modal-close" bindtap="closeInfoModal">关闭</button>
+    </view>
   </view>
 </view>

@@ -1037,6 +1037,7 @@ class GameModel {
                WHERE id = ?`,
               [JSON.stringify({ winner: 'evil', reason: '坏人完成3个任务' }), gameId]
             );
+            await this._resetRoomAfterEnd(connection, game[0].room_id);
           } else if (successCount >= 3) {
             // 好人完成3个任务，进入刺杀阶段
             await connection.execute(
@@ -1192,7 +1193,7 @@ class GameModel {
     try {
       await db.transaction(async (connection) => {
         const [game] = await connection.execute(
-          `SELECT current_phase, current_round, failed_nominations
+          `SELECT current_phase, current_round, failed_nominations, room_id
            FROM games WHERE id = ? FOR UPDATE`,
           [gameId]
         );
@@ -1280,6 +1281,7 @@ class GameModel {
              gameId]
           );
         }
+        await this._resetRoomAfterEnd(connection, game[0].room_id);
       });
 
       return await this.getState(gameId);
@@ -1290,7 +1292,25 @@ class GameModel {
   }
 
   // =============== 工具方法 ===============
-  
+
+  /**
+   * 游戏结束后重置房间状态（自然结束/放弃时调用）。
+   * 房间与游戏独立：玩家仍留在房间，可再次开局。
+   * @param {Object} connection 事务连接
+   * @param {string|null} roomId 房间ID
+   */
+  static async _resetRoomAfterEnd(connection, roomId) {
+    if (!roomId) return;
+    await connection.execute(
+      `UPDATE rooms SET game_started = FALSE, updated_at = NOW() WHERE id = ?`,
+      [roomId]
+    );
+    await connection.execute(
+      `UPDATE room_players SET is_ready = FALSE WHERE room_id = ?`,
+      [roomId]
+    );
+  }
+
   /**
    * 根据玩家数量获取角色配置
    * @param {number} playerCount 玩家数量

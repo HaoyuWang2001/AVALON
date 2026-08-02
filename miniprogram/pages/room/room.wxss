@@ -5,7 +5,7 @@ button::after { border: none; }
 
 page { background: #F3F4F6; }
 
-.container { padding: 20rpx; padding-top: 0; }
+.container { padding: 20rpx; padding-top: 0; padding-bottom: 200rpx; }
 
 /* ─── Top Bar ─── */
 .top-bar {
@@ -67,18 +67,30 @@ page { background: #F3F4F6; }
 .btn-cancel { background: #E5E7EB; color: #6B7280; }
 .btn-ready { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; }
 
-/* ─── Card 2: Host Control ─── */
-.host-card { background: #fff; }
-.btn-host-start {
-  display: block; font-size: 32rpx; font-weight: 700; padding: 22rpx;
-  border-radius: 40rpx; text-align: center; margin-bottom: 12rpx;
+/* ─── Host Bottom Bar ─── */
+.host-bottom-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20rpx 40rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: #FFFFFF; border-top: 1rpx solid #F3F4F6;
+  box-shadow: 0 -4rpx 16rpx rgba(0,0,0,0.06);
+}
+.host-bottom-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 176rpx; height: 88rpx; border-radius: 12rpx;
+  font-size: 28rpx; font-weight: 600;
   background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff;
 }
-.btn-host-start.disabled { background: #E5E7EB; color: #9CA3AF; }
-.start-hint { font-size: 32rpx; color: #8B5CF6; text-align: center; display: block; margin-bottom: 8rpx; }
-.host-divider { height: 1rpx; background: #E5E7EB; margin: 20rpx 0; }
-.host-actions { display: flex; gap: 20rpx; justify-content: center; }
-.host-actions .btn-round { font-size: 26rpx; padding: 14rpx 40rpx; }
+.host-bottom-btn-primary {
+  background: linear-gradient(135deg, #7C3AED, #5B21B6);
+  box-shadow: 0 4rpx 16rpx rgba(124,58,237,0.35);
+}
+.host-bottom-btn.btn-disabled { background: #E5E7EB; color: #9CA3AF; box-shadow: none; }
+.start-hint-bar {
+  position: fixed; left: 0; right: 0; bottom: 120rpx; z-index: 49;
+  text-align: center; font-size: 26rpx; color: #8B5CF6;
+  pointer-events: none;
+}
 
 /* ─── Card 3: Seats ─── */
 .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20rpx; }

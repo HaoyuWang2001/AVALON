@@ -27,13 +27,40 @@ Page({
     speakingOrderConfirmed: false,
     speakingOrderOptions: [{ label: '按座位号从1号开始', value: 'asc' }, { label: '从队长开始逆序', value: 'desc' }],
     showRoleModal: false,
+    showRoleMask: false,
+    showInfoModal: false,
     showVoteModal: false,
     showMissionModal: false,
     userInfo: null,
+
+    failedNominations: 0,
+    maxFailedNominations: 3,
+    carIndex: 1,
+    lakeHolderOpenId: '',
+    preNominatedTeam: [],
+    carsHistory: [],
+    lakeHistory: [],
+    lancelotSwaps: [],
+    roundList: [],
+    flowCars: [],
+    visionList: [],
+    nominateMode: 'final',
   },
 
   onLoad(options) {
     const { roomId, gameId } = options;
+    if (!gameId) {
+      // 无有效 gameId（如游戏已结束/房间重置后误入），回退到房间页
+      wx.showToast({ title: '游戏不存在或已结束', icon: 'none' });
+      setTimeout(() => {
+        if (roomId) {
+          wx.redirectTo({ url: `/pages/room/room?roomId=${roomId}` });
+        } else {
+          wx.navigateBack();
+        }
+      }, 800);
+      return;
+    }
     this.setData({
       roomId: roomId || '',
       gameId: gameId || '',
@@ -69,29 +96,91 @@ Page({
     const { gameId } = this.data;
     api.getGameState(gameId).then(res => {
       if (res.success && res.current) {
+        const phase = res.current.phase || 'roleReveal';
+        const round = res.current.round || 1;
+        const myOpenId = app.globalData.openId || '';
+        const isHost = !!(res.players || []).some(p => p.openId === myOpenId && p.isHost);
+        const isLeader = !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId;
+        const keepLocal = phase === 'discussion' && isLeader;
+
+        if (this.data.currentRound !== round) this._discussionSaved = false;
+        if (phase !== 'discussion') this._discussionSaved = false;
+
+        const missions = res.history ? res.history.missions || [] : [];
+        const roundList = [];
+        for (let i = 1; i <= 5; i++) {
+          const m = missions.find(x => x.round === i);
+          let status = 'todo';
+          if (m) status = m.success ? 'succ' : 'fail';
+          roundList.push({ round: i, status, isCurrent: i === round });
+        }
+
+        const maxFailed = (res.basic && res.basic.roomConfig && res.basic.roomConfig.rules && res.basic.roomConfig.rules.maxFailedNominations) || 3;
+        const failed = res.current.failedNominations || 0;
+        const total = maxFailed + 1;
+        const forcedSend = !!res.current.forcedSend;
+        const flowCars = [];
+        for (let i = 1; i <= total; i++) {
+          let state = 'pending';
+          if (i <= failed) state = 'failed';
+          else if (i === failed + 1) state = 'current';
+          flowCars.push({ index: i, state, isLast: i === total });
+        }
+        if (forcedSend) {
+          flowCars[total - 1].state = 'current';
+          flowCars[total - 1].isForced = true;
+        }
+
+        const vp = res.player && res.player.vision ? res.player.vision.players || [] : [];
+        const visionList = vp.map(v => {
+          const np = (res.players || []).find(x => x.openId === v.openId);
+          return {
+            openId: v.openId,
+            name: np ? np.nickName : '?',
+            avatar: np && np.avatarUrl ? np.avatarUrl : '/images/default-avatar.png',
+            role: v.role || null,
+            side: v.side || null
+          };
+        });
+
         this.setData({
           gameState: res.current,
           playerRole: res.player ? res.player.role : null,
           playerSide: res.player ? res.player.side : null,
-          currentPhase: res.current.phase || 'roleReveal',
-          currentRound: res.current.round || 1,
+          currentPhase: phase,
+          currentRound: round,
           teamLeaderOpenId: res.current.teamLeaderOpenId || '',
-          nominatedTeam: res.current.nominatedTeam || [],
+          nominatedTeam: keepLocal ? this.data.nominatedTeam : (res.current.nominatedTeam || []),
+          preNominatedTeam: keepLocal ? this.data.preNominatedTeam : (res.current.preNominatedTeam || []),
           teamVotes: res.current.teamVotes || {},
           missionVotes: res.current.missionVotes || {},
-          missionResults: res.history ? res.history.missions || [] : [],
-          forcedSend: !!res.current.forcedSend,
+          missionResults: missions,
+          forcedSend: forcedSend,
+          failedNominations: failed,
+          maxFailedNominations: maxFailed,
+          carIndex: res.current.index || 1,
+          lakeHolderOpenId: res.current.lakeHolderOpenId || '',
           vision: res.player ? res.player.vision || null : null,
+          visionList: visionList,
           allPlayers: res.players || [],
           gameResult: res.basic && res.basic.result ? res.basic.result : null,
-          isHost: !!(res.players || []).some(p => p.openId === (app.globalData.openId || '') && p.isHost),
+          isHost: isHost,
+          carsHistory: res.history ? res.history.cars || [] : [],
+          lakeHistory: res.history ? res.history.lake || [] : [],
+          lancelotSwaps: res.history ? res.history.lancelotSwaps || [] : [],
           speakingOrder: res.current.speakingOrder || 'asc',
           speakingOrderIndex: (res.current.speakingOrder || 'asc') === 'desc' ? 1 : 0,
-          speakingOrderConfirmed: res.current.speakingOrder !== 'asc' || !!res.current.preNominatedTeam,
+          speakingOrderConfirmed: this._discussionSaved || (res.current.speakingOrder || 'asc') !== 'asc' || !!res.current.preNominatedTeam,
+          roundList: roundList,
+          flowCars: flowCars,
         });
 
-        if (res.current.phase === 'gameEnd') {
+        if (phase === 'gameEnd') {
           this.showGameEndResult(res.basic ? res.basic.result : null);
+        }
+
+        if (phase === 'roleReveal' && res.player && res.player.role && !wx.getStorageSync('avalon_roleMask_' + gameId)) {
+          this.setData({ showRoleMask: true });
         }
       }
     }).catch(err => {
@@ -106,6 +195,40 @@ Page({
     }).catch(err => {
       wx.showToast({ title: (err && err.message) || '进入讨论失败', icon: 'none' });
     });
+  },
+
+  dismissRoleMask() {
+    wx.setStorageSync('avalon_roleMask_' + this.data.gameId, true);
+    this.setData({ showRoleMask: false });
+    this.openRoleModal();
+  },
+
+  openRoleModal() {
+    if (!this.data.playerRole) return;
+    this.setData({ showRoleModal: true });
+  },
+
+  closeRoleModal() {
+    this.setData({ showRoleModal: false });
+    if (this.data.currentPhase === 'roleReveal') {
+      this.confirmRoleReveal();
+    }
+  },
+
+  tapCloseRoleModal() {
+    this.setData({ showRoleModal: false });
+  },
+
+  backToHome() {
+    wx.reLaunch({ url: '/pages/index/index' });
+  },
+
+  openInfoModal() {
+    this.setData({ showInfoModal: true });
+  },
+
+  closeInfoModal() {
+    this.setData({ showInfoModal: false });
   },
 
   showGameEndResult(gameResult) {
@@ -123,75 +246,26 @@ Page({
     }
   },
 
-  viewRole() {
-    const { playerRole } = this.data;
-    if (!playerRole) return;
-
-    const roleInfo = {
-      'merlin': { name: '梅林', desc: '知道所有坏人（除莫德雷德），需要隐藏身份' },
-      'percival': { name: '派西维尔', desc: '知道梅林和莫甘娜，需要保护梅林' },
-      'loyal': { name: '忠臣', desc: '好人阵营，不知道其他角色身份' },
-      'mordred': { name: '莫德雷德', desc: '坏人，梅林看不到他' },
-      'morgana': { name: '莫甘娜', desc: '坏人，假扮梅林迷惑派西维尔' },
-      'assassin': { name: '刺客', desc: '坏人，游戏结束时可以刺杀梅林' },
-      'minion': { name: '爪牙', desc: '坏人，帮助破坏任务' },
-      'oberon': { name: '奥伯伦', desc: '坏人，不知道其他坏人身份，坏人看不到他' },
-      'lancelot': { name: '兰斯洛特', desc: '好人或坏人身份不确定，任务投票时可以故意输掉' },
-      'ladyOfTheLake': { name: '湖中仙女', desc: '好人，可以使用湖中仙女技能查看其他玩家阵营' },
-    };
-
-    const info = roleInfo[playerRole] || { name: '未知', desc: '角色信息错误' };
-
-    wx.showModal({
-      title: `你的角色: ${info.name}`,
-      content: info.desc,
-      showCancel: false,
-      confirmText: '知道了'
-    });
-  },
-
-  viewVision() {
-    const { vision, allPlayers } = this.data;
-    const players = allPlayers || [];
-    if (!vision || !vision.players || vision.players.length === 0) {
-      wx.showModal({ title: '你的视野', content: '本局你暂时看不到其他玩家', showCancel: false, confirmText: '知道了' });
-      return;
-    }
-    const roleLabel = {
-      merlin: '梅林', percival: '派西', loyal: '忠臣', lancelotBlue: '蓝兰', lancelotRed: '红兰',
-      morgana: '莫甘娜', assassin: '刺客', mordred: '莫德雷德', minion: '爪牙', oberon: '奥伯伦'
-    };
-    const lines = vision.players.map(p => {
-      const np = players.find(x => x.openId === p.openId);
-      const name = np ? np.nickName : '?';
-      let label = name;
-      if (p.role) label += `（${roleLabel[p.role] || p.role}）`;
-      else if (p.side) label += `（${p.side === 'evil' ? '坏人' : '好人'}）`;
-      return label;
-    });
-    wx.showModal({ title: '你能看到的玩家', content: lines.join('\n'), showCancel: false, confirmText: '知道了' });
-  },
-
   nominatePlayer(e) {
+    if (!this.checkIfTeamLeader()) return;
     const playerId = e.currentTarget.dataset.id;
-    const { nominatedTeam } = this.data;
-    const index = nominatedTeam.indexOf(playerId);
+    const mode = this.data.nominateMode;
 
-    if (index === -1) {
-      if (nominatedTeam.length >= this.getRequiredTeamSize()) {
-        wx.showToast({
-          title: '队伍人数已满',
-          icon: 'error',
-        });
-        return;
-      }
-      nominatedTeam.push(playerId);
+    if (mode === 'pre') {
+      const pre = this.data.preNominatedTeam.slice();
+      const i = pre.indexOf(playerId);
+      if (i === -1) pre.push(playerId); else pre.splice(i, 1);
+      this.setData({ preNominatedTeam: pre });
     } else {
-      nominatedTeam.splice(index, 1);
+      const t = this.data.nominatedTeam.slice();
+      const i = t.indexOf(playerId);
+      if (i === -1) t.push(playerId); else t.splice(i, 1);
+      this.setData({ nominatedTeam: t });
     }
+  },
 
-    this.setData({ nominatedTeam });
-    this.submitNomination();
+  onNominateModeChange(e) {
+    this.setData({ nominateMode: e.currentTarget.dataset.mode });
   },
 
   onSpeakingOrderChange(e) {
@@ -202,13 +276,22 @@ Page({
     });
   },
 
-  confirmSpeakingOrder() {
-    const { gameId, speakingOrder } = this.data;
-    api.setDiscussion(gameId, speakingOrder).then(() => {
+  saveDiscussionSettings() {
+    const { gameId, speakingOrder, preNominatedTeam } = this.data;
+    const requiredSize = this.getRequiredTeamSize();
+    if (preNominatedTeam.length > 0 && preNominatedTeam.length !== requiredSize) {
+      wx.showToast({ title: `预提名需选满 ${requiredSize} 人（或清空）`, icon: 'none' });
+      return;
+    }
+    wx.showLoading({ title: '保存中...', mask: true });
+    api.setDiscussion(gameId, speakingOrder, preNominatedTeam).then(() => {
+      wx.hideLoading();
+      this._discussionSaved = true;
       this.fetchGameState();
-      wx.showToast({ title: '发言设置已保存', icon: 'success' });
+      wx.showToast({ title: '已保存', icon: 'success' });
     }).catch(err => {
-      wx.showToast({ title: (err && err.message) || '设置失败', icon: 'none' });
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' });
     });
   },
 
@@ -228,15 +311,23 @@ Page({
     return sizes[playerCount]?.[round - 1] || 3;
   },
 
-  submitNomination() {
+  confirmNomination() {
     const { gameId, nominatedTeam, forcedSend } = this.data;
-    const isLeader = this.checkIfTeamLeader();
-    if (!isLeader) return;
+    const requiredSize = this.getRequiredTeamSize();
+    if (nominatedTeam.length !== requiredSize) {
+      wx.showToast({ title: `还需选择 ${requiredSize - nominatedTeam.length} 人`, icon: 'none' });
+      return;
+    }
+    wx.showLoading({ title: '提交中...', mask: true });
     api.submitNomination(gameId, nominatedTeam, forcedSend ? true : undefined).then(res => {
+      wx.hideLoading();
       if (res && res.success === false) {
         wx.showToast({ title: res.message || '提交失败', icon: 'none' });
+      } else {
+        this.fetchGameState();
       }
     }).catch(err => {
+      wx.hideLoading();
       wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
     });
   },
@@ -280,20 +371,32 @@ Page({
     });
   },
 
-  viewGameHistory() {
-    const { missionResults } = this.data;
+  getLeaderName(openId) {
+    const p = (this.data.allPlayers || []).find(x => x.openId === openId);
+    return p ? p.nickName : '未知';
+  },
 
-    let historyText = '任务历史:\n';
-    missionResults.forEach((result, index) => {
-      historyText += `第${index + 1}回合: ${result.success ? '成功' : '失败'}\n`;
-    });
+  getLakeHolderName() {
+    return this.getLeaderName(this.data.lakeHolderOpenId);
+  },
 
-    wx.showModal({
-      title: '游戏历史',
-      content: historyText,
-      showCancel: false,
-      confirmText: '关闭'
-    });
+  getNamesByIds(ids) {
+    return (ids || []).map(id => this.getLeaderName(id)).join('、');
+  },
+
+  getApproveCount(votes) {
+    return Object.values(votes || {}).filter(v => v === 'approve').length;
+  },
+
+  getRejectCount(votes) {
+    return Object.values(votes || {}).filter(v => v === 'reject').length;
+  },
+
+  getCarOutcome(car) {
+    if (!car) return '';
+    if (car.outcome === 'reject') return '流车';
+    if (car.outcome === 'send') return car.missionSuccess ? '发车成功' : '发车失败';
+    return '进行中';
   },
 
   canAssassinate() {
@@ -408,7 +511,7 @@ Page({
   },
 
   getPlayerSide(role) {
-    const goodRoles = ['merlin', 'percival', 'loyal', 'lancelot', 'ladyOfTheLake'];
+    const goodRoles = ['merlin', 'percival', 'loyal', 'lancelotBlue', 'ladyOfTheLake'];
     return goodRoles.includes(role) ? 'good' : 'evil';
   },
 
@@ -422,9 +525,29 @@ Page({
       'assassin': '刺客',
       'minion': '爪牙',
       'oberon': '奥伯伦',
+      'lancelotBlue': '蓝兰',
+      'lancelotRed': '红兰',
       'lancelot': '兰斯洛特',
       'ladyOfTheLake': '湖中仙女'
     };
     return roleNames[role] || '未知';
+  },
+
+  getRoleDesc(role) {
+    const roleDesc = {
+      'merlin': '知道所有坏人（除莫德雷德），需要隐藏身份',
+      'percival': '知道梅林和莫甘娜，需要保护梅林',
+      'loyal': '好人阵营，不知道其他角色身份',
+      'mordred': '坏人，梅林看不到他',
+      'morgana': '坏人，假扮梅林迷惑派西维尔',
+      'assassin': '坏人，游戏结束时可以刺杀梅林',
+      'minion': '坏人，帮助破坏任务',
+      'oberon': '坏人，不知道其他坏人身份，坏人看不到他',
+      'lancelotBlue': '蓝兰，好人阵营兰斯洛特，可能被换阵营',
+      'lancelotRed': '红兰，坏人阵营兰斯洛特，可能被换阵营',
+      'lancelot': '兰斯洛特，任务投票时可以故意输掉',
+      'ladyOfTheLake': '好人，可以使用湖中仙女技能查看其他玩家阵营'
+    };
+    return roleDesc[role] || '角色信息错误';
   },
 });

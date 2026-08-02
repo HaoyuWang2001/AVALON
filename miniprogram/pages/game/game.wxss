@@ -1,140 +1,223 @@
 /* pages/game/game.wxss */
 
-/* 玩家列表样式 */
-.players-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
+/* ─────── 顶部操作栏 ─────── */
+.top-actions {
+  position: sticky; top: 0; z-index: 90;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20rpx 8rpx; margin-bottom: 8rpx;
+}
+.top-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 12rpx; padding: 16rpx 40rpx;
+  font-size: 28rpx; font-weight: 700; color: #fff;
+}
+.top-home { background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
+.top-destroy { background: linear-gradient(135deg, #F87171, #DC2626); }
+
+/* ─────── 任务进度卡 ─────── */
+.mission-card { margin-top: 8rpx; }
+.mission-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8rpx; }
+.mission-head-info { display: flex; align-items: center; gap: 16rpx; }
+.mission-phase { font-size: 26rpx; color: #6B7280; font-weight: 600; }
+.mission-lake { font-size: 24rpx; color: #0EA5E9; }
+.mission-actions { display: flex; gap: 12rpx; }
+.mini-btn {
+  font-size: 24rpx; font-weight: 600; color: #fff;
+  background: #8B5CF6; border-radius: 8rpx; padding: 10rpx 20rpx;
 }
 
+/* 5 轮圆圈 */
+.rounds { display: flex; align-items: center; justify-content: center; margin: 16rpx 0 8rpx; }
+.round-connector { width: 64rpx; height: 4rpx; background: #D1D5DB; border-radius: 2rpx; }
+.round-circle {
+  width: 44rpx; height: 44rpx; border-radius: 50%;
+  background: #D1D5DB; flex-shrink: 0;
+}
+.round-circle.succ { background: #3B82F6; }
+.round-circle.fail { background: #EF4444; }
+.round-circle.current { box-shadow: 0 0 0 8rpx rgba(139, 92, 246, 0.28); }
+
+/* 流车图 */
+.flow-cars { display: flex; align-items: flex-end; justify-content: center; gap: 20rpx; margin-top: 12rpx; }
+.flow-car {
+  position: relative;
+  width: 52rpx; height: 52rpx; border-radius: 12rpx;
+  background: #E5E7EB;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.flow-car-icon { font-size: 30rpx; line-height: 1; }
+.flow-car.failed { background: #FEE2E2; border: 2rpx solid #EF4444; }
+.flow-car.failed .flow-car-icon { color: #EF4444; }
+.flow-car.current { border: 4rpx solid #8B5CF6; }
+.flow-car.is-forced { border-color: #EF4444; box-shadow: 0 0 0 6rpx rgba(239, 68, 68, 0.2); }
+.flow-car.last { width: 68rpx; height: 68rpx; flex-direction: column; }
+.flow-car-label {
+  position: absolute; bottom: -28rpx; left: 50%;
+  transform: translateX(-50%);
+  font-size: 18rpx; color: #EF4444; font-weight: 600;
+  white-space: nowrap;
+}
+.flow-cars { margin-bottom: 8rpx; }
+
+/* ─────── 讨论阶段 ─────── */
+.disc-setup { background: #F8F9FA; border-radius: 12rpx; padding: 20rpx; margin-bottom: 20rpx; }
+.rule-label { font-size: 28rpx; font-weight: 600; color: #374151; }
+.picker-value { font-size: 28rpx; color: #8B5CF6; font-weight: 600; }
+.pick-confirmed { font-size: 28rpx; color: #10B981; font-weight: 600; }
+.segment { display: flex; background: #E5E7EB; border-radius: 12rpx; overflow: hidden; }
+.segment-item {
+  padding: 12rpx 28rpx; font-size: 26rpx; color: #6B7280; font-weight: 600;
+}
+.segment-item.segment-active { background: #8B5CF6; color: #fff; }
+.nominate-hint { font-size: 24rpx; margin-top: 12rpx; }
+.disc-btns { display: flex; gap: 16rpx; margin-top: 20rpx; }
+.disc-btns button { flex: 1; font-size: 26rpx; padding: 18rpx 0; }
+.info-line {
+  font-size: 28rpx; color: #4B5563; margin-bottom: 8rpx;
+  background: #F8F9FA; border-radius: 8rpx; padding: 12rpx 16rpx;
+}
+
+/* 玩家列表（预提名 / 最终提名 标记） */
+.player-item { position: relative; }
+.player-item.pre-selected { background: #FEF3C7; border: 2rpx solid #F59E0B; }
+.player-item.selected { background: #D1ECF1; border: 2rpx solid #17A2B8; }
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36rpx; height: 36rpx; border-radius: 50%;
+  font-size: 22rpx; font-weight: 700; color: #fff; margin-right: 8rpx;
+}
+.badge-pre { background: #F59E0B; }
+.badge-final { background: #17A2B8; }
+
+/* 玩家列表基础样式 */
+.players-list { display: flex; flex-direction: column; gap: 20rpx; }
 .player-item {
-  display: flex;
-  align-items: center;
-  padding: 24rpx;
-  border-radius: 12rpx;
-  background-color: #f8f9fa;
+  display: flex; align-items: center; padding: 24rpx;
+  border-radius: 12rpx; background-color: #f8f9fa;
   transition: all 0.2s ease;
 }
-
-.player-item.selectable:active {
-  background-color: #e9ecef;
-}
-
-.player-item.selected {
-  background-color: #d1ecf1;
-  border: 2rpx solid #17a2b8;
-}
-
-.player-avatar {
-  width: 100rpx;
-  height: 100rpx;
-  border-radius: 50%;
-  margin-right: 24rpx;
-}
-
-.player-info {
-  flex: 1;
-}
-
-.player-name {
-  font-size: 32rpx;
-  font-weight: 600;
-  margin-bottom: 8rpx;
-}
-
-.player-status {
-  font-size: 24rpx;
-  color: #6c757d;
-}
+.player-item.selectable:active { background-color: #e9ecef; }
+.player-avatar { width: 100rpx; height: 100rpx; border-radius: 50%; margin-right: 24rpx; }
+.player-info { flex: 1; }
+.player-name { font-size: 32rpx; font-weight: 600; margin-bottom: 8rpx; }
+.player-status { font-size: 24rpx; color: #6c757d; }
 
 /* 队伍成员样式 */
-.team-member {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 20rpx;
-}
-
-.team-member-avatar {
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 50%;
-  margin-bottom: 12rpx;
-  border: 4rpx solid #3498db;
-}
-
-.team-member-name {
-  font-size: 28rpx;
-  text-align: center;
-}
+.team-member { display: flex; flex-direction: column; align-items: center; margin: 20rpx; }
+.team-member-avatar { width: 120rpx; height: 120rpx; border-radius: 50%; margin-bottom: 12rpx; border: 4rpx solid #3498db; }
+.team-member-name { font-size: 28rpx; text-align: center; }
 
 /* 投票按钮样式 */
-.vote-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 40rpx;
-}
+.vote-buttons { display: flex; justify-content: space-between; margin-top: 40rpx; }
 
 /* 玩家揭示样式 */
-.players-reveal {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
+.players-reveal { display: flex; flex-direction: column; gap: 20rpx; }
+.player-reveal-item { display: flex; align-items: center; padding: 20rpx; border-radius: 12rpx; }
+.player-reveal-item.good { background-color: rgba(46, 204, 113, 0.1); border-left: 6rpx solid #2ecc71; }
+.player-reveal-item.evil { background-color: rgba(231, 76, 60, 0.1); border-left: 6rpx solid #e74c3c; }
+.player-reveal-avatar { width: 80rpx; height: 80rpx; border-radius: 50%; margin-right: 20rpx; }
+.player-reveal-name { font-size: 28rpx; font-weight: 600; margin-bottom: 4rpx; }
+.player-reveal-role { font-size: 24rpx; color: #6c757d; }
+
+/* ─────── 蒙版 ─────── */
+.role-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 999;
+  background: rgba(45, 45, 52, 0.92);
+  display: flex; align-items: center; justify-content: center;
+}
+.role-mask-inner {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 60rpx; text-align: center;
+}
+.role-mask-title { font-size: 44rpx; font-weight: 700; color: #FFFFFF; letter-spacing: 4rpx; margin-bottom: 24rpx; }
+.role-mask-sub { font-size: 44rpx; font-weight: 700; color: #C4B5FD; margin-bottom: 72rpx; line-height: 1.4; }
+.role-mask-btn { min-width: 320rpx; }
+
+/* ─────── 弹窗通用 ─────── */
+.modal-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.55); z-index: 998;
 }
 
-.player-reveal-item {
-  display: flex;
-  align-items: center;
-  padding: 20rpx;
-  border-radius: 12rpx;
+/* ─────── 查看身份弹窗 ─────── */
+.role-modal {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
 }
-
-.player-reveal-item.good {
-  background-color: rgba(46, 204, 113, 0.1);
-  border-left: 6rpx solid #2ecc71;
+.role-modal-body {
+  position: relative; z-index: 999;
+  width: 640rpx; max-height: 88vh;
+  background: #FFFFFF; border-radius: 24rpx;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 40rpx 32rpx 32rpx;
+  overflow-y: auto;
 }
-
-.player-reveal-item.evil {
-  background-color: rgba(231, 76, 60, 0.1);
-  border-left: 6rpx solid #e74c3c;
+.role-card-badge {
+  width: 260rpx; height: 360rpx; border-radius: 20rpx;
+  background: linear-gradient(160deg, #1E1B4B, #312E81);
+  box-shadow: 0 12rpx 32rpx rgba(49, 46, 129, 0.35);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24rpx;
 }
+.role-card-img { width: 100%; height: 100%; }
+.role-card-emoji { font-size: 120rpx; }
+.role-tags { display: flex; gap: 12rpx; margin-bottom: 16rpx; flex-wrap: wrap; justify-content: center; }
+.role-tag { font-size: 26rpx; font-weight: 700; padding: 8rpx 24rpx; border-radius: 24rpx; }
+.role-tag-name { background: #EDE9FE; color: #6D28D9; }
+.role-tag.tag-good { background: rgba(46, 204, 113, 0.12); color: #10B981; }
+.role-tag.tag-evil { background: rgba(231, 76, 60, 0.12); color: #EF4444; }
+.role-card-desc { font-size: 28rpx; color: #6B7280; text-align: center; line-height: 1.6; margin-bottom: 24rpx; padding: 0 12rpx; }
+.role-card-btn { min-width: 320rpx; }
 
-.player-reveal-avatar {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  margin-right: 20rpx;
+/* 视野列表 */
+.role-vision { width: 100%; border-top: 1rpx solid #E5E7EB; padding-top: 20rpx; margin-bottom: 24rpx; }
+.role-vision-title { font-size: 26rpx; font-weight: 700; color: #374151; margin-bottom: 12rpx; text-align: center; }
+.role-vision-item { display: flex; align-items: center; padding: 10rpx 0; }
+.role-vision-avatar { width: 64rpx; height: 64rpx; border-radius: 50%; margin-right: 16rpx; background: #F3F4F6; }
+.role-vision-name { flex: 1; font-size: 28rpx; color: #111827; }
+.role-vision-tag { font-size: 24rpx; font-weight: 600; padding: 4rpx 16rpx; border-radius: 20rpx; background: #EDE9FE; color: #6D28D9; }
+.role-vision-tag.tag-good { background: rgba(46, 204, 113, 0.12); color: #10B981; }
+.role-vision-tag.tag-evil { background: rgba(231, 76, 60, 0.12); color: #EF4444; }
+
+/* ─────── 历史弹窗 ─────── */
+.info-modal {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
 }
-
-.player-reveal-name {
-  font-size: 28rpx;
-  font-weight: 600;
-  margin-bottom: 4rpx;
+.info-modal-body {
+  position: relative; z-index: 999;
+  width: 640rpx; max-height: 82vh;
+  background: #FFFFFF; border-radius: 24rpx;
+  display: flex; flex-direction: column;
+  padding: 32rpx 28rpx 24rpx;
 }
-
-.player-reveal-role {
-  font-size: 24rpx;
-  color: #6c757d;
+.info-modal-title { font-size: 34rpx; font-weight: 800; color: #111827; text-align: center; margin-bottom: 16rpx; }
+.info-modal-scroll { flex: 1; min-height: 0; }
+.info-section { margin-bottom: 24rpx; }
+.info-section-title { font-size: 28rpx; font-weight: 700; color: #8B5CF6; margin-bottom: 12rpx; }
+.info-round { margin-bottom: 16rpx; }
+.info-round-title { font-size: 26rpx; font-weight: 700; color: #374151; margin-bottom: 8rpx; }
+.info-car { background: #F8F9FA; border-radius: 10rpx; padding: 14rpx 16rpx; margin-bottom: 8rpx; }
+.info-car-line { font-size: 26rpx; color: #4B5563; line-height: 1.5; }
+.info-car-result { font-weight: 600; }
+.info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 26rpx; color: #4B5563;
+  background: #F8F9FA; border-radius: 8rpx; padding: 12rpx 16rpx; margin-bottom: 8rpx;
 }
-
+.txt-good { color: #10B981; font-weight: 700; }
+.txt-evil { color: #EF4444; font-weight: 700; }
+.txt-muted { color: #9CA3AF; }
+.info-modal-close { margin-top: 16rpx; }
 
 /* 工具函数样式 */
-progress {
-  border-radius: 12rpx;
-}
+progress { border-radius: 12rpx; }
 
 /* 响应式调整 */
 @media (max-width: 600rpx) {
-  .vote-buttons {
-    flex-direction: column;
-    gap: 20rpx;
-  }
-
-  .vote-buttons button {
-    width: 100% !important;
-  }
-
-  .team-member {
-    margin: 10rpx;
-  }
+  .vote-buttons { flex-direction: column; gap: 20rpx; }
+  .vote-buttons button { width: 100% !important; }
+  .team-member { margin: 10rpx; }
 }

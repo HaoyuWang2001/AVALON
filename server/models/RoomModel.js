@@ -195,7 +195,7 @@ class RoomModel {
 
       let activeGameId = null;
       if (room.gameStarted) {
-        const [games] = await db.query('SELECT id FROM games WHERE room_id = ? AND status = ? LIMIT 1', [roomId, 'active']);
+        const games = await db.query('SELECT id FROM games WHERE room_id = ? AND status = ? LIMIT 1', [roomId, 'active']);
         if (games.length > 0) activeGameId = games[0].id;
       }
 

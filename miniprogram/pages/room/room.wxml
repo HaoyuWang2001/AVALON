@@ -29,20 +29,6 @@
     </view>
   </view>
 
-  <!-- Card 2: Host Control -->
-  <view class="card host-card" wx:if="{{currentUser && isHost}}">
-    <view class="card-header">
-      <text class="card-title">🎮 房主控制台</text>
-    </view>
-    <text class="btn-host-start {{canStartGame ? '' : 'disabled'}}" bindtap="startGame">开始游戏</text>
-    <text wx:if="{{!canStartGame && startHint}}" class="start-hint">{{startHint}}</text>
-    <view class="host-divider"></view>
-    <view class="host-actions">
-      <text class="btn-round btn-purple" bindtap="modifyConfig">修改配置</text>
-      <text class="btn-round {{seatsFull ? 'btn-purple' : 'btn-disabled'}}" bindtap="randomShuffleSeats">随机位置</text>
-    </view>
-  </view>
-
   <!-- Card 3: Seating Area -->
   <view class="card seating-card">
     <view class="card-header">
@@ -108,6 +94,14 @@
       </view>
     </scroll-view>
     <view wx:else class="empty-hint">暂无观战玩家</view>
+  </view>
+
+  <!-- Host Bottom Bar -->
+  <view class="start-hint-bar" wx:if="{{currentUser && isHost && startHint}}">{{startHint}}</view>
+  <view class="host-bottom-bar" wx:if="{{currentUser && isHost}}">
+    <text class="host-bottom-btn" bindtap="modifyConfig">修改配置</text>
+    <text class="host-bottom-btn host-bottom-btn-primary {{canStartGame ? '' : 'btn-disabled'}}" bindtap="startGame">开始游戏</text>
+    <text class="host-bottom-btn {{seatsFull ? '' : 'btn-disabled'}}" bindtap="randomShuffleSeats">随机位置</text>
   </view>
 
   <!-- Config Overlay -->

@@ -1,8 +1,8 @@
 const {
   makeUserId, createRoom, joinRoom, toggleReady,
   createRoomWithPlayers, createRoomAndStartGame, buildConfigWithSpectator,
-  apiPost, apiGet, submitNomination, castVote,
-  advancePhase, assassinate, endGame, leaveRoom,
+  apiPost, apiGet, submitNomination, castVote, castMissionVote,
+  advancePhase, assassinate, endGame, leaveRoom, disband, getRoom,
   setDiscussion, abandonGame, getGameState
 } = require('./helpers/testHelper');
 
@@ -289,6 +289,68 @@ describe('06 — Edge Cases & Validation', () => {
       expect(res.body.success).toBe(false);
       expect(res.body.message || '').toMatch(/游戏已开始/);
       await endGame(gameId);
+    });
+  });
+
+  describe('Room & Game Lifecycle', () => {
+    // 打到自然结束（坏人 3 胜）
+    async function driveToNaturalEnd(gameId, players) {
+      await advancePhase(gameId);
+      const sizes = { 1: 2, 2: 3, 3: 2, 4: 3, 5: 3 };
+      let fails = 0;
+      let guard = 0;
+      while (fails < 3 && guard < 20) {
+        guard++;
+        let st = await getGameState(gameId);
+        if (st.current.phase === 'gameEnd') break;
+        if (st.current.phase === 'discussion') {
+          const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
+          const size = sizes[st.current.round] || 2;
+          const evils = players.filter(p => p.side === 'evil');
+          const team = [...evils, ...players.filter(p => p.side === 'good')].slice(0, size).map(p => p.openId);
+          await submitNomination(gameId, leader.openId, team);
+        }
+        st = await getGameState(gameId);
+        if (st.current.phase === 'teamVote') {
+          for (const p of players) await castVote(gameId, p.openId, 'approve');
+        }
+        st = await getGameState(gameId);
+        if (st.current.phase === 'missionVote') {
+          const team = st.current.nominatedTeam || [];
+          for (const oid of team) {
+            const p = players.find(x => x.openId === oid);
+            await castMissionVote(gameId, oid, p.side === 'evil' ? 'fail' : 'success', p.role);
+          }
+          st = await getGameState(gameId);
+          if (st.history.missions) fails = st.history.missions.filter(r => !r.success).length;
+        }
+      }
+      return getGameState(gameId);
+    }
+
+    it('游戏自然结束后：房间 game_started 重置为 false（玩家留在房间）', async () => {
+      const { roomId, gameId, players } = await createRoomAndStartGame(5);
+      await driveToNaturalEnd(gameId, players);
+      const st = await getGameState(gameId);
+      expect(st.current.phase).toBe('gameEnd');
+      expect(st.basic.status).toBe('ended');
+      const room = await getRoom(roomId);
+      expect(room.room.gameStarted).toBeFalsy();
+      expect(room.room.players.length).toBe(5);
+    });
+
+    it('游戏结束后：房主可解散房间', async () => {
+      const { roomId, gameId, players } = await createRoomAndStartGame(5);
+      await driveToNaturalEnd(gameId, players);
+      const res = await disband(roomId, players[0].openId);
+      expect(res.success).toBe(true);
+    });
+
+    it('游戏进行中：房主可解散房间', async () => {
+      const { roomId, gameId, players } = await createRoomAndStartGame(5);
+      await advancePhase(gameId);
+      const res = await disband(roomId, players[0].openId);
+      expect(res.success).toBe(true);
     });
   });
 

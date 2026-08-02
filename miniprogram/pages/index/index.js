@@ -166,7 +166,8 @@ Page({
   backToRoom() {
     const room = this.data.currentRoom;
     if (!room) return;
-    if (room.gameStarted) {
+    // 游戏进行中且存在 active gameId → 进入游戏；否则回到房间
+    if (room.gameStarted && room.gameId) {
       wx.navigateTo({ url: `/pages/game/game?gameId=${room.gameId}&roomId=${room.roomId}` });
     } else {
       wx.navigateTo({ url: `/pages/room/room?roomId=${room.roomId}` });
@@ -203,7 +204,9 @@ Page({
             this.setData({ currentRoom: null, isCurrentRoomHost: false });
             getApp().globalData.roomId = null;
             wx.showToast({ title: '已解散', icon: 'success' });
-          }).catch(() => {});
+          }).catch((err) => {
+            wx.showToast({ title: (err && err.message) || '解散失败', icon: 'none' });
+          });
         }
       }
     });
