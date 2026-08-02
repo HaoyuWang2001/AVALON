@@ -64,7 +64,7 @@ describe('constants', () => {
       expect(phases).toHaveLength(7);
       expect(phases).toContain('waiting');
       expect(phases).toContain('roleReveal');
-      expect(phases).toContain('teamSelection');
+      expect(phases).toContain('discussion');
       expect(phases).toContain('teamVote');
       expect(phases).toContain('missionVote');
       expect(phases).toContain('missionResult');

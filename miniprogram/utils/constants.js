@@ -36,7 +36,7 @@ const SIDES = {
 const GAME_PHASES = {
   WAITING: 'waiting',
   ROLE_REVEAL: 'roleReveal',
-  TEAM_SELECTION: 'teamSelection',
+  DISCUSSION: 'discussion',
   TEAM_VOTE: 'teamVote',
   MISSION_VOTE: 'missionVote',
   MISSION_RESULT: 'missionResult',

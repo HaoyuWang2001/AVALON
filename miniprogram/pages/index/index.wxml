@@ -240,7 +240,7 @@
             <view class="rule-row">
               <view class="rule-col">
                 <text class="rule-label">兰斯换身轮次</text>
-                <text class="rule-desc">第几轮起抽取身份转换卡（0=不转换）</text>
+                <text class="rule-desc">第几轮结束、下一轮开始时抽取身份转换卡（1-4）</text>
               </view>
               <picker class="rule-picker" mode="selector" range="{{[1,2,3,4]}}" value="{{rules.lancelotSwapRound - 1}}" data-field="lancelotSwapRound" data-range="{{[1,2,3,4]}}" bindchange="onRulePicker">
                 <text>第 {{rules.lancelotSwapRound}} 轮</text>
