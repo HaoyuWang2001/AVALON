@@ -260,12 +260,21 @@ async function confirmRevealAll(gameId, players) {
   return state;
 }
 
-// 推进到 discussion 阶段：confirmRevealAll → (若 preNominate) submitPreNomination → selectSpeakingOrder
+// 推进到 discussion 阶段：confirmRevealAll → (若 lancelot) 全员确认 → (若 preNominate) submitPreNomination → selectSpeakingOrder
 // 用于测试快速进入发车前的讨论阶段；若已处于 discussion 则不做任何事
 async function driveToDiscussion(gameId, players) {
   let state = await getGameState(gameId);
   if (state.current.phase === 'roleReveal') {
     state = await confirmRevealAll(gameId, players);
+  }
+  if (state.current.phase === 'lancelot') {
+    for (const p of players) {
+      await confirmLancelot(gameId, p.openId);
+    }
+    state = await getGameState(gameId);
+  }
+  if (state.current.phase === 'lake') {
+    throw new Error('driveToDiscussion: lake 阶段需显式验人');
   }
   if (state.current.phase === 'preNominate') {
     const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);

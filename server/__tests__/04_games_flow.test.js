@@ -25,7 +25,8 @@ async function setupGame(config) {
 async function driveToMissionVote(gameId, players, team) {
   let state = await getGameState(gameId);
   if (state.current.phase === 'roleReveal' || state.current.phase === 'preNominate'
-      || state.current.phase === 'speakingOrder' || state.current.phase === 'discussion') {
+      || state.current.phase === 'speakingOrder' || state.current.phase === 'discussion'
+      || state.current.phase === 'lancelot') {
     await driveToDiscussion(gameId, players);
     state = await getGameState(gameId);
   }
