@@ -87,29 +87,51 @@
       <view class="bar-info">已确认 {{revealConfirmedCount}}/{{revealTotalCount}}</view>
     </block>
 
-    <!-- discussion：三步依次（预选车队→发言方向→确认发车） -->
-    <block wx:if="{{currentPhase === 'discussion'}}">
+    <!-- preNominate：车主预选车型（提交预选；强制发车时直接确认发车） -->
+    <block wx:if="{{currentPhase === 'preNominate'}}">
       <block wx:if="{{isTeamLeader}}">
-        <!-- ① 预选车队 -->
-        <view class="bar-row" wx:if="{{!preStepDone}}">
+        <view class="bar-row" wx:if="{{!forcedSend}}">
           <button size="mini" class="btn btn-primary" bindtap="submitPreNomination">提交预选（{{preNominatedTeam.length}}人）</button>
         </view>
-        <!-- ② 发言方向 -->
-        <block wx:if="{{preStepDone && !speakingOrderConfirmed}}">
-          <view class="bar-row">
-            <view class="direction-btn {{speakingOrder === 'asc' ? 'direction-active' : ''}}" data-order="asc" bindtap="selectSpeakingDirection">↑</view>
-            <view class="direction-btn {{speakingOrder === 'desc' ? 'direction-active' : ''}}" data-order="desc" bindtap="selectSpeakingDirection">↓</view>
-          </view>
-          <view class="bar-row">
-            <text class="step-undo" bindtap="undoPreNomination">重选</text>
-          </view>
-        </block>
-        <!-- ③ 房主点车 -->
-        <view class="bar-row" wx:if="{{speakingOrderConfirmed}}">
+        <view class="bar-row" wx:else>
+          <button size="mini" class="btn btn-primary" bindtap="confirmNomination">确认发车（{{preNominatedTeam.length}}/{{requiredTeamSize}}）</button>
+        </view>
+      </block>
+      <view wx:else class="bar-info">等待队长预选...</view>
+    </block>
+
+    <!-- speakingOrder：车主确定发言顺序 -->
+    <block wx:if="{{currentPhase === 'speakingOrder'}}">
+      <block wx:if="{{isTeamLeader}}">
+        <view class="bar-row">
+          <view class="direction-btn {{speakingOrder === 'asc' ? 'direction-active' : ''}}" data-order="asc" bindtap="selectSpeakingDirection">↑</view>
+          <view class="direction-btn {{speakingOrder === 'desc' ? 'direction-active' : ''}}" data-order="desc" bindtap="selectSpeakingDirection">↓</view>
+        </view>
+      </block>
+      <view wx:else class="bar-info">等待队长确定发言顺序...</view>
+    </block>
+
+    <!-- discussion：车主确认发车 -->
+    <block wx:if="{{currentPhase === 'discussion'}}">
+      <block wx:if="{{isTeamLeader}}">
+        <view class="bar-row">
           <button size="mini" class="btn btn-primary" bindtap="confirmNomination">确认发车 {{preNominatedTeam.length}}/{{requiredTeamSize}}</button>
         </view>
       </block>
       <view wx:else class="bar-info">等待队长发车...</view>
+    </block>
+
+    <!-- lake：湖仙验人（必验） -->
+    <block wx:if="{{currentPhase === 'lake'}}">
+      <view class="bar-info">湖仙持有者点击玩家卡牌查验阵营（结果仅你可见）</view>
+    </block>
+
+    <!-- lancelot：兰斯抽卡结果展示 + 全员确认 -->
+    <block wx:if="{{currentPhase === 'lancelot'}}">
+      <view class="bar-info">兰斯洛特抽卡{{lancelotResult && lancelotResult.switched ? '：身份转换！' : '：未转换'}}</view>
+      <view class="bar-row">
+        <button size="mini" class="btn btn-primary" bindtap="confirmLancelot">确认（{{lancelotConfirmedCount}}/{{lancelotTotalCount}}）</button>
+      </view>
     </block>
 
     <!-- teamVote -->

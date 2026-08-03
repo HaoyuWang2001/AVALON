@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const { connectClients, disconnectAll, waitForEvent, createClient } = require('./helpers/socketHelper');
 const {
-  createRoomWithPlayers, startGame, getGameState, advancePhase,
+  createRoomWithPlayers, startGame, getGameState, driveToDiscussion,
   submitNomination, castVote, buildCustomBoard10
 } = require('./helpers/testHelper');
 
@@ -107,7 +107,8 @@ describe('05 — WebSocket Real-time Communication', () => {
   it('should deliver current game state to a new spectator on joinRoom', async () => {
     const { roomId, gameId } = await createRoomAndStart10();
     // 推进到 discussion，再让 socket 观战者加入
-    await advancePhase(gameId);
+    const fullPlayers = (await getGameState(gameId)).players;
+    await driveToDiscussion(gameId, fullPlayers);
     await joinRoomAndConfirm(clients[1], roomId, 'spectator_s1');
     const state = await waitForEvent(clients[1], 'gameState');
     expect(state.state.basic.gameId).toBe(gameId);
@@ -117,7 +118,7 @@ describe('05 — WebSocket Real-time Communication', () => {
 
   it('should deliver current game state to a reconnecting player via requestState', async () => {
     const { roomId, gameId, players } = await createRoomAndStart10();
-    await advancePhase(gameId);
+    await driveToDiscussion(gameId, players);
     const st0 = await getGameState(gameId);
     const leader = players.find(p => p.openId === st0.current.teamLeaderOpenId);
     const team = [leader.openId, ...players.map(p => p.openId).filter(id => id !== leader.openId)].slice(0, 3);

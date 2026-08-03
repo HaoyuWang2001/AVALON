@@ -167,13 +167,6 @@ class ApiService {
     });
   }
 
-  async advancePhase(gameId) {
-    return this.request(`/games/${gameId}/advancePhase`, {
-      method: 'POST',
-      data: {}
-    });
-  }
-
   async confirmReveal(gameId) {
     const openId = this.openId || getApp().globalData.openId;
     return this.request(`/games/${gameId}/confirmReveal`, {
@@ -182,13 +175,35 @@ class ApiService {
     });
   }
 
-  async setDiscussion(gameId, speakingOrder, preNominatedTeam) {
+  async submitPreNomination(gameId, preNominatedTeam) {
     const openId = this.openId || getApp().globalData.openId;
-    const data = { gameId, openId, speakingOrder };
-    if (preNominatedTeam !== undefined) data.preNominatedTeam = preNominatedTeam;
-    return this.request('/games/setDiscussion', {
+    return this.request('/games/preNominate', {
       method: 'POST',
-      data
+      data: { gameId, openId, preNominatedTeam }
+    });
+  }
+
+  async selectSpeakingOrder(gameId, speakingOrder) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request('/games/speakingOrder', {
+      method: 'POST',
+      data: { gameId, openId, speakingOrder }
+    });
+  }
+
+  async lakeInspect(gameId, targetOpenId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/games/${gameId}/lakeInspect`, {
+      method: 'POST',
+      data: { openId, targetOpenId }
+    });
+  }
+
+  async confirmLancelot(gameId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/games/${gameId}/confirmLancelot`, {
+      method: 'POST',
+      data: { openId }
     });
   }
 

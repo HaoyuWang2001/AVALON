@@ -86,8 +86,9 @@ Page({
     speakingOrder: 'asc',
     speakingOrderIndex: 0,
     speakingOrderConfirmed: false,
-    preStepDone: false,
-    directionStepDone: false,
+    lancelotResult: null,
+    lancelotConfirmedCount: 0,
+    lancelotTotalCount: 0,
     speakingOrderOptions: [{ label: '按座位号从1号开始', value: 'asc' }, { label: '从队长开始逆序', value: 'desc' }],
     showRoleModal: false,
     showRolePage: false,
@@ -171,10 +172,7 @@ Page({
         const myOpenId = app.globalData.openId || '';
         const isHost = !!(res.players || []).some(p => p.openId === myOpenId && p.isHost);
         const isLeader = !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId;
-        const keepLocal = phase === 'discussion' && isLeader;
-
-        if (this.data.currentRound !== round) this._discussionSaved = false;
-        if (phase !== 'discussion') this._discussionSaved = false;
+        const keepLocal = phase === 'preNominate' && isLeader;
 
         const missions = res.history ? res.history.missions || [] : [];
         const roundList = [];
@@ -216,8 +214,8 @@ Page({
         });
 
         const myRole = res.player ? res.player.role : null;
-        // 本地预选未落库时保留本地选中，否则用后端值（统一供富化与 setData 使用）
-        const effPreTeam = (keepLocal && !this._discussionSaved)
+        // 预选阶段（车主未提交）保留本地选中，否则用后端值（统一供富化与 setData 使用）
+        const effPreTeam = keepLocal
           ? this.data.preNominatedTeam
           : (res.current.preNominatedTeam || []);
         // 长桌玩家富化（预计算 checked/isLeader/voteType/标签，避免 wxml 函数调用）
@@ -242,7 +240,7 @@ Page({
           currentPhase: phase,
           currentRound: round,
           teamLeaderOpenId: res.current.teamLeaderOpenId || '',
-          nominatedTeam: (keepLocal && !this._discussionSaved) ? this.data.nominatedTeam : (res.current.nominatedTeam || []),
+          nominatedTeam: keepLocal ? this.data.nominatedTeam : (res.current.nominatedTeam || []),
           preNominatedTeam: effPreTeam,
           teamVotes: res.current.teamVotes || {},
           missionVotes: res.current.missionVotes || {},
@@ -269,7 +267,10 @@ Page({
           lancelotSwaps: res.history ? res.history.lancelotSwaps || [] : [],
           speakingOrder: keepLocal ? this.data.speakingOrder : (res.current.speakingOrder || 'asc'),
           speakingOrderIndex: keepLocal ? this.data.speakingOrderIndex : ((res.current.speakingOrder || 'asc') === 'desc' ? 1 : 0),
-          speakingOrderConfirmed: this._discussionSaved || !!res.current.discussionSet,
+          speakingOrderConfirmed: !!res.current.discussionSet,
+          lancelotResult: res.current.lancelotResult || null,
+          lancelotConfirmedCount: res.current.lancelotConfirmedCount || 0,
+          lancelotTotalCount: res.current.lancelotTotalCount || 0,
           roundList: roundList,
           flowCars: flowCars,
           centerPhase: this.centerPhaseText(),
@@ -277,7 +278,7 @@ Page({
           lastMissionResult: !!(missions.length > 0 && missions[missions.length - 1].success),
           isTeamLeader: !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
           requiredTeamSize: this.getRequiredTeamSize(),
-          showSelectCheck: phase === 'discussion' && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId && !(this._discussionSaved || !!res.current.discussionSet),
+          showSelectCheck: phase === 'preNominate' && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
           voteCount: Object.keys(res.current.teamVotes || {}).length,
           playerTotal: (res.players || []).length,
           isMissionTeamMember: !!((res.current.nominatedTeam || []).includes(myOpenId)),
@@ -400,9 +401,9 @@ Page({
 
   nominatePlayer(e) {
     if (!this.checkIfTeamLeader()) return;
-    if (this.data.speakingOrderConfirmed) return;
+    if (this.data.currentPhase !== 'preNominate') return;
     const playerId = e.currentTarget.dataset.id;
-    // 讨论阶段第一步：预选车型（任意人数，点选/取消）
+    // 预选车型阶段：点选/取消
     const pre = this.data.preNominatedTeam.slice();
     const i = pre.indexOf(playerId);
     if (i === -1) pre.push(playerId); else pre.splice(i, 1);
@@ -414,49 +415,33 @@ Page({
     this.setData({ preNominatedTeam: pre, tablePlayers });
   },
 
-  // 第一步完成：提交预选车型（本地锁定，不落库）
+  // preNominate 阶段：车主提交预选车型（落库 → 后端切到 speakingOrder）
   submitPreNomination() {
     if (!this.checkIfTeamLeader()) return;
-    this.setData({ preStepDone: true });
-    // 若方向也已选择，则两步齐全 → 统一提交
-    if (this.data.directionStepDone) {
-      this.commitDiscussionSettings();
-    } else {
-      wx.showToast({ title: '预选车型已提交，请选择发言方向', icon: 'none' });
-    }
+    if (this.data.currentPhase !== 'preNominate') return;
+    const { gameId, preNominatedTeam } = this.data;
+    wx.showLoading({ title: '提交中...', mask: true });
+    api.submitPreNomination(gameId, preNominatedTeam).then(() => {
+      wx.hideLoading();
+      this.fetchGameState();
+    }).catch(err => {
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
+    });
   },
 
-  // 回退第一步（允许重新选择预选车型；未落库前可回退）
-  undoPreNomination() {
-    if (this.data.speakingOrderConfirmed) return;
-    this.setData({ preStepDone: false, directionStepDone: false });
-  },
-
-  // 第二步：点击方向按钮立即选择（asc=↑ 顺序 / desc=↓ 逆序），两步齐全后统一提交
+  // speakingOrder 阶段：点击方向按钮提交（后端切到 discussion）
   selectSpeakingDirection(e) {
     if (!this.checkIfTeamLeader()) return;
+    if (this.data.currentPhase !== 'speakingOrder') return;
     const order = e.currentTarget.dataset.order;
     if (!['asc', 'desc'].includes(order)) return;
-    this.setData({
-      speakingOrder: order,
-      speakingOrderIndex: order === 'desc' ? 1 : 0,
-      directionStepDone: true
-    });
-    // 两步都完成 → 统一调用 setDiscussion 落库
-    if (this.data.preStepDone && order) {
-      this.commitDiscussionSettings();
-    }
-  },
-
-  // 统一提交：预选车型 + 发言方向一次落库
-  commitDiscussionSettings() {
-    const { gameId, speakingOrder, preNominatedTeam } = this.data;
+    const { gameId } = this.data;
     wx.showLoading({ title: '提交中...', mask: true });
-    api.setDiscussion(gameId, speakingOrder, preNominatedTeam).then(() => {
+    api.selectSpeakingOrder(gameId, order).then(() => {
       wx.hideLoading();
-      this._discussionSaved = true;
+      this.setData({ speakingOrder: order });
       this.fetchGameState();
-      wx.showToast({ title: '发言设置已提交', icon: 'success' });
     }).catch(err => {
       wx.hideLoading();
       wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
@@ -479,10 +464,12 @@ Page({
     return sizes[playerCount]?.[round - 1] || 3;
   },
 
+  // discussion 阶段：车主确认发车（提交最终队伍 → teamVote）；强制发车时从 preNominate 直接发车
   confirmNomination() {
-    const { gameId, preNominatedTeam, forcedSend } = this.data;
-    if (!this.data.speakingOrderConfirmed) {
-      wx.showToast({ title: '请先完成预选车型与发言方向', icon: 'none' });
+    const { gameId, preNominatedTeam, forcedSend, currentPhase } = this.data;
+    const canSend = currentPhase === 'discussion' || (currentPhase === 'preNominate' && forcedSend);
+    if (!canSend) {
+      wx.showToast({ title: '请先完成预选与发言方向', icon: 'none' });
       return;
     }
     const requiredSize = this.getRequiredTeamSize();
@@ -512,20 +499,61 @@ Page({
   // 长桌玩家点击（按阶段分发）
   onTablePlayerTap(e) {
     const { currentPhase } = this.data;
-    if (currentPhase === 'discussion') {
+    if (currentPhase === 'preNominate') {
       this.nominatePlayer(e);
+    } else if (currentPhase === 'lake') {
+      this.lakeInspect(e);
     } else if (currentPhase === 'assassination') {
       this.assassinate(e);
     }
+  },
+
+  // lake 阶段：湖仙选择被查验者（必验，不可跳过）
+  lakeInspect(e) {
+    const targetOpenId = e.currentTarget.dataset.id;
+    const { gameId } = this.data;
+    wx.showModal({
+      title: '湖仙验人',
+      content: '确认查验该玩家的阵营？（结果仅你可见）',
+      success: (res) => {
+        if (res.confirm) {
+          wx.showLoading({ title: '验人中...', mask: true });
+          api.lakeInspect(gameId, targetOpenId).then(() => {
+            wx.hideLoading();
+            this.fetchGameState();
+          }).catch(err => {
+            wx.hideLoading();
+            wx.showToast({ title: (err && err.message) || '验人失败', icon: 'none' });
+          });
+        }
+      }
+    });
+  },
+
+  // lancelot 阶段：确认抽卡结果（全员确认后进入下一轮）
+  confirmLancelot() {
+    const { gameId } = this.data;
+    wx.showLoading({ title: '确认中...', mask: true });
+    api.confirmLancelot(gameId).then(() => {
+      wx.hideLoading();
+      this.fetchGameState();
+    }).catch(err => {
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '确认失败', icon: 'none' });
+    });
   },
 
   // 中间区阶段名文字
   centerPhaseText() {
     const map = {
       roleReveal: '身份',
+      preNominate: '预选',
+      speakingOrder: '发言序',
       discussion: '发言',
       teamVote: '投票',
       missionVote: '任务',
+      lake: '湖仙',
+      lancelot: '抽卡',
       assassination: '刺杀',
       missionResult: '结果',
       gameEnd: '结束'
@@ -725,14 +753,16 @@ Page({
   getPhaseText(phase) {
     const phaseMap = {
       'roleReveal': '角色揭示',
+      'preNominate': '车主预选车型',
+      'speakingOrder': '车主确定发言顺序',
       'discussion': '讨论阶段',
       'teamVote': '队伍投票',
       'missionVote': '任务投票',
       'missionResult': '任务结果',
-      'assassination': '刺杀阶段',
-      'gameEnd': '游戏结束',
       'lake': '湖仙验人',
-      'lancelot': '兰斯抽卡'
+      'lancelot': '兰斯抽卡',
+      'assassination': '刺杀阶段',
+      'gameEnd': '游戏结束'
     };
     return phaseMap[phase] || phase;
   },

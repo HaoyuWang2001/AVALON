@@ -2,8 +2,10 @@ const {
   makeUserId, createRoom, joinRoom, toggleReady,
   createRoomWithPlayers, createRoomAndStartGame, buildConfigWithSpectator,
   apiPost, apiGet, submitNomination, castVote, castMissionVote,
-  advancePhase, assassinate, endGame, leaveRoom, disband, getRoom,
-  setDiscussion, abandonGame, getGameState
+  confirmReveal, confirmRevealAll, driveToDiscussion,
+  submitPreNomination, selectSpeakingOrder,
+  assassinate, endGame, leaveRoom, disband, getRoom,
+  abandonGame, getGameState
 } = require('./helpers/testHelper');
 
 describe('06 — Edge Cases & Validation', () => {
@@ -101,8 +103,8 @@ describe('06 — Edge Cases & Validation', () => {
       expect(res.body.success).toBe(false);
     });
 
-    it('should reject advancePhase on nonexistent game', async () => {
-      const res = await advancePhase('00000000-0000-0000-0000-000000000000');
+    it('should reject confirmReveal on nonexistent game', async () => {
+      const res = await confirmReveal('00000000-0000-0000-0000-000000000000', 'a');
       expect(res.success).toBe(false);
     });
 
@@ -111,17 +113,17 @@ describe('06 — Edge Cases & Validation', () => {
       expect(res.success).toBe(false);
     });
 
-    it('should reject submitNomination when not discussion', async () => {
+    it('should reject submitNomination when not discussion/preNominate', async () => {
       const { gameId, players } = await createRoomAndStartGame(5);
       const res = await submitNomination(gameId, players[0].openId, [players[0].openId]);
       expect(res.success).toBe(false);
-      await advancePhase(gameId);
+      await confirmRevealAll(gameId, players);
       await endGame(gameId);
     });
 
     it('should reject castVote when not teamVote', async () => {
       const { gameId, players } = await createRoomAndStartGame(5);
-      await advancePhase(gameId);
+      await driveToDiscussion(gameId, players);
       const res = await castVote(gameId, players[0].openId, 'approve');
       expect(res.success).toBe(false);
       await endGame(gameId);
@@ -136,52 +138,65 @@ describe('06 — Edge Cases & Validation', () => {
     });
   });
 
-  describe('setDiscussion', () => {
-    it('should reject setDiscussion when not discussion phase', async () => {
+  describe('preNominate / speakingOrder', () => {
+    it('should reject submitPreNomination when not preNominate phase', async () => {
       const { gameId, players } = await createRoomAndStartGame(5);
-      const res = await setDiscussion(gameId, players[0].openId, 'asc');
+      const res = await submitPreNomination(gameId, players[0].openId, []);
+      expect(res.success).toBe(false);
+      await endGame(gameId);
+    });
+
+    it('should reject selectSpeakingOrder when not speakingOrder phase', async () => {
+      const { gameId, players } = await createRoomAndStartGame(5);
+      const res = await selectSpeakingOrder(gameId, players[0].openId, 'asc');
       expect(res.success).toBe(false);
       await endGame(gameId);
     });
 
     it('should reject invalid speakingOrder', async () => {
       const { gameId, players } = await createRoomAndStartGame(5);
-      await advancePhase(gameId);
-      const res = await setDiscussion(gameId, players[0].openId, 'sideways');
+      await confirmRevealAll(gameId, players);
+      const st = await getGameState(gameId);
+      const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
+      await submitPreNomination(gameId, leader.openId, []);
+      const res = await selectSpeakingOrder(gameId, leader.openId, 'sideways');
       expect(res.success).toBe(false);
       await endGame(gameId);
     });
 
-    it('should reject when non-leader tries to set discussion', async () => {
+    it('should reject when non-leader tries to submit prenomination', async () => {
       const { gameId, players } = await createRoomAndStartGame(5);
-      await advancePhase(gameId);
+      await confirmRevealAll(gameId, players);
       const st = await getGameState(gameId);
       const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
       const nonLeader = players.find(p => p.openId !== leader.openId);
-      const res = await setDiscussion(gameId, nonLeader.openId, 'asc');
+      const res = await submitPreNomination(gameId, nonLeader.openId, []);
       expect(res.success).toBe(false);
       await endGame(gameId);
     });
 
-    it('should accept leader setDiscussion once, reject second change', async () => {
+    it('should accept leader submitPreNomination + selectSpeakingOrder', async () => {
       const { gameId, players } = await createRoomAndStartGame(5);
-      await advancePhase(gameId);
+      await confirmRevealAll(gameId, players);
       const st = await getGameState(gameId);
+      expect(st.current.phase).toBe('preNominate');
       const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
-      const ok = await setDiscussion(gameId, leader.openId, 'desc');
-      expect(ok.success).toBe(true);
-      expect(ok.current.speakingOrder).toBe('desc');
-      const again = await setDiscussion(gameId, leader.openId, 'asc');
-      expect(again.success).toBe(false);
+      const pre = await submitPreNomination(gameId, leader.openId, []);
+      expect(pre.success).toBe(true);
+      expect(pre.current.phase).toBe('speakingOrder');
+      const order = await selectSpeakingOrder(gameId, leader.openId, 'desc');
+      expect(order.success).toBe(true);
+      expect(order.current.phase).toBe('discussion');
+      expect(order.current.speakingOrder).toBe('desc');
       await endGame(gameId);
     });
 
-    it('should reject preNominatedTeam with wrong size', async () => {
+    it('should reject preNominatedTeam with member not in game', async () => {
       const { gameId, players } = await createRoomAndStartGame(5);
-      await advancePhase(gameId);
+      await confirmRevealAll(gameId, players);
       const st = await getGameState(gameId);
       const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
-      const res = await setDiscussion(gameId, leader.openId, 'asc', [players[0].openId]);
+      const res = await submitPreNomination(gameId, leader.openId, ['ghost-player']);
       expect(res.success).toBe(false);
       await endGame(gameId);
     });
@@ -217,7 +232,7 @@ describe('06 — Edge Cases & Validation', () => {
   describe('Concurrency & Phase Locks', () => {
     it('should reject duplicate concurrent team votes (unique car_index)', async () => {
       const { gameId, players } = await createRoomAndStartGame(5);
-      await advancePhase(gameId);
+      await driveToDiscussion(gameId, players);
       const st = await getGameState(gameId);
       const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
       const team = [leader.openId, ...players.map(p => p.openId).filter(id => id !== leader.openId)].slice(0, 2);
@@ -233,7 +248,7 @@ describe('06 — Edge Cases & Validation', () => {
 
     it('should reject duplicate castVote by same player', async () => {
       const { gameId, players } = await createRoomAndStartGame(5);
-      await advancePhase(gameId);
+      await driveToDiscussion(gameId, players);
       const st = await getGameState(gameId);
       const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
       const team = [leader.openId, ...players.map(p => p.openId).filter(id => id !== leader.openId)].slice(0, 2);
@@ -300,7 +315,7 @@ describe('06 — Edge Cases & Validation', () => {
       return { roomId, gameId, players };
     }
 
-    it('未全员确认前停留在 roleReveal；全员确认后自动进入 discussion', async () => {
+    it('未全员确认前停留在 roleReveal；全员确认后自动进入 preNominate', async () => {
       const { gameId, players } = await startFreshGame();
       // 前 4 人确认，仍在 roleReveal
       for (let i = 0; i < 4; i++) {
@@ -311,10 +326,10 @@ describe('06 — Edge Cases & Validation', () => {
       const st = await getGameState(gameId);
       expect(st.current.phase).toBe('roleReveal');
       expect(st.current.revealConfirmedCount).toBe(4);
-      // 第 5 人确认 → 自动进入 discussion
+      // 第 5 人确认 → 自动进入 preNominate
       const last = await apiPost(`/api/games/${gameId}/confirmReveal`, { openId: players[4].openId });
       expect(last.body.success).toBe(true);
-      expect(last.body.current.phase).toBe('discussion');
+      expect(last.body.current.phase).toBe('preNominate');
       await endGame(gameId);
     });
 
@@ -338,26 +353,26 @@ describe('06 — Edge Cases & Validation', () => {
       await endGame(gameId);
     });
 
-    it('已进入 discussion 后 confirmReveal 被拒', async () => {
+    it('已进入 preNominate 后 confirmReveal 被拒', async () => {
       const { gameId, players } = await startFreshGame();
       for (const p of players) {
         await apiPost(`/api/games/${gameId}/confirmReveal`, { openId: p.openId });
       }
       const st = await getGameState(gameId);
-      expect(st.current.phase).toBe('discussion');
+      expect(st.current.phase).toBe('preNominate');
       const res = await apiPost(`/api/games/${gameId}/confirmReveal`, { openId: players[0].openId });
       expect(res.body.success).toBe(false);
       expect(res.body.message || '').toMatch(/当前不是角色揭示阶段/);
       await endGame(gameId);
     });
 
-    it('advancePhase 不再被玩家用于推进（保留但校验阶段）', async () => {
-      const { gameId } = await startFreshGame();
-      // roleReveal 阶段 advancePhase 仍可被调用（保留）；验证 confirmReveal 才是入口
-      const res = await advancePhase(gameId);
+    it('confirmReveal 是 roleReveal → preNominate 的唯一入口', async () => {
+      const { gameId, players } = await startFreshGame();
+      // 未全员确认时无法绕过；全员确认后进入 preNominate
+      const res = await confirmRevealAll(gameId, players);
       expect(res.success).toBe(true);
       const st = await getGameState(gameId);
-      expect(st.current.phase).toBe('discussion');
+      expect(st.current.phase).toBe('preNominate');
       await endGame(gameId);
     });
   });
@@ -365,7 +380,7 @@ describe('06 — Edge Cases & Validation', () => {
   describe('Room & Game Lifecycle', () => {
     // 打到自然结束（坏人 3 胜）
     async function driveToNaturalEnd(gameId, players) {
-      await advancePhase(gameId);
+      await confirmRevealAll(gameId, players);
       const sizes = { 1: 2, 2: 3, 3: 2, 4: 3, 5: 3 };
       let fails = 0;
       let guard = 0;
@@ -373,6 +388,16 @@ describe('06 — Edge Cases & Validation', () => {
         guard++;
         let st = await getGameState(gameId);
         if (st.current.phase === 'gameEnd') break;
+        if (st.current.phase === 'preNominate') {
+          const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
+          await submitPreNomination(gameId, leader.openId, []);
+          continue;
+        }
+        if (st.current.phase === 'speakingOrder') {
+          const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
+          await selectSpeakingOrder(gameId, leader.openId, 'asc');
+          continue;
+        }
         if (st.current.phase === 'discussion') {
           const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
           const size = sizes[st.current.round] || 2;
@@ -432,7 +457,7 @@ describe('06 — Edge Cases & Validation', () => {
 
     it('游戏进行中：房主可解散房间', async () => {
       const { roomId, gameId, players } = await createRoomAndStartGame(5);
-      await advancePhase(gameId);
+      await confirmRevealAll(gameId, players);
       const res = await disband(roomId, players[0].openId);
       expect(res.success).toBe(true);
     });

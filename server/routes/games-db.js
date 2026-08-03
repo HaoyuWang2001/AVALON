@@ -148,7 +148,7 @@ function createRouter() {
         });
       }
       
-      if (error.message.includes('当前不是队伍选择阶段') ||
+      if (error.message.includes('当前不是发车阶段') ||
           error.message.includes('只有队长才能提名') ||
           error.message.includes('需要') ||
           error.message.includes('强制车')) {
@@ -266,45 +266,7 @@ function createRouter() {
   });
   
   // 推进游戏阶段
-  router.post('/:gameId/advancePhase', async (req, res) => {
-    try {
-      const { gameId } = req.params;
-
-      if (!gameId) {
-        return res.status(400).json({ 
-          success: false, 
-          message: '缺少游戏ID' 
-        });
-      }
-
-      const result = await GameModel.advancePhase(gameId);
-
-      res.json(result);
-    } catch (error) {
-      console.error('推进阶段API错误:', error);
-
-      if (error.message.includes('游戏不存在')) {
-        return res.status(404).json({ 
-          success: false, 
-          message: error.message 
-        });
-      }
-
-      if (error.message.includes('当前阶段无法推进')) {
-        return res.status(400).json({ 
-          success: false, 
-          message: error.message 
-        });
-      }
-
-      res.status(500).json({ 
-        success: false, 
-        message: error.message || '推进阶段失败' 
-      });
-    }
-  });
-
-  // 确认角色揭示（全员确认后自动进入 discussion）
+  // 确认角色揭示（全员确认后自动进入 preNominate）
   router.post('/:gameId/confirmReveal', async (req, res) => {
     try {
       const { gameId } = req.params;
@@ -339,10 +301,41 @@ function createRouter() {
     }
   });
 
-  // 设置讨论阶段（发言顺序 + 预提名队伍，每轮一次）
-  router.post('/setDiscussion', async (req, res) => {
+  // 车主提交预选车型（preNominate → speakingOrder）
+  router.post('/preNominate', async (req, res) => {
     try {
-      const { gameId, openId, speakingOrder, preNominatedTeam } = req.body;
+      const { gameId, openId, preNominatedTeam } = req.body;
+
+      if (!gameId || !openId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+
+      const result = await GameModel.submitPreNomination(gameId, openId, preNominatedTeam);
+
+      emitGame(req.body.roomId || null, req.body.gameId);
+
+      res.json(result);
+    } catch (error) {
+      console.error('提交预选API错误:', error);
+
+      if (error.message.includes('游戏不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+
+      if (error.message.includes('当前不是车主预选车型阶段') ||
+          error.message.includes('只有队长才能提交预选') ||
+          error.message.includes('预提名队伍')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
+      res.status(500).json({ success: false, message: error.message || '提交预选失败' });
+    }
+  });
+
+  // 车主确定发言顺序（speakingOrder → discussion）
+  router.post('/speakingOrder', async (req, res) => {
+    try {
+      const { gameId, openId, speakingOrder } = req.body;
 
       if (!gameId || !openId) {
         return res.status(400).json({ success: false, message: '缺少必要参数' });
@@ -351,27 +344,25 @@ function createRouter() {
         return res.status(400).json({ success: false, message: 'speakingOrder 必须是 asc 或 desc' });
       }
 
-      const result = await GameModel.setDiscussion(gameId, openId, speakingOrder, preNominatedTeam);
+      const result = await GameModel.setSpeakingOrder(gameId, openId, speakingOrder);
 
       emitGame(req.body.roomId || null, req.body.gameId);
 
       res.json(result);
     } catch (error) {
-      console.error('设置讨论阶段API错误:', error);
+      console.error('设置发言顺序API错误:', error);
 
       if (error.message.includes('游戏不存在')) {
         return res.status(404).json({ success: false, message: error.message });
       }
 
-      if (error.message.includes('当前不是讨论阶段') ||
-          error.message.includes('只有队长才能设置发言') ||
-          error.message.includes('不可更改') ||
-          error.message.includes('speakingOrder') ||
-          error.message.includes('预提名队伍')) {
+      if (error.message.includes('当前不是车主确定发言顺序阶段') ||
+          error.message.includes('只有队长才能设置发言顺序') ||
+          error.message.includes('speakingOrder')) {
         return res.status(400).json({ success: false, message: error.message });
       }
 
-      res.status(500).json({ success: false, message: error.message || '设置讨论阶段失败' });
+      res.status(500).json({ success: false, message: error.message || '设置发言顺序失败' });
     }
   });
 
@@ -450,6 +441,78 @@ function createRouter() {
         success: false, 
         message: error.message || '刺杀失败' 
       });
+    }
+  });
+
+  // 湖仙验人（lake → 下一阶段）
+  router.post('/:gameId/lakeInspect', async (req, res) => {
+    try {
+      const { gameId } = req.params;
+      const { openId, targetOpenId } = req.body;
+
+      if (!gameId || !openId || !targetOpenId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+
+      const result = await GameModel.lakeInspect(gameId, openId, targetOpenId);
+
+      const db = require('../config/db');
+      const [gameRecord] = await db.query('SELECT room_id FROM games WHERE id = ?', [gameId]);
+      if (gameRecord && gameRecord.room_id) {
+        emitGame(gameRecord.room_id, gameId);
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error('湖仙验人API错误:', error);
+
+      if (error.message.includes('游戏不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+
+      if (error.message.includes('当前不是湖仙验人阶段') ||
+          error.message.includes('只有湖仙持有者才能验人') ||
+          error.message.includes('不在本局') ||
+          error.message.includes('不可重复查验')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
+      res.status(500).json({ success: false, message: error.message || '湖仙验人失败' });
+    }
+  });
+
+  // 确认兰斯抽卡（lancelot → preNominate，全员确认后自动进入下一轮）
+  router.post('/:gameId/confirmLancelot', async (req, res) => {
+    try {
+      const { gameId } = req.params;
+      const { openId } = req.body;
+
+      if (!gameId || !openId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+
+      const result = await GameModel.confirmLancelot(gameId, openId);
+
+      const db = require('../config/db');
+      const [gameRecord] = await db.query('SELECT room_id FROM games WHERE id = ?', [gameId]);
+      if (gameRecord && gameRecord.room_id) {
+        emitGame(gameRecord.room_id, gameId);
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error('确认兰斯抽卡API错误:', error);
+
+      if (error.message.includes('游戏不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+
+      if (error.message.includes('当前不是兰斯抽卡阶段') ||
+          error.message.includes('你不在本局游戏中')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
+      res.status(500).json({ success: false, message: error.message || '确认兰斯抽卡失败' });
     }
   });
 

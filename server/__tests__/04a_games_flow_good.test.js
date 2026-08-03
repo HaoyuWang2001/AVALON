@@ -1,6 +1,6 @@
 const {
-  createRoomAndStartGame, getGameState, advancePhase,
-  submitNomination, castVote, castMissionVote,
+  createRoomAndStartGame, getGameState, confirmRevealAll, confirmLancelot,
+  submitNomination, castVote, castMissionVote, submitPreNomination, selectSpeakingOrder,
   assassinate, endGame,
   buildStandardRoomConfig, buildCustomBoard9, buildCustomBoard10, withConfigOverrides
 } = require('./helpers/testHelper');
@@ -27,7 +27,7 @@ describe('04a — Good Win Full Game Flow', () => {
       const result = await createRoomAndStartGame(n, boardConfig({ config }));
       gameId = result.gameId;
       players = result.players;
-      await advancePhase(gameId);
+      await confirmRevealAll(gameId, players);
     });
 
     it('should complete good win flow (3 successes → assassin miss → good)', async () => {
@@ -39,6 +39,27 @@ describe('04a — Good Win Full Game Flow', () => {
         round++;
         let state = await getGameState(gameId);
         if (state.current.phase === 'gameEnd') break;
+
+        // 兰斯抽卡阶段：全员确认
+        if (state.current.phase === 'lancelot') {
+          for (const p of players) await confirmLancelot(gameId, p.openId);
+          continue;
+        }
+        // 湖仙验人：标准板未启用，理论上不进入
+        if (state.current.phase === 'lake') break;
+
+        // 车主预选车型
+        if (state.current.phase === 'preNominate') {
+          const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
+          await submitPreNomination(gameId, leader.openId, []);
+          continue;
+        }
+        // 车主确定发言顺序
+        if (state.current.phase === 'speakingOrder') {
+          const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
+          await selectSpeakingOrder(gameId, leader.openId, 'asc');
+          continue;
+        }
 
         if (state.current.phase === 'discussion') {
           const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
@@ -56,7 +77,7 @@ describe('04a — Good Win Full Game Flow', () => {
         }
 
         state = await getGameState(gameId);
-        if (state.current.phase === 'discussion') continue;
+        if (state.current.phase === 'preNominate' || state.current.phase === 'discussion') continue;
         if (state.current.phase === 'gameEnd') break;
         if (state.current.phase === 'assassination') { goodMissionCount = 3; break; }
 

@@ -123,14 +123,30 @@ async function main() {
       res = await request('GET', `/games/${arg('game')}?openId=${arg('openId', '')}`);
       console.log(JSON.stringify(res.body));
       break;
-    case 'advance':
-      res = await request('POST', `/games/${arg('game')}/advancePhase`, {});
+    case 'confirm':
+      res = await request('POST', `/games/${arg('game')}/confirmReveal`, { openId: arg('openId') });
       console.log(JSON.stringify(res.body));
       break;
-    case 'discussion':
-      res = await request('POST', '/games/setDiscussion', {
+    case 'prenominate':
+      res = await request('POST', '/games/preNominate', {
+        gameId: arg('game'), openId: arg('openId'), preNominatedTeam: arg('team', '').split(',').filter(Boolean)
+      });
+      console.log(JSON.stringify(res.body));
+      break;
+    case 'order':
+      res = await request('POST', '/games/speakingOrder', {
         gameId: arg('game'), openId: arg('openId'), speakingOrder: arg('order', 'asc')
       });
+      console.log(JSON.stringify(res.body));
+      break;
+    case 'lake':
+      res = await request('POST', `/games/${arg('game')}/lakeInspect`, {
+        openId: arg('openId'), targetOpenId: arg('target')
+      });
+      console.log(JSON.stringify(res.body));
+      break;
+    case 'lancelot':
+      res = await request('POST', `/games/${arg('game')}/confirmLancelot`, { openId: arg('openId') });
       console.log(JSON.stringify(res.body));
       break;
     case 'nominate': {

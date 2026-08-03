@@ -82,44 +82,46 @@ globalTeardown:
 
 | 阶段 | 说明 |
 |------|------|
-| roleReveal | 查看身份；生成首位车长；湖仙落位；角色互知信息在此固化 |
-| discussion | 车长预选车队、指定发言顺序、轮流发言（计时仅前端）、车长总结发言 |
-| submitNomination（动作） | 车长确定车队，调用后直接进入 teamVote，不单独停留 |
-| teamVote | 全体玩家投票（approve/reject）；>半数发车，≤半数流车 |
+| roleReveal | 查看身份；生成首位车长；湖仙落位；角色互知信息在此固化；全员 confirmReveal 后进入 preNominate |
+| preNominate | 车主预选车队（任意人数/可空）；本地点选 + submitPreNomination 落库；强制发车时车主直接确认发车 |
+| speakingOrder | 车主确定发言顺序（asc/desc），selectSpeakingOrder 落库 |
+| discussion | 车主确认发车（submitNomination）；轮流发言（计时仅前端）；车长总结发言 |
+| teamVote | 全体玩家投票（approve/reject）；>半数发车，≤半数流车（下一位车主回 preNominate） |
 | missionVote | 车上成员投 success/fail（判定见 §4.3），任务结果驱动进入下一轮 |
-| lakeInspection（子阶段） | 湖仙验人；仅当湖仙激活且触发条件满足时插入，阻塞 |
+| lake | 湖仙验人（独立阶段）；仅当湖仙激活且触发条件满足时插入，阻塞；湖仙必验（不可跳过） |
+| lancelot | 兰斯抽卡（独立阶段）；抽卡自动触发，结果展示后全员 confirmLancelot 进入下一轮 |
 | assassination | 好人 3 次任务成功后进入；刺客/莫甘娜开刀 |
 | gameEnd | 游戏结束，房间重置 |
 
 ### 3.2 主流程状态机
 
 ```
-roleReveal → discussion → [submitNomination] → teamVote
+roleReveal → preNominate → speakingOrder → discussion → [submitNomination] → teamVote
   ├─ 发车(>半数) → missionVote
   │     ├─ 成功≥3 → assassination →[assassinate]→ gameEnd
   │     ├─ 失败≥3 → gameEnd (evil)
-  │     └─ 否则 → 轮次转换触发链 → discussion(下一轮, 号牌+1)
-  └─ 流车(≤半数) → discussion(round 不变, 号牌+1, 流车数+1)
+  │     └─ 否则 → 轮次转换触发链 → preNominate(下一轮, 号牌+1)
+  └─ 流车(≤半数) → preNominate(round 不变, 下一位车主, 流车数+1)
        └─ 流车数达 maxFailedNominations → 强制发车(见 3.4.1)
 ```
 
-#### 轮次转换触发链（发车成功后、进入下一轮 discussion 前，顺序固定）
+#### 轮次转换触发链（发车成功后、进入下一轮 preNominate 前，顺序固定）
 
 ```
-完成轮次 r ∈ [ladyOfTheLakeRound, 4] 且启用湖仙:
-  ① 湖仙验人(阻塞 lakeInspection 子阶段) → 持有者验人/跳过 → 令牌传给被查验者
+完成轮次 r ∈ [ladyOfTheLakeRound, 4] 且启用湖仙且仍有未当过湖仙者:
+  ① lake 阶段：持有者验人/必验 → 令牌传给被查验者（lakeInspect 后若兰斯触发则进入 lancelot）
 完成轮次 r ∈ [lancelotSwapRound, 4] 且存在兰斯洛特:
-  ② 抽卡 1 张(不放回) → 抽中转则更新阵营(见 3.4.3)
-→ 进入下一轮 discussion
+  ② lancelot 阶段：自动抽卡 1 张(不放回) → 抽中转则更新阵营(见 3.4.3) → 全员确认后进入下一轮
+→ 进入下一轮 preNominate
 ```
 
-### 3.3 每轮详流程（discussion）
+### 3.3 每轮详流程（preNominate → speakingOrder → discussion）
 
-- 车长预选车队：任意人数/可空；本局玩家可见、**不入库**、可随时随意更改（内存态 + socket 广播）。
-- 指定发言顺序：由车长选择，服务端跟踪当前发言人。
+- 车主预选车队（preNominate）：任意人数/可空；本局玩家可见、**不入库**（本地暂存）、可随时更改；车主点选后 `submitPreNomination` 落库 → 进入 speakingOrder。
+- 指定发言顺序（speakingOrder）：由车长选择（asc/desc），`selectSpeakingOrder` 落库 → 进入 discussion。
 - 轮流发言：按序进行；若配置 `limits.speechTimeout`，由**前端倒计时**（服务端不下发 deadline、不强制打断；测试不覆盖计时）。
 - 车长总结发言。
-- 车长正式选车：`submitNomination`（动作）→ teamVote。
+- 车长正式选车（discussion）：`submitNomination` → teamVote。
 
 ### 3.4 特殊规则
 
@@ -127,17 +129,18 @@ roleReveal → discussion → [submitNomination] → teamVote
 
 流车数达 `rules.maxFailedNominations` 后，下一车由**在任车主**强制发车：
 
-- 跳过 discussion 与 teamVote，仅 submitNomination → missionVote。
+- 跳过 speakingOrder 与 discussion 与 teamVote，车主在 preNominate 阶段直接 `submitNomination(forcedCar=true)` → missionVote。
 - 任务结束后进入下一轮，流车数重置为 0。
-- 游戏状态需暴露 `forcedSend` 标志供前端识别。
+- 游戏状态需暴露 `forcedSend` 标志供前端识别（preNominate 阶段显示"确认发车"而非"提交预选"）。
 
 #### 3.4.2 湖仙（Lady of the Lake）
 
 - 激活：`rules.ladyOfTheLake === true`；触发窗口为**完成轮次 r ∈ [ladyOfTheLakeRound, 4]** 的每次轮次转换。
 - 落位：初始持有者 = 首位车长号牌 - 1（取模回绕到 N）。
-- 验人：持有者选择一名**未当过湖仙**的在局玩家，获知其**当前阵营**（good/evil，不显示具体身份）；结果仅持有者可见。
-- 传递：查验后令牌**传给被查验者**；可跳过（令牌不传递、继续持有）。
+- 验人（独立 lake 阶段，**必验不可跳过**）：持有者选择一名**未当过湖仙**的在局玩家，获知其**当前阵营**（good/evil，不显示具体身份）；结果仅持有者可见。
+- 传递：查验后令牌**传给被查验者**（`lake_holder_open_id = target`）。
 - 终止：当全部在局玩家都当过湖仙后，湖仙停止触发。
+- 验人完成后：若兰斯触发则进入 lancelot，否则直接进入下一轮 preNominate。
 
 #### 3.4.3 兰斯洛特（Lancelot）
 
@@ -150,7 +153,11 @@ roleReveal → discussion → [submitNomination] → teamVote
 
 #### 3.4.4 触发顺序
 
-湖仙验人在前、兰斯洛特抽卡在后（见 §3.2 触发链）。
+湖仙验人（lake）在前、兰斯洛特抽卡（lancelot）在后；两者均为独立阶段（见 §3.2 触发链）。<br>
+若仅配置湖仙：missionVote → lake → preNominate。<br>
+若仅配置兰斯：missionVote → lancelot → preNominate。<br>
+两者均配置：missionVote → lake → lancelot → preNominate。<br>
+均未配置：missionVote → preNominate。
 
 ### 3.5 游戏内完整状态
 
@@ -220,7 +227,7 @@ roleReveal → discussion → [submitNomination] → teamVote
 
 全体 N 人参与投票（approve/reject）。
 - approve > 半数（发车）→ 进入任务投票阶段 missionVote
-- approve ≤ 半数（流车）→ leader 号牌 +1 轮转，回 discussion（round 不变，流车数 +1）；流车数达阈值触发强制发车（见 §3.4.1）
+- approve ≤ 半数（流车）→ leader 号牌 +1 轮转，回 preNominate（round 不变，流车数 +1）；流车数达阈值触发强制发车（见 §3.4.1）
 
 #### 任务投票（castMissionVote）
 
@@ -423,11 +430,15 @@ roleReveal → discussion → [submitNomination] → teamVote
 （5-12 人见 §4.1；11 人板无 assassin，由 morgana 行使刺杀）。
 
 ```
-createRoomAndStartGame(N) → advancePhase(gameId)   // roleReveal → discussion
+createRoomAndStartGame(N) → confirmRevealAll(gameId, players)  // roleReveal → preNominate
 → 循环:
     leader = players[teamLeaderIndex]
-    teamSize = TEAM_SIZES[N][currentRound-1]
-    submitNomination(gameId, leader.openId, team)   // 正式选车 → teamVote
+    if preNominate: submitPreNomination(gameId, leader.openId, [])
+    if speakingOrder: selectSpeakingOrder(gameId, leader.openId, 'asc')
+    if lancelot: 全员 confirmLancelot(gameId, openId)
+    if discussion:
+        teamSize = TEAM_SIZES[N][currentRound-1]
+        submitNomination(gameId, leader.openId, team)   // 正式选车 → teamVote
     全员 castVote: 多数 approve
     仅任务队成员 castMissionVote: 全投 success
     若 7+ 人且 R4，验证双重失败规则不触发（全投 success 时 failCount=0）
@@ -445,15 +456,18 @@ createRoomAndStartGame(N) → advancePhase(gameId)   // roleReveal → discussio
 - `gameResult.winner === 'good'`
 - `missionResults.filter(success).length >= 3`
 
-> 说明：标准 11/12 人板含兰斯洛特，轮次转换时抽卡自动发生（§3.4.3），因全员投 success 不受影响；
-> 若房间配置启用湖仙，轮次转换时需先驱动 `lakeInspection` 子阶段（§3.4.2）后再继续。
+> 说明：标准 11/12 人板含兰斯洛特，轮次转换时进入 lancelot 阶段（§3.4.3），全员 confirmLancelot 后继续；因全员投 success 不受影响；
+> 若房间配置启用湖仙，轮次转换时需先驱动 `lake` 阶段（§3.4.2）后再继续。
 
 ### 阶段 3b：坏人胜利路径 — `04b_games_flow_evil.test.js`（参数化 10 板；兰板 keep 确定性）
 
 **路径 1：3 次任务失败**
 ```
-createRoomAndStartGame(N) → advancePhase   // roleReveal → discussion
+createRoomAndStartGame(N) → confirmRevealAll(gameId, players)   // roleReveal → preNominate
 → 循环:
+    if preNominate: submitPreNomination(gameId, leader.openId, [])
+    if speakingOrder: selectSpeakingOrder(gameId, leader.openId, 'asc')
+    if lancelot: 全员 confirmLancelot(gameId, openId)
     leader 提名尽量包含坏人角色（普通轮至少 1 名即失败；7+ 保护轮需 ≥2 名）
     全员 castVote('approve')
     任务队成员 castMissionVote: evil 投 fail, good 投 success
@@ -464,7 +478,7 @@ createRoomAndStartGame(N) → advancePhase   // roleReveal → discussion
 
 **路径 2：刺杀命中梅林（任意阶段发起）**
 ```
-createRoomAndStartGame(N) → advancePhase
+createRoomAndStartGame(N) → confirmRevealAll(gameId, players)
 → 找到刺客角色玩家（assassin 或 11 人时的 morgana）
 → 找到 merlin 角色玩家
 → 刺客在 discussion 阶段直接发起刺杀梅林
@@ -519,7 +533,7 @@ createRoomAndStartGame(N) → advancePhase
 | 不存在房间 | get/join/start 均 404 或失败 |
 | 不存在游戏 | getGameState 404 |
 | 无效 vote 值 | 失败 |
-| advancePhase 不存在游戏 | 失败 |
+| confirmReveal 不存在游戏 | 失败 |
 | assassinate 不存在游戏 | 失败 |
 | 非刺客发起刺杀 | 失败 |
 | 好人发起刺杀 | 失败 |
@@ -527,11 +541,14 @@ createRoomAndStartGame(N) → advancePhase
 | 非 teamVote 阶段投票 | 失败 |
 | 游戏结束后刺杀 | 失败 |
 | 快速循环 | 5 次 create-join-leave 无泄漏 |
-| setDiscussion 阶段限制 | 非 discussion 阶段被拒 |
-| setDiscussion 非法顺序 | 非 asc/desc 被拒 |
-| setDiscussion 非队长 | 非队长被拒 |
-| setDiscussion 一次不可改 | 第二次设置被拒 |
-| setDiscussion 预提名人数 | 队伍大小不符被拒 |
+| preNominate 阶段限制 | 非 preNominate 阶段被拒 |
+| speakingOrder 非法顺序 | 非 asc/desc 被拒 |
+| 非队长提交预选 | 非队长被拒 |
+| 预提名包含非本局玩家 | 被拒 |
+| 未全员确认停留 roleReveal | 确认计数递增、不切阶段 |
+| 全员确认进入 preNominate | 第 N 人确认后 phase=preNominate |
+| 预选成功进入 speakingOrder | 提交预选后 phase=speakingOrder |
+| 发言顺序成功进入 discussion | 选方向后 phase=discussion |
 | abandon 非房主 | 非房主被拒 |
 | abandon 房主 | status=abandoned 且房间重置 |
 | abandon 已结束 | 拒绝 |
@@ -590,12 +607,16 @@ createRoomAndStartGame(N) → advancePhase
 | `leaveRoom(roomId, userId)` | 退出房间 |
 | `startGame(roomId)` | 启动游戏，返回 `{ gameId, game }` |
 | `getGameState(gameId, openId?)` | 获取游戏状态（新结构 basic/players/current/history） |
-| `advancePhase(gameId)` | 推进 roleReveal → discussion（保留，非 UI 入口） |
-| `confirmReveal(gameId, openId)` | 确认角色揭示（全员确认后自动进入 discussion；幂等） |
-| `setDiscussion(gameId, openId, speakingOrder, preNominatedTeam?)` | 车长设置发言顺序+预提名（每轮一次不可改） |
+| `confirmReveal(gameId, openId)` | 确认角色揭示（全员确认后自动进入 preNominate；幂等） |
+| `confirmRevealAll(gameId, players)` | 全员确认角色揭示（替代原 advancePhase 快速推进） |
+| `driveToDiscussion(gameId, players)` | 快速推进到 discussion 阶段（confirmRevealAll + submitPreNomination + selectSpeakingOrder） |
+| `submitPreNomination(gameId, openId, preNominatedTeam?)` | 车主提交预选（preNominate → speakingOrder） |
+| `selectSpeakingOrder(gameId, openId, speakingOrder)` | 车主确定发言顺序（speakingOrder → discussion） |
+| `lakeInspect(gameId, openId, targetOpenId)` | 湖仙验人（lake → 下一阶段；必验） |
+| `confirmLancelot(gameId, openId)` | 确认兰斯抽卡（lancelot → preNominate，全员确认后自动进入下一轮） |
 | `assassinate(gameId, killerOpenId, targetOpenId)` | 刺杀梅林（刺客/莫甘娜） |
 | `abandonGame(gameId, openId)` | 放弃游戏（仅房主；无胜负结果） |
-| `submitNomination(gameId, openId, team)` | 正式选车（discussion → teamVote） |
+| `submitNomination(gameId, openId, team)` | 正式选车（discussion/preNominate → teamVote） |
 | `castVote(gameId, openId, vote)` | 队伍投票（全员） |
 | `castMissionVote(gameId, openId, vote, role)` | 任务投票（仅任务队；按当前阵营判定） |
 | `assassinate(gameId, killerOpenId, targetOpenId)` | 刺杀梅林（刺客或莫甘娜发起） |
@@ -605,7 +626,7 @@ createRoomAndStartGame(N) → advancePhase
 | `createRoomAndStartGame(n)` | 创建 N 人房间 + 启动游戏（使用**按人数的标准角色板**，11 人无 assassin、莫甘娜开刀），返回含 gameId 和玩家角色 |
 
 > 兰斯洛特抽卡控制 `lancelotSwapForce('switch'|'keep')`（经 `rules.lancelotSwapForce` 注入配置）。
-> 湖仙验人/令牌（`lakeInspect`/`lakePass`）与发言计时器仍为规划中（内存态）。
+> 湖仙验人（`lakeInspect`，必验不可跳过）与发言计时器已实现；抽卡/验人均为独立阶段。
 
 ### 6.3 测试文件清单
 
@@ -678,12 +699,14 @@ npm test
 |------|------|------|
 | POST | `/start` | 启动游戏 → 返回 gameId（含首位车长/湖仙落位） |
 | GET | `/:gameId?openId=` | 获取状态（新结构：`basic`/`players`/`current`/`history`；带 openId 返回玩家视角 `player.role/vision`，他人 role/side 隐藏；`current.teamVotes/missionVotes` 按 voteVisibility/missionFailDetail 门控，P14 投票中仅见自己） |
-| POST | `/:gameId/advancePhase` | 推进 roleReveal → discussion（保留；非 UI 入口） |
-| POST | `/:gameId/confirmReveal` | 确认角色揭示（全员确认后自动进入 discussion） |
-| POST | `/setDiscussion` | 车长设置发言顺序（asc/desc）+预提名队伍（每轮一次不可改） |
-| POST | `/submitNomination` | 正式选车（discussion → teamVote；记录 game_cars 车次） |
+| POST | `/:gameId/confirmReveal` | 确认角色揭示（全员确认后自动进入 preNominate） |
+| POST | `/preNominate` | 车主提交预选队伍（preNominate → speakingOrder） |
+| POST | `/speakingOrder` | 车主确定发言顺序（speakingOrder → discussion） |
+| POST | `/submitNomination` | 正式选车（discussion/preNominate → teamVote；记录 game_cars 车次） |
 | POST | `/castVote` | 队伍投票（全员；按 car_index 归档） |
 | POST | `/castMissionVote` | 任务投票（仅任务队；完成时归档 mission_votes/mission_success） |
+| POST | `/:gameId/lakeInspect` | 湖仙验人（lake → 下一阶段；必验不可跳过） |
+| POST | `/:gameId/confirmLancelot` | 确认兰斯抽卡（lancelot → preNominate；全员确认后自动进入下一轮） |
 | POST | `/:gameId/assassinate` | 刺杀梅林（仅刺客/莫甘娜；强制进入刺杀阶段；执行后 gameEnd，status=ended） |
 | POST | `/:gameId/abandon` | 放弃游戏（仅房主；status=abandoned 无胜负结果） |
 | POST | `/end` | 结束游戏（status=ended 并重置房间） |

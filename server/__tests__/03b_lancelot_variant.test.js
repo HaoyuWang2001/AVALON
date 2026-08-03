@@ -1,6 +1,7 @@
 const {
-  createLancelotGame, getGameState, advancePhase,
+  createLancelotGame, getGameState, confirmRevealAll,
   submitNomination, castVote, castMissionVote,
+  submitPreNomination, selectSpeakingOrder, confirmLancelot,
   assassinate, endGame
 } = require('./helpers/testHelper');
 
@@ -30,7 +31,7 @@ describe('03b — Lancelot Single-Role Variants (10 players)', () => {
       gameId = result.gameId;
       players = result.players;
       lancelotPlayer = players.find(p => p.role === expectedLancelotRole);
-      await advancePhase(gameId);
+      await confirmRevealAll(gameId, players);
     });
 
     it(`should assign ${expectedLancelotRole} with side = ${expectedLancelotSide}`, () => {
@@ -52,17 +53,44 @@ describe('03b — Lancelot Single-Role Variants (10 players)', () => {
     it('should complete a full good-win flow', async () => {
       let goodMissionCount = 0;
       let round = 0;
-      const maxRounds = 10;
+      const maxRounds = 12;
 
       while (goodMissionCount < 3 && round < maxRounds) {
         round++;
-        const state = await getGameState(gameId);
+        let state = await getGameState(gameId);
 
         if (state.current.phase === 'gameEnd') break;
-        if (state.current.phase !== 'discussion' && state.current.phase !== 'teamVote'
-            && state.current.phase !== 'missionVote') break;
+        if (state.current.phase === 'assassination') break;
 
-        // Handle team selection / re-try
+        // 兰斯抽卡阶段：全员确认后进入下一轮
+        if (state.current.phase === 'lancelot') {
+          for (const p of players) {
+            await confirmLancelot(gameId, p.openId);
+          }
+          state = await getGameState(gameId);
+          continue;
+        }
+
+        // 湖仙验人：10 人变体未启用湖仙，理论上不进入；若进入则跳过（无持有者逻辑则跳过）
+        if (state.current.phase === 'lake') {
+          break;
+        }
+
+        // 车主预选车型：提交空预选
+        if (state.current.phase === 'preNominate') {
+          const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
+          await submitPreNomination(gameId, leader.openId, []);
+          state = await getGameState(gameId);
+        }
+
+        // 车主确定发言顺序：选 asc
+        if (state.current.phase === 'speakingOrder') {
+          const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
+          await selectSpeakingOrder(gameId, leader.openId, 'asc');
+          state = await getGameState(gameId);
+        }
+
+        // 讨论阶段：正式选车
         if (state.current.phase === 'discussion') {
           const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
           const teamSize = getTeamSize(10, state.current.round);
@@ -71,7 +99,10 @@ describe('03b — Lancelot Single-Role Variants (10 players)', () => {
           if (!nomResult.success) continue;
         }
 
-        await maybeCastTeamVotes(gameId, players);
+        // 队伍投票：多数 approve
+        const half = Math.floor(10 / 2) + 1;
+        for (let i = 0; i < half; i++) await castVote(gameId, players[i].openId, 'approve');
+        for (let i = half; i < 10; i++) await castVote(gameId, players[i].openId, 'reject');
 
         const s2 = await getGameState(gameId);
         if (s2.current.phase === 'missionVote') {
@@ -123,17 +154,4 @@ describe('03b — Lancelot Single-Role Variants (10 players)', () => {
 function getTeamSize(pc, round) {
   const s = { 10: [3, 4, 4, 5, 5] };
   return (s[pc] || [3, 4, 4, 5, 5])[round - 1] || 3;
-}
-
-async function maybeCastTeamVotes(gameId, players) {
-  const state = await require('./helpers/testHelper').getGameState(gameId);
-  if (state.current.phase !== 'teamVote') return;
-  const n = players.length;
-  const { castVote } = require('./helpers/testHelper');
-  for (let i = 0; i < Math.floor(n / 2) + 1; i++) {
-    await castVote(gameId, players[i].openId, 'approve');
-  }
-  for (let i = Math.floor(n / 2) + 1; i < n; i++) {
-    await castVote(gameId, players[i].openId, 'reject');
-  }
 }

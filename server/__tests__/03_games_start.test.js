@@ -1,5 +1,5 @@
 const {
-  createRoomWithPlayers, startGame, getGameState, advancePhase, toggleReady,
+  createRoomWithPlayers, startGame, getGameState, confirmReveal, confirmRevealAll, toggleReady,
   buildStandardRoomConfig, buildCustomBoard10, buildCustomBoard9, withConfigOverrides
 } = require('./helpers/testHelper');
 
@@ -63,13 +63,19 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
       expect(res.success).toBe(false);
     });
 
-    it('T3 advancePhase：roleReveal→discussion，二次调用失败', async () => {
-      const { gameId } = await startBoard(buildCustomBoard10());
-      const r1 = await advancePhase(gameId);
-      expect(r1.success).toBe(true);
-      expect(r1.current.phase).toBe('discussion');
-      const r2 = await advancePhase(gameId);
-      expect(r2.success).toBe(false);
+    it('T3 confirmReveal：roleReveal→preNominate，全员确认后进入', async () => {
+      const { gameId, players } = await startBoard(buildCustomBoard10());
+      // 未全员确认时停留 roleReveal
+      const partial = await confirmReveal(gameId, players[0].openId);
+      expect(partial.success).toBe(true);
+      expect(partial.current.phase).toBe('roleReveal');
+      // 全员确认后进入 preNominate
+      const state = await confirmRevealAll(gameId, players);
+      expect(state.success).toBe(true);
+      expect(state.current.phase).toBe('preNominate');
+      // 幂等：已进入 preNominate 后再次确认被拒
+      const again = await confirmReveal(gameId, players[0].openId);
+      expect(again.success).toBe(false);
     });
   });
 

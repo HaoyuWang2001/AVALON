@@ -246,9 +246,39 @@ async function getGameState(gameId, openId) {
   return res.body;
 }
 
-async function advancePhase(gameId) {
-  const res = await apiPost(`/api/games/${gameId}/advancePhase`, {});
+async function confirmReveal(gameId, openId) {
+  const res = await apiPost(`/api/games/${gameId}/confirmReveal`, { openId });
   return res.body;
+}
+
+// 全员确认角色揭示（替代原 advancePhase 快速推进；每个玩家调用一次）
+async function confirmRevealAll(gameId, players) {
+  let state = null;
+  for (const p of players) {
+    state = await confirmReveal(gameId, p.openId);
+  }
+  return state;
+}
+
+// 推进到 discussion 阶段：confirmRevealAll → (若 preNominate) submitPreNomination → selectSpeakingOrder
+// 用于测试快速进入发车前的讨论阶段；若已处于 discussion 则不做任何事
+async function driveToDiscussion(gameId, players) {
+  let state = await getGameState(gameId);
+  if (state.current.phase === 'roleReveal') {
+    state = await confirmRevealAll(gameId, players);
+  }
+  if (state.current.phase === 'preNominate') {
+    const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
+    const preRes = await submitPreNomination(gameId, leader.openId, []);
+    if (!preRes.success) throw new Error('submitPreNomination failed: ' + JSON.stringify(preRes));
+    const orderRes = await selectSpeakingOrder(gameId, leader.openId, 'asc');
+    if (!orderRes.success) throw new Error('selectSpeakingOrder failed: ' + JSON.stringify(orderRes));
+    state = await getGameState(gameId);
+  }
+  if (state.current.phase !== 'discussion') {
+    throw new Error('driveToDiscussion: unexpected phase ' + state.current.phase);
+  }
+  return state;
 }
 
 async function submitNomination(gameId, openId, nominatedTeam, forcedCar) {
@@ -278,8 +308,23 @@ async function endGame(gameId) {
   return res.body;
 }
 
-async function setDiscussion(gameId, openId, speakingOrder, preNominatedTeam) {
-  const res = await apiPost('/api/games/setDiscussion', { gameId, openId, speakingOrder, preNominatedTeam });
+async function submitPreNomination(gameId, openId, preNominatedTeam) {
+  const res = await apiPost('/api/games/preNominate', { gameId, openId, preNominatedTeam });
+  return res.body;
+}
+
+async function selectSpeakingOrder(gameId, openId, speakingOrder) {
+  const res = await apiPost('/api/games/speakingOrder', { gameId, openId, speakingOrder });
+  return res.body;
+}
+
+async function lakeInspect(gameId, openId, targetOpenId) {
+  const res = await apiPost(`/api/games/${gameId}/lakeInspect`, { openId, targetOpenId });
+  return res.body;
+}
+
+async function confirmLancelot(gameId, openId) {
+  const res = await apiPost(`/api/games/${gameId}/confirmLancelot`, { openId });
   return res.body;
 }
 
@@ -420,13 +465,18 @@ module.exports = {
   cleanupRooms,
   startGame,
   getGameState,
-  advancePhase,
+  confirmReveal,
+  confirmRevealAll,
+  driveToDiscussion,
   submitNomination,
   castVote,
   castMissionVote,
   assassinate,
   endGame,
-  setDiscussion,
+  submitPreNomination,
+  selectSpeakingOrder,
+  lakeInspect,
+  confirmLancelot,
   abandonGame,
   createRoomWithPlayers,
   createRoomAndStartGame,

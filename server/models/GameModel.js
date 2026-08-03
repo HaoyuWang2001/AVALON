@@ -30,13 +30,13 @@ const LANCELOT_BLUE = 'lancelotBlue';
  */
 async function maybeLancelotSwap(connection, gameId, completedRound, rules) {
   const swapRound = rules.lancelotSwapRound;
-  if (typeof swapRound !== 'number' || completedRound < swapRound || completedRound > 4) return;
+  if (typeof swapRound !== 'number' || completedRound < swapRound || completedRound > 4) return null;
 
   const [lancelots] = await connection.execute(
     `SELECT open_id, side FROM game_players WHERE game_id = ? AND role IN ('lancelotBlue','lancelotRed')`,
     [gameId]
   );
-  if (lancelots.length === 0) return;
+  if (lancelots.length === 0) return null;
 
   let switched;
   if (rules.lancelotSwapForce === 'switch') switched = true;
@@ -47,15 +47,16 @@ async function maybeLancelotSwap(connection, gameId, completedRound, rules) {
     'INSERT INTO lancelot_swap_history (game_id, round, switched, created_at) VALUES (?, ?, ?, NOW())',
     [gameId, completedRound, switched]
   );
-  if (!switched) return;
-
-  for (const l of lancelots) {
-    const newSide = l.side === 'good' ? 'evil' : 'good';
-    await connection.execute(
-      'UPDATE game_players SET side = ? WHERE game_id = ? AND open_id = ?',
-      [newSide, gameId, l.open_id]
-    );
+  if (switched) {
+    for (const l of lancelots) {
+      const newSide = l.side === 'good' ? 'evil' : 'good';
+      await connection.execute(
+        'UPDATE game_players SET side = ? WHERE game_id = ? AND open_id = ?',
+        [newSide, gameId, l.open_id]
+      );
+    }
   }
+  return switched;
 }
 
 function buildVision(requester, players, roomConfig) {
@@ -274,19 +275,18 @@ class GameModel {
   }
 
   /**
-   * 设置讨论阶段状态（发言顺序 + 预提名队伍），每轮讨论一次不可改。
-   * 仅当前队长可调用；需处于 discussion 阶段。
+   * 车主提交预选队伍：preNominate → speakingOrder。
+   * 仅当前队长可调用；需处于 preNominate 阶段。预选任意人数，仅校验成员都在本局。
    * @param {string} gameId 游戏ID
    * @param {string} openId 队长openId
-   * @param {string} speakingOrder 发言顺序 'asc' | 'desc'
    * @param {Array<string>} preNominatedTeam 预提名队伍（可选）
    * @returns {Promise<Object>} 更新后的游戏状态
    */
-  static async setDiscussion(gameId, openId, speakingOrder, preNominatedTeam) {
+  static async submitPreNomination(gameId, openId, preNominatedTeam) {
     try {
       await db.transaction(async (connection) => {
         const [game] = await connection.execute(
-          `SELECT current_phase, current_round, team_leader_index, pre_nominated_team, speaking_order, discussion_set, room_id
+          `SELECT current_phase, team_leader_index, room_id
            FROM games WHERE id = ? FOR UPDATE`,
           [gameId]
         );
@@ -295,8 +295,8 @@ class GameModel {
           throw new Error('游戏不存在');
         }
 
-        if (game[0].current_phase !== 'discussion') {
-          throw new Error('当前不是讨论阶段');
+        if (game[0].current_phase !== 'preNominate') {
+          throw new Error('当前不是车主预选车型阶段');
         }
 
         // 队长校验（与 startGame 分配队长时使用相同的座位号排序）
@@ -309,16 +309,7 @@ class GameModel {
 
         const teamLeaderIndex = game[0].team_leader_index;
         if (teamLeaderIndex >= players.length || players[teamLeaderIndex].open_id !== openId) {
-          throw new Error('只有队长才能设置发言');
-        }
-
-        // 每轮讨论仅可设置一次（不可更改）
-        if (game[0].discussion_set) {
-          throw new Error('本轮发言配置已设置，不可更改');
-        }
-
-        if (!['asc', 'desc'].includes(speakingOrder)) {
-          throw new Error('speakingOrder 必须是 asc 或 desc');
+          throw new Error('只有队长才能提交预选');
         }
 
         // 预提名队伍校验（若提供）：任意人数，仅校验成员都在本局
@@ -333,15 +324,76 @@ class GameModel {
 
         await connection.execute(
           `UPDATE games 
-           SET speaking_order = ?, pre_nominated_team = ?, discussion_set = TRUE, updated_at = NOW()
+           SET pre_nominated_team = ?, speaking_order = 'asc',
+               discussion_set = FALSE,
+               lancelot_result = NULL,
+               current_phase = 'speakingOrder',
+               updated_at = NOW()
            WHERE id = ?`,
-          [speakingOrder, preTeamJson, gameId]
+          [preTeamJson, gameId]
         );
       });
 
       return await this.getState(gameId);
     } catch (error) {
-      console.error('设置讨论阶段失败:', error);
+      console.error('提交预选失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 车主确定发言顺序：speakingOrder → discussion。
+   * 仅当前队长可调用；需处于 speakingOrder 阶段。
+   * @param {string} gameId 游戏ID
+   * @param {string} openId 队长openId
+   * @param {string} speakingOrder 发言顺序 'asc' | 'desc'
+   * @returns {Promise<Object>} 更新后的游戏状态
+   */
+  static async setSpeakingOrder(gameId, openId, speakingOrder) {
+    try {
+      await db.transaction(async (connection) => {
+        const [game] = await connection.execute(
+          `SELECT current_phase, team_leader_index, room_id
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId]
+        );
+
+        if (game.length === 0) {
+          throw new Error('游戏不存在');
+        }
+
+        if (game[0].current_phase !== 'speakingOrder') {
+          throw new Error('当前不是车主确定发言顺序阶段');
+        }
+
+        // 队长校验
+        const [players] = await connection.execute(
+          `SELECT gp.open_id FROM game_players gp
+           LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
+           ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
+          [game[0].room_id]
+        );
+
+        const teamLeaderIndex = game[0].team_leader_index;
+        if (teamLeaderIndex >= players.length || players[teamLeaderIndex].open_id !== openId) {
+          throw new Error('只有队长才能设置发言顺序');
+        }
+
+        if (!['asc', 'desc'].includes(speakingOrder)) {
+          throw new Error('speakingOrder 必须是 asc 或 desc');
+        }
+
+        await connection.execute(
+          `UPDATE games 
+           SET speaking_order = ?, discussion_set = TRUE, current_phase = 'discussion', updated_at = NOW()
+           WHERE id = ?`,
+          [speakingOrder, gameId]
+        );
+      });
+
+      return await this.getState(gameId);
+    } catch (error) {
+      console.error('设置发言顺序失败:', error);
       throw error;
     }
   }
@@ -413,7 +465,7 @@ class GameModel {
                 team_leader_index as teamLeaderIndex, nominated_team as nominatedTeam,
                 failed_nominations as failedNominations, lake_holder_open_id as lakeHolderOpenId,
                 pre_nominated_team as preNominatedTeam, speaking_order as speakingOrder,
-                discussion_set as discussionSet,
+                discussion_set as discussionSet, lancelot_result as lancelotResult,
                 assassination, game_result as gameResult,
                 created_at as createdAt, ended_at as endedAt, updated_at as updatedAt,
                 status
@@ -432,6 +484,7 @@ class GameModel {
       if (game.preNominatedTeam) game.preNominatedTeam = parseJson(game.preNominatedTeam);
       if (game.gameResult) game.gameResult = parseJson(game.gameResult);
       if (game.assassination) game.assassination = parseJson(game.assassination);
+      if (game.lancelotResult) game.lancelotResult = parseJson(game.lancelotResult);
 
       // 房间配置（视野判定 + 湖仙 + 可见性）
       const roomRows = await db.query('SELECT room_config FROM rooms WHERE id = ?', [game.roomId]);
@@ -441,6 +494,7 @@ class GameModel {
       // 获取游戏玩家
       const players = await db.query(
         `SELECT gp.open_id as openId, gp.role, gp.side, gp.reveal_confirmed as revealConfirmed,
+                gp.lancelot_confirmed as lancelotConfirmed,
                 p.nick_name as nickName, p.avatar_url as avatarUrl, p.seat_number as seatNumber
          FROM game_players gp
          JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
@@ -451,6 +505,7 @@ class GameModel {
 
       const playerCount = players.length;
       const revealConfirmedCount = players.filter(p => p.revealConfirmed === 1 || p.revealConfirmed === true).length;
+      const lancelotConfirmedCount = players.filter(p => p.lancelotConfirmed === 1 || p.lancelotConfirmed === true).length;
       const carIndex = game.failedNominations + 1;
 
       // 当前车次队伍投票 / 任务投票
@@ -642,6 +697,9 @@ class GameModel {
         lakeHolderOpenId: game.lakeHolderOpenId || null,
         speakingOrder: game.speakingOrder || 'asc',
         discussionSet: !!(game.discussionSet === 1 || game.discussionSet === true),
+        lancelotResult: game.lancelotResult || null,
+        lancelotConfirmedCount,
+        lancelotTotalCount: playerCount,
         revealConfirmedCount,
         revealTotalCount: playerCount
       };
@@ -683,8 +741,8 @@ class GameModel {
           throw new Error('游戏不存在');
         }
         
-        if (game[0].current_phase !== 'discussion') {
-          throw new Error('当前不是队伍选择阶段');
+        if (!['discussion', 'preNominate'].includes(game[0].current_phase)) {
+          throw new Error('当前不是发车阶段');
         }
 
         // 读取房间配置（流车阈值）
@@ -877,7 +935,7 @@ class GameModel {
 
             await connection.execute(
               `UPDATE games 
-               SET current_phase = 'discussion',
+               SET current_phase = 'preNominate',
                    team_leader_index = ?,
                    nominated_team = NULL,
                    failed_nominations = ?,
@@ -885,6 +943,7 @@ class GameModel {
                    pre_nominated_team = NULL,
                    speaking_order = 'asc',
                    discussion_set = FALSE,
+                   lancelot_result = NULL,
                    updated_at = NOW()
                WHERE id = ?`,
               [newTeamLeaderIndex, failedNominations, lakeHolderOpenId, gameId]
@@ -1070,8 +1129,7 @@ class GameModel {
               [gameId]
             );
           } else {
-            // 进入下一回合（先触发兰斯洛特转换抽卡，再推进；流车数重置 0）
-            await maybeLancelotSwap(connection, gameId, game[0].current_round, rules);
+            // 进入下一回合触发链：先湖仙验人(lake)，再兰斯抽卡(lancelot)，最后 preNominate
             const newRound = game[0].current_round + 1;
             const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
             const [newLeaderPlayers] = await connection.execute(
@@ -1084,21 +1142,86 @@ class GameModel {
               ? newLeaderPlayers[(newTeamLeaderIndex - 1 + playerCount) % playerCount].open_id
               : null;
 
-            await connection.execute(
-              `UPDATE games 
-               SET current_phase = 'discussion',
-                   current_round = ?,
-                   team_leader_index = ?,
-                   nominated_team = NULL,
-                   failed_nominations = 0,
-                   lake_holder_open_id = ?,
-                   pre_nominated_team = NULL,
-                   speaking_order = 'asc',
-                   discussion_set = FALSE,
-                   updated_at = NOW()
-               WHERE id = ?`,
-              [newRound, newTeamLeaderIndex, lakeHolderOpenId, gameId]
+            // 湖仙触发条件：启用且完成轮次在 [ladyOfTheLakeRound, 4] 且仍有未当过湖仙的玩家
+            const ladyRound = parseInt(rules.ladyOfTheLakeRound, 10) || 2;
+            const lakeEnabled = !!rules.ladyOfTheLake && game[0].current_round >= ladyRound && game[0].current_round <= 4;
+            const [lakeUsedRows] = await connection.execute(
+              `SELECT COUNT(*) as cnt FROM lake_history WHERE game_id = ? AND target_open_id IN (
+                 SELECT open_id FROM game_players WHERE game_id = ?)`,
+              [gameId, gameId]
             );
+            const lakeUsedCount = parseInt(lakeUsedRows[0].cnt, 10);
+            const lakeRemaining = lakeEnabled && lakeUsedCount < playerCount;
+
+            // 兰斯触发条件：配置 lancelotSwapRound 且存在兰斯洛特角色且完成轮次在窗口
+            const swapRound = rules.lancelotSwapRound;
+            const lancelotEnabled = typeof swapRound === 'number'
+              && game[0].current_round >= swapRound && game[0].current_round <= 4;
+            const [lancelotPlayers] = await connection.execute(
+              `SELECT COUNT(*) as cnt FROM game_players WHERE game_id = ? AND role IN ('lancelotBlue','lancelotRed')`,
+              [gameId]
+            );
+            const hasLancelot = parseInt(lancelotPlayers[0].cnt, 10) > 0;
+
+            // 校验湖仙是否已验完所有玩家（历史记录里的 inspector/target 都不再可查）
+            const [lakeInspectorRows] = await connection.execute(
+              `SELECT COUNT(*) as cnt FROM (
+                 SELECT target_open_id FROM lake_history WHERE game_id = ?
+                 UNION
+                 SELECT inspector_open_id FROM lake_history WHERE game_id = ?
+               ) t`,
+              [gameId, gameId]
+            );
+            const lakeAllExhausted = parseInt(lakeInspectorRows[0].cnt, 10) >= playerCount;
+
+            if (lakeRemaining && !lakeAllExhausted) {
+              // 进入湖仙验人阶段（保持当前轮次，验人者=当前持有者，等待 lakeInspect）
+              await connection.execute(
+                `UPDATE games 
+                 SET current_phase = 'lake',
+                     nominated_team = NULL,
+                     updated_at = NOW()
+                 WHERE id = ?`,
+                [gameId]
+              );
+            } else if (lancelotEnabled && hasLancelot) {
+              // 进入兰斯抽卡阶段：抽卡结果写 lancelot_result，等待全员确认
+              const switched = await maybeLancelotSwap(connection, gameId, game[0].current_round, rules);
+              await connection.execute(
+                `UPDATE games 
+                 SET current_phase = 'lancelot',
+                     current_round = ?,
+                     team_leader_index = ?,
+                     nominated_team = NULL,
+                     failed_nominations = 0,
+                     lake_holder_open_id = ?,
+                     pre_nominated_team = NULL,
+                     speaking_order = 'asc',
+                     discussion_set = FALSE,
+                     lancelot_result = ?,
+                     updated_at = NOW()
+                 WHERE id = ?`,
+                [newRound, newTeamLeaderIndex, lakeHolderOpenId, JSON.stringify({ switched: !!switched, round: game[0].current_round }), gameId]
+              );
+            } else {
+              // 无湖仙/兰斯 → 直接进入下一轮 preNominate
+              await connection.execute(
+                `UPDATE games 
+                 SET current_phase = 'preNominate',
+                     current_round = ?,
+                     team_leader_index = ?,
+                     nominated_team = NULL,
+                     failed_nominations = 0,
+                     lake_holder_open_id = ?,
+                     pre_nominated_team = NULL,
+                     speaking_order = 'asc',
+                     discussion_set = FALSE,
+                     lancelot_result = NULL,
+                     updated_at = NOW()
+                 WHERE id = ?`,
+                [newRound, newTeamLeaderIndex, lakeHolderOpenId, gameId]
+              );
+            }
           }
         }
       });
@@ -1106,6 +1229,209 @@ class GameModel {
       return await this.getState(gameId);
     } catch (error) {
       console.error('任务投票失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 湖仙验人：lake → 下一阶段。
+   * 仅当前湖仙持有者可调用；需处于 lake 阶段；必验（不可跳过）。
+   * 目标须为未当过湖仙的在局玩家；结果（当前阵营）仅验人者可见（getState 门控）。
+   * 验人后令牌传给被查验者；若兰斯触发则进入 lancelot，否则进入下一轮 preNominate。
+   * @param {string} gameId 游戏ID
+   * @param {string} openId 湖仙持有者openId
+   * @param {string} targetOpenId 被查验者openId
+   * @returns {Promise<Object>} 更新后的游戏状态
+   */
+  static async lakeInspect(gameId, openId, targetOpenId) {
+    try {
+      await db.transaction(async (connection) => {
+        const [game] = await connection.execute(
+          `SELECT current_phase, current_round, team_leader_index, lake_holder_open_id, room_id, failed_nominations,
+                  (SELECT COUNT(*) FROM game_players WHERE game_id = ?) as player_count
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId, gameId]
+        );
+
+        if (game.length === 0) {
+          throw new Error('游戏不存在');
+        }
+
+        if (game[0].current_phase !== 'lake') {
+          throw new Error('当前不是湖仙验人阶段');
+        }
+
+        // 校验验人者是当前湖仙持有者
+        if (game[0].lake_holder_open_id !== openId) {
+          throw new Error('只有湖仙持有者才能验人');
+        }
+
+        // 校验目标在局且未当过湖仙
+        const [target] = await connection.execute(
+          'SELECT open_id, side FROM game_players WHERE game_id = ? AND open_id = ?',
+          [gameId, targetOpenId]
+        );
+        if (target.length === 0) {
+          throw new Error('被查验者不在本局游戏中');
+        }
+        const [used] = await connection.execute(
+          'SELECT COUNT(*) as cnt FROM lake_history WHERE game_id = ? AND target_open_id = ?',
+          [gameId, targetOpenId]
+        );
+        if (parseInt(used[0].cnt, 10) > 0) {
+          throw new Error('该玩家已当过湖仙，不可重复查验');
+        }
+
+        // 写入验人记录（结果=目标当前阵营）
+        await connection.execute(
+          `INSERT INTO lake_history (game_id, round, inspector_open_id, target_open_id, result, created_at)
+           VALUES (?, ?, ?, ?, ?, NOW())`,
+          [gameId, game[0].current_round, openId, targetOpenId, target[0].side]
+        );
+
+        // 令牌传给被查验者
+        await connection.execute(
+          'UPDATE games SET lake_holder_open_id = ?, updated_at = NOW() WHERE id = ?',
+          [targetOpenId, gameId]
+        );
+
+        // 读取房间规则，判定兰斯是否触发
+        const roomRows = await connection.execute('SELECT room_config FROM rooms WHERE id = ?', [game[0].room_id]);
+        const roomConfig = roomRows[0].length ? parseJson(roomRows[0][0].room_config) : null;
+        const rules = (roomConfig && roomConfig.rules) || {};
+        const swapRound = rules.lancelotSwapRound;
+        const lancelotEnabled = typeof swapRound === 'number'
+          && game[0].current_round >= swapRound && game[0].current_round <= 4;
+        const [lancelotPlayers] = await connection.execute(
+          `SELECT COUNT(*) as cnt FROM game_players WHERE game_id = ? AND role IN ('lancelotBlue','lancelotRed')`,
+          [gameId]
+        );
+        const hasLancelot = parseInt(lancelotPlayers[0].cnt, 10) > 0;
+
+        const playerCount = parseInt(game[0].player_count, 10);
+        const newRound = game[0].current_round + 1;
+        const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
+        const [newLeaderPlayers] = await connection.execute(
+          `SELECT gp.open_id FROM game_players gp
+           LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
+           ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
+          [game[0].room_id]
+        );
+
+        if (lancelotEnabled && hasLancelot) {
+          const switched = await maybeLancelotSwap(connection, gameId, game[0].current_round, rules);
+          await connection.execute(
+            `UPDATE games 
+             SET current_phase = 'lancelot',
+                 current_round = ?,
+                 team_leader_index = ?,
+                 nominated_team = NULL,
+                 failed_nominations = 0,
+                 pre_nominated_team = NULL,
+                 speaking_order = 'asc',
+                 discussion_set = FALSE,
+                 lancelot_result = ?,
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [newRound, newTeamLeaderIndex, JSON.stringify({ switched: !!switched, round: game[0].current_round }), gameId]
+          );
+        } else {
+          await connection.execute(
+            `UPDATE games 
+             SET current_phase = 'preNominate',
+                 current_round = ?,
+                 team_leader_index = ?,
+                 nominated_team = NULL,
+                 failed_nominations = 0,
+                 pre_nominated_team = NULL,
+                 speaking_order = 'asc',
+                 discussion_set = FALSE,
+                 lancelot_result = NULL,
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [newRound, newTeamLeaderIndex, gameId]
+          );
+        }
+      });
+
+      return await this.getState(gameId);
+    } catch (error) {
+      console.error('湖仙验人失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 确认兰斯抽卡：lancelot → preNominate（下一轮）。
+   * 全员确认（game_players.lancelot_confirmed）后自动进入下一轮 preNominate；幂等。
+   * @param {string} gameId 游戏ID
+   * @param {string} openId 玩家openId
+   * @returns {Promise<Object>} 更新后的游戏状态
+   */
+  static async confirmLancelot(gameId, openId) {
+    try {
+      await db.transaction(async (connection) => {
+        const [game] = await connection.execute(
+          `SELECT current_phase, room_id
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId]
+        );
+
+        if (game.length === 0) {
+          throw new Error('游戏不存在');
+        }
+
+        if (game[0].current_phase !== 'lancelot') {
+          throw new Error('当前不是兰斯抽卡阶段');
+        }
+
+        // 校验 openId 是游戏内玩家
+        const [gp] = await connection.execute(
+          'SELECT open_id FROM game_players WHERE game_id = ? AND open_id = ?',
+          [gameId, openId]
+        );
+        if (gp.length === 0) {
+          throw new Error('你不在本局游戏中');
+        }
+
+        // 幂等标记确认
+        await connection.execute(
+          'UPDATE game_players SET lancelot_confirmed = TRUE WHERE game_id = ? AND open_id = ?',
+          [gameId, openId]
+        );
+
+        const [counts] = await connection.execute(
+          `SELECT COUNT(*) as total,
+                  SUM(CASE WHEN lancelot_confirmed THEN 1 ELSE 0 END) as confirmed
+           FROM game_players WHERE game_id = ?`,
+          [gameId]
+        );
+        const total = parseInt(counts[0].total, 10);
+        const confirmed = parseInt(counts[0].confirmed, 10);
+
+        // 全员确认后自动进入下一轮 preNominate：重置讨论态与确认标记
+        if (total > 0 && confirmed >= total) {
+          await connection.execute(
+            `UPDATE games 
+             SET current_phase = 'preNominate',
+                 pre_nominated_team = NULL,
+                 speaking_order = 'asc',
+                 discussion_set = FALSE,
+                 lancelot_result = NULL,
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [gameId]
+          );
+          await connection.execute(
+            'UPDATE game_players SET lancelot_confirmed = FALSE WHERE game_id = ?',
+            [gameId]
+          );
+        }
+      });
+
+      return await this.getState(gameId);
+    } catch (error) {
+      console.error('确认兰斯抽卡失败:', error);
       throw error;
     }
   }
@@ -1158,52 +1484,9 @@ class GameModel {
       throw error;
     }
   }
-  
-  /**
-   * 推进游戏阶段
-   * @param {string} gameId 游戏ID
-   * @returns {Promise<Object>} 更新后的游戏状态
-   */
-  static async advancePhase(gameId) {
-    try {
-      await db.transaction(async (connection) => {
-        const [game] = await connection.execute(
-          `SELECT current_phase, team_leader_index, room_id,
-                  (SELECT COUNT(*) FROM game_players WHERE game_id = ?) as player_count
-           FROM games WHERE id = ? FOR UPDATE`,
-          [gameId, gameId]
-        );
-
-        if (game.length === 0) {
-          throw new Error('游戏不存在');
-        }
-
-        if (game[0].current_phase !== 'roleReveal') {
-          throw new Error('当前阶段无法推进');
-        }
-
-        // 进入讨论：重置讨论态（预提名/发言序/已设置标记）
-        await connection.execute(
-          `UPDATE games 
-           SET current_phase = 'discussion',
-               pre_nominated_team = NULL,
-               speaking_order = 'asc',
-               discussion_set = FALSE,
-               updated_at = NOW()
-           WHERE id = ?`,
-          [gameId]
-        );
-      });
-
-      return await this.getState(gameId);
-    } catch (error) {
-      console.error('推进阶段失败:', error);
-      throw error;
-    }
-  }
 
   /**
-   * 确认角色揭示（全员确认后自动进入 discussion）。
+   * 确认角色揭示（全员确认后自动进入 preNominate）。
    * 仅 game_players 内的玩家可确认（观战者不计入）；幂等；无强制推进。
    * @param {string} gameId 游戏ID
    * @param {string} openId 玩家openId
@@ -1251,16 +1534,22 @@ class GameModel {
         const total = parseInt(counts[0].total, 10);
         const confirmed = parseInt(counts[0].confirmed, 10);
 
-        // 全员确认后自动进入讨论：重置讨论态（预提名/发言序/已设置标记）
+        // 全员确认后自动进入 preNominate（车主预选车型）：重置讨论态与确认标记
         if (total > 0 && confirmed >= total) {
           await connection.execute(
             `UPDATE games 
-             SET current_phase = 'discussion',
+             SET current_phase = 'preNominate',
                  pre_nominated_team = NULL,
                  speaking_order = 'asc',
                  discussion_set = FALSE,
+                 lancelot_result = NULL,
                  updated_at = NOW()
              WHERE id = ?`,
+            [gameId]
+          );
+          // 重置全员确认标记，供后续 lancelot 阶段复用
+          await connection.execute(
+            'UPDATE game_players SET reveal_confirmed = FALSE, lancelot_confirmed = FALSE WHERE game_id = ?',
             [gameId]
           );
         }
