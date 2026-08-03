@@ -291,9 +291,12 @@ Page({
           this.showGameEndResult(res.basic ? res.basic.result : null);
         }
 
-        // 进入 discussion：关闭身份蒙版/等待态（弹窗由用户手动关闭，不自动消失）
+        // 离开 roleReveal（进入 preNominate 或后续阶段）：关闭身份确认页/蒙版/等待态
+        if (phase !== 'roleReveal') {
+          this.setData({ showRolePage: false, showRoleMask: false, roleWaiting: false });
+        }
+        // 计时器仅在 discussion 阶段运行
         if (phase === 'discussion') {
-          this.setData({ showRoleMask: false, roleWaiting: false });
           this._ensureTimerInit();
         } else {
           this._stopTimer();
