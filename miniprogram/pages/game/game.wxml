@@ -10,7 +10,6 @@
   <!-- 角色揭示提示蒙版（一次性） -->
   <view class="role-mask" wx:if="{{showRoleMask}}">
     <view class="role-mask-inner">
-      <view class="role-mask-title">您的身份已发放</view>
       <view class="role-mask-sub">确保您的周围没有坏坏</view>
       <button class="btn btn-primary role-mask-btn" bindtap="dismissRoleMask">查看身份</button>
     </view>
