@@ -276,6 +276,7 @@ class ApiService {
   }
 
   onSocketMessage(type, fn) {
+    if (!this._socketHandlers) this._socketHandlers = {};
     if (!this._socketHandlers[type]) this._socketHandlers[type] = [];
     this._socketHandlers[type].push(fn);
   }
