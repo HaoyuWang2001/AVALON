@@ -208,7 +208,7 @@
   gap: 16rpx;
   padding: 36rpx 24rpx;
 }
-.timer-icon { font-size: 64rpx; line-height: 1; }
+.timer-icon { width: 64rpx; height: 64rpx; }
 .timer-num { font-size: 56rpx; font-weight: 800; color: #8B5CF6; line-height: 1; }
 .timer-btns { display: flex; gap: 16rpx; margin-top: 8rpx; }
 .timer-btn {

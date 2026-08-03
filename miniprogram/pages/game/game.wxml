@@ -47,7 +47,7 @@
 
   <!-- 计时器卡片（仅 discussion，房主操控） -->
   <view class="card timer-card" wx:if="{{currentPhase === 'discussion'}}">
-    <text class="timer-icon">⏱️</text>
+    <image src="/images/stopwatch.png" class="timer-icon"></image>
     <text class="timer-num">{{timerSeconds}}s</text>
     <view wx:if="{{isHost}}" class="timer-btns">
       <text wx:if="{{!timerRunning}}" class="timer-btn" bindtap="startTimer">启动</text>
