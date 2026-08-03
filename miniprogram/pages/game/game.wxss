@@ -180,20 +180,9 @@
   flex-direction: column;
   gap: 16rpx;
 }
-.bar-phase {
-  font-size: 34rpx; font-weight: 800; color: #8B5CF6;
-  letter-spacing: 4rpx; text-align: center;
-}
 .bar-info { font-size: 28rpx; color: #6B7280; text-align: center; }
 .bar-row { display: flex; align-items: center; justify-content: center; gap: 16rpx; }
 .bar-row button { flex: 1; }
-.bar-timer { font-size: 40rpx; font-weight: 800; color: #8B5CF6; }
-.bar-timer-btns { display: flex; gap: 12rpx; }
-.bar-btn {
-  font-size: 24rpx; font-weight: 700; color: #fff;
-  background: #8B5CF6; border-radius: 10rpx;
-  padding: 8rpx 22rpx;
-}
 .bar-done { display: flex; align-items: center; gap: 16rpx; }
 
 /* 投票状态点：灰=未投 紫=已投 */
@@ -213,14 +202,21 @@
 .txt-approve { color: #10B981; }
 .txt-reject { color: #EF4444; }
 
-/* 计时器 */
-.timer-box {
-  display: flex; flex-direction: column; align-items: center; gap: 12rpx;
-  padding: 16rpx 24rpx;
-  background: #F5F3FF; border-radius: 16rpx;
-  width: 100%;
+/* 阶段标签（原中间区位置，轮次卡下方） */
+.phase-banner {
+  text-align: center;
+  font-size: 40rpx; font-weight: 800; color: #8B5CF6;
+  letter-spacing: 6rpx;
+  padding: 20rpx 0 8rpx;
 }
-.timer-num { font-size: 64rpx; font-weight: 800; color: #8B5CF6; line-height: 1; }
+
+/* 计时器卡片（轮次卡下方，仅 discussion） */
+.timer-card {
+  display: flex; align-items: center; justify-content: center; gap: 24rpx;
+  padding: 20rpx 24rpx;
+  background: #F5F3FF;
+}
+.timer-num { font-size: 56rpx; font-weight: 800; color: #8B5CF6; line-height: 1; }
 .timer-btns { display: flex; gap: 16rpx; }
 .timer-btn {
   font-size: 24rpx; font-weight: 700; color: #fff;

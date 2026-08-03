@@ -45,6 +45,19 @@
     </view>
   </view>
 
+  <!-- 阶段标签（原中间区位置） -->
+  <view class="phase-banner">{{centerPhase}}</view>
+
+  <!-- 计时器卡片（仅 discussion，房主操控） -->
+  <view class="card timer-card" wx:if="{{currentPhase === 'discussion'}}">
+    <text class="timer-num">{{timerSeconds}}s</text>
+    <view wx:if="{{isHost}}" class="timer-btns">
+      <text wx:if="{{!timerRunning}}" class="timer-btn" bindtap="startTimer">启动</text>
+      <text wx:else class="timer-btn" bindtap="pauseTimer">暂停</text>
+      <text class="timer-btn" bindtap="resetTimer">重置</text>
+    </view>
+  </view>
+
   <!-- 玩家列表（全宽大卡片，每玩家一行） -->
   <view class="player-list">
     <view wx:for="{{tablePlayers}}" wx:key="openId" class="table-player {{item.cardState}}"
@@ -67,23 +80,13 @@
 
   <!-- 底部按钮框（fixed 常驻） -->
   <view class="bottom-bar">
-    <view class="bar-phase">{{centerPhase}}</view>
-
     <!-- roleReveal：确认进度 -->
     <block wx:if="{{currentPhase === 'roleReveal'}}">
       <view class="bar-info">已确认 {{revealConfirmedCount}}/{{revealTotalCount}}</view>
     </block>
 
-    <!-- discussion：计时器 + 两步流程 + 确认发车 -->
+    <!-- discussion：两步流程 + 确认发车（计时器在顶部 timer-card） -->
     <block wx:if="{{currentPhase === 'discussion'}}">
-      <view class="bar-row">
-        <text class="bar-timer">{{timerSeconds}}s</text>
-        <view wx:if="{{isHost}}" class="bar-timer-btns">
-          <text wx:if="{{!timerRunning}}" class="bar-btn" bindtap="startTimer">启动</text>
-          <text wx:else class="bar-btn" bindtap="pauseTimer">暂停</text>
-          <text class="bar-btn" bindtap="resetTimer">重置</text>
-        </view>
-      </view>
       <block wx:if="{{isTeamLeader}}">
         <block wx:if="{{!speakingOrderConfirmed}}">
           <view class="bar-row">
