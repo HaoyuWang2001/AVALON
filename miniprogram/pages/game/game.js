@@ -9,6 +9,9 @@ Page({
     gameState: null,
     playerRole: null,
     playerSide: null,
+    roleName: '',
+    roleEmoji: '',
+    roleDesc: '',
     revealConfirmed: false,
     revealConfirmedCount: 0,
     revealTotalCount: 0,
@@ -142,14 +145,20 @@ Page({
             name: np ? np.nickName : '?',
             avatar: np && np.avatarUrl ? np.avatarUrl : '/images/default-avatar.png',
             role: v.role || null,
-            side: v.side || null
+            side: v.side || null,
+            roleText: v.role ? this.getRoleName(v.role) : '',
+            campText: v.side ? (v.side === 'evil' ? '坏人' : '好人') : ''
           };
         });
 
+        const myRole = res.player ? res.player.role : null;
         this.setData({
           gameState: res.current,
-          playerRole: res.player ? res.player.role : null,
+          playerRole: myRole,
           playerSide: res.player ? res.player.side : null,
+          roleName: this.getRoleName(myRole),
+          roleEmoji: this.getRoleEmoji(myRole),
+          roleDesc: this.getRoleDesc(myRole),
           currentPhase: phase,
           currentRound: round,
           teamLeaderOpenId: res.current.teamLeaderOpenId || '',

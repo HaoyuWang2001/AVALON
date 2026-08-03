@@ -253,20 +253,20 @@
     <view class="role-page-inner">
       <view class="role-card-badge">
         <image wx:if="{{roleCardImg}}" src="{{roleCardImg}}" class="role-card-img" mode="aspectFit"/>
-        <text wx:else class="role-card-emoji">{{getRoleEmoji(playerRole)}}</text>
+        <text wx:else class="role-card-emoji">{{roleEmoji}}</text>
       </view>
       <view class="role-tags">
-        <text class="role-tag role-tag-name">{{getRoleName(playerRole)}}</text>
+        <text class="role-tag role-tag-name">{{roleName}}</text>
         <text class="role-tag role-tag-side {{playerSide === 'evil' ? 'tag-evil' : 'tag-good'}}">{{playerSide === 'evil' ? '坏人阵营' : '好人阵营'}}</text>
       </view>
-      <view class="role-card-desc">{{getRoleDesc(playerRole)}}</view>
+      <view class="role-card-desc">{{roleDesc}}</view>
       <view class="role-vision" wx:if="{{visionList.length > 0}}">
         <view wx:for="{{visionList}}" wx:key="openId" class="role-vision-item">
           <image src="{{item.avatar}}" class="role-vision-avatar"></image>
           <text class="role-vision-name">{{item.name}}</text>
           <view class="role-vision-tags">
-            <text wx:if="{{item.role}}" class="role-vision-tag role-vision-tag-role">{{getRoleName(item.role)}}</text>
-            <text wx:if="{{item.side}}" class="role-vision-tag {{item.side === 'evil' ? 'tag-evil' : 'tag-good'}}">{{item.side === 'evil' ? '坏人' : '好人'}}</text>
+            <text wx:if="{{item.roleText}}" class="role-vision-tag role-vision-tag-role">{{item.roleText}}</text>
+            <text wx:if="{{item.campText}}" class="role-vision-tag {{item.side === 'evil' ? 'tag-evil' : 'tag-good'}}">{{item.campText}}</text>
           </view>
         </view>
       </view>
