@@ -502,6 +502,18 @@ Page({
     );
   },
 
+  // 当前玩家是否在任务队上（决定是否显示任务投票按钮）
+  isOnMissionTeam() {
+    const { nominatedTeam, playerId } = this.data;
+    return !!(nominatedTeam || []).includes(playerId);
+  },
+
+  // 当前玩家是否已提交任务投票
+  hasMissionVoted() {
+    const { missionVotes, playerId } = this.data;
+    return !!(missionVotes && missionVotes[playerId]);
+  },
+
   getVoteCount() {
     return Object.keys(this.data.teamVotes || {}).length;
   },

@@ -1,0 +1,60 @@
+/* styles/tokens.wxss — 公共设计 token（颜色 / 圆角 / 阴影 / 基础排版） */
+page {
+  /* 品牌紫 */
+  --primary: #8B5CF6;
+  --primary-dark: #6D28D9;
+  --primary-deep: #7C3AED;
+  --primary-deeper: #5B21B6;
+  --primary-light: #A78BFA;
+  --primary-bg: #F5F3FF;
+  --gradient-start: #8B5CF6;
+  --gradient-end: #6D28D9;
+
+  /* 语义色 */
+  --danger: #EF4444;
+  --danger-deep: #DC2626;
+  --danger-soft-bg: #FEE2E2;
+  --danger-soft-text: #DC2626;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --info: #17A2B8;
+  --link: #2563EB;
+
+  /* 中性灰阶 */
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+
+  /* 页面/卡片背景 */
+  --bg-page: #F5F5F5;
+  --bg-card: #FFFFFF;
+  --border-color: #E5E7EB;
+
+  /* 文字色（兼容历史命名） */
+  --text-title: #111827;
+  --text-body: #374151;
+  --text-muted: #9CA3AF;
+
+  /* 圆角 */
+  --radius-sm: 8rpx;
+  --radius-md: 16rpx;
+  --radius-lg: 24rpx;
+
+  /* 阴影 */
+  --shadow-sm: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12rpx 32rpx rgba(0, 0, 0, 0.15);
+  --shadow-primary: 0 8rpx 24rpx rgba(124, 58, 237, 0.15);
+
+  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-body);
+  line-height: 1.5;
+}

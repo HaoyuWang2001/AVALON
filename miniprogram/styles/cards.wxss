@@ -1,0 +1,10 @@
+/* styles/cards.wxss — 公共卡片 */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 24rpx;
+  margin: 0 0 20rpx;
+  box-shadow: var(--shadow-sm);
+}
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20rpx; }
+.card-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); }

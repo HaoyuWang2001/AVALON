@@ -33,9 +33,9 @@
       <text wx:if="{{currentRoom.gameStarted}}" class="current-room-ingame">游戏中</text>
     </view>
     <view class="current-room-btns">
-      <button class="btn-small btn-primary" bindtap="backToRoom">回到房间</button>
-      <button wx:if="{{isCurrentRoomHost}}" class="btn-small btn-danger" bindtap="disbandCurrentRoom">解散房间</button>
-      <button wx:else class="btn-small btn-danger" bindtap="exitCurrentRoom">退出房间</button>
+      <button class="btn btn-sm btn-primary" bindtap="backToRoom">回到房间</button>
+      <button wx:if="{{isCurrentRoomHost}}" class="btn btn-sm btn-danger" bindtap="disbandCurrentRoom">解散房间</button>
+      <button wx:else class="btn btn-sm btn-danger" bindtap="exitCurrentRoom">退出房间</button>
     </view>
   </view>
 
@@ -64,7 +64,7 @@
   <view class="config-panel">
 
     <!-- Top bar -->
-    <view class="top-bar">
+    <view class="config-top-bar">
       <view class="config-close" bindtap="closeConfig">
         <text class="close-text">✕</text>
       </view>

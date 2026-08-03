@@ -1,19 +1,5 @@
 /* pages/game/game.wxss */
 
-/* ─────── 顶部操作栏 ─────── */
-.top-actions {
-  position: sticky; top: 0; z-index: 90;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 20rpx 8rpx; margin-bottom: 8rpx;
-}
-.top-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 12rpx; padding: 16rpx 40rpx;
-  font-size: 28rpx; font-weight: 700; color: #fff;
-}
-.top-home { background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
-.top-destroy { background: linear-gradient(135deg, #F87171, #DC2626); }
-
 /* ─────── 任务进度卡 ─────── */
 .mission-card { margin-top: 8rpx; }
 .mission-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8rpx; }
@@ -23,7 +9,8 @@
 .mission-actions { display: flex; gap: 12rpx; }
 .mini-btn {
   font-size: 24rpx; font-weight: 600; color: #fff;
-  background: #8B5CF6; border-radius: 8rpx; padding: 10rpx 20rpx;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  border-radius: 8rpx; padding: 10rpx 20rpx;
 }
 
 /* 5 轮圆圈 */
@@ -38,7 +25,7 @@
 .round-circle.current { box-shadow: 0 0 0 8rpx rgba(139, 92, 246, 0.28); }
 
 /* 流车图 */
-.flow-cars { display: flex; align-items: flex-end; justify-content: center; gap: 20rpx; margin-top: 12rpx; }
+.flow-cars { display: flex; align-items: flex-end; justify-content: center; gap: 20rpx; margin: 12rpx 0 8rpx; }
 .flow-car {
   position: relative;
   width: 52rpx; height: 52rpx; border-radius: 12rpx;
@@ -58,14 +45,13 @@
   font-size: 18rpx; color: #EF4444; font-weight: 600;
   white-space: nowrap;
 }
-.flow-cars { margin-bottom: 8rpx; }
 
 /* ─────── 讨论阶段 ─────── */
 .disc-setup { background: #F8F9FA; border-radius: 12rpx; padding: 20rpx; margin-bottom: 20rpx; }
 .rule-label { font-size: 28rpx; font-weight: 600; color: #374151; }
 .picker-value { font-size: 28rpx; color: #8B5CF6; font-weight: 600; }
 .pick-confirmed { font-size: 28rpx; color: #10B981; font-weight: 600; }
-.segment { display: flex; background: #E5E7EB; border-radius: 12rpx; overflow: hidden; }
+.segment { display: flex; background: var(--gray-100); border-radius: 12rpx; overflow: hidden; }
 .segment-item {
   padding: 12rpx 28rpx; font-size: 26rpx; color: #6B7280; font-weight: 600;
 }

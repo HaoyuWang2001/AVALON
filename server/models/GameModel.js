@@ -578,8 +578,10 @@ class GameModel {
       const fullPlayers = players.map(p => ({ ...p, isHost: p.openId === game.ownerId }));
       let publicPlayers;
       let player = null;
+      // 游戏结束后向所有人揭示全部角色/阵营
+      const revealAll = game.currentPhase === 'gameEnd' && game.status === 'ended';
       if (openId) {
-        // 玩家视角：隐藏他人 role/side，附 vision（开局冻结存储）
+        // 玩家视角：隐藏他人 role/side，附 vision（开局冻结存储）；游戏结束后全揭示
         const visionRows = await db.query(
           'SELECT vision FROM game_visions WHERE game_id = ? AND open_id = ?',
           [gameId, openId]
@@ -591,14 +593,18 @@ class GameModel {
           revealConfirmed: requesterInfo ? (requesterInfo.revealConfirmed === 1 || requesterInfo.revealConfirmed === true) : false,
           vision
         };
-        publicPlayers = fullPlayers.map(p => {
-          const entry = { openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl, seatNumber: p.seatNumber, isHost: p.isHost, revealConfirmed: p.revealConfirmed === 1 || p.revealConfirmed === true };
-          if (p.openId === openId) {
-            entry.role = p.role;
-            entry.side = p.side;
-          }
-          return entry;
-        });
+        if (revealAll) {
+          publicPlayers = fullPlayers;
+        } else {
+          publicPlayers = fullPlayers.map(p => {
+            const entry = { openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl, seatNumber: p.seatNumber, isHost: p.isHost, revealConfirmed: p.revealConfirmed === 1 || p.revealConfirmed === true };
+            if (p.openId === openId) {
+              entry.role = p.role;
+              entry.side = p.side;
+            }
+            return entry;
+          });
+        }
       } else {
         publicPlayers = fullPlayers;
       }

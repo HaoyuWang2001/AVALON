@@ -1,5 +1,12 @@
 <!--pages/game/game.wxml-->
-<view class="container">
+<view class="game-page">
+  <!-- 顶部操作栏（公共组件：左=暂回首页 右=炸掉会议） -->
+  <top-bar>
+    <text slot="left" class="btn-round btn-purple" bindtap="backToHome">暂回首页</text>
+    <text slot="right" class="btn-round btn-danger" bindtap="abandonGame" wx:if="{{isHost}}">炸掉会议</text>
+  </top-bar>
+
+  <view class="container">
   <!-- 角色揭示提示蒙版（一次性） -->
   <view class="role-mask" wx:if="{{showRoleMask}}">
     <view class="role-mask-inner">
@@ -7,12 +14,6 @@
       <view class="role-mask-sub">确保您的周围没有坏坏</view>
       <button class="btn btn-primary role-mask-btn" bindtap="dismissRoleMask">查看身份</button>
     </view>
-  </view>
-
-  <!-- 顶部操作栏 -->
-  <view class="top-actions">
-    <text class="top-btn top-home" bindtap="backToHome">暂回首页</text>
-    <text class="top-btn top-destroy" bindtap="abandonGame" wx:if="{{isHost}}">炸掉会议</text>
   </view>
 
   <!-- 任务进度卡 -->
@@ -144,11 +145,6 @@
   <view wx:if="{{currentPhase === 'missionVote'}}" class="card">
     <view class="subtitle text-center">执行任务投票</view>
 
-    <view class="text-center mb-4">
-      <view>你被选中执行第{{currentRound}}个任务</view>
-      <view class="text-muted">请选择任务结果:</view>
-    </view>
-
     <view class="nominated-team" wx:if="{{nominatedTeam.length > 0}}">
       <view class="flex-center" style="flex-wrap: wrap;">
         <view wx:for="{{getNominatedPlayers()}}" wx:key="openId" class="team-member">
@@ -158,13 +154,26 @@
       </view>
     </view>
 
-    <view class="vote-buttons">
-      <button class="btn btn-success" style="width: 45%;" bindtap="castMissionVote" data-vote="success">任务成功</button>
-      <button class="btn btn-danger" style="width: 45%;" bindtap="castMissionVote" data-vote="fail">破坏任务</button>
-    </view>
-
-    <view class="text-center text-muted mt-4">
-      注意: 只有坏人才能选择"破坏任务"
+    <block wx:if="{{isOnMissionTeam()}}">
+      <block wx:if="{{!hasMissionVoted()}}">
+        <view class="text-center mb-4">
+          <view>你被选中执行第{{currentRound}}个任务</view>
+          <view class="text-muted">请选择任务结果:</view>
+        </view>
+        <view class="vote-buttons">
+          <button class="btn btn-success" style="width: 45%;" bindtap="castMissionVote" data-vote="success">任务成功</button>
+          <button class="btn btn-danger" style="width: 45%;" bindtap="castMissionVote" data-vote="fail">破坏任务</button>
+        </view>
+        <view class="text-center text-muted mt-4">
+          注意: 只有坏人才能选择"破坏任务"
+        </view>
+      </block>
+      <view wx:else class="text-center text-muted mt-4" style="color: #2ecc71;">
+        你已提交任务投票，等待其他队员...
+      </view>
+    </block>
+    <view wx:else class="text-center text-muted mt-4">
+      你不是任务队员，等待他们执行任务...
     </view>
   </view>
 
@@ -303,4 +312,5 @@
       <button class="btn btn-primary info-modal-close" bindtap="closeInfoModal">关闭</button>
     </view>
   </view>
+</view>
 </view>

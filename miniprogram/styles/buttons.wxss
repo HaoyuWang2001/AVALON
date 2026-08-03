@@ -1,0 +1,60 @@
+/* styles/buttons.wxss — 公共按钮库 */
+
+/* ─────── 大按钮基类 ─────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box; margin: 0; border: none; line-height: 1.4;
+  border-radius: var(--radius-md);
+  font-size: 32rpx; font-weight: 600;
+  padding: 20rpx 40rpx;
+  transition: all 0.2s ease;
+}
+.btn::after { border: none; }
+.btn-primary { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: #fff; box-shadow: var(--shadow-primary); }
+.btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+.btn-danger { background: linear-gradient(135deg, #F87171, var(--danger)); color: #fff; box-shadow: 0 4rpx 16rpx rgba(239, 68, 68, 0.3); }
+.btn-success { background: linear-gradient(135deg, #34D399, var(--success)); color: #fff; box-shadow: 0 4rpx 16rpx rgba(16, 185, 129, 0.3); }
+.btn-ghost { background: transparent; color: var(--primary); border: 2rpx solid var(--primary); }
+.btn-secondary { background: var(--gray-100); color: var(--gray-700); }
+.btn-soft-danger { background: var(--danger-soft-bg); color: var(--danger-soft-text); }
+.btn-soft-primary { background: var(--primary-bg); color: var(--primary-dark); }
+.btn-sm { padding: 12rpx 24rpx; font-size: 26rpx; border-radius: var(--radius-sm); }
+.btn-lg { padding: 26rpx 48rpx; font-size: 34rpx; }
+.btn[disabled], .btn-disabled { background: var(--gray-200); color: var(--gray-400); box-shadow: none; }
+
+/* ─────── 小胶囊 / 方形按钮（兼容历史类名） ─────── */
+.btn-round {
+  display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box; margin: 0; border: none; line-height: 1.4; text-align: center;
+  font-size: 28rpx; font-weight: 600;
+  padding: 12rpx 28rpx; border-radius: 32rpx;
+}
+.btn-round::after { border: none; }
+.btn-round[disabled] { opacity: 0.5; }
+.btn-square {
+  display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box; margin: 0; border: none;
+  font-size: 26rpx; font-weight: 600; color: #fff; background: var(--primary);
+  border-radius: 12rpx; padding: 14rpx 28rpx;
+}
+.btn-square[disabled] { background: var(--gray-200); color: var(--gray-400); }
+
+/* ─────── 颜色变体（配合 btn-round / btn-square / bar-btn 使用） ─────── */
+.btn-purple { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: #fff; }
+.btn-disband { background: var(--danger-soft-bg); color: var(--danger-soft-text); }
+.btn-exit { background: var(--danger-soft-bg); color: var(--danger-soft-text); }
+.btn-copy { background: var(--gray-200); color: var(--gray-700); }
+.btn-share { background: #DBEAFE; color: var(--link); }
+.btn-cancel { background: var(--gray-200); color: var(--gray-500); }
+.btn-ready { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: #fff; }
+
+/* ─────── 底部操作栏按钮 ─────── */
+.bar-btn {
+  display: flex; align-items: center; justify-content: center;
+  box-sizing: border-box;
+  width: 176rpx; height: 88rpx; border-radius: 12rpx;
+  font-size: 28rpx; font-weight: 600;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: #fff;
+}
+.bar-btn-primary { background: linear-gradient(135deg, var(--primary-deep), var(--primary-deeper)); box-shadow: 0 4rpx 16rpx rgba(124, 58, 237, 0.35); }
+.bar-btn.btn-disabled, .bar-btn[disabled] { background: var(--gray-200); color: var(--gray-400); box-shadow: none; }

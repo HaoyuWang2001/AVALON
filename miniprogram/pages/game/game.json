@@ -1,5 +1,7 @@
 {
   "navigationBarTitleText": "游戏进行中",
   "enablePullDownRefresh": false,
-  "usingComponents": {}
+  "usingComponents": {
+    "top-bar": "/components/top-bar/top-bar"
+  }
 }

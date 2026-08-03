@@ -1,0 +1,3 @@
+<view class="bottom-bar">
+  <slot></slot>
+</view>

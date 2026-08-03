@@ -407,6 +407,20 @@ describe('06 — Edge Cases & Validation', () => {
       expect(room.room.players.length).toBe(5);
     });
 
+    it('游戏结束后：玩家视角能看到全部角色/阵营（揭示）', async () => {
+      const { gameId, players } = await createRoomAndStartGame(5);
+      await driveToNaturalEnd(gameId, players);
+      // 用任一玩家 openId 拉取，应看到所有玩家的 role/side
+      const st = await getGameState(gameId, players[0].openId);
+      expect(st.current.phase).toBe('gameEnd');
+      expect(st.players.length).toBe(5);
+      for (const p of st.players) {
+        expect(typeof p.role).toBe('string');
+        expect(['good', 'evil']).toContain(p.side);
+      }
+      await endGame(gameId);
+    });
+
     it('游戏结束后：房主可解散房间', async () => {
       const { roomId, gameId, players } = await createRoomAndStartGame(5);
       await driveToNaturalEnd(gameId, players);

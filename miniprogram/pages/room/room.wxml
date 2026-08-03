@@ -1,10 +1,12 @@
 <!--pages/room/room.wxml-->
-<view class="container">
-  <!-- Top Bar (always visible) -->
-  <view class="top-bar">
-    <text class="btn-round btn-topbar-left {{isHost ? 'btn-disband' : 'btn-exit'}}" bindtap="{{isHost ? 'disbandRoom' : 'exitRoom'}}">{{isHost ? '解散房间' : '退出房间'}}</text>
-    <text class="btn-round btn-topbar-right btn-purple" bindtap="backToLobby">暂回大厅</text>
-  </view>
+<view class="room-page">
+  <!-- Top Bar (公共组件：左=暂回首页 右=破坏性操作) -->
+  <top-bar>
+    <text slot="left" class="btn-round btn-purple" bindtap="backToLobby">暂回首页</text>
+    <text slot="right" class="btn-round {{isHost ? 'btn-disband' : 'btn-exit'}}" bindtap="{{isHost ? 'disbandRoom' : 'exitRoom'}}">{{isHost ? '解散房间' : '退出房间'}}</text>
+  </top-bar>
+
+  <view class="container">
 
   <!-- Card 1: Room Info -->
   <view class="card room-info-card">
@@ -96,13 +98,13 @@
     <view wx:else class="empty-hint">暂无观战玩家</view>
   </view>
 
-  <!-- Host Bottom Bar -->
+  <!-- Host Bottom Bar (公共组件) -->
   <view class="start-hint-bar" wx:if="{{currentUser && isHost && startHint}}">{{startHint}}</view>
-  <view class="host-bottom-bar" wx:if="{{currentUser && isHost}}">
-    <text class="host-bottom-btn" bindtap="modifyConfig">修改配置</text>
-    <text class="host-bottom-btn host-bottom-btn-primary {{canStartGame ? '' : 'btn-disabled'}}" bindtap="startGame">开始游戏</text>
-    <text class="host-bottom-btn {{seatsFull ? '' : 'btn-disabled'}}" bindtap="randomShuffleSeats">随机位置</text>
-  </view>
+  <bottom-bar wx:if="{{currentUser && isHost}}">
+    <text class="bar-btn" bindtap="modifyConfig">修改配置</text>
+    <text class="bar-btn bar-btn-primary {{canStartGame ? '' : 'btn-disabled'}}" bindtap="startGame">开始游戏</text>
+    <text class="bar-btn {{seatsFull ? '' : 'btn-disabled'}}" bindtap="randomShuffleSeats">随机位置</text>
+  </bottom-bar>
 
   <!-- Config Overlay -->
   <view class="config-overlay" wx:if="{{showConfig}}">
@@ -430,4 +432,5 @@
       </view>
     </view>
   </view>
+</view>
 </view>
