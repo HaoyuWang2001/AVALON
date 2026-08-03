@@ -186,16 +186,26 @@ Page({
         }
 
         // 断线重连：roleReveal 阶段始终展示身份蒙版+弹窗（直到确认身份）；其他阶段不自动弹
-        if (phase === 'roleReveal' && res.player && res.player.role && !this.data.revealConfirmed) {
+        const needConfirm = phase === 'roleReveal' && res.player && res.player.role && !this.data.revealConfirmed;
+        if (needConfirm) {
           this.setData({ showRoleMask: true });
+          // 禁用返回手势：roleReveal 未确认时必须点按钮才能继续
+          if (wx.enableAlertBeforeUnload) {
+            wx.enableAlertBeforeUnload({ message: '请先确认你的身份' });
+          }
         } else {
           this.setData({ showRoleMask: false });
+          if (wx.disableAlertBeforeUnload) {
+            wx.disableAlertBeforeUnload();
+          }
         }
       }
     }).catch(err => {
       console.error('获取游戏状态失败:', err);
     });
   },
+
+  noop() {},
 
   confirmRoleReveal() {
     const { gameId } = this.data;

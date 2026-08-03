@@ -249,9 +249,9 @@
     </view>
   </view>
 
-  <!-- 查看身份弹窗 -->
+  <!-- 查看身份弹窗（roleReveal 阶段必须点按钮，点外部不关闭） -->
   <view class="role-modal" wx:if="{{showRoleModal}}">
-    <view class="modal-mask" bindtap="tapCloseRoleModal"></view>
+    <view class="modal-mask" bindtap="{{currentPhase === 'roleReveal' && !revealConfirmed ? 'noop' : 'tapCloseRoleModal'}}"></view>
     <view class="role-modal-body">
       <view class="role-card-badge">
         <image wx:if="{{roleCardImg}}" src="{{roleCardImg}}" class="role-card-img" mode="aspectFit"/>
