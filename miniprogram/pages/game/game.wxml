@@ -44,211 +44,132 @@
     </view>
   </view>
 
-  <!-- 根据游戏阶段显示不同内容 -->
-  <!-- 角色揭示阶段 -->
-  <view wx:if="{{currentPhase === 'roleReveal'}}" class="card">
-    <view class="text-center" style="padding: 30rpx 0 10rpx;">
-      <view style="font-size: 44rpx; margin-bottom: 16rpx;">🎭</view>
-      <view wx:if="{{playerRole && !revealConfirmed}}" class="text-muted">点击「查看身份」确认你的角色</view>
-      <view wx:if="{{playerRole && revealConfirmed}}" class="text-muted" style="color: #2ecc71;">你已确认身份</view>
-      <view wx:if="{{!playerRole}}" class="text-muted">等待分配角色...</view>
-      <view class="text-muted" style="margin-top: 12rpx;">已确认 {{revealConfirmedCount}}/{{revealTotalCount}} 人</view>
+  <!-- 长桌主骨架：左列玩家 + 中间区 + 右列玩家（全程显示） -->
+  <view class="table-layout">
+    <!-- 左列玩家 -->
+    <view class="table-side table-left">
+      <view wx:for="{{leftPlayers}}" wx:key="openId" class="table-player {{tableCardState(item.openId)}}"
+        bindtap="{{currentPhase === 'discussion' || currentPhase === 'assassination' ? 'onTablePlayerTap' : ''}}" data-id="{{item.openId}}">
+        <text class="seat-no">{{item.seatNumber}}</text>
+        <view class="tplayer-avatar-wrap">
+          <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
+          <text wx:if="{{item.openId === teamLeaderOpenId}}" class="crown-badge">👑</text>
+          <text wx:if="{{item.openId === playerId}}" class="me-tag">我</text>
+          <view wx:if="{{currentPhase === 'teamVote' && teamVoteStatus}}" class="vote-dot {{teamVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
+          <view wx:if="{{currentPhase === 'missionVote' && missionVoteStatus}}" class="vote-dot {{missionVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
+          <text wx:if="{{currentPhase !== 'teamVote' && publicVoteOf(item.openId)}}" class="vote-type {{publicVoteOf(item.openId) === 'approve' ? 'txt-approve' : 'txt-reject'}}">{{publicVoteOf(item.openId) === 'approve' ? '✓' : '✗'}}</text>
+        </view>
+        <text class="tplayer-name">{{item.nickName}}</text>
+      </view>
     </view>
-  </view>
 
-  <!-- 讨论阶段 -->
-  <view wx:if="{{currentPhase === 'discussion'}}" class="card">
-    <view class="subtitle text-center">讨论 · 发车准备</view>
-    <view class="text-center text-muted mb-3" style="color: #e74c3c;" wx:if="{{forcedSend}}">本轮强制发车</view>
-    <view class="text-center mb-3">
-      <text class="leader-badge">👑 队长：{{getTeamLeaderName()}}</text>
-    </view>
+    <!-- 中间区 -->
+    <view class="table-center">
+      <view class="center-phase">{{centerPhaseText()}}</view>
 
-    <block wx:if="{{checkIfTeamLeader()}}">
-      <view class="disc-setup">
-        <block wx:if="{{!speakingOrderConfirmed}}">
-          <!-- 第一步：预选车型 -->
-          <view class="disc-step">
-            <view class="disc-step-title">第一步 · 预选车型</view>
-            <view class="text-muted nominate-hint">点击玩家选择预选车型（任意人数），再次点击取消</view>
-            <view class="disc-btns">
-              <button wx:if="{{!preStepDone}}" size="mini" class="btn btn-primary" bindtap="submitPreNomination">提交预选车型（{{preNominatedTeam.length}}人）</button>
-              <view wx:else class="disc-step-done">
-                <text class="step-done-text">✓ 预选车型已提交（{{getNamesByIds(preNominatedTeam) || '无'}}）</text>
-                <text class="step-undo" bindtap="undoPreNomination">重新选择</text>
-              </view>
-            </view>
+      <!-- roleReveal：确认进度 -->
+      <block wx:if="{{currentPhase === 'roleReveal'}}">
+        <view class="center-info">已确认 {{revealConfirmedCount}}/{{revealTotalCount}}</view>
+      </block>
+
+      <!-- discussion：计时器 + 两步流程 + 确认发车 -->
+      <block wx:if="{{currentPhase === 'discussion'}}">
+        <view class="timer-box">
+          <text class="timer-num">{{timerSeconds}}</text>
+          <view class="timer-btns" wx:if="{{isHost}}">
+            <text wx:if="{{!timerRunning}}" class="timer-btn" bindtap="startTimer">启动</text>
+            <text wx:else class="timer-btn" bindtap="pauseTimer">暂停</text>
+            <text class="timer-btn" bindtap="resetTimer">重置</text>
           </view>
-
-          <!-- 第二步：指定发言方向 -->
-          <view class="disc-step">
-            <view class="disc-step-title">第二步 · 指定发言方向</view>
-            <view class="direction-btns">
-              <view class="direction-btn {{speakingOrder === 'asc' ? 'direction-active' : ''}}" data-order="asc" bindtap="selectSpeakingDirection">↑ 顺序</view>
-              <view class="direction-btn {{speakingOrder === 'desc' ? 'direction-active' : ''}}" data-order="desc" bindtap="selectSpeakingDirection">↓ 逆序</view>
+        </view>
+        <block wx:if="{{checkIfTeamLeader()}}">
+          <view class="disc-setup">
+            <block wx:if="{{!speakingOrderConfirmed}}">
+              <view class="disc-step">
+                <view class="disc-step-title">预选车型</view>
+                <view class="disc-btns">
+                  <button wx:if="{{!preStepDone}}" size="mini" class="btn btn-primary" bindtap="submitPreNomination">提交预选（{{preNominatedTeam.length}}人）</button>
+                  <view wx:else class="disc-step-done">
+                    <text class="step-done-text">✓ 已提交</text>
+                    <text class="step-undo" bindtap="undoPreNomination">重选</text>
+                  </view>
+                </view>
+              </view>
+              <view class="disc-step">
+                <view class="disc-step-title">发言方向</view>
+                <view class="direction-btns">
+                  <view class="direction-btn {{speakingOrder === 'asc' ? 'direction-active' : ''}}" data-order="asc" bindtap="selectSpeakingDirection">↑</view>
+                  <view class="direction-btn {{speakingOrder === 'desc' ? 'direction-active' : ''}}" data-order="desc" bindtap="selectSpeakingDirection">↓</view>
+                </view>
+              </view>
+            </block>
+            <view class="disc-btns disc-final">
+              <button size="mini" class="btn btn-primary" bindtap="confirmNomination" disabled="{{!speakingOrderConfirmed}}">确认发车 {{preNominatedTeam.length}}/{{getRequiredTeamSize()}}</button>
             </view>
-            <view class="text-muted nominate-hint">从队长开始{{speakingOrder === 'desc' ? '逆序' : '顺序'}}发言</view>
-            <view wx:if="{{directionStepDone}}" class="disc-step-done"><text class="step-done-text">✓ 发言方向已选择</text></view>
           </view>
         </block>
-        <view wx:else class="disc-step-done" style="justify-content:center; margin-bottom: 20rpx;">
-          <text class="step-done-text">✓ 发言设置已提交（{{getNamesByIds(preNominatedTeam) || '无'}} · {{speakingOrder === 'desc' ? '逆序' : '顺序'}}）</text>
-        </view>
-
-        <!-- 最终确认发车 -->
-        <view class="disc-btns disc-final">
-          <button size="mini" class="btn btn-primary" bindtap="confirmNomination" disabled="{{!speakingOrderConfirmed}}">确认发车 {{preNominatedTeam.length}}/{{getRequiredTeamSize()}}</button>
-        </view>
-      </view>
-    </block>
-
-    <view class="players-list">
-      <view wx:for="{{allPlayers}}" wx:key="openId"
-        class="player-item {{preNominatedTeam.includes(item.openId) ? 'pre-selected' : ''}} {{nominatedTeam.includes(item.openId) ? 'selected' : ''}} {{checkIfTeamLeader() && !speakingOrderConfirmed ? 'selectable' : ''}}"
-        bindtap="nominatePlayer" data-id="{{item.openId}}">
-        <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="player-avatar"></image>
-        <view class="player-info">
-          <view class="player-name">{{item.nickName}}</view>
-          <view class="player-status">
-            <text wx:if="{{item.openId === teamLeaderOpenId}}" class="badge badge-leader">👑 队长</text>
-            <text wx:if="{{preNominatedTeam.includes(item.openId)}}" class="badge badge-pre">预选</text>
-            <text wx:if="{{nominatedTeam.includes(item.openId)}}" class="badge badge-final">选</text>
-            {{item.openId === userInfo.openId ? '(自己)' : ''}}
-          </view>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 队伍投票阶段 -->
-  <view wx:if="{{currentPhase === 'teamVote'}}" class="card">
-    <view class="subtitle text-center">投票是否同意该队伍</view>
-
-    <view class="nominated-team">
-      <view class="text-center mb-4">被提名执行任务的队伍:</view>
-      <view class="flex-center" style="flex-wrap: wrap;">
-        <view wx:for="{{getNominatedPlayers()}}" wx:key="openId" class="team-member">
-          <image src="{{item.avatarUrl}}" class="team-member-avatar"></image>
-          <view class="team-member-name">{{item.nickName}}</view>
-        </view>
-      </view>
-    </view>
-
-    <view class="vote-buttons">
-      <button class="btn btn-success" style="width: 45%;" bindtap="castVote" data-vote="approve">同意</button>
-      <button class="btn btn-danger" style="width: 45%;" bindtap="castVote" data-vote="reject">反对</button>
-    </view>
-
-    <view class="text-center text-muted mt-4">
-      投票进度: {{getVoteCount()}}/{{allPlayers.length || 0}}
-    </view>
-  </view>
-
-  <!-- 任务投票阶段 -->
-  <view wx:if="{{currentPhase === 'missionVote'}}" class="card">
-    <view class="subtitle text-center">执行任务投票</view>
-
-    <view class="nominated-team" wx:if="{{nominatedTeam.length > 0}}">
-      <view class="flex-center" style="flex-wrap: wrap;">
-        <view wx:for="{{getNominatedPlayers()}}" wx:key="openId" class="team-member">
-          <image src="{{item.avatarUrl}}" class="team-member-avatar"></image>
-          <view class="team-member-name">{{item.nickName}}</view>
-        </view>
-      </view>
-    </view>
-
-    <block wx:if="{{isOnMissionTeam()}}">
-      <block wx:if="{{!hasMissionVoted()}}">
-        <view class="text-center mb-4">
-          <view>你被选中执行第{{currentRound}}个任务</view>
-          <view class="text-muted">请选择任务结果:</view>
-        </view>
-        <view class="vote-buttons">
-          <button class="btn btn-success" style="width: 45%;" bindtap="castMissionVote" data-vote="success">任务成功</button>
-          <button class="btn btn-danger" style="width: 45%;" bindtap="castMissionVote" data-vote="fail">破坏任务</button>
-        </view>
-        <view class="text-center text-muted mt-4">
-          注意: 只有坏人才能选择"破坏任务"
-        </view>
       </block>
-      <view wx:else class="text-center text-muted mt-4" style="color: #2ecc71;">
-        你已提交任务投票，等待其他队员...
-      </view>
-    </block>
-    <view wx:else class="text-center text-muted mt-4">
-      你不是任务队员，等待他们执行任务...
-    </view>
-  </view>
 
-  <!-- 刺杀阶段 -->
-  <view wx:if="{{currentPhase === 'assassination'}}" class="card">
-    <view class="subtitle text-center">刺杀梅林</view>
-    <view class="text-center mb-4">
-      <view class="text-muted">好人已完成3个任务，坏人阵营需刺杀梅林翻盘</view>
-      <view wx:if="{{!canAssassinate()}}" class="text-muted" style="margin-top: 10rpx;">等待刺客选择目标...</view>
-      <view wx:else class="text-muted" style="margin-top: 10rpx;">你是坏人，选择你认为的梅林</view>
-    </view>
-    <view class="players-list">
-      <view wx:for="{{allPlayers}}" wx:key="openId" wx:if="{{item.openId !== playerId}}" class="player-item selectable" bindtap="assassinate" data-id="{{item.openId}}">
-        <image src="{{item.avatarUrl}}" class="player-avatar"></image>
-        <view class="player-info">
-          <view class="player-name">{{item.nickName}}</view>
-          <view class="player-status">{{item.openId === userInfo.openId ? '(自己)' : ''}}</view>
+      <!-- teamVote -->
+      <block wx:if="{{currentPhase === 'teamVote'}}">
+        <view class="vote-buttons col">
+          <button class="btn btn-success" bindtap="castVote" data-vote="approve">同意</button>
+          <button class="btn btn-danger" bindtap="castVote" data-vote="reject">反对</button>
         </view>
-      </view>
-    </view>
-  </view>
+        <view class="center-info">已投 {{getVoteCount()}}/{{allPlayers.length}}</view>
+      </block>
 
-  <!-- 任务结果阶段 -->
-  <view wx:if="{{currentPhase === 'missionResult'}}" class="card">
-    <view class="subtitle text-center">第{{currentRound}}回合结果</view>
+      <!-- missionVote -->
+      <block wx:if="{{currentPhase === 'missionVote'}}">
+        <block wx:if="{{isOnMissionTeam()}}">
+          <block wx:if="{{!hasMissionVoted()}}">
+            <view class="vote-buttons col">
+              <button class="btn btn-success" bindtap="castMissionVote" data-vote="success">成功</button>
+              <button class="btn btn-danger" bindtap="castMissionVote" data-vote="fail">失败</button>
+            </view>
+          </block>
+          <view wx:else class="center-info" style="color:#2ecc71;">已提交，等待其他队员</view>
+        </block>
+        <view wx:else class="center-info">等待任务队执行</view>
+      </block>
 
-    <view class="text-center" style="padding: 40rpx 0;">
-      <view style="font-size: 72rpx; margin-bottom: 30rpx;">
-        {{getLastMissionResult() ? '✅' : '❌'}}
-      </view>
-      <view style="font-size: 48rpx; font-weight: 600; margin-bottom: 20rpx;">
-        {{getLastMissionResult() ? '任务成功' : '任务失败'}}
-      </view>
-      <view class="text-muted">
-        {{getLastMissionResult() ? '好人阵营获得1分' : '坏人阵营获得1分'}}
-      </view>
-    </view>
+      <!-- assassination -->
+      <block wx:if="{{currentPhase === 'assassination'}}">
+        <view class="center-info">{{canAssassinate() ? '选择刺杀目标' : '等待刺客行动'}}</view>
+      </block>
 
-    <view class="text-center">
-      <view class="text-muted">下一回合即将开始...</view>
-    </view>
-  </view>
-
-  <!-- 游戏结束阶段 -->
-  <view wx:if="{{currentPhase === 'gameEnd'}}" class="card">
-    <view class="subtitle text-center">游戏结束</view>
-
-    <view class="text-center" style="padding: 40rpx 0;">
-      <view style="font-size: 72rpx; margin-bottom: 30rpx;">
-        {{getGameWinner() === 'good' ? '🎉' : '💀'}}
-      </view>
-      <view style="font-size: 48rpx; font-weight: 600; margin-bottom: 20rpx;">
-        {{getGameWinner() === 'good' ? '好人阵营胜利' : '坏人阵营胜利'}}
-      </view>
-      <view class="text-muted">
-        {{gameResult ? gameResult.reason : (getGameWinner() === 'good' ? '成功完成了3个任务' : '任务失败或梅林被刺杀')}}
-      </view>
+      <!-- gameEnd -->
+      <block wx:if="{{currentPhase === 'gameEnd'}}">
+        <view class="game-end-icon">{{getGameWinner() === 'good' ? '🎉' : '💀'}}</view>
+        <view class="game-end-title">{{getGameWinner() === 'good' ? '好人胜利' : '坏人胜利'}}</view>
+        <button class="btn btn-primary" bindtap="endGame">返回房间</button>
+      </block>
     </view>
 
-    <view class="players-reveal">
-      <view class="text-center mb-4">玩家角色:</view>
-      <view wx:for="{{allPlayers}}" wx:key="openId" class="player-reveal-item {{getPlayerSide(item.role)}}">
-        <image src="{{item.avatarUrl}}" class="player-reveal-avatar"></image>
-        <view class="player-reveal-info">
-          <view class="player-reveal-name">{{item.nickName}}</view>
-          <view class="player-reveal-role">{{getRoleName(item.role)}}</view>
+    <!-- 右列玩家 -->
+    <view class="table-side table-right">
+      <view wx:for="{{rightPlayers}}" wx:key="openId" class="table-player {{tableCardState(item.openId)}}"
+        bindtap="{{currentPhase === 'discussion' || currentPhase === 'assassination' ? 'onTablePlayerTap' : ''}}" data-id="{{item.openId}}">
+        <view class="tplayer-avatar-wrap">
+          <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
+          <text wx:if="{{item.openId === teamLeaderOpenId}}" class="crown-badge">👑</text>
+          <text wx:if="{{item.openId === playerId}}" class="me-tag">我</text>
+          <view wx:if="{{currentPhase === 'teamVote' && teamVoteStatus}}" class="vote-dot {{teamVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
+          <view wx:if="{{currentPhase === 'missionVote' && missionVoteStatus}}" class="vote-dot {{missionVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
+          <text wx:if="{{currentPhase !== 'teamVote' && publicVoteOf(item.openId)}}" class="vote-type {{publicVoteOf(item.openId) === 'approve' ? 'txt-approve' : 'txt-reject'}}">{{publicVoteOf(item.openId) === 'approve' ? '✓' : '✗'}}</text>
         </view>
+        <text class="tplayer-name">{{item.nickName}}</text>
+        <text class="seat-no">{{item.seatNumber}}</text>
       </view>
     </view>
+  </view>
 
-    <view class="text-center mt-4">
-      <button class="btn btn-primary" bindtap="endGame">返回房间</button>
+  <!-- 任务结果全屏弹窗 -->
+  <view class="result-overlay" wx:if="{{currentPhase === 'missionResult'}}">
+    <view class="result-card">
+      <view class="result-emoji">{{getLastMissionResult() ? '✅' : '❌'}}</view>
+      <view class="result-title">{{getLastMissionResult() ? '任务成功' : '任务失败'}}</view>
+      <view class="result-sub">{{getLastMissionResult() ? '好人获得1分' : '坏人获得1分'}}</view>
     </view>
   </view>
 
