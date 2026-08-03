@@ -27,10 +27,12 @@
   </view>
 
   <view class="card current-room-card" wx:if="{{currentRoom}}">
-    <view class="current-room-info">
-      <text class="current-room-label">您当前处于房间</text>
-      <text class="current-room-id">{{currentRoom.roomId}}</text>
-      <text wx:if="{{currentRoom.gameStarted}}" class="current-room-ingame">游戏中</text>
+    <view class="current-room-label">您当前处于房间</view>
+    <view class="current-room-id">{{currentRoom.roomId}}</view>
+    <view class="current-room-tags">
+      <text wx:if="{{currentRoom.gameStarted}}" class="current-room-tag current-room-tag-ingame">游戏中</text>
+      <text wx:else class="current-room-tag current-room-tag-wait">准备中</text>
+      <text wx:if="{{isCurrentRoomHost}}" class="current-room-tag current-room-tag-host">房主</text>
     </view>
     <view class="current-room-btns">
       <button class="btn btn-sm btn-primary" bindtap="backToRoom">回到房间</button>
