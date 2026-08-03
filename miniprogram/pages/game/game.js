@@ -239,10 +239,6 @@ Page({
     }
   },
 
-  tapCloseRoleModal() {
-    this.setData({ showRoleModal: false });
-  },
-
   backToHome() {
     wx.reLaunch({ url: '/pages/index/index' });
   },
