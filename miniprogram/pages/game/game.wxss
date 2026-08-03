@@ -202,26 +202,19 @@
 .txt-approve { color: #10B981; }
 .txt-reject { color: #EF4444; }
 
-/* 阶段标签（原中间区位置，轮次卡下方） */
-.phase-banner {
-  text-align: center;
-  font-size: 40rpx; font-weight: 800; color: #8B5CF6;
-  letter-spacing: 6rpx;
-  padding: 20rpx 0 8rpx;
-}
-
-/* 计时器卡片（轮次卡下方，仅 discussion） */
+/* 计时器卡片（轮次卡下方，仅 discussion）：纵向布局，背景与其他卡片一致 */
 .timer-card {
-  display: flex; align-items: center; justify-content: center; gap: 24rpx;
-  padding: 20rpx 24rpx;
-  background: #F5F3FF;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16rpx;
+  padding: 36rpx 24rpx;
 }
+.timer-icon { font-size: 64rpx; line-height: 1; }
 .timer-num { font-size: 56rpx; font-weight: 800; color: #8B5CF6; line-height: 1; }
-.timer-btns { display: flex; gap: 16rpx; }
+.timer-btns { display: flex; gap: 16rpx; margin-top: 8rpx; }
 .timer-btn {
-  font-size: 24rpx; font-weight: 700; color: #fff;
-  background: #8B5CF6; border-radius: 10rpx;
-  padding: 8rpx 22rpx;
+  font-size: 26rpx; font-weight: 700; color: #fff;
+  background: #8B5CF6; border-radius: 12rpx;
+  padding: 10rpx 40rpx;
 }
 
 /* 任务结果全屏弹窗 */
