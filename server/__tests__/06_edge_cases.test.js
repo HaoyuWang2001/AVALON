@@ -155,7 +155,9 @@ describe('06 — Edge Cases & Validation', () => {
     it('should reject when non-leader tries to set discussion', async () => {
       const { gameId, players } = await createRoomAndStartGame(5);
       await advancePhase(gameId);
-      const nonLeader = players.find(p => p.openId !== players[0].openId);
+      const st = await getGameState(gameId);
+      const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
+      const nonLeader = players.find(p => p.openId !== leader.openId);
       const res = await setDiscussion(gameId, nonLeader.openId, 'asc');
       expect(res.success).toBe(false);
       await endGame(gameId);
