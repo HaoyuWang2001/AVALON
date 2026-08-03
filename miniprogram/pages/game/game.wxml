@@ -38,8 +38,7 @@
       <view class="flow-cars">
         <block wx:for="{{flowCars}}" wx:key="index">
           <view class="flow-car {{item.state}} {{item.isLast ? 'last' : ''}} {{item.isForced ? 'is-forced' : ''}}">
-            <text class="flow-car-icon">{{item.state === 'failed' ? '✕' : '√'}}</text>
-            <text wx:if="{{item.isLast}}" class="flow-car-label">强制车</text>
+            <text wx:if="{{item.isLast}}" class="flow-car-label"></text>
           </view>
         </block>
       </view>
@@ -53,14 +52,14 @@
       <view wx:for="{{leftPlayers}}" wx:key="openId" class="table-player {{item.cardState}}"
         bindtap="onTablePlayerTap" data-id="{{item.openId}}">
         <text class="seat-no">{{item.seatNumber}}</text>
+        <view class="tplayer-avatar-wrap">
+          <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
+          <text wx:if="{{item.isLeader}}" class="crown-badge">👑</text>
+          <text wx:if="{{item.voteType}}" class="vote-type {{item.voteType === 'approve' ? 'txt-approve' : 'txt-reject'}}">{{item.voteType === 'approve' ? '✓' : '✗'}}</text>
+          <view wx:if="{{currentPhase === 'teamVote' && teamVoteStatus}}" class="vote-dot {{teamVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
+          <view wx:if="{{currentPhase === 'missionVote' && missionVoteStatus}}" class="vote-dot {{missionVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
+        </view>
         <view class="tplayer-info">
-          <view class="tplayer-avatar-wrap">
-            <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
-            <text wx:if="{{item.isLeader}}" class="crown-badge">👑</text>
-            <text wx:if="{{item.voteType}}" class="vote-type {{item.voteType === 'approve' ? 'txt-approve' : 'txt-reject'}}">{{item.voteType === 'approve' ? '✓' : '✗'}}</text>
-            <view wx:if="{{currentPhase === 'teamVote' && teamVoteStatus}}" class="vote-dot {{teamVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
-            <view wx:if="{{currentPhase === 'missionVote' && missionVoteStatus}}" class="vote-dot {{missionVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
-          </view>
           <text class="tplayer-name">{{item.nickName}}</text>
           <view class="tplayer-tags">
             <text wx:if="{{item.tagText}}" class="ptag {{item.tagClass}}">{{item.tagText}}</text>
@@ -156,20 +155,20 @@
     <view class="table-side table-right">
       <view wx:for="{{rightPlayers}}" wx:key="openId" class="table-player {{item.cardState}}"
         bindtap="onTablePlayerTap" data-id="{{item.openId}}">
+        <text class="seat-no">{{item.seatNumber}}</text>
+        <view class="tplayer-avatar-wrap">
+          <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
+          <text wx:if="{{item.isLeader}}" class="crown-badge">👑</text>
+          <text wx:if="{{item.voteType}}" class="vote-type {{item.voteType === 'approve' ? 'txt-approve' : 'txt-reject'}}">{{item.voteType === 'approve' ? '✓' : '✗'}}</text>
+          <view wx:if="{{currentPhase === 'teamVote' && teamVoteStatus}}" class="vote-dot {{teamVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
+          <view wx:if="{{currentPhase === 'missionVote' && missionVoteStatus}}" class="vote-dot {{missionVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
+        </view>
         <view class="tplayer-info">
-          <view class="tplayer-avatar-wrap">
-            <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
-            <text wx:if="{{item.isLeader}}" class="crown-badge">👑</text>
-            <text wx:if="{{item.voteType}}" class="vote-type {{item.voteType === 'approve' ? 'txt-approve' : 'txt-reject'}}">{{item.voteType === 'approve' ? '✓' : '✗'}}</text>
-            <view wx:if="{{currentPhase === 'teamVote' && teamVoteStatus}}" class="vote-dot {{teamVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
-            <view wx:if="{{currentPhase === 'missionVote' && missionVoteStatus}}" class="vote-dot {{missionVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
-          </view>
           <text class="tplayer-name">{{item.nickName}}</text>
           <view class="tplayer-tags">
             <text wx:if="{{item.tagText}}" class="ptag {{item.tagClass}}">{{item.tagText}}</text>
           </view>
         </view>
-        <text class="seat-no">{{item.seatNumber}}</text>
       </view>
     </view>
   </view>

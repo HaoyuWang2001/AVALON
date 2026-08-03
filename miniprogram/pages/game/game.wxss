@@ -15,7 +15,7 @@
 
 /* 5 轮圆圈 */
 .rounds { display: flex; align-items: center; justify-content: center; margin: 20rpx 0 10rpx; }
-.round-connector { width: 84rpx; height: 10rpx; background: #D1D5DB; border-radius: 5rpx; }
+.round-connector { width: 64rpx; height: 10rpx; background: #D1D5DB; border-radius: 5rpx; }
 .round-circle {
   width: 64rpx; height: 64rpx; border-radius: 50%;
   background: #D1D5DB; flex-shrink: 0;
@@ -33,10 +33,8 @@
 .flow-cars { display: flex; align-items: flex-end; justify-content: flex-start; gap: 24rpx; }
 .flow-car {
   position: relative;
-  width: 60rpx; height: 60rpx; border-radius: 14rpx;
+  width: 40rpx; height: 60rpx; border-radius: 14rpx;
   background: #E5E7EB;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
 }
 .flow-car-icon { font-size: 34rpx; line-height: 1; }
 .flow-car.failed { background: #FEE2E2; border: 2rpx solid #EF4444; }
@@ -137,11 +135,12 @@
 .vote-buttons.col { flex-direction: column; width: 100%; gap: 14rpx; }
 .vote-buttons.col button { width: 100%; }
 
-/* 玩家小卡片（长桌两侧：头像上、用户名下、座位号外侧） */
+/* 玩家小卡片（统一：左头像、右上昵称、右下标签、号码牌左上角） */
 .table-player {
+  position: relative;
   display: flex;
   align-items: center;
-  padding: 20rpx 10rpx;
+  padding: 20rpx 12rpx;
   border-radius: 16rpx;
   background: #FFFFFF;
   border: 2rpx solid #E5E7EB;
@@ -152,33 +151,35 @@
 .table-player.state-sel { background: #D1ECF1; border-color: #17A2B8; }
 .table-player:active { opacity: 0.7; }
 
+/* 号码牌：固定在左上角，小尺寸 */
 .seat-no {
-  flex-shrink: 0;
-  font-size: 30rpx; font-weight: 800; color: #fff;
+  position: absolute;
+  top: 6rpx; left: 6rpx;
+  z-index: 2;
+  font-size: 20rpx; font-weight: 800; color: #fff;
   background: #8B5CF6;
-  border-radius: 12rpx;
-  padding: 8rpx 16rpx;
-  margin: 0 8rpx;
+  border-radius: 8rpx;
+  padding: 2rpx 10rpx;
 }
-.tplayer-info {
-  flex: 1;
-  display: flex; flex-direction: column; align-items: center;
-  min-width: 0;
-}
-.tplayer-avatar-wrap { position: relative; flex-shrink: 0; }
+.tplayer-avatar-wrap { position: relative; flex-shrink: 0; margin: 12rpx 8rpx 4rpx 4rpx; }
 .tplayer-avatar {
   width: 88rpx; height: 88rpx; border-radius: 50%;
   background: #F3F4F6;
 }
+.tplayer-info {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: flex-start;
+  min-width: 0;
+  margin-left: 8rpx;
+}
 .tplayer-name {
-  font-size: 24rpx; color: #374151; font-weight: 600;
-  max-width: 120rpx;
+  font-size: 26rpx; color: #374151; font-weight: 600;
+  max-width: 130rpx;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  margin-top: 8rpx;
 }
 .tplayer-tags {
-  display: flex; flex-wrap: wrap; justify-content: center;
-  gap: 6rpx; margin-top: 6rpx;
+  display: flex; flex-wrap: wrap; align-items: flex-start;
+  gap: 6rpx; margin-top: 8rpx;
 }
 
 /* 标准标签体系：浅底深字 */
