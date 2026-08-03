@@ -191,7 +191,7 @@ Page({
           this.setData({ showRoleMask: true });
           // 禁用返回手势：roleReveal 未确认时必须点按钮才能继续
           if (wx.enableAlertBeforeUnload) {
-            wx.enableAlertBeforeUnload({ message: '请先确认你的身份' });
+            wx.enableAlertBeforeUnload({ message: '是否暂时挂起游戏回到首页？' });
           }
         } else {
           this.setData({ showRoleMask: false });
