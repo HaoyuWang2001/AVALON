@@ -285,9 +285,9 @@ Page({
           this.showGameEndResult(res.basic ? res.basic.result : null);
         }
 
-        // 全员确认后进入 discussion：关闭身份页/蒙版，正式进入游戏
+        // 进入 discussion：关闭身份蒙版/等待态（弹窗由用户手动关闭，不自动消失）
         if (phase === 'discussion') {
-          this.setData({ showRoleModal: false, showRolePage: false, showRoleMask: false, roleWaiting: false });
+          this.setData({ showRoleMask: false, roleWaiting: false });
           this._ensureTimerInit();
         } else {
           this._stopTimer();
