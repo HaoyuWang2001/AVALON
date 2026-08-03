@@ -303,8 +303,9 @@ class GameModel {
         const [players] = await connection.execute(
           `SELECT gp.open_id FROM game_players gp
            LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
+           WHERE gp.game_id = ?
            ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
-          [game[0].room_id]
+          [game[0].room_id, gameId]
         );
 
         const teamLeaderIndex = game[0].team_leader_index;
@@ -370,8 +371,9 @@ class GameModel {
         const [players] = await connection.execute(
           `SELECT gp.open_id FROM game_players gp
            LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
+           WHERE gp.game_id = ?
            ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
-          [game[0].room_id]
+          [game[0].room_id, gameId]
         );
 
         const teamLeaderIndex = game[0].team_leader_index;
@@ -756,8 +758,9 @@ class GameModel {
         const [players] = await connection.execute(
           `SELECT gp.open_id, gp.role FROM game_players gp
            LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
+           WHERE gp.game_id = ?
            ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
-          [game[0].room_id]
+          [game[0].room_id, gameId]
         );
         
         const teamLeaderIndex = game[0].team_leader_index;
@@ -926,8 +929,9 @@ class GameModel {
             const [newLeaderPlayers] = await connection.execute(
               `SELECT gp.open_id FROM game_players gp
                LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
+               WHERE gp.game_id = ?
                ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
-              [game[0].room_id]
+              [game[0].room_id, gameId]
             );
             const lakeHolderOpenId = newLeaderPlayers.length
               ? newLeaderPlayers[(newTeamLeaderIndex - 1 + playerCount) % playerCount].open_id
@@ -1135,8 +1139,9 @@ class GameModel {
             const [newLeaderPlayers] = await connection.execute(
               `SELECT gp.open_id FROM game_players gp
                LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
+               WHERE gp.game_id = ?
                ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
-              [game[0].room_id]
+              [game[0].room_id, gameId]
             );
             const lakeHolderOpenId = newLeaderPlayers.length
               ? newLeaderPlayers[(newTeamLeaderIndex - 1 + playerCount) % playerCount].open_id
@@ -1314,8 +1319,9 @@ class GameModel {
         const [newLeaderPlayers] = await connection.execute(
           `SELECT gp.open_id FROM game_players gp
            LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
+           WHERE gp.game_id = ?
            ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
-          [game[0].room_id]
+          [game[0].room_id, gameId]
         );
 
         if (lancelotEnabled && hasLancelot) {
