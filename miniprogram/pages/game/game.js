@@ -218,9 +218,11 @@ Page({
 
   confirmRoleReveal() {
     const { gameId } = this.data;
-    api.confirmReveal(gameId).then(() => {
+    api.confirmReveal(gameId).then(res => {
+      // 确认成功：关闭身份页与蒙版，随后刷新状态（全员确认后自动进 discussion）
+      this.setData({ showRoleModal: false, showRoleMask: false });
       this.fetchGameState();
-      if (this.data.revealConfirmedCount >= this.data.revealTotalCount) {
+      if (res && res.current && res.current.phase === 'discussion') {
         wx.showToast({ title: '全员已确认，进入讨论', icon: 'success' });
       }
     }).catch(err => {
