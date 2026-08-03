@@ -18,9 +18,12 @@
             <view class="user-name-text {{userInfo.nickName ? '' : 'name-placeholder'}}">{{userInfo.nickName || '点击改名'}}</view>
             <input type="nickname" class="wx-nick-input-overlay" value="{{userInfo.nickName}}" bindinput="onWxNickInput" bindblur="onWxNickBlur"/>
           </view>
-          <view class="user-game-nick">游戏内昵称：{{customNickName || '未设置'}}</view>
-          <view class="user-status">在线</view>
+          <view class="user-status {{userStatusClass}}">{{userStatusText}}</view>
         </view>
+      </view>
+      <view class="user-divider"></view>
+      <view class="user-game-nick-row">
+        <view class="user-game-nick">游戏内昵称：{{customNickName || '未设置'}}</view>
         <view class="edit-nick-btn btn-round" bindtap="showNickNameModal">更改昵称</view>
       </view>
     </view>

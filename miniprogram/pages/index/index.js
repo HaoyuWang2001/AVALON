@@ -49,6 +49,8 @@ Page({
     customNickName: '',
     currentRoom: null,
     isCurrentRoomHost: false,
+    userStatusText: '在线',
+    userStatusClass: 'status-online',
 
     showConfig: false,
     playerCount: 5,
@@ -159,6 +161,14 @@ Page({
           currentRoom: res.room,
           isCurrentRoomHost: !!(res.room.ownerId && res.room.ownerId === openId)
         });
+        // 状态：游戏中(红) / 房间中(蓝)
+        if (res.room.gameStarted) {
+          this.setData({ userStatusText: '游戏中', userStatusClass: 'status-ingame' });
+        } else {
+          this.setData({ userStatusText: '房间中', userStatusClass: 'status-inroom' });
+        }
+      } else if (res && res.success) {
+        this.setData({ currentRoom: null, isCurrentRoomHost: false, userStatusText: '在线', userStatusClass: 'status-online' });
       }
     }).catch(() => {});
   },
@@ -183,7 +193,7 @@ Page({
       success: (res) => {
         if (res.confirm) {
           api.leaveRoom(room.roomId).then(() => {
-            this.setData({ currentRoom: null, isCurrentRoomHost: false });
+            this.setData({ currentRoom: null, isCurrentRoomHost: false, userStatusText: '在线', userStatusClass: 'status-online' });
             getApp().globalData.roomId = null;
             wx.showToast({ title: '已退出', icon: 'success' });
           }).catch(() => {});
@@ -201,7 +211,7 @@ Page({
       success: (res) => {
         if (res.confirm) {
           api.disbandRoom(room.roomId).then(() => {
-            this.setData({ currentRoom: null, isCurrentRoomHost: false });
+            this.setData({ currentRoom: null, isCurrentRoomHost: false, userStatusText: '在线', userStatusClass: 'status-online' });
             getApp().globalData.roomId = null;
             wx.showToast({ title: '已解散', icon: 'success' });
           }).catch((err) => {

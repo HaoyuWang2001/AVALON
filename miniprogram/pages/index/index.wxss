@@ -29,10 +29,16 @@
 .user-name-text { font-size: 34rpx; font-weight: 700; color: var(--gray-900); height: 50rpx; line-height: 50rpx; }
 .name-placeholder { color: var(--gray-400); font-weight: 400; }
 .wx-nick-input-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0; z-index: 1; }
-.user-game-nick { font-size: 34rpx; color: var(--primary); margin-top: 2rpx; font-weight: 600; }
-.user-status { font-size: 24rpx; color: var(--success); margin-top: 4rpx; display: flex; align-items: center; }
-.user-status::before { content: ''; width: 10rpx; height: 10rpx; background: var(--success); border-radius: 50%; margin-right: 8rpx; }
-.edit-nick-btn { font-size: 24rpx; }
+.user-game-nick-row { display: flex; align-items: center; justify-content: space-between; }
+.user-game-nick { font-size: 34rpx; color: var(--primary); font-weight: 600; }
+.user-status { font-size: 28rpx; color: var(--success); margin-top: 4rpx; display: flex; align-items: center; }
+.user-status::before { content: ''; width: 12rpx; height: 12rpx; background: var(--success); border-radius: 50%; margin-right: 10rpx; }
+.user-status.status-ingame { color: var(--danger); }
+.user-status.status-ingame::before { background: var(--danger); }
+.user-status.status-inroom { color: #3B82F6; }
+.user-status.status-inroom::before { background: #3B82F6; }
+.user-divider { height: 1rpx; background: #E5E7EB; margin: 24rpx 0; }
+.edit-nick-btn { font-size: 24rpx; flex-shrink: 0; }
 
 .login-btn { width: 100%; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; border-radius: 16rpx; font-size: 32rpx; font-weight: 600; padding: 24rpx; box-shadow: 0 6rpx 20rpx rgba(124,58,237,0.3); }
 
