@@ -2,6 +2,17 @@
 const app = getApp();
 const api = require('../../services/api.js');
 
+// 环形座位投影到长桌两侧：左列=前半升序，右列=后半降序
+function splitTableSides(players) {
+  const list = (players || []).slice();
+  const n = list.length;
+  const half = Math.ceil(n / 2);
+  return {
+    left: list.slice(0, half),
+    right: list.slice(half).reverse()
+  };
+}
+
 Page({
   data: {
     roomId: '',
@@ -19,9 +30,13 @@ Page({
     currentRound: 1,
     teamLeaderOpenId: '',
     allPlayers: [],
+    leftPlayers: [],
+    rightPlayers: [],
     nominatedTeam: [],
     teamVotes: {},
     missionVotes: {},
+    teamVoteStatus: null,
+    missionVoteStatus: null,
     missionResults: [],
     forcedSend: false,
     vision: null,
@@ -47,6 +62,9 @@ Page({
     carIndex: 1,
     lakeHolderOpenId: '',
     preNominatedTeam: [],
+    timerSeconds: 0,
+    timerRunning: false,
+    roomConfigVal: null,
     carsHistory: [],
     lakeHistory: [],
     lancelotSwaps: [],
@@ -94,6 +112,7 @@ Page({
 
   onUnload() {
     if (this.gamePolling) clearInterval(this.gamePolling);
+    this._stopTimer();
     api.disconnectSocket();
   },
 
@@ -181,6 +200,11 @@ Page({
           vision: res.player ? res.player.vision || null : null,
           visionList: visionList,
           allPlayers: res.players || [],
+          leftPlayers: splitTableSides(res.players || []).left,
+          rightPlayers: splitTableSides(res.players || []).right,
+          teamVoteStatus: res.current.teamVoteStatus || null,
+          missionVoteStatus: res.current.missionVoteStatus || null,
+          roomConfigVal: res.basic && res.basic.roomConfig ? res.basic.roomConfig : null,
           gameResult: res.basic && res.basic.result ? res.basic.result : null,
           isHost: isHost,
           carsHistory: res.history ? res.history.cars || [] : [],
@@ -200,7 +224,11 @@ Page({
         // 全员确认后进入 discussion：关闭身份页/蒙版，正式进入游戏
         if (phase === 'discussion') {
           this.setData({ showRoleModal: false, showRoleMask: false, roleWaiting: false });
-        } else if (phase === 'roleReveal' && res.player && res.player.role && !this.data.revealConfirmed) {
+          this._ensureTimerInit();
+        } else {
+          this._stopTimer();
+        }
+        if (phase === 'roleReveal' && res.player && res.player.role && !this.data.revealConfirmed) {
           // roleReveal 未确认：展示蒙版；已点击确认（roleWaiting）则保持身份页等待，不再弹蒙版
           this.setData({ showRoleMask: !this.data.roleWaiting });
           // 禁用返回手势：roleReveal 未确认时必须点按钮才能继续
@@ -388,6 +416,63 @@ Page({
   checkIfTeamLeader() {
     const { teamLeaderOpenId } = this.data;
     return !!teamLeaderOpenId && teamLeaderOpenId === app.globalData.openId;
+  },
+
+  // ─────── 发言计时器（房主操控，仅 discussion） ───────
+  _getSpeechTimeout() {
+    const rc = (this.data.gameState && this.data.gameState.roomConfig) || this.data.roomConfigVal;
+    const limits = (rc && rc.limits) || {};
+    return parseInt(limits.speechTimeout, 10) || 0;
+  },
+  _ensureTimerInit() {
+    if (this.timerInterval) return;
+    const sec = this._getSpeechTimeout();
+    if (this.data.timerSeconds === 0 && sec > 0) {
+      this.setData({ timerSeconds: sec, timerRunning: false });
+    }
+  },
+  _stopTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    this.setData({ timerRunning: false });
+  },
+  startTimer() {
+    if (!this.checkIfTeamLeader()) return;
+    if (this.data.timerRunning) return;
+    if (this.data.timerSeconds <= 0) {
+      const sec = this._getSpeechTimeout();
+      if (!sec) { wx.showToast({ title: '未设置发言时限', icon: 'none' }); return; }
+      this.setData({ timerSeconds: sec });
+    }
+    this.setData({ timerRunning: true });
+    this.timerInterval = setInterval(() => {
+      let s = this.data.timerSeconds - 1;
+      if (s <= 0) {
+        s = 0;
+        clearInterval(this.timerInterval);
+        this.timerInterval = null;
+        this.setData({ timerSeconds: s, timerRunning: false });
+        wx.showToast({ title: '发言时间到', icon: 'none' });
+      } else {
+        this.setData({ timerSeconds: s });
+      }
+    }, 1000);
+  },
+  pauseTimer() {
+    if (!this.checkIfTeamLeader()) return;
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    this.setData({ timerRunning: false });
+  },
+  resetTimer() {
+    if (!this.checkIfTeamLeader()) return;
+    this.pauseTimer();
+    const sec = this._getSpeechTimeout();
+    this.setData({ timerSeconds: sec || 0 });
   },
 
   castVote(e) {

@@ -616,6 +616,15 @@ class GameModel {
         result: game.gameResult || null
       };
 
+      // 投票状态（投票阶段全员可见：已投/未投，不含票型）
+      const buildVoteStatus = (votesObj) => {
+        const status = {};
+        for (const p of players) {
+          status[p.openId] = votesObj[p.openId] ? 'voted' : 'pending';
+        }
+        return status;
+      };
+
       // 当前状态
       const current = {
         round: game.currentRound,
@@ -628,6 +637,8 @@ class GameModel {
         nominatedTeam: game.nominatedTeam || null,
         teamVotes: gatedTeamVotes,
         missionVotes: gatedMissionVotes,
+        teamVoteStatus: game.currentPhase === 'teamVote' ? buildVoteStatus(teamVotesObj) : null,
+        missionVoteStatus: game.currentPhase === 'missionVote' ? buildVoteStatus(missionVotesObj) : null,
         lakeHolderOpenId: game.lakeHolderOpenId || null,
         speakingOrder: game.speakingOrder || 'asc',
         discussionSet: !!(game.discussionSet === 1 || game.discussionSet === true),

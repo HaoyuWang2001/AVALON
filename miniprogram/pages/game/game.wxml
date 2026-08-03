@@ -20,7 +20,6 @@
     <view class="mission-head">
       <view class="mission-head-info">
         <text class="mission-phase">{{getPhaseText(currentPhase)}}</text>
-        <text class="mission-lake" wx:if="{{lakeHolderOpenId}}">🏝️ {{getLakeHolderName()}}</text>
       </view>
       <view class="mission-actions">
         <text class="mini-btn" wx:if="{{playerRole}}" bindtap="openRoleModal">查看身份</text>
@@ -38,7 +37,7 @@
     <view class="flow-cars">
       <block wx:for="{{flowCars}}" wx:key="index">
         <view class="flow-car {{item.state}} {{item.isLast ? 'last' : ''}} {{item.isForced ? 'is-forced' : ''}}">
-          <text class="flow-car-icon">{{item.state === 'failed' ? '✕' : '🚗'}}</text>
+          <text class="flow-car-icon">{{item.state === 'failed' ? '✕' : '√'}}</text>
           <text wx:if="{{item.isLast}}" class="flow-car-label">强制车</text>
         </view>
       </block>
@@ -101,12 +100,6 @@
           <button size="mini" class="btn btn-primary" bindtap="confirmNomination" disabled="{{!speakingOrderConfirmed}}">确认发车 {{preNominatedTeam.length}}/{{getRequiredTeamSize()}}</button>
         </view>
       </view>
-    </block>
-    <block wx:else>
-      <view class="text-center text-muted mb-3">等待队长 {{getTeamLeaderName()}} 准备发车...</view>
-      <view class="info-line" wx:if="{{speakingOrderConfirmed}}">发言方向：{{speakingOrder === 'desc' ? '从队长开始逆序' : '按座位号顺序'}}</view>
-      <view class="info-line" wx:if="{{preNominatedTeam.length > 0}}">预选车型：{{getNamesByIds(preNominatedTeam)}}</view>
-      <view class="info-line" wx:if="{{nominatedTeam.length > 0}}">发车队伍：{{getNamesByIds(nominatedTeam)}}</view>
     </block>
 
     <view class="players-list">
