@@ -2,25 +2,15 @@
 const app = getApp();
 const api = require('../../services/api.js');
 
-// 环形座位投影到长桌两侧：左列=前半升序，右列=后半降序
-function splitTableSides(players) {
-  const list = (players || []).slice();
-  const n = list.length;
-  const half = Math.ceil(n / 2);
-  return {
-    left: list.slice(0, half),
-    right: list.slice(half).reverse()
-  };
-}
-
-// 标准标签配色：浅紫底深紫字 / 浅蓝底蓝字 / 浅粉底粉字
+// 标准标签配色：浅紫底深紫字 / 浅蓝底蓝字 / 浅粉底粉字 / 浅金底金字
 const TAG_STYLES = {
   purple: 'ptag-purple',
   blue: 'ptag-blue',
-  pink: 'ptag-pink'
+  pink: 'ptag-pink',
+  gold: 'ptag-gold'
 };
 
-// 为长桌玩家卡片富化字段（cardState/isLeader/voteType/tagText/tagClass）
+// 为玩家卡片富化字段（cardState/isLeader/voteType/tags[]）
 function enrichTablePlayer(p, ctx) {
   const {
     leaderOpenId, myOpenId, hostOpenId, lakeHolderOpenId,
@@ -28,7 +18,7 @@ function enrichTablePlayer(p, ctx) {
   } = ctx;
 
   let cardState = '';
-  if ((nominatedTeam || []).includes(p.openId)) cardState = 'state-sel';
+  if ((nominatedTeam || []).includes(p.openId)) cardState = 'state-pre';
   else if ((preNominatedTeam || []).includes(p.openId)) cardState = 'state-pre';
 
   // 票型：非 teamVote 阶段且公开时显示（后端已门控 teamVotes）
@@ -38,24 +28,19 @@ function enrichTablePlayer(p, ctx) {
     if (v === 'approve' || v === 'reject') voteType = v;
   }
 
-  // 标签：我(紫) / 房主(蓝) / 湖仙(粉) —— 优先级：我 > 房主 > 湖仙
-  let tagText = '';
-  let tagClass = '';
-  if (p.openId === myOpenId) {
-    tagText = '我'; tagClass = TAG_STYLES.purple;
-  } else if (p.openId === hostOpenId) {
-    tagText = '房主'; tagClass = TAG_STYLES.blue;
-  } else if (p.openId === lakeHolderOpenId) {
-    tagText = '湖仙'; tagClass = TAG_STYLES.pink;
-  }
+  // 标签数组：车主(金) / 我(紫) / 房主(蓝) / 湖仙(粉)，可叠加
+  const tags = [];
+  if (p.openId === leaderOpenId) tags.push({ text: '车主', cls: TAG_STYLES.gold });
+  if (p.openId === myOpenId) tags.push({ text: '我', cls: TAG_STYLES.purple });
+  if (p.openId === hostOpenId) tags.push({ text: '房主', cls: TAG_STYLES.blue });
+  if (p.openId === lakeHolderOpenId) tags.push({ text: '湖仙', cls: TAG_STYLES.pink });
 
   return {
     ...p,
     cardState,
     isLeader: p.openId === leaderOpenId,
     voteType,
-    tagText,
-    tagClass
+    tags
   };
 }
 
@@ -76,8 +61,7 @@ Page({
     currentRound: 1,
     teamLeaderOpenId: '',
     allPlayers: [],
-    leftPlayers: [],
-    rightPlayers: [],
+    tablePlayers: [],
     centerPhase: '',
     phaseText: '',
     lastMissionResult: false,
@@ -270,8 +254,7 @@ Page({
           vision: res.player ? res.player.vision || null : null,
           visionList: visionList,
           allPlayers: res.players || [],
-          leftPlayers: splitTableSides(tablePlayers).left,
-          rightPlayers: splitTableSides(tablePlayers).right,
+          tablePlayers: tablePlayers,
           teamVoteStatus: res.current.teamVoteStatus || null,
           missionVoteStatus: res.current.missionVoteStatus || null,
           roomConfigVal: res.basic && res.basic.roomConfig ? res.basic.roomConfig : null,

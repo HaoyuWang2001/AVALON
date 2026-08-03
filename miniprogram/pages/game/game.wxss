@@ -15,7 +15,7 @@
 
 /* 5 轮圆圈 */
 .rounds { display: flex; align-items: center; justify-content: center; margin: 20rpx 0 10rpx; }
-.round-connector { width: 64rpx; height: 10rpx; background: #D1D5DB; border-radius: 5rpx; }
+.round-connector { width: 48rpx; height: 10rpx; background: #D1D5DB; border-radius: 5rpx; }
 .round-circle {
   width: 64rpx; height: 64rpx; border-radius: 50%;
   background: #D1D5DB; flex-shrink: 0;
@@ -102,102 +102,100 @@
 .direction-btn.direction-active { background: #8B5CF6; border-color: #8B5CF6; color: #fff; }
 .disc-final { margin-top: 24rpx; }
 
-/* ─────── 长桌布局 ─────── */
-.table-layout {
-  display: flex;
-  gap: 12rpx;
-  padding: 8rpx 0;
-  min-height: 60vh;
-}
-.table-side {
-  flex: 1;
+/* ─────── 玩家列表（全宽大卡片） ─────── */
+.player-list {
   display: flex;
   flex-direction: column;
-  gap: 14rpx;
-  max-height: 70vh;
-  overflow-y: auto;
-  padding: 4rpx;
-}
-.table-center {
-  flex: 0 0 240rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
   gap: 16rpx;
-  padding-top: 8rpx;
+  padding: 8rpx 0 260rpx; /* 底部留白，避免被 fixed 底部框遮挡 */
 }
-.center-phase {
-  font-size: 36rpx; font-weight: 800; color: #8B5CF6;
-  letter-spacing: 4rpx;
-}
-.center-info { font-size: 26rpx; color: #6B7280; text-align: center; }
-.vote-buttons.col { flex-direction: column; width: 100%; gap: 14rpx; }
-.vote-buttons.col button { width: 100%; }
 
-/* 玩家小卡片（统一：左头像、右上昵称、右下标签、号码牌左上角） */
+/* 玩家大卡片（每行全宽）：座位号左上角 + 左头像 + 右信息 */
 .table-player {
   position: relative;
   display: flex;
   align-items: center;
-  padding: 20rpx 12rpx;
-  border-radius: 16rpx;
+  padding: 24rpx 20rpx;
+  border-radius: 18rpx;
   background: #FFFFFF;
   border: 2rpx solid #E5E7EB;
   transition: all 0.2s ease;
-  min-height: 120rpx;
+  min-height: 140rpx;
 }
-.table-player.state-pre { background: #FEF3C7; border-color: #F59E0B; }
-.table-player.state-sel { background: #D1ECF1; border-color: #17A2B8; }
+/* 车主选中（预选/发车）→ 更明显的淡紫底 + 紫边框 */
+.table-player.state-pre { background: #EDE9FE; border-color: #8B5CF6; }
 .table-player:active { opacity: 0.7; }
 
 /* 号码牌：固定在左上角，小尺寸 */
 .seat-no {
   position: absolute;
-  top: 6rpx; left: 6rpx;
+  top: 8rpx; left: 8rpx;
   z-index: 2;
   font-size: 20rpx; font-weight: 800; color: #fff;
   background: #8B5CF6;
   border-radius: 8rpx;
   padding: 2rpx 10rpx;
 }
-.tplayer-avatar-wrap { position: relative; flex-shrink: 0; margin: 12rpx 8rpx 4rpx 4rpx; }
+.tplayer-avatar-wrap { position: relative; flex-shrink: 0; margin-left: 28rpx; }
 .tplayer-avatar {
-  width: 88rpx; height: 88rpx; border-radius: 50%;
+  width: 100rpx; height: 100rpx; border-radius: 50%;
   background: #F3F4F6;
 }
 .tplayer-info {
   flex: 1;
   display: flex; flex-direction: column; align-items: flex-start;
   min-width: 0;
-  margin-left: 8rpx;
+  margin-left: 24rpx;
 }
 .tplayer-name {
-  font-size: 26rpx; color: #374151; font-weight: 600;
-  max-width: 130rpx;
+  font-size: 32rpx; color: #111827; font-weight: 700;
+  max-width: 300rpx;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .tplayer-tags {
   display: flex; flex-wrap: wrap; align-items: flex-start;
-  gap: 6rpx; margin-top: 8rpx;
+  gap: 8rpx; margin-top: 12rpx;
 }
 
 /* 标准标签体系：浅底深字 */
 .ptag {
-  font-size: 20rpx; font-weight: 700;
-  padding: 4rpx 14rpx; border-radius: 18rpx;
-  line-height: 1.4;
+  font-size: 22rpx; font-weight: 700;
+  padding: 4rpx 16rpx; border-radius: 20rpx;
+  line-height: 1.5;
 }
 .ptag-purple { background: #EDE9FE; color: #6D28D9; }
 .ptag-blue { background: #DBEAFE; color: #1D4ED8; }
 .ptag-pink { background: #FCE7F3; color: #BE185D; }
+.ptag-gold { background: #FEF3C7; color: #B45309; }
 
-/* 队长皇冠：大，位于头像正上方 */
-.crown-badge {
-  position: absolute; top: -26rpx; left: 50%;
-  transform: translateX(-50%);
-  font-size: 52rpx; line-height: 1;
+/* ─────── 底部按钮框（fixed 常驻） ─────── */
+.bottom-bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 900;
+  background: #FFFFFF;
+  border-top: 2rpx solid #E5E7EB;
+  box-shadow: 0 -6rpx 20rpx rgba(0,0,0,0.06);
+  padding: 20rpx 32rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
 }
+.bar-phase {
+  font-size: 34rpx; font-weight: 800; color: #8B5CF6;
+  letter-spacing: 4rpx; text-align: center;
+}
+.bar-info { font-size: 28rpx; color: #6B7280; text-align: center; }
+.bar-row { display: flex; align-items: center; justify-content: center; gap: 16rpx; }
+.bar-row button { flex: 1; }
+.bar-timer { font-size: 40rpx; font-weight: 800; color: #8B5CF6; }
+.bar-timer-btns { display: flex; gap: 12rpx; }
+.bar-btn {
+  font-size: 24rpx; font-weight: 700; color: #fff;
+  background: #8B5CF6; border-radius: 10rpx;
+  padding: 8rpx 22rpx;
+}
+.bar-done { display: flex; align-items: center; gap: 16rpx; }
 
 /* 投票状态点：灰=未投 紫=已投 */
 .vote-dot {
