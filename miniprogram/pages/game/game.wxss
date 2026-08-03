@@ -90,7 +90,6 @@
 .disc-step { margin-bottom: 24rpx; }
 .disc-step-title { font-size: 28rpx; font-weight: 700; color: #374151; margin-bottom: 12rpx; }
 .disc-step-done { display: flex; align-items: center; gap: 12rpx; margin-top: 14rpx; }
-.step-done-text { font-size: 26rpx; color: #10B981; font-weight: 600; }
 .step-undo { font-size: 24rpx; color: #8B5CF6; text-decoration: underline; padding: 4rpx 8rpx; }
 .direction-btns { display: flex; gap: 16rpx; margin-top: 8rpx; }
 .direction-btn {
@@ -122,9 +121,23 @@
   transition: all 0.2s ease;
   min-height: 130rpx;
 }
-/* 车主选中（预选/发车）→ 更明显的淡紫底 + 紫边框 */
-.table-player.state-pre { background: #EDE9FE; border-color: #8B5CF6; }
 .table-player:active { opacity: 0.7; }
+
+/* 右侧选人复选框（仅车主选人期显示）：未选=空心灰圈，选中=紫底白勾 */
+.table-check {
+  flex-shrink: 0;
+  width: 44rpx; height: 44rpx;
+  border-radius: 50%;
+  border: 3rpx solid #D1D5DB;
+  background: #FFFFFF;
+  margin-left: 20rpx;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28rpx; font-weight: 800; color: #FFFFFF;
+}
+.table-check.checked {
+  background: #8B5CF6;
+  border-color: #8B5CF6;
+}
 
 /* 座位号徽章：内联，位于头像左侧并排 */
 .seat-no {
@@ -183,7 +196,6 @@
 .bar-info { font-size: 28rpx; color: #6B7280; text-align: center; }
 .bar-row { display: flex; align-items: center; justify-content: center; gap: 16rpx; }
 .bar-row button { flex: 1; }
-.bar-done { display: flex; align-items: center; gap: 16rpx; }
 
 /* 投票状态点：灰=未投 紫=已投 */
 .vote-dot {

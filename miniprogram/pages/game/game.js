@@ -10,16 +10,15 @@ const TAG_STYLES = {
   gold: 'ptag-gold'
 };
 
-// 为玩家卡片富化字段（cardState/isLeader/voteType/tags[]）
+// 为玩家卡片富化字段（checked/isLeader/voteType/tags[]）
 function enrichTablePlayer(p, ctx) {
   const {
     leaderOpenId, myOpenId, hostOpenId, lakeHolderOpenId,
     preNominatedTeam, nominatedTeam, teamVotes, currentPhase
   } = ctx;
 
-  let cardState = '';
-  if ((nominatedTeam || []).includes(p.openId)) cardState = 'state-pre';
-  else if ((preNominatedTeam || []).includes(p.openId)) cardState = 'state-pre';
+  // 复选框勾选：预选队伍中包含该玩家
+  const checked = !!(preNominatedTeam || []).includes(p.openId);
 
   // 票型：非 teamVote 阶段且公开时显示（后端已门控 teamVotes）
   let voteType = '';
@@ -37,7 +36,7 @@ function enrichTablePlayer(p, ctx) {
 
   return {
     ...p,
-    cardState,
+    checked,
     isLeader: p.openId === leaderOpenId,
     voteType,
     tags
@@ -114,6 +113,7 @@ Page({
     flowCars: [],
     visionList: [],
     nominateMode: 'final',
+    showSelectCheck: false,
   },
 
   onLoad(options) {
@@ -216,7 +216,7 @@ Page({
         });
 
         const myRole = res.player ? res.player.role : null;
-        // 长桌玩家富化（预计算 cardState/isLeader/voteType/标签，避免 wxml 函数调用）
+        // 长桌玩家富化（预计算 checked/isLeader/voteType/标签，避免 wxml 函数调用）
         const hostOpenId = (res.players || []).find(p => p.isHost) ? (res.players || []).find(p => p.isHost).openId : '';
         const tablePlayers = (res.players || []).map(p => enrichTablePlayer(p, {
           leaderOpenId: res.current.teamLeaderOpenId || '',
@@ -273,6 +273,7 @@ Page({
           lastMissionResult: !!(missions.length > 0 && missions[missions.length - 1].success),
           isTeamLeader: !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
           requiredTeamSize: this.getRequiredTeamSize(),
+          showSelectCheck: phase === 'discussion' && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId && !(this._discussionSaved || !!res.current.discussionSet),
           voteCount: Object.keys(res.current.teamVotes || {}).length,
           playerTotal: (res.players || []).length,
           isMissionTeamMember: !!((res.current.nominatedTeam || []).includes(myOpenId)),
@@ -401,7 +402,12 @@ Page({
     const pre = this.data.preNominatedTeam.slice();
     const i = pre.indexOf(playerId);
     if (i === -1) pre.push(playerId); else pre.splice(i, 1);
-    this.setData({ preNominatedTeam: pre });
+    // 就地刷新该玩家卡片的复选框勾选状态
+    const tablePlayers = this.data.tablePlayers.map(p => {
+      if (p.openId !== playerId) return p;
+      return { ...p, checked: pre.includes(playerId) };
+    });
+    this.setData({ preNominatedTeam: pre, tablePlayers });
   },
 
   // 第一步完成：提交预选车型（本地锁定，不落库）
@@ -497,14 +503,6 @@ Page({
   checkIfTeamLeader() {
     const { teamLeaderOpenId } = this.data;
     return !!teamLeaderOpenId && teamLeaderOpenId === app.globalData.openId;
-  },
-
-  // 长桌玩家卡片状态类（预选金底 / 发车青底）
-  tableCardState(openId) {
-    const { preNominatedTeam, nominatedTeam } = this.data;
-    if ((nominatedTeam || []).includes(openId)) return 'state-sel';
-    if ((preNominatedTeam || []).includes(openId)) return 'state-pre';
-    return '';
   },
 
   // 长桌玩家点击（按阶段分发）
