@@ -43,9 +43,10 @@
 .login-btn { width: 100%; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; border-radius: 16rpx; font-size: 32rpx; font-weight: 600; padding: 24rpx; box-shadow: 0 6rpx 20rpx rgba(124,58,237,0.3); }
 
 .current-room-card { background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-radius: 28rpx; padding: 40rpx 36rpx; margin-bottom: 20rpx; border-left: 8rpx solid var(--warning); flex-shrink: 0; }
-.current-room-label { font-size: 26rpx; color: #92400E; margin-bottom: 8rpx; }
-.current-room-id { display: block; font-size: 52rpx; font-weight: 800; color: #B45309; letter-spacing: 8rpx; margin-bottom: 24rpx; }
-.current-room-tags { display: flex; gap: 14rpx; margin-bottom: 28rpx; flex-wrap: wrap; }
+.current-room-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16rpx; }
+.current-room-label { font-size: 32rpx; color: #92400E; font-weight: 600; }
+.current-room-id { display: block; text-align: center; font-size: 52rpx; font-weight: 800; color: #B45309; letter-spacing: 8rpx; padding: 16rpx 0; margin-bottom: 12rpx; }
+.current-room-tags { display: flex; gap: 14rpx; flex-wrap: wrap; justify-content: flex-end; }
 .current-room-tag { font-size: 24rpx; color: #fff; padding: 6rpx 18rpx; border-radius: 8rpx; }
 .current-room-tag-ingame { background: #EF4444; }
 .current-room-tag-wait { background: #3B82F6; }
