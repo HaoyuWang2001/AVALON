@@ -61,53 +61,64 @@
   <view wx:if="{{currentPhase === 'discussion'}}" class="card">
     <view class="subtitle text-center">讨论 · 发车准备</view>
     <view class="text-center text-muted mb-3" style="color: #e74c3c;" wx:if="{{forcedSend}}">本轮强制发车</view>
+    <view class="text-center mb-3">
+      <text class="leader-badge">👑 队长：{{getTeamLeaderName()}}</text>
+    </view>
 
     <block wx:if="{{checkIfTeamLeader()}}">
       <view class="disc-setup">
-        <view class="flex-between" wx:if="{{!speakingOrderConfirmed}}">
-          <text class="rule-label">发车方向</text>
-          <picker range="{{speakingOrderOptions}}" range-key="label" value="{{speakingOrderIndex}}" bindchange="onSpeakingOrderChange">
-            <view class="picker-value">{{speakingOrderOptions[speakingOrderIndex].label}}</view>
-          </picker>
-        </view>
-        <view class="flex-between" wx:else>
-          <text class="rule-label">发车方向</text>
-          <text class="pick-confirmed">{{speakingOrder === 'desc' ? '从队长开始逆序' : '按座位号'}}</text>
-        </view>
-
-        <view class="flex-between mt-2">
-          <text class="rule-label">提名模式</text>
-          <view class="segment">
-            <view class="segment-item {{nominateMode === 'pre' ? 'segment-active' : ''}}" data-mode="pre" bindtap="onNominateModeChange">预提名</view>
-            <view class="segment-item {{nominateMode === 'final' ? 'segment-active' : ''}}" data-mode="final" bindtap="onNominateModeChange">最终提名</view>
+        <block wx:if="{{!speakingOrderConfirmed}}">
+          <!-- 第一步：预选车型 -->
+          <view class="disc-step">
+            <view class="disc-step-title">第一步 · 预选车型</view>
+            <view class="text-muted nominate-hint">点击玩家选择预选车型（任意人数），再次点击取消</view>
+            <view class="disc-btns">
+              <button wx:if="{{!preStepDone}}" size="mini" class="btn btn-primary" bindtap="submitPreNomination">提交预选车型（{{preNominatedTeam.length}}人）</button>
+              <view wx:else class="disc-step-done">
+                <text class="step-done-text">✓ 预选车型已提交（{{getNamesByIds(preNominatedTeam) || '无'}}）</text>
+                <text class="step-undo" bindtap="undoPreNomination">重新选择</text>
+              </view>
+            </view>
           </view>
-        </view>
-        <view class="text-muted nominate-hint">
-          {{nominateMode === 'pre' ? '点击玩家标记预提名队伍（可留空）' : '点击玩家标记最终发车队伍'}}
+
+          <!-- 第二步：指定发言方向 -->
+          <view class="disc-step">
+            <view class="disc-step-title">第二步 · 指定发言方向</view>
+            <view class="direction-btns">
+              <view class="direction-btn {{speakingOrder === 'asc' ? 'direction-active' : ''}}" data-order="asc" bindtap="selectSpeakingDirection">↑ 顺序</view>
+              <view class="direction-btn {{speakingOrder === 'desc' ? 'direction-active' : ''}}" data-order="desc" bindtap="selectSpeakingDirection">↓ 逆序</view>
+            </view>
+            <view class="text-muted nominate-hint">从队长开始{{speakingOrder === 'desc' ? '逆序' : '顺序'}}发言</view>
+            <view wx:if="{{directionStepDone}}" class="disc-step-done"><text class="step-done-text">✓ 发言方向已选择</text></view>
+          </view>
+        </block>
+        <view wx:else class="disc-step-done" style="justify-content:center; margin-bottom: 20rpx;">
+          <text class="step-done-text">✓ 发言设置已提交（{{getNamesByIds(preNominatedTeam) || '无'}} · {{speakingOrder === 'desc' ? '逆序' : '顺序'}}）</text>
         </view>
 
-        <view class="disc-btns">
-          <button size="mini" class="btn btn-secondary" bindtap="saveDiscussionSettings" disabled="{{speakingOrderConfirmed}}">保存发言设置{{preNominatedTeam.length > 0 ? ' · 预提名' + preNominatedTeam.length + '人' : ''}}</button>
-          <button size="mini" class="btn btn-primary" bindtap="confirmNomination">确认提名 {{nominatedTeam.length}}/{{getRequiredTeamSize()}}</button>
+        <!-- 最终确认发车 -->
+        <view class="disc-btns disc-final">
+          <button size="mini" class="btn btn-primary" bindtap="confirmNomination" disabled="{{!speakingOrderConfirmed}}">确认发车 {{preNominatedTeam.length}}/{{getRequiredTeamSize()}}</button>
         </view>
       </view>
     </block>
     <block wx:else>
       <view class="text-center text-muted mb-3">等待队长 {{getTeamLeaderName()}} 准备发车...</view>
-      <view class="info-line" wx:if="{{speakingOrderConfirmed}}">发车方向：{{speakingOrder === 'desc' ? '从队长开始逆序' : '按座位号'}}</view>
-      <view class="info-line" wx:if="{{preNominatedTeam.length > 0}}">预提名：{{getNamesByIds(preNominatedTeam)}}</view>
+      <view class="info-line" wx:if="{{speakingOrderConfirmed}}">发言方向：{{speakingOrder === 'desc' ? '从队长开始逆序' : '按座位号顺序'}}</view>
+      <view class="info-line" wx:if="{{preNominatedTeam.length > 0}}">预选车型：{{getNamesByIds(preNominatedTeam)}}</view>
       <view class="info-line" wx:if="{{nominatedTeam.length > 0}}">发车队伍：{{getNamesByIds(nominatedTeam)}}</view>
     </block>
 
     <view class="players-list">
       <view wx:for="{{allPlayers}}" wx:key="openId"
-        class="player-item {{preNominatedTeam.includes(item.openId) ? 'pre-selected' : ''}} {{nominatedTeam.includes(item.openId) ? 'selected' : ''}} {{checkIfTeamLeader() ? 'selectable' : ''}}"
+        class="player-item {{preNominatedTeam.includes(item.openId) ? 'pre-selected' : ''}} {{nominatedTeam.includes(item.openId) ? 'selected' : ''}} {{checkIfTeamLeader() && !speakingOrderConfirmed ? 'selectable' : ''}}"
         bindtap="nominatePlayer" data-id="{{item.openId}}">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="player-avatar"></image>
         <view class="player-info">
           <view class="player-name">{{item.nickName}}</view>
           <view class="player-status">
-            <text wx:if="{{preNominatedTeam.includes(item.openId)}}" class="badge badge-pre">预</text>
+            <text wx:if="{{item.openId === teamLeaderOpenId}}" class="badge badge-leader">👑 队长</text>
+            <text wx:if="{{preNominatedTeam.includes(item.openId)}}" class="badge badge-pre">预选</text>
             <text wx:if="{{nominatedTeam.includes(item.openId)}}" class="badge badge-final">选</text>
             {{item.openId === userInfo.openId ? '(自己)' : ''}}
           </view>

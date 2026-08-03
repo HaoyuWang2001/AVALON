@@ -321,14 +321,9 @@ class GameModel {
           throw new Error('speakingOrder 必须是 asc 或 desc');
         }
 
-        // 预提名队伍校验（若提供）
+        // 预提名队伍校验（若提供）：任意人数，仅校验成员都在本局
         let preTeamJson = null;
         if (Array.isArray(preNominatedTeam) && preNominatedTeam.length > 0) {
-          const playerCount = players.length;
-          const requiredSize = this.getTeamSize(playerCount, game[0].current_round);
-          if (preNominatedTeam.length !== requiredSize) {
-            throw new Error(`预提名队伍需要${requiredSize}人`);
-          }
           const validIds = new Set(players.map(p => p.open_id));
           if (preNominatedTeam.some(id => !validIds.has(id))) {
             throw new Error('预提名队伍包含不在本局的玩家');
@@ -418,6 +413,7 @@ class GameModel {
                 team_leader_index as teamLeaderIndex, nominated_team as nominatedTeam,
                 failed_nominations as failedNominations, lake_holder_open_id as lakeHolderOpenId,
                 pre_nominated_team as preNominatedTeam, speaking_order as speakingOrder,
+                discussion_set as discussionSet,
                 assassination, game_result as gameResult,
                 created_at as createdAt, ended_at as endedAt, updated_at as updatedAt,
                 status
@@ -634,6 +630,7 @@ class GameModel {
         missionVotes: gatedMissionVotes,
         lakeHolderOpenId: game.lakeHolderOpenId || null,
         speakingOrder: game.speakingOrder || 'asc',
+        discussionSet: !!(game.discussionSet === 1 || game.discussionSet === true),
         revealConfirmedCount,
         revealTotalCount: playerCount
       };

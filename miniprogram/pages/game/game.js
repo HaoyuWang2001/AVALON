@@ -31,6 +31,8 @@ Page({
     speakingOrder: 'asc',
     speakingOrderIndex: 0,
     speakingOrderConfirmed: false,
+    preStepDone: false,
+    directionStepDone: false,
     speakingOrderOptions: [{ label: '按座位号从1号开始', value: 'asc' }, { label: '从队长开始逆序', value: 'desc' }],
     showRoleModal: false,
     showRoleMask: false,
@@ -163,8 +165,8 @@ Page({
           currentPhase: phase,
           currentRound: round,
           teamLeaderOpenId: res.current.teamLeaderOpenId || '',
-          nominatedTeam: keepLocal ? this.data.nominatedTeam : (res.current.nominatedTeam || []),
-          preNominatedTeam: keepLocal ? this.data.preNominatedTeam : (res.current.preNominatedTeam || []),
+          nominatedTeam: (keepLocal && !this._discussionSaved) ? this.data.nominatedTeam : (res.current.nominatedTeam || []),
+          preNominatedTeam: (keepLocal && !this._discussionSaved) ? this.data.preNominatedTeam : (res.current.preNominatedTeam || []),
           teamVotes: res.current.teamVotes || {},
           missionVotes: res.current.missionVotes || {},
           missionResults: missions,
@@ -186,7 +188,7 @@ Page({
           lancelotSwaps: res.history ? res.history.lancelotSwaps || [] : [],
           speakingOrder: keepLocal ? this.data.speakingOrder : (res.current.speakingOrder || 'asc'),
           speakingOrderIndex: keepLocal ? this.data.speakingOrderIndex : ((res.current.speakingOrder || 'asc') === 'desc' ? 1 : 0),
-          speakingOrderConfirmed: this._discussionSaved || (res.current.speakingOrder || 'asc') !== 'asc' || !!res.current.preNominatedTeam,
+          speakingOrderConfirmed: this._discussionSaved || !!res.current.discussionSet,
           roundList: roundList,
           flowCars: flowCars,
         });
@@ -284,50 +286,61 @@ Page({
 
   nominatePlayer(e) {
     if (!this.checkIfTeamLeader()) return;
+    if (this.data.speakingOrderConfirmed) return;
     const playerId = e.currentTarget.dataset.id;
-    const mode = this.data.nominateMode;
+    // 讨论阶段第一步：预选车型（任意人数，点选/取消）
+    const pre = this.data.preNominatedTeam.slice();
+    const i = pre.indexOf(playerId);
+    if (i === -1) pre.push(playerId); else pre.splice(i, 1);
+    this.setData({ preNominatedTeam: pre });
+  },
 
-    if (mode === 'pre') {
-      const pre = this.data.preNominatedTeam.slice();
-      const i = pre.indexOf(playerId);
-      if (i === -1) pre.push(playerId); else pre.splice(i, 1);
-      this.setData({ preNominatedTeam: pre });
+  // 第一步完成：提交预选车型（本地锁定，不落库）
+  submitPreNomination() {
+    if (!this.checkIfTeamLeader()) return;
+    this.setData({ preStepDone: true });
+    // 若方向也已选择，则两步齐全 → 统一提交
+    if (this.data.directionStepDone) {
+      this.commitDiscussionSettings();
     } else {
-      const t = this.data.nominatedTeam.slice();
-      const i = t.indexOf(playerId);
-      if (i === -1) t.push(playerId); else t.splice(i, 1);
-      this.setData({ nominatedTeam: t });
+      wx.showToast({ title: '预选车型已提交，请选择发言方向', icon: 'none' });
     }
   },
 
-  onNominateModeChange(e) {
-    this.setData({ nominateMode: e.currentTarget.dataset.mode });
+  // 回退第一步（允许重新选择预选车型；未落库前可回退）
+  undoPreNomination() {
+    if (this.data.speakingOrderConfirmed) return;
+    this.setData({ preStepDone: false, directionStepDone: false });
   },
 
-  onSpeakingOrderChange(e) {
-    const index = parseInt(e.detail.value) || 0;
+  // 第二步：点击方向按钮立即选择（asc=↑ 顺序 / desc=↓ 逆序），两步齐全后统一提交
+  selectSpeakingDirection(e) {
+    if (!this.checkIfTeamLeader()) return;
+    const order = e.currentTarget.dataset.order;
+    if (!['asc', 'desc'].includes(order)) return;
     this.setData({
-      speakingOrderIndex: index,
-      speakingOrder: this.data.speakingOrderOptions[index] ? this.data.speakingOrderOptions[index].value : 'asc'
+      speakingOrder: order,
+      speakingOrderIndex: order === 'desc' ? 1 : 0,
+      directionStepDone: true
     });
+    // 两步都完成 → 统一调用 setDiscussion 落库
+    if (this.data.preStepDone && order) {
+      this.commitDiscussionSettings();
+    }
   },
 
-  saveDiscussionSettings() {
+  // 统一提交：预选车型 + 发言方向一次落库
+  commitDiscussionSettings() {
     const { gameId, speakingOrder, preNominatedTeam } = this.data;
-    const requiredSize = this.getRequiredTeamSize();
-    if (preNominatedTeam.length > 0 && preNominatedTeam.length !== requiredSize) {
-      wx.showToast({ title: `预提名需选满 ${requiredSize} 人（或清空）`, icon: 'none' });
-      return;
-    }
-    wx.showLoading({ title: '保存中...', mask: true });
+    wx.showLoading({ title: '提交中...', mask: true });
     api.setDiscussion(gameId, speakingOrder, preNominatedTeam).then(() => {
       wx.hideLoading();
       this._discussionSaved = true;
       this.fetchGameState();
-      wx.showToast({ title: '已保存', icon: 'success' });
+      wx.showToast({ title: '发言设置已提交', icon: 'success' });
     }).catch(err => {
       wx.hideLoading();
-      wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' });
+      wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
     });
   },
 
@@ -348,14 +361,18 @@ Page({
   },
 
   confirmNomination() {
-    const { gameId, nominatedTeam, forcedSend } = this.data;
+    const { gameId, preNominatedTeam, forcedSend } = this.data;
+    if (!this.data.speakingOrderConfirmed) {
+      wx.showToast({ title: '请先完成预选车型与发言方向', icon: 'none' });
+      return;
+    }
     const requiredSize = this.getRequiredTeamSize();
-    if (nominatedTeam.length !== requiredSize) {
-      wx.showToast({ title: `还需选择 ${requiredSize - nominatedTeam.length} 人`, icon: 'none' });
+    if (preNominatedTeam.length !== requiredSize) {
+      wx.showToast({ title: `预选车型需 ${requiredSize} 人（当前${preNominatedTeam.length}）`, icon: 'none' });
       return;
     }
     wx.showLoading({ title: '提交中...', mask: true });
-    api.submitNomination(gameId, nominatedTeam, forcedSend ? true : undefined).then(res => {
+    api.submitNomination(gameId, preNominatedTeam, forcedSend ? true : undefined).then(res => {
       wx.hideLoading();
       if (res && res.success === false) {
         wx.showToast({ title: res.message || '提交失败', icon: 'none' });
