@@ -40,9 +40,9 @@
     </view>
     <view class="current-room-id">{{currentRoom.roomId}}</view>
     <view class="current-room-btns">
-      <button class="btn btn-sm btn-primary" bindtap="backToRoom">回到房间</button>
-      <button wx:if="{{isCurrentRoomHost}}" class="btn btn-sm btn-danger" bindtap="disbandCurrentRoom">解散房间</button>
-      <button wx:else class="btn btn-sm btn-danger" bindtap="exitCurrentRoom">退出房间</button>
+      <button class="btn btn-sm btn-primary room-btn" bindtap="backToRoom">回到房间</button>
+      <button wx:if="{{isCurrentRoomHost}}" class="btn btn-sm btn-danger room-btn" bindtap="disbandCurrentRoom">解散房间</button>
+      <button wx:else class="btn btn-sm btn-danger room-btn" bindtap="exitCurrentRoom">退出房间</button>
     </view>
   </view>
 
