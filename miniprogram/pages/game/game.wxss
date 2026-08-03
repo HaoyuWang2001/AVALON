@@ -159,6 +159,21 @@
 .role-card-desc { font-size: 30rpx; color: #6B7280; text-align: center; line-height: 1.6; margin-bottom: 28rpx; padding: 0 12rpx; }
 .role-card-btn { min-width: 360rpx; font-size: 30rpx; }
 
+/* 等待其他玩家确认 */
+.role-waiting { display: flex; flex-direction: column; align-items: center; padding: 40rpx 0 16rpx; }
+.role-waiting-spinner {
+  width: 72rpx; height: 72rpx;
+  border: 8rpx solid rgba(139, 92, 246, 0.2);
+  border-top-color: #8B5CF6;
+  border-radius: 50%;
+  animation: role-spin 1s linear infinite;
+}
+.role-waiting-text { font-size: 28rpx; color: #6B7280; margin-top: 24rpx; }
+@keyframes role-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* 视野列表 */
 .role-vision { width: 100%; border-top: 1rpx solid #E5E7EB; padding-top: 24rpx; margin-bottom: 28rpx; }
 .role-vision-item { display: flex; align-items: center; padding: 14rpx 0; }

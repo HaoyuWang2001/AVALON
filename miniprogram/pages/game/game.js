@@ -34,6 +34,7 @@ Page({
     speakingOrderOptions: [{ label: '按座位号从1号开始', value: 'asc' }, { label: '从队长开始逆序', value: 'desc' }],
     showRoleModal: false,
     showRoleMask: false,
+    roleWaiting: false,
     showInfoModal: false,
     showVoteModal: false,
     showMissionModal: false,
@@ -194,10 +195,12 @@ Page({
           this.showGameEndResult(res.basic ? res.basic.result : null);
         }
 
-        // 断线重连：roleReveal 阶段始终展示身份蒙版+弹窗（直到确认身份）；其他阶段不自动弹
-        const needConfirm = phase === 'roleReveal' && res.player && res.player.role && !this.data.revealConfirmed;
-        if (needConfirm) {
-          this.setData({ showRoleMask: true });
+        // 全员确认后进入 discussion：关闭身份页/蒙版，正式进入游戏
+        if (phase === 'discussion') {
+          this.setData({ showRoleModal: false, showRoleMask: false, roleWaiting: false });
+        } else if (phase === 'roleReveal' && res.player && res.player.role && !this.data.revealConfirmed) {
+          // roleReveal 未确认：展示蒙版；已点击确认（roleWaiting）则保持身份页等待，不再弹蒙版
+          this.setData({ showRoleMask: !this.data.roleWaiting });
           // 禁用返回手势：roleReveal 未确认时必须点按钮才能继续
           if (wx.enableAlertBeforeUnload) {
             wx.enableAlertBeforeUnload({ message: '是否暂时挂起游戏回到首页？' });
@@ -219,10 +222,12 @@ Page({
   confirmRoleReveal() {
     const { gameId } = this.data;
     api.confirmReveal(gameId).then(res => {
-      // 确认成功：关闭身份页与蒙版，随后刷新状态（全员确认后自动进 discussion）
-      this.setData({ showRoleModal: false, showRoleMask: false });
+      // 确认成功：进入等待状态——保持身份页，隐藏按钮，显示紫色加载
+      this.setData({ roleWaiting: true, showRoleMask: false });
       this.fetchGameState();
       if (res && res.current && res.current.phase === 'discussion') {
+        // 已是最后确认者，全员确认完成 → 进入 discussion
+        this.setData({ showRoleModal: false });
         wx.showToast({ title: '全员已确认，进入讨论', icon: 'success' });
       }
     }).catch(err => {

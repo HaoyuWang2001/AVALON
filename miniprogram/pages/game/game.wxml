@@ -270,7 +270,13 @@
           </view>
         </view>
       </view>
-      <button class="btn btn-primary role-card-btn" bindtap="closeRoleModal" disabled="{{currentPhase !== 'roleReveal' && revealConfirmed}}">
+      <block wx:if="{{roleWaiting}}">
+        <view class="role-waiting">
+          <view class="role-waiting-spinner"></view>
+          <view class="role-waiting-text">等待其他玩家确认身份...</view>
+        </view>
+      </block>
+      <button wx:else class="btn btn-primary role-card-btn" bindtap="closeRoleModal" disabled="{{currentPhase !== 'roleReveal' && revealConfirmed}}">
         {{currentPhase === 'roleReveal' && !revealConfirmed ? '确认身份' : '隐藏身份'}}
       </button>
     </view>
