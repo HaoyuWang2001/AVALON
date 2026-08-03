@@ -555,6 +555,24 @@ Page({
     return roleNames[role] || '未知';
   },
 
+  getRoleEmoji(role) {
+    const emojis = {
+      'merlin': '🔮',
+      'percival': '🛡️',
+      'loyal': '🧑‍🌾',
+      'mordred': '🌑',
+      'morgana': '🌙',
+      'assassin': '🗡️',
+      'minion': '🐺',
+      'oberon': '👤',
+      'lancelotBlue': '🔵',
+      'lancelotRed': '🔴',
+      'lancelot': '⚖️',
+      'ladyOfTheLake': '🏝️'
+    };
+    return emojis[role] || '🎴';
+  },
+
   getRoleDesc(role) {
     const roleDesc = {
       'merlin': '知道所有坏人（除莫德雷德），需要隐藏身份',

@@ -134,38 +134,39 @@
 }
 .role-modal-body {
   position: relative; z-index: 999;
-  width: 640rpx; max-height: 88vh;
-  background: #FFFFFF; border-radius: 24rpx;
+  width: 720rpx; max-height: 90vh;
+  background: #FFFFFF; border-radius: 28rpx;
   display: flex; flex-direction: column; align-items: center;
-  padding: 40rpx 32rpx 32rpx;
+  padding: 48rpx 40rpx 40rpx;
   overflow-y: auto;
 }
 .role-card-badge {
-  width: 260rpx; height: 360rpx; border-radius: 20rpx;
+  width: 320rpx; height: 420rpx; border-radius: 24rpx;
   background: linear-gradient(160deg, #1E1B4B, #312E81);
   box-shadow: 0 12rpx 32rpx rgba(49, 46, 129, 0.35);
   display: flex; align-items: center; justify-content: center;
-  margin-bottom: 24rpx;
+  margin-bottom: 28rpx;
 }
 .role-card-img { width: 100%; height: 100%; }
-.role-card-emoji { font-size: 120rpx; }
-.role-tags { display: flex; gap: 12rpx; margin-bottom: 16rpx; flex-wrap: wrap; justify-content: center; }
-.role-tag { font-size: 26rpx; font-weight: 700; padding: 8rpx 24rpx; border-radius: 24rpx; }
+.role-card-emoji { font-size: 160rpx; }
+.role-tags { display: flex; gap: 16rpx; margin-bottom: 20rpx; flex-wrap: wrap; justify-content: center; }
+.role-tag { font-size: 32rpx; font-weight: 800; padding: 12rpx 32rpx; border-radius: 28rpx; }
 .role-tag-name { background: #EDE9FE; color: #6D28D9; }
 .role-tag.tag-good { background: rgba(46, 204, 113, 0.12); color: #10B981; }
 .role-tag.tag-evil { background: rgba(231, 76, 60, 0.12); color: #EF4444; }
-.role-card-desc { font-size: 28rpx; color: #6B7280; text-align: center; line-height: 1.6; margin-bottom: 24rpx; padding: 0 12rpx; }
-.role-card-btn { min-width: 320rpx; }
+.role-card-desc { font-size: 30rpx; color: #6B7280; text-align: center; line-height: 1.6; margin-bottom: 28rpx; padding: 0 12rpx; }
+.role-card-btn { min-width: 360rpx; font-size: 30rpx; }
 
 /* 视野列表 */
-.role-vision { width: 100%; border-top: 1rpx solid #E5E7EB; padding-top: 20rpx; margin-bottom: 24rpx; }
-.role-vision-title { font-size: 26rpx; font-weight: 700; color: #374151; margin-bottom: 12rpx; text-align: center; }
-.role-vision-item { display: flex; align-items: center; padding: 10rpx 0; }
-.role-vision-avatar { width: 64rpx; height: 64rpx; border-radius: 50%; margin-right: 16rpx; background: #F3F4F6; }
-.role-vision-name { flex: 1; font-size: 28rpx; color: #111827; }
-.role-vision-tag { font-size: 24rpx; font-weight: 600; padding: 4rpx 16rpx; border-radius: 20rpx; background: #EDE9FE; color: #6D28D9; }
-.role-vision-tag.tag-good { background: rgba(46, 204, 113, 0.12); color: #10B981; }
-.role-vision-tag.tag-evil { background: rgba(231, 76, 60, 0.12); color: #EF4444; }
+.role-vision { width: 100%; border-top: 1rpx solid #E5E7EB; padding-top: 24rpx; margin-bottom: 28rpx; }
+.role-vision-item { display: flex; align-items: center; padding: 14rpx 0; }
+.role-vision-avatar { width: 72rpx; height: 72rpx; border-radius: 50%; margin-right: 20rpx; background: #F3F4F6; }
+.role-vision-name { flex: 1; font-size: 30rpx; color: #111827; font-weight: 600; }
+.role-vision-tags { display: flex; gap: 10rpx; flex-wrap: wrap; align-items: center; }
+.role-vision-tag { font-size: 26rpx; font-weight: 700; padding: 6rpx 20rpx; border-radius: 22rpx; background: #EDE9FE; color: #6D28D9; }
+.role-vision-tag-role { background: #4F46E5; color: #FFFFFF; }
+.role-vision-tag.tag-good { background: rgba(46, 204, 113, 0.14); color: #10B981; }
+.role-vision-tag.tag-evil { background: rgba(231, 76, 60, 0.14); color: #EF4444; }
 
 /* ─────── 历史弹窗 ─────── */
 .info-modal {
