@@ -272,8 +272,8 @@
           </view>
         </view>
       </view>
-      <button class="btn btn-primary role-card-btn" bindtap="closeRoleModal" disabled="{{revealConfirmed}}">
-        {{revealConfirmed ? '已确认 ({{revealConfirmedCount}}/{{revealTotalCount}})' : '隐藏身份并确认'}}
+      <button class="btn btn-primary role-card-btn" bindtap="closeRoleModal" disabled="{{currentPhase !== 'roleReveal' && revealConfirmed}}">
+        {{currentPhase === 'roleReveal' && !revealConfirmed ? '确认身份' : '隐藏身份'}}
       </button>
     </view>
   </view>

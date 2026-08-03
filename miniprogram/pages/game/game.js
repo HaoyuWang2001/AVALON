@@ -185,8 +185,11 @@ Page({
           this.showGameEndResult(res.basic ? res.basic.result : null);
         }
 
-        if (phase === 'roleReveal' && res.player && res.player.role && !wx.getStorageSync('avalon_roleMask_' + gameId)) {
+        // 断线重连：roleReveal 阶段始终展示身份蒙版+弹窗（直到确认身份）；其他阶段不自动弹
+        if (phase === 'roleReveal' && res.player && res.player.role && !this.data.revealConfirmed) {
           this.setData({ showRoleMask: true });
+        } else {
+          this.setData({ showRoleMask: false });
         }
       }
     }).catch(err => {
@@ -218,10 +221,11 @@ Page({
   },
 
   closeRoleModal() {
-    this.setData({ showRoleModal: false });
-    // 角色揭示阶段：关闭角色卡即确认（幂等，可重复）
+    // 角色揭示阶段未确认：点"确认身份"→ 确认并关闭；其他阶段：仅关闭
     if (this.data.currentPhase === 'roleReveal' && !this.data.revealConfirmed) {
       this.confirmRoleReveal();
+    } else {
+      this.setData({ showRoleModal: false });
     }
   },
 
@@ -548,9 +552,7 @@ Page({
       'minion': '爪牙',
       'oberon': '奥伯伦',
       'lancelotBlue': '蓝兰',
-      'lancelotRed': '红兰',
-      'lancelot': '兰斯洛特',
-      'ladyOfTheLake': '湖中仙女'
+      'lancelotRed': '红兰'
     };
     return roleNames[role] || '未知';
   },
@@ -566,9 +568,7 @@ Page({
       'minion': '🐺',
       'oberon': '👤',
       'lancelotBlue': '🔵',
-      'lancelotRed': '🔴',
-      'lancelot': '⚖️',
-      'ladyOfTheLake': '🏝️'
+      'lancelotRed': '🔴'
     };
     return emojis[role] || '🎴';
   },
@@ -584,9 +584,7 @@ Page({
       'minion': '坏人，帮助破坏任务',
       'oberon': '坏人，不知道其他坏人身份，坏人看不到他',
       'lancelotBlue': '蓝兰，好人阵营兰斯洛特，可能被换阵营',
-      'lancelotRed': '红兰，坏人阵营兰斯洛特，可能被换阵营',
-      'lancelot': '兰斯洛特，任务投票时可以故意输掉',
-      'ladyOfTheLake': '好人，可以使用湖中仙女技能查看其他玩家阵营'
+      'lancelotRed': '红兰，坏人阵营兰斯洛特，可能被换阵营'
     };
     return roleDesc[role] || '角色信息错误';
   },
