@@ -41,7 +41,7 @@
 .flow-car.failed .flow-car-icon { color: #EF4444; }
 .flow-car.current { border: 5rpx solid #8B5CF6; }
 .flow-car.is-forced { border-color: #EF4444; box-shadow: 0 0 0 6rpx rgba(239, 68, 68, 0.2); }
-.flow-car.last { width: 76rpx; height: 76rpx; flex-direction: column; }
+.flow-car.last { width: 56rpx; height: 76rpx; flex-direction: column; }
 .flow-car-label {
   position: absolute; bottom: -30rpx; left: 50%;
   transform: translateX(-50%);
@@ -133,7 +133,7 @@
   background: #8B5CF6;
   border-radius: 12rpx;
   padding: 8rpx 16rpx;
-  margin: 0 8rpx;
+  margin: 0 16rpx 0 8rpx;
 }
 .tplayer-avatar-wrap { position: relative; flex-shrink: 0; }
 .tplayer-avatar {
