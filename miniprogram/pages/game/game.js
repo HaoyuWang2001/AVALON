@@ -216,6 +216,10 @@ Page({
         });
 
         const myRole = res.player ? res.player.role : null;
+        // 本地预选未落库时保留本地选中，否则用后端值（统一供富化与 setData 使用）
+        const effPreTeam = (keepLocal && !this._discussionSaved)
+          ? this.data.preNominatedTeam
+          : (res.current.preNominatedTeam || []);
         // 长桌玩家富化（预计算 checked/isLeader/voteType/标签，避免 wxml 函数调用）
         const hostOpenId = (res.players || []).find(p => p.isHost) ? (res.players || []).find(p => p.isHost).openId : '';
         const tablePlayers = (res.players || []).map(p => enrichTablePlayer(p, {
@@ -223,7 +227,7 @@ Page({
           myOpenId: myOpenId,
           hostOpenId,
           lakeHolderOpenId: res.current.lakeHolderOpenId || '',
-          preNominatedTeam: res.current.preNominatedTeam || [],
+          preNominatedTeam: effPreTeam,
           nominatedTeam: res.current.nominatedTeam || [],
           teamVotes: res.current.teamVotes || {},
           currentPhase: phase
@@ -239,7 +243,7 @@ Page({
           currentRound: round,
           teamLeaderOpenId: res.current.teamLeaderOpenId || '',
           nominatedTeam: (keepLocal && !this._discussionSaved) ? this.data.nominatedTeam : (res.current.nominatedTeam || []),
-          preNominatedTeam: (keepLocal && !this._discussionSaved) ? this.data.preNominatedTeam : (res.current.preNominatedTeam || []),
+          preNominatedTeam: effPreTeam,
           teamVotes: res.current.teamVotes || {},
           missionVotes: res.current.missionVotes || {},
           missionResults: missions,
