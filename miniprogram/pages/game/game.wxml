@@ -19,7 +19,7 @@
   <view class="card mission-card">
     <view class="mission-head">
       <view class="mission-head-info">
-        <text class="mission-phase">{{getPhaseText(currentPhase)}}</text>
+        <text class="mission-phase">{{phaseText}}</text>
       </view>
       <view class="mission-actions">
         <text class="mini-btn" wx:if="{{playerRole}}" bindtap="openRoleModal">查看身份</text>
@@ -34,13 +34,15 @@
       </block>
     </view>
 
-    <view class="flow-cars">
-      <block wx:for="{{flowCars}}" wx:key="index">
-        <view class="flow-car {{item.state}} {{item.isLast ? 'last' : ''}} {{item.isForced ? 'is-forced' : ''}}">
-          <text class="flow-car-icon">{{item.state === 'failed' ? '✕' : '√'}}</text>
-          <text wx:if="{{item.isLast}}" class="flow-car-label">强制车</text>
-        </view>
-      </block>
+    <view class="flow-area">
+      <view class="flow-cars">
+        <block wx:for="{{flowCars}}" wx:key="index">
+          <view class="flow-car {{item.state}} {{item.isLast ? 'last' : ''}} {{item.isForced ? 'is-forced' : ''}}">
+            <text class="flow-car-icon">{{item.state === 'failed' ? '✕' : '√'}}</text>
+            <text wx:if="{{item.isLast}}" class="flow-car-label">强制车</text>
+          </view>
+        </block>
+      </view>
     </view>
   </view>
 
@@ -48,24 +50,28 @@
   <view class="table-layout">
     <!-- 左列玩家 -->
     <view class="table-side table-left">
-      <view wx:for="{{leftPlayers}}" wx:key="openId" class="table-player {{tableCardState(item.openId)}}"
-        bindtap="{{currentPhase === 'discussion' || currentPhase === 'assassination' ? 'onTablePlayerTap' : ''}}" data-id="{{item.openId}}">
+      <view wx:for="{{leftPlayers}}" wx:key="openId" class="table-player {{item.cardState}}"
+        bindtap="onTablePlayerTap" data-id="{{item.openId}}">
         <text class="seat-no">{{item.seatNumber}}</text>
-        <view class="tplayer-avatar-wrap">
-          <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
-          <text wx:if="{{item.openId === teamLeaderOpenId}}" class="crown-badge">👑</text>
-          <text wx:if="{{item.openId === playerId}}" class="me-tag">我</text>
-          <view wx:if="{{currentPhase === 'teamVote' && teamVoteStatus}}" class="vote-dot {{teamVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
-          <view wx:if="{{currentPhase === 'missionVote' && missionVoteStatus}}" class="vote-dot {{missionVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
-          <text wx:if="{{currentPhase !== 'teamVote' && publicVoteOf(item.openId)}}" class="vote-type {{publicVoteOf(item.openId) === 'approve' ? 'txt-approve' : 'txt-reject'}}">{{publicVoteOf(item.openId) === 'approve' ? '✓' : '✗'}}</text>
+        <view class="tplayer-info">
+          <view class="tplayer-avatar-wrap">
+            <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
+            <text wx:if="{{item.isLeader}}" class="crown-badge">👑</text>
+            <text wx:if="{{item.voteType}}" class="vote-type {{item.voteType === 'approve' ? 'txt-approve' : 'txt-reject'}}">{{item.voteType === 'approve' ? '✓' : '✗'}}</text>
+            <view wx:if="{{currentPhase === 'teamVote' && teamVoteStatus}}" class="vote-dot {{teamVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
+            <view wx:if="{{currentPhase === 'missionVote' && missionVoteStatus}}" class="vote-dot {{missionVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
+          </view>
+          <text class="tplayer-name">{{item.nickName}}</text>
+          <view class="tplayer-tags">
+            <text wx:if="{{item.tagText}}" class="ptag {{item.tagClass}}">{{item.tagText}}</text>
+          </view>
         </view>
-        <text class="tplayer-name">{{item.nickName}}</text>
       </view>
     </view>
 
     <!-- 中间区 -->
     <view class="table-center">
-      <view class="center-phase">{{centerPhaseText()}}</view>
+      <view class="center-phase">{{centerPhase}}</view>
 
       <!-- roleReveal：确认进度 -->
       <block wx:if="{{currentPhase === 'roleReveal'}}">
@@ -82,7 +88,7 @@
             <text class="timer-btn" bindtap="resetTimer">重置</text>
           </view>
         </view>
-        <block wx:if="{{checkIfTeamLeader()}}">
+        <block wx:if="{{isTeamLeader}}">
           <view class="disc-setup">
             <block wx:if="{{!speakingOrderConfirmed}}">
               <view class="disc-step">
@@ -104,7 +110,7 @@
               </view>
             </block>
             <view class="disc-btns disc-final">
-              <button size="mini" class="btn btn-primary" bindtap="confirmNomination" disabled="{{!speakingOrderConfirmed}}">确认发车 {{preNominatedTeam.length}}/{{getRequiredTeamSize()}}</button>
+              <button size="mini" class="btn btn-primary" bindtap="confirmNomination" disabled="{{!speakingOrderConfirmed}}">确认发车 {{preNominatedTeam.length}}/{{requiredTeamSize}}</button>
             </view>
           </view>
         </block>
@@ -116,13 +122,13 @@
           <button class="btn btn-success" bindtap="castVote" data-vote="approve">同意</button>
           <button class="btn btn-danger" bindtap="castVote" data-vote="reject">反对</button>
         </view>
-        <view class="center-info">已投 {{getVoteCount()}}/{{allPlayers.length}}</view>
+        <view class="center-info">已投 {{voteCount}}/{{playerTotal}}</view>
       </block>
 
       <!-- missionVote -->
       <block wx:if="{{currentPhase === 'missionVote'}}">
-        <block wx:if="{{isOnMissionTeam()}}">
-          <block wx:if="{{!hasMissionVoted()}}">
+        <block wx:if="{{isMissionTeamMember}}">
+          <block wx:if="{{!hasMissionVoted}}">
             <view class="vote-buttons col">
               <button class="btn btn-success" bindtap="castMissionVote" data-vote="success">成功</button>
               <button class="btn btn-danger" bindtap="castMissionVote" data-vote="fail">失败</button>
@@ -135,30 +141,34 @@
 
       <!-- assassination -->
       <block wx:if="{{currentPhase === 'assassination'}}">
-        <view class="center-info">{{canAssassinate() ? '选择刺杀目标' : '等待刺客行动'}}</view>
+        <view class="center-info">{{canAssassinateVar ? '选择刺杀目标' : '等待刺客行动'}}</view>
       </block>
 
       <!-- gameEnd -->
       <block wx:if="{{currentPhase === 'gameEnd'}}">
-        <view class="game-end-icon">{{getGameWinner() === 'good' ? '🎉' : '💀'}}</view>
-        <view class="game-end-title">{{getGameWinner() === 'good' ? '好人胜利' : '坏人胜利'}}</view>
+        <view class="game-end-icon">{{gameWinner === 'good' ? '🎉' : '💀'}}</view>
+        <view class="game-end-title">{{gameWinner === 'good' ? '好人胜利' : '坏人胜利'}}</view>
         <button class="btn btn-primary" bindtap="endGame">返回房间</button>
       </block>
     </view>
 
     <!-- 右列玩家 -->
     <view class="table-side table-right">
-      <view wx:for="{{rightPlayers}}" wx:key="openId" class="table-player {{tableCardState(item.openId)}}"
-        bindtap="{{currentPhase === 'discussion' || currentPhase === 'assassination' ? 'onTablePlayerTap' : ''}}" data-id="{{item.openId}}">
-        <view class="tplayer-avatar-wrap">
-          <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
-          <text wx:if="{{item.openId === teamLeaderOpenId}}" class="crown-badge">👑</text>
-          <text wx:if="{{item.openId === playerId}}" class="me-tag">我</text>
-          <view wx:if="{{currentPhase === 'teamVote' && teamVoteStatus}}" class="vote-dot {{teamVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
-          <view wx:if="{{currentPhase === 'missionVote' && missionVoteStatus}}" class="vote-dot {{missionVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
-          <text wx:if="{{currentPhase !== 'teamVote' && publicVoteOf(item.openId)}}" class="vote-type {{publicVoteOf(item.openId) === 'approve' ? 'txt-approve' : 'txt-reject'}}">{{publicVoteOf(item.openId) === 'approve' ? '✓' : '✗'}}</text>
+      <view wx:for="{{rightPlayers}}" wx:key="openId" class="table-player {{item.cardState}}"
+        bindtap="onTablePlayerTap" data-id="{{item.openId}}">
+        <view class="tplayer-info">
+          <view class="tplayer-avatar-wrap">
+            <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
+            <text wx:if="{{item.isLeader}}" class="crown-badge">👑</text>
+            <text wx:if="{{item.voteType}}" class="vote-type {{item.voteType === 'approve' ? 'txt-approve' : 'txt-reject'}}">{{item.voteType === 'approve' ? '✓' : '✗'}}</text>
+            <view wx:if="{{currentPhase === 'teamVote' && teamVoteStatus}}" class="vote-dot {{teamVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
+            <view wx:if="{{currentPhase === 'missionVote' && missionVoteStatus}}" class="vote-dot {{missionVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
+          </view>
+          <text class="tplayer-name">{{item.nickName}}</text>
+          <view class="tplayer-tags">
+            <text wx:if="{{item.tagText}}" class="ptag {{item.tagClass}}">{{item.tagText}}</text>
+          </view>
         </view>
-        <text class="tplayer-name">{{item.nickName}}</text>
         <text class="seat-no">{{item.seatNumber}}</text>
       </view>
     </view>
@@ -167,14 +177,14 @@
   <!-- 任务结果全屏弹窗 -->
   <view class="result-overlay" wx:if="{{currentPhase === 'missionResult'}}">
     <view class="result-card">
-      <view class="result-emoji">{{getLastMissionResult() ? '✅' : '❌'}}</view>
-      <view class="result-title">{{getLastMissionResult() ? '任务成功' : '任务失败'}}</view>
-      <view class="result-sub">{{getLastMissionResult() ? '好人获得1分' : '坏人获得1分'}}</view>
+      <view class="result-emoji">{{lastMissionResult ? '✅' : '❌'}}</view>
+      <view class="result-title">{{lastMissionResult ? '任务成功' : '任务失败'}}</view>
+      <view class="result-sub">{{lastMissionResult ? '好人获得1分' : '坏人获得1分'}}</view>
     </view>
   </view>
 
-  <!-- 身份页（全屏覆盖） -->
-  <view class="role-page" wx:if="{{showRoleModal}}">
+  <!-- 全屏 confirmReveal 页（roleReveal 阶段确认身份） -->
+  <view class="role-page" wx:if="{{showRolePage}}">
     <view class="role-page-inner">
       <view class="role-card-badge">
         <image wx:if="{{roleCardImg}}" src="{{roleCardImg}}" class="role-card-img" mode="aspectFit"/>
@@ -202,10 +212,25 @@
             <view class="role-waiting-text">等待其他玩家确认身份...</view>
           </view>
         </block>
-        <button wx:else class="btn btn-primary role-card-btn" bindtap="closeRoleModal" disabled="{{currentPhase !== 'roleReveal' && revealConfirmed}}">
-          {{currentPhase === 'roleReveal' && !revealConfirmed ? '确认身份' : '隐藏身份'}}
-        </button>
+        <button wx:else class="btn btn-primary role-card-btn" bindtap="closeRolePage">确认身份</button>
       </view>
+    </view>
+  </view>
+
+  <!-- 标准查看身份弹窗（非 roleReveal，点"隐藏身份"关闭，不自动消失） -->
+  <view class="role-modal" wx:if="{{showRoleModal}}">
+    <view class="modal-mask" bindtap="closeRoleModal"></view>
+    <view class="role-modal-body">
+      <view class="role-card-badge">
+        <image wx:if="{{roleCardImg}}" src="{{roleCardImg}}" class="role-card-img" mode="aspectFit"/>
+        <text wx:else class="role-card-emoji">{{roleEmoji}}</text>
+      </view>
+      <view class="role-tags">
+        <text class="role-tag role-tag-name">{{roleName}}</text>
+        <text class="role-tag role-tag-side {{playerSide === 'evil' ? 'tag-evil' : 'tag-good'}}">{{playerSide === 'evil' ? '坏人阵营' : '好人阵营'}}</text>
+      </view>
+      <view class="role-card-desc">{{roleDesc}}</view>
+      <button class="btn btn-primary role-card-btn" bindtap="closeRoleModal">隐藏身份</button>
     </view>
   </view>
 

@@ -13,6 +13,52 @@ function splitTableSides(players) {
   };
 }
 
+// 标准标签配色：浅紫底深紫字 / 浅蓝底蓝字 / 浅粉底粉字
+const TAG_STYLES = {
+  purple: 'ptag-purple',
+  blue: 'ptag-blue',
+  pink: 'ptag-pink'
+};
+
+// 为长桌玩家卡片富化字段（cardState/isLeader/voteType/tagText/tagClass）
+function enrichTablePlayer(p, ctx) {
+  const {
+    leaderOpenId, myOpenId, hostOpenId, lakeHolderOpenId,
+    preNominatedTeam, nominatedTeam, teamVotes, currentPhase
+  } = ctx;
+
+  let cardState = '';
+  if ((nominatedTeam || []).includes(p.openId)) cardState = 'state-sel';
+  else if ((preNominatedTeam || []).includes(p.openId)) cardState = 'state-pre';
+
+  // 票型：非 teamVote 阶段且公开时显示（后端已门控 teamVotes）
+  let voteType = '';
+  if (currentPhase !== 'teamVote') {
+    const v = (teamVotes || {})[p.openId];
+    if (v === 'approve' || v === 'reject') voteType = v;
+  }
+
+  // 标签：我(紫) / 房主(蓝) / 湖仙(粉) —— 优先级：我 > 房主 > 湖仙
+  let tagText = '';
+  let tagClass = '';
+  if (p.openId === myOpenId) {
+    tagText = '我'; tagClass = TAG_STYLES.purple;
+  } else if (p.openId === hostOpenId) {
+    tagText = '房主'; tagClass = TAG_STYLES.blue;
+  } else if (p.openId === lakeHolderOpenId) {
+    tagText = '湖仙'; tagClass = TAG_STYLES.pink;
+  }
+
+  return {
+    ...p,
+    cardState,
+    isLeader: p.openId === leaderOpenId,
+    voteType,
+    tagText,
+    tagClass
+  };
+}
+
 Page({
   data: {
     roomId: '',
@@ -32,6 +78,17 @@ Page({
     allPlayers: [],
     leftPlayers: [],
     rightPlayers: [],
+    centerPhase: '',
+    phaseText: '',
+    lastMissionResult: false,
+    isTeamLeader: false,
+    requiredTeamSize: 0,
+    voteCount: 0,
+    playerTotal: 0,
+    isMissionTeamMember: false,
+    hasMissionVoted: false,
+    canAssassinateVar: false,
+    gameWinner: '',
     nominatedTeam: [],
     teamVotes: {},
     missionVotes: {},
@@ -50,6 +107,7 @@ Page({
     directionStepDone: false,
     speakingOrderOptions: [{ label: '按座位号从1号开始', value: 'asc' }, { label: '从队长开始逆序', value: 'desc' }],
     showRoleModal: false,
+    showRolePage: false,
     showRoleMask: false,
     roleWaiting: false,
     showInfoModal: false,
@@ -174,6 +232,18 @@ Page({
         });
 
         const myRole = res.player ? res.player.role : null;
+        // 长桌玩家富化（预计算 cardState/isLeader/voteType/标签，避免 wxml 函数调用）
+        const hostOpenId = (res.players || []).find(p => p.isHost) ? (res.players || []).find(p => p.isHost).openId : '';
+        const tablePlayers = (res.players || []).map(p => enrichTablePlayer(p, {
+          leaderOpenId: res.current.teamLeaderOpenId || '',
+          myOpenId: myOpenId,
+          hostOpenId,
+          lakeHolderOpenId: res.current.lakeHolderOpenId || '',
+          preNominatedTeam: res.current.preNominatedTeam || [],
+          nominatedTeam: res.current.nominatedTeam || [],
+          teamVotes: res.current.teamVotes || {},
+          currentPhase: phase
+        }));
         this.setData({
           gameState: res.current,
           playerRole: myRole,
@@ -200,8 +270,8 @@ Page({
           vision: res.player ? res.player.vision || null : null,
           visionList: visionList,
           allPlayers: res.players || [],
-          leftPlayers: splitTableSides(res.players || []).left,
-          rightPlayers: splitTableSides(res.players || []).right,
+          leftPlayers: splitTableSides(tablePlayers).left,
+          rightPlayers: splitTableSides(tablePlayers).right,
           teamVoteStatus: res.current.teamVoteStatus || null,
           missionVoteStatus: res.current.missionVoteStatus || null,
           roomConfigVal: res.basic && res.basic.roomConfig ? res.basic.roomConfig : null,
@@ -215,6 +285,17 @@ Page({
           speakingOrderConfirmed: this._discussionSaved || !!res.current.discussionSet,
           roundList: roundList,
           flowCars: flowCars,
+          centerPhase: this.centerPhaseText(),
+          phaseText: this.getPhaseText(phase),
+          lastMissionResult: !!(missions.length > 0 && missions[missions.length - 1].success),
+          isTeamLeader: !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
+          requiredTeamSize: this.getRequiredTeamSize(),
+          voteCount: Object.keys(res.current.teamVotes || {}).length,
+          playerTotal: (res.players || []).length,
+          isMissionTeamMember: !!((res.current.nominatedTeam || []).includes(myOpenId)),
+          hasMissionVoted: !!(res.current.missionVotes && res.current.missionVotes[myOpenId]),
+          canAssassinateVar: ['assassin', 'morgana'].includes(myRole),
+          gameWinner: res.basic && res.basic.result && res.basic.result.winner ? res.basic.result.winner : (missions.filter(r => r.success).length >= 3 ? 'good' : 'evil'),
         });
 
         if (phase === 'gameEnd') {
@@ -223,7 +304,7 @@ Page({
 
         // 全员确认后进入 discussion：关闭身份页/蒙版，正式进入游戏
         if (phase === 'discussion') {
-          this.setData({ showRoleModal: false, showRoleMask: false, roleWaiting: false });
+          this.setData({ showRoleModal: false, showRolePage: false, showRoleMask: false, roleWaiting: false });
           this._ensureTimerInit();
         } else {
           this._stopTimer();
@@ -257,7 +338,7 @@ Page({
       this.fetchGameState();
       if (res && res.current && res.current.phase === 'discussion') {
         // 已是最后确认者，全员确认完成 → 进入 discussion
-        this.setData({ showRoleModal: false });
+        this.setData({ showRolePage: false, showRoleModal: false });
         wx.showToast({ title: '全员已确认，进入讨论', icon: 'success' });
       }
     }).catch(err => {
@@ -265,23 +346,40 @@ Page({
     });
   },
 
+  // 蒙版"查看身份" → 打开全屏 confirmReveal 页（roleReveal 阶段）
   dismissRoleMask() {
     wx.setStorageSync('avalon_roleMask_' + this.data.gameId, true);
     this.setData({ showRoleMask: false });
-    this.openRoleModal();
+    this.openRolePage();
   },
 
+  // 全屏 confirmReveal 页（roleReveal 阶段确认身份用）
+  openRolePage() {
+    if (!this.data.playerRole) return;
+    this.setData({ showRolePage: true, showRoleModal: false });
+  },
+
+  // 查看身份：roleReveal 用全屏确认页，其他阶段用标准弹窗
   openRoleModal() {
     if (!this.data.playerRole) return;
-    this.setData({ showRoleModal: true });
+    if (this.data.currentPhase === 'roleReveal') {
+      this.setData({ showRolePage: true, showRoleModal: false });
+    } else {
+      this.setData({ showRoleModal: true, showRolePage: false });
+    }
   },
 
+  // 标准弹窗"隐藏身份"：仅关闭，不触发确认，不自动消失
   closeRoleModal() {
-    // 角色揭示阶段未确认：点"确认身份"→ 确认并关闭；其他阶段：仅关闭
+    this.setData({ showRoleModal: false });
+  },
+
+  // 全屏页"隐藏身份"（若 roleReveal 未确认则触发确认）
+  closeRolePage() {
     if (this.data.currentPhase === 'roleReveal' && !this.data.revealConfirmed) {
       this.confirmRoleReveal();
     } else {
-      this.setData({ showRoleModal: false });
+      this.setData({ showRolePage: false });
     }
   },
 
@@ -416,6 +514,52 @@ Page({
   checkIfTeamLeader() {
     const { teamLeaderOpenId } = this.data;
     return !!teamLeaderOpenId && teamLeaderOpenId === app.globalData.openId;
+  },
+
+  // 长桌玩家卡片状态类（预选金底 / 发车青底）
+  tableCardState(openId) {
+    const { preNominatedTeam, nominatedTeam } = this.data;
+    if ((nominatedTeam || []).includes(openId)) return 'state-sel';
+    if ((preNominatedTeam || []).includes(openId)) return 'state-pre';
+    return '';
+  },
+
+  // 长桌玩家点击（按阶段分发）
+  onTablePlayerTap(e) {
+    const { currentPhase } = this.data;
+    if (currentPhase === 'discussion') {
+      this.nominatePlayer(e);
+    } else if (currentPhase === 'assassination') {
+      this.assassinate(e);
+    }
+  },
+
+  // 中间区阶段名文字
+  centerPhaseText() {
+    const map = {
+      roleReveal: '身份',
+      discussion: '发言',
+      teamVote: '投票',
+      missionVote: '任务',
+      assassination: '刺杀',
+      missionResult: '结果',
+      gameEnd: '结束'
+    };
+    return map[this.data.currentPhase] || this.data.currentPhase;
+  },
+
+  // 是否处于投票进行中（用于控制票型显示）
+  isVotingPhase() {
+    const { currentPhase } = this.data;
+    return currentPhase === 'teamVote' || currentPhase === 'missionVote';
+  },
+
+  // 队伍投票结束后公开票型（后端 teamVotes 已按 voteVisibility 门控）
+  publicVoteOf(openId) {
+    const { currentPhase, teamVotes } = this.data;
+    if (currentPhase === 'teamVote') return '';          // 投票中不显示
+    const v = (teamVotes || {})[openId];
+    return v === 'approve' || v === 'reject' ? v : '';
   },
 
   // ─────── 发言计时器（房主操控，仅 discussion） ───────

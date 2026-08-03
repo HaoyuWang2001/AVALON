@@ -14,35 +14,40 @@
 }
 
 /* 5 轮圆圈 */
-.rounds { display: flex; align-items: center; justify-content: center; margin: 16rpx 0 8rpx; }
-.round-connector { width: 64rpx; height: 4rpx; background: #D1D5DB; border-radius: 2rpx; }
+.rounds { display: flex; align-items: center; justify-content: center; margin: 20rpx 0 10rpx; }
+.round-connector { width: 84rpx; height: 10rpx; background: #D1D5DB; border-radius: 5rpx; }
 .round-circle {
-  width: 44rpx; height: 44rpx; border-radius: 50%;
+  width: 64rpx; height: 64rpx; border-radius: 50%;
   background: #D1D5DB; flex-shrink: 0;
 }
 .round-circle.succ { background: #3B82F6; }
 .round-circle.fail { background: #EF4444; }
-.round-circle.current { box-shadow: 0 0 0 8rpx rgba(139, 92, 246, 0.28); }
+.round-circle.current {
+  width: 80rpx; height: 80rpx;
+  border: 6rpx solid #8B5CF6;
+  box-shadow: 0 0 0 6rpx rgba(139, 92, 246, 0.25);
+}
 
-/* 流车图 */
-.flow-cars { display: flex; align-items: flex-end; justify-content: center; gap: 20rpx; margin: 12rpx 0 8rpx; }
+/* 流车图（置于卡片左侧，上边距加大，灰实线分隔） */
+.flow-area { margin-top: 40rpx; padding: 24rpx 24rpx 4rpx; border-top: 2rpx solid #E5E7EB; }
+.flow-cars { display: flex; align-items: flex-end; justify-content: flex-start; gap: 24rpx; }
 .flow-car {
   position: relative;
-  width: 52rpx; height: 52rpx; border-radius: 12rpx;
+  width: 60rpx; height: 60rpx; border-radius: 14rpx;
   background: #E5E7EB;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.flow-car-icon { font-size: 30rpx; line-height: 1; }
+.flow-car-icon { font-size: 34rpx; line-height: 1; }
 .flow-car.failed { background: #FEE2E2; border: 2rpx solid #EF4444; }
 .flow-car.failed .flow-car-icon { color: #EF4444; }
-.flow-car.current { border: 4rpx solid #8B5CF6; }
+.flow-car.current { border: 5rpx solid #8B5CF6; }
 .flow-car.is-forced { border-color: #EF4444; box-shadow: 0 0 0 6rpx rgba(239, 68, 68, 0.2); }
-.flow-car.last { width: 68rpx; height: 68rpx; flex-direction: column; }
+.flow-car.last { width: 76rpx; height: 76rpx; flex-direction: column; }
 .flow-car-label {
-  position: absolute; bottom: -28rpx; left: 50%;
+  position: absolute; bottom: -30rpx; left: 50%;
   transform: translateX(-50%);
-  font-size: 18rpx; color: #EF4444; font-weight: 600;
+  font-size: 20rpx; color: #EF4444; font-weight: 600;
   white-space: nowrap;
 }
 
@@ -132,59 +137,71 @@
 .vote-buttons.col { flex-direction: column; width: 100%; gap: 14rpx; }
 .vote-buttons.col button { width: 100%; }
 
-/* 玩家小卡片（长桌两侧，左右镜像） */
+/* 玩家小卡片（长桌两侧：头像上、用户名下、座位号外侧） */
 .table-player {
   display: flex;
   align-items: center;
-  padding: 10rpx 8rpx;
-  border-radius: 14rpx;
+  padding: 20rpx 10rpx;
+  border-radius: 16rpx;
   background: #FFFFFF;
   border: 2rpx solid #E5E7EB;
   transition: all 0.2s ease;
-  min-height: 96rpx;
+  min-height: 120rpx;
 }
 .table-player.state-pre { background: #FEF3C7; border-color: #F59E0B; }
 .table-player.state-sel { background: #D1ECF1; border-color: #17A2B8; }
 .table-player:active { opacity: 0.7; }
-.table-left .table-player { flex-direction: row; }
-.table-right .table-player { flex-direction: row-reverse; }
 
 .seat-no {
   flex-shrink: 0;
-  font-size: 28rpx; font-weight: 800; color: #fff;
+  font-size: 30rpx; font-weight: 800; color: #fff;
   background: #8B5CF6;
-  border-radius: 10rpx;
-  padding: 4rpx 14rpx;
-  margin: 0 6rpx;
+  border-radius: 12rpx;
+  padding: 8rpx 16rpx;
+  margin: 0 8rpx;
+}
+.tplayer-info {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center;
+  min-width: 0;
 }
 .tplayer-avatar-wrap { position: relative; flex-shrink: 0; }
 .tplayer-avatar {
-  width: 76rpx; height: 76rpx; border-radius: 50%;
+  width: 88rpx; height: 88rpx; border-radius: 50%;
   background: #F3F4F6;
 }
 .tplayer-name {
   font-size: 24rpx; color: #374151; font-weight: 600;
-  max-width: 110rpx;
+  max-width: 120rpx;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  margin: 0 8rpx;
+  margin-top: 8rpx;
+}
+.tplayer-tags {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 6rpx; margin-top: 6rpx;
 }
 
-/* 队长 / 自己 角标 */
-.crown-badge {
-  position: absolute; top: -8rpx; right: -8rpx;
-  font-size: 28rpx; line-height: 1;
+/* 标准标签体系：浅底深字 */
+.ptag {
+  font-size: 20rpx; font-weight: 700;
+  padding: 4rpx 14rpx; border-radius: 18rpx;
+  line-height: 1.4;
 }
-.me-tag {
-  position: absolute; top: -8rpx; left: -8rpx;
-  font-size: 20rpx; font-weight: 700; color: #fff;
-  background: #8B5CF6; border-radius: 8rpx;
-  padding: 2rpx 8rpx;
+.ptag-purple { background: #EDE9FE; color: #6D28D9; }
+.ptag-blue { background: #DBEAFE; color: #1D4ED8; }
+.ptag-pink { background: #FCE7F3; color: #BE185D; }
+
+/* 队长皇冠：大，位于头像正上方 */
+.crown-badge {
+  position: absolute; top: -26rpx; left: 50%;
+  transform: translateX(-50%);
+  font-size: 52rpx; line-height: 1;
 }
 
 /* 投票状态点：灰=未投 紫=已投 */
 .vote-dot {
   position: absolute; bottom: -4rpx; right: -4rpx;
-  width: 20rpx; height: 20rpx; border-radius: 50%;
+  width: 22rpx; height: 22rpx; border-radius: 50%;
   background: #9CA3AF;
   border: 2rpx solid #fff;
 }
@@ -192,8 +209,8 @@
 
 /* 投票后公开票型 */
 .vote-type {
-  position: absolute; bottom: -4rpx; right: -4rpx;
-  font-size: 26rpx; font-weight: 800;
+  position: absolute; bottom: -6rpx; right: -4rpx;
+  font-size: 30rpx; font-weight: 800;
 }
 .txt-approve { color: #10B981; }
 .txt-reject { color: #EF4444; }
@@ -269,6 +286,20 @@
 .modal-mask {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.55); z-index: 998;
+}
+
+/* ─────── 标准查看身份弹窗 ─────── */
+.role-modal {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+}
+.role-modal-body {
+  position: relative; z-index: 999;
+  width: 560rpx; max-height: 80vh;
+  background: #FFFFFF; border-radius: 28rpx;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 40rpx 36rpx;
+  overflow-y: auto;
 }
 
 /* ─────── 身份页（全屏覆盖） ─────── */
