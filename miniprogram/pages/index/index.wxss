@@ -36,12 +36,12 @@
 
 .login-btn { width: 100%; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; border-radius: 16rpx; font-size: 32rpx; font-weight: 600; padding: 24rpx; box-shadow: 0 6rpx 20rpx rgba(124,58,237,0.3); }
 
-.current-room-card { background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; border-left: 8rpx solid var(--warning); flex-shrink: 0; }
-.current-room-info { display: flex; align-items: center; gap: 16rpx; margin-bottom: 16rpx; flex-wrap: wrap; }
-.current-room-label { font-size: 26rpx; color: #92400E; }
-.current-room-id { font-size: 40rpx; font-weight: 800; color: #B45309; letter-spacing: 6rpx; }
-.current-room-ingame { font-size: 22rpx; color: #fff; background: var(--danger); padding: 4rpx 12rpx; border-radius: 6rpx; }
-.current-room-btns { display: flex; gap: 16rpx; }
+.current-room-card { background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-radius: 28rpx; padding: 40rpx 36rpx; margin-bottom: 20rpx; border-left: 8rpx solid var(--warning); flex-shrink: 0; }
+.current-room-info { display: flex; align-items: center; gap: 20rpx; margin-bottom: 28rpx; flex-wrap: wrap; }
+.current-room-label { font-size: 28rpx; color: #92400E; }
+.current-room-id { font-size: 44rpx; font-weight: 800; color: #B45309; letter-spacing: 6rpx; }
+.current-room-ingame { font-size: 24rpx; color: #fff; background: var(--danger); padding: 6rpx 16rpx; border-radius: 8rpx; }
+.current-room-btns { display: flex; gap: 20rpx; }
 
 .action-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
 .action-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 24rpx; display: flex; align-items: center; }
