@@ -727,7 +727,10 @@ Page({
       'teamVote': '队伍投票',
       'missionVote': '任务投票',
       'missionResult': '任务结果',
-      'gameEnd': '游戏结束'
+      'assassination': '刺杀阶段',
+      'gameEnd': '游戏结束',
+      'lake': '湖仙验人',
+      'lancelot': '兰斯抽卡'
     };
     return phaseMap[phase] || phase;
   },
