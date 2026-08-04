@@ -232,7 +232,7 @@
   background: #FFFFFF;
   border-top: 2rpx solid #E5E7EB;
   box-shadow: 0 -6rpx 20rpx rgba(0,0,0,0.06);
-  padding: 20rpx 32rpx 40rpx;
+  padding: 28rpx 32rpx 44rpx;
   display: flex;
   flex-direction: column;
   gap: 16rpx;
@@ -240,6 +240,20 @@
 .bar-info { font-size: 28rpx; color: #6B7280; text-align: center; }
 .bar-row { display: flex; align-items: center; justify-content: center; gap: 16rpx; }
 .bar-row button { flex: 1; }
+/* 队伍投票：同意深灰绿 / 反对深灰红，宽度 200rpx、高度不变 */
+.bar-row .vote-approve,
+.bar-row .vote-reject {
+  flex: none;
+  width: 200rpx;
+}
+.vote-approve {
+  background: linear-gradient(135deg, #4A8F77, #376B58);
+  box-shadow: 0 4rpx 16rpx rgba(55, 107, 88, 0.3);
+}
+.vote-reject {
+  background: linear-gradient(135deg, #9C5B5B, #7A4545);
+  box-shadow: 0 4rpx 16rpx rgba(122, 69, 69, 0.3);
+}
 
 /* 计时器卡片（轮次卡下方，仅 discussion）：纵向布局，背景与其他卡片一致 */
 .timer-card {
