@@ -247,12 +247,12 @@
   width: 200rpx;
 }
 .vote-approve {
-  background: linear-gradient(135deg, #4A8F77, #376B58);
-  box-shadow: 0 4rpx 16rpx rgba(55, 107, 88, 0.3);
+  background: linear-gradient(135deg, #6FAF94, #4E8A70);
+  box-shadow: 0 4rpx 16rpx rgba(78, 138, 112, 0.3);
 }
 .vote-reject {
-  background: linear-gradient(135deg, #9C5B5B, #7A4545);
-  box-shadow: 0 4rpx 16rpx rgba(122, 69, 69, 0.3);
+  background: linear-gradient(135deg, #B57A7A, #8F5E5E);
+  box-shadow: 0 4rpx 16rpx rgba(143, 94, 94, 0.3);
 }
 
 /* 计时器卡片（轮次卡下方，仅 discussion）：纵向布局，背景与其他卡片一致 */
