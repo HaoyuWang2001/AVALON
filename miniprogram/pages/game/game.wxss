@@ -17,7 +17,7 @@
 .rounds { display: flex; align-items: center; justify-content: center; margin: 40rpx 10rpx; }
 .round-connector { width: 48rpx; height: 10rpx; background: #D1D5DB; border-radius: 5rpx; }
 .round-circle {
-  width: 72rpx; height: 72rpx; border-radius: 50%;
+  width: 81rpx; height: 81rpx; border-radius: 50%;
   background: #D1D5DB; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
 }
@@ -30,24 +30,26 @@
 .round-circle.succ .round-size,
 .round-circle.fail .round-size { color: #FFFFFF; }
 .round-circle.current {
-  width: 80rpx; height: 80rpx;
+  width: 96rpx; height: 96rpx;
   border: 6rpx solid #8B5CF6;
 }
 
 /* 流车图（置于卡片左侧，上边距加大，灰实线分隔） */
-.flow-area { margin: 40rpx 20rpx 0 20rpx; padding: 32rpx 32rpx 10rpx; border-top: 2rpx solid #E5E7EB; }
+.flow-area { margin: 40rpx 40rpx 0 20rpx; padding: 32rpx 32rpx 10rpx; border-top: 2rpx solid #E5E7EB; }
 .flow-cars { display: flex; align-items: flex-end; justify-content: flex-start; gap: 28rpx; }
 .flow-car {
   position: relative;
-  width: 40rpx; height: 60rpx; border-radius: 14rpx;
+  width: 48rpx; height: 72rpx; border-radius: 14rpx;
   background: #E5E7EB;
+  display: flex; align-items: center; justify-content: center;
 }
 .flow-car-icon { font-size: 34rpx; line-height: 1; }
 .flow-car.failed { background: #FEE2E2; border: 2rpx solid #EF4444; }
 .flow-car.failed .flow-car-icon { color: #EF4444; }
 .flow-car.current { border: 5rpx solid #8B5CF6; }
 .flow-car.is-forced { border-color: #EF4444; box-shadow: 0 0 0 6rpx rgba(239, 68, 68, 0.2); }
-.flow-car.last { width: 56rpx; height: 76rpx; flex-direction: column; }
+.flow-car.last { width: 64rpx; height: 96rpx; flex-direction: column; }
+.flow-car.last .flow-car-icon { font-size: 44rpx; }
 .flow-car-label {
   position: absolute; bottom: -30rpx; left: 50%;
   transform: translateX(-50%);
@@ -236,6 +238,14 @@
   min-height: 100rpx;
 }
 .bar-info { font-size: 32rpx; color: #6B7280; text-align: center; }
+/* 预选车信息行：紫色加粗，文字与箭头垂直居中 */
+.bar-preteam {
+  color: #8B5CF6;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 /* 等待动画下方文字：紫色 */
 .bar-waiting { color: #8B5CF6; }
 .bar-row { display: flex; align-items: center; justify-content: center; gap: 16rpx; }

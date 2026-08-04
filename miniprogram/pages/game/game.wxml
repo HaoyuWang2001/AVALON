@@ -40,7 +40,7 @@
       <view class="flow-cars">
         <block wx:for="{{flowCars}}" wx:key="index">
           <view class="flow-car {{item.state}} {{item.isLast ? 'last' : ''}} {{item.isForced ? 'is-forced' : ''}}">
-            <text wx:if="{{item.isLast}}" class="flow-car-label"></text>
+            <text class="flow-car-icon">{{item.state === 'failed' ? '🚫' : (item.isLast ? '⚡' : '')}}</text>
           </view>
         </block>
       </view>
@@ -103,7 +103,7 @@
 
     <!-- speakingOrder：车主确定发言顺序 -->
     <block wx:if="{{currentPhase === 'speakingOrder'}}">
-      <view class="bar-info">预选车：{{preTeamSeats || '无'}}</view>
+      <view class="bar-info bar-preteam">预选车：{{preTeamSeats || '无'}}</view>
       <block wx:if="{{!isTeamLeader}}">
         <view class="vote-waiting">
           <view class="vote-waiting-spinner"></view>
@@ -115,7 +115,7 @@
     <!-- discussion：车主确认发车 -->
     <block wx:if="{{currentPhase === 'discussion'}}">
       <!-- 预选车+方向：仅非强制车时显示 -->
-      <view wx:if="{{!forcedSend}}" class="bar-info">预选车：{{preTeamSeats || '无'}}<image src="/images/{{speakingOrder === 'desc' ? 'down-arrow.png' : 'up-arrow.png'}}" class="dir-pill-img" mode="aspectFit"></image></view>
+      <view wx:if="{{!forcedSend}}" class="bar-info bar-preteam">预选车：{{preTeamSeats || '无'}}<image src="/images/{{speakingOrder === 'desc' ? 'down-arrow.png' : 'up-arrow.png'}}" class="dir-pill-img" mode="aspectFit"></image></view>
       <!-- 车长：强制发车/确认发车按钮 -->
       <block wx:if="{{isTeamLeader}}">
         <view class="bar-row">
