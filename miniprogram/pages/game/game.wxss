@@ -245,6 +245,7 @@
 .bar-row .vote-reject {
   flex: none;
   width: 200rpx;
+  color: #FFFFFF;
 }
 .vote-approve {
   background: linear-gradient(135deg, #6FAF94, #4E8A70);
