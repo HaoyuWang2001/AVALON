@@ -119,7 +119,7 @@
         <view class="vote-waiting">
           <view class="vote-waiting-spinner"></view>
         </view>
-        <view class="bar-info">等待车长发出强制车...</view>
+        <view class="bar-info bar-waiting">等待车长发出强制车...</view>
       </block>
     </block>
 
