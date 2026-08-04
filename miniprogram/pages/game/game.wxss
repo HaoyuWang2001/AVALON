@@ -240,20 +240,21 @@
 .bar-info { font-size: 28rpx; color: #6B7280; text-align: center; }
 .bar-row { display: flex; align-items: center; justify-content: center; gap: 16rpx; }
 .bar-row button { flex: 1; }
-/* 队伍投票：同意深灰绿 / 反对深灰红，宽度 200rpx、高度不变 */
+/* 队伍投票：同意/反对 深色实底、白字、更明显圆角 */
 .bar-row .vote-approve,
 .bar-row .vote-reject {
   flex: none;
-  width: 200rpx;
+  width: 220rpx;
   color: #FFFFFF;
+  border-radius: 16rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
 }
 .vote-approve {
-  background: linear-gradient(135deg, #6FAF94, #4E8A70);
-  box-shadow: 0 4rpx 16rpx rgba(78, 138, 112, 0.3);
+  background: #2E7D5B;
 }
 .vote-reject {
-  background: linear-gradient(135deg, #B57A7A, #8F5E5E);
-  box-shadow: 0 4rpx 16rpx rgba(143, 94, 94, 0.3);
+  background: #A63D3D;
 }
 
 /* 计时器卡片（轮次卡下方，仅 discussion）：纵向布局，背景与其他卡片一致 */
