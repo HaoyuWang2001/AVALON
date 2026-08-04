@@ -93,14 +93,22 @@
           <button size="mini" class="btn btn-primary" bindtap="submitPreNomination">提交预选（{{localSelected.length}}人）</button>
         </view>
       </block>
-      <view wx:else class="bar-info">等待队长预选...</view>
+      <view wx:else class="bar-waiting">
+        <view class="vote-waiting">
+          <view class="vote-waiting-spinner"></view>
+        </view>
+        <view class="bar-info bar-waiting">等待队长预选...</view>
+      </view>
     </block>
 
     <!-- speakingOrder：车主确定发言顺序 -->
     <block wx:if="{{currentPhase === 'speakingOrder'}}">
       <view class="bar-info">预选车：{{preTeamSeats || '无'}}</view>
       <block wx:if="{{!isTeamLeader}}">
-        <view class="bar-info">等待队长确定发言顺序...</view>
+        <view class="vote-waiting">
+          <view class="vote-waiting-spinner"></view>
+        </view>
+        <view class="bar-info bar-waiting">等待队长确定发言顺序...</view>
       </block>
     </block>
 
