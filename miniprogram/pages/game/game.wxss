@@ -251,10 +251,10 @@
   letter-spacing: 2rpx;
 }
 .vote-approve {
-  background: #6A8677;
+  background: #34C78A;
 }
 .vote-reject {
-  background: #8F6363;
+  background: #F0686B;
 }
 
 /* 计时器卡片（轮次卡下方，仅 discussion）：纵向布局，背景与其他卡片一致 */
