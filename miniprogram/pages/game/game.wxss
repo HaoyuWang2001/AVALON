@@ -135,6 +135,19 @@
 .table-player.state-team-voted {
   background: linear-gradient(to right, #DDD6FE 0%, #FFFFFF 50%, #FEF3C7 100%);
 }
+/* missionVote：左半绿=赞成 / 红=反对（队伍投票结果），车队右半金色保留 */
+.table-player.state-approved {
+  background: linear-gradient(to right, #D1FAE5 0%, #FFFFFF 50%);
+}
+.table-player.state-rejected {
+  background: linear-gradient(to right, #FEE2E2 0%, #FFFFFF 50%);
+}
+.table-player.state-team-approved {
+  background: linear-gradient(to right, #D1FAE5 0%, #FFFFFF 50%, #FEF3C7 100%);
+}
+.table-player.state-team-rejected {
+  background: linear-gradient(to right, #FEE2E2 0%, #FFFFFF 50%, #FEF3C7 100%);
+}
 
 /* 右侧选人复选框（仅车主选人期显示）：未选=空心灰圈，选中=紫底白勾 */
 .table-check {

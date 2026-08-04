@@ -39,8 +39,14 @@ function enrichTablePlayer(p, ctx) {
       if (inTeam && voted) cardState = 'state-team-voted';
       else if (inTeam) cardState = 'state-team';
       else if (voted) cardState = 'state-voted';
-    } else if (inTeam) {
-      cardState = 'state-team';
+    } else if (currentPhase === 'missionVote') {
+      // 队伍投票结果公开：左半绿=赞成 / 红=反对；车队右半金色保留
+      const vote = (teamVotes || {})[p.openId];
+      if (inTeam && vote === 'approve') cardState = 'state-team-approved';
+      else if (inTeam && vote === 'reject') cardState = 'state-team-rejected';
+      else if (vote === 'approve') cardState = 'state-approved';
+      else if (vote === 'reject') cardState = 'state-rejected';
+      else if (inTeam) cardState = 'state-team';
     }
   }
 
