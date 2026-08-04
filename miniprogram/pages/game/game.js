@@ -97,6 +97,8 @@ Page({
     gameWinner: '',
     nominatedTeam: [],
     teamVotes: {},
+    approveSeats: '',
+    rejectSeats: '',
     missionVotes: {},
     teamVoteStatus: null,
     missionVoteStatus: null,
@@ -248,6 +250,14 @@ Page({
           const p = (res.players || []).find(x => x.openId === id);
           return p ? String(p.seatNumber) : '?';
         }).join(' ');
+        // 队伍投票结果（missionVote 及之后公开）：赞成/反对座位号
+        const tv = res.current.teamVotes || {};
+        const seatOf = id => {
+          const p = (res.players || []).find(x => x.openId === id);
+          return p ? String(p.seatNumber) : '?';
+        };
+        const approveSeats = Object.keys(tv).filter(id => tv[id] === 'approve').map(seatOf).join(' ');
+        const rejectSeats = Object.keys(tv).filter(id => tv[id] === 'reject').map(seatOf).join(' ');
         // 长桌玩家富化（预计算 checked/isLeader/voteType/标签，避免 wxml 函数调用）
         const hostOpenId = (res.players || []).find(p => p.isHost) ? (res.players || []).find(p => p.isHost).openId : '';
         const tablePlayers = (res.players || []).map(p => enrichTablePlayer(p, {
@@ -274,6 +284,8 @@ Page({
           nominatedTeam: keepLocal ? this.data.nominatedTeam : (res.current.nominatedTeam || []),
           preNominatedTeam: effPreTeam,
           preTeamSeats: preTeamSeats,
+          approveSeats: approveSeats,
+          rejectSeats: rejectSeats,
           teamVotes: res.current.teamVotes || {},
           missionVotes: res.current.missionVotes || {},
           missionResults: missions,
