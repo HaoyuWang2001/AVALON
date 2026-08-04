@@ -144,8 +144,9 @@
           <button class="btn vote-reject" bindtap="castVote" data-vote="reject">反对</button>
         </view>
       </block>
-      <view wx:else class="vote-waiting">
+      <view wx:else class="vote-waiting vote-waiting-col">
         <view class="vote-waiting-spinner"></view>
+        <text class="vote-waiting-text">等待全部玩家投票...</text>
       </view>
     </block>
 
