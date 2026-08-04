@@ -762,9 +762,12 @@ Page({
     const vote = e.currentTarget.dataset.vote;
     const { gameId } = this.data;
 
-    api.castVote(gameId, vote).then(res => {
-      console.log('投票成功:', res);
+    wx.showLoading({ title: '提交中...', mask: true });
+    api.castVote(gameId, vote).then(() => {
+      wx.hideLoading();
+      this.fetchGameState();
     }).catch(err => {
+      wx.hideLoading();
       wx.showToast({ title: (err && err.message) || '投票失败', icon: 'none' });
     });
   },
@@ -790,9 +793,12 @@ Page({
       cancelText: '取消',
       success: (res) => {
         if (res.confirm) {
+          wx.showLoading({ title: '提交中...', mask: true });
           api.castMissionVote(gameId, vote, playerRole).then(() => {
+            wx.hideLoading();
             this.fetchGameState();
           }).catch(err => {
+            wx.hideLoading();
             wx.showToast({ title: (err && err.message) || '任务投票失败', icon: 'none' });
           });
         }
