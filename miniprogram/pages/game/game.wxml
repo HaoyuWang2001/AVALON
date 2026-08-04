@@ -289,10 +289,10 @@
     <block wx:if="{{!hasMissionVoted}}">
       <view class="mission-split">
         <view class="mission-half mission-half-success" data-vote="success" bindtap="confirmMissionVote">
-          <view class="mission-badge"><text class="mission-half-emoji">✨</text></view>
+          <text class="mission-half-emoji">✨</text>
         </view>
         <view class="mission-half mission-half-fail" data-vote="fail" bindtap="confirmMissionVote">
-          <view class="mission-badge"><text class="mission-half-emoji">💣</text></view>
+          <text class="mission-half-emoji">💣</text>
         </view>
       </view>
     </block>

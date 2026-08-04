@@ -508,22 +508,20 @@ progress { border-radius: 12rpx; }
   flex: 1;
   display: flex; align-items: center; justify-content: center;
 }
-.mission-half:active { opacity: 0.85; }
 .mission-half-success {
   background:
-    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.18), transparent 60%),
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.18), transparent 40%),
+    radial-gradient(ellipse at 50% 100%, rgba(255, 255, 255, 0.18), transparent 40%),
     #5A7D6B;
 }
 .mission-half-fail {
   background:
-    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.18), transparent 60%),
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.18), transparent 40%),
+    radial-gradient(ellipse at 50% 100%, rgba(255, 255, 255, 0.18), transparent 40%),
     #8C5A5A;
 }
-.mission-badge {
-  width: 200rpx; height: 200rpx; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.25);
-  display: flex; align-items: center; justify-content: center;
-}
+.mission-half-success:active { background: #4E6B5C; }
+.mission-half-fail:active { background: #7A4D4D; }
 .mission-half-emoji { font-size: 120rpx; line-height: 1; }
 .mission-waiting {
   flex: 1; display: flex; flex-direction: column;
