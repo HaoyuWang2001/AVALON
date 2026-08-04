@@ -56,13 +56,45 @@
     </button>
   </view>
 
-  <view class="card info-card">
+  <view class="card history-card" wx:if="{{historyList.length > 0}}">
+    <view class="history-title">历史对局</view>
+    <view class="history-stats" wx:if="{{totalWinRate}}">
+      总胜率 {{totalWinRate}} · 蓝方 {{goodWinRate}} · 红方 {{evilWinRate}}
+    </view>
+    <view class="history-item" wx:for="{{historyList}}" wx:key="gameId"
+          bindtap="openHistoryGame" data-gameid="{{item.gameId}}">
+      <text class="history-role">{{item.roleName}}</text>
+      <text class="history-result {{item.isWin ? 'win' : 'lose'}}">{{item.isWin ? '胜' : '负'}}</text>
+      <text class="history-duration">{{item.durationText}}</text>
+    </view>
+  </view>
+
+  <view class="role-stats" wx:if="{{roleStats.length > 0}}">
+    <view class="role-stats-title">角色胜率</view>
+    <view class="role-stats-list">
+      <view class="role-stat-item" wx:for="{{roleStats}}" wx:key="role">
+        <text class="role-stat-name">{{item.roleName}}</text>
+        <text class="role-stat-value">{{item.wins}}/{{item.games}} ({{item.winRate}})</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card gameinfo-btn" bindtap="showInfoModal">
+    <text class="btn-icon">📖</text>游戏说明
+  </view>
+  <view class="footer"><view class="footer-version">AVALON v1.0.0</view></view>
+</view>
+
+<!-- 说明弹窗 -->
+<view class="info-modal" wx:if="{{showInfo}}">
+  <view class="modal-mask" bindtap="closeInfo"></view>
+  <view class="info-modal-body">
     <view class="info-title">游戏说明</view>
     <view class="info-item">• 5-12 人，支持标准板与自定义板子</view>
     <view class="info-item">• 支持多样村规，可扩展性拉满</view>
     <view class="info-item">• 支持线上发牌与线下发牌+小程序发车两种模式</view>
+    <button class="btn btn-primary" bindtap="closeInfo">关闭</button>
   </view>
-  <view class="footer"><view class="footer-version">AVALON v1.0.0</view></view>
 </view>
 
 <!-- ─────────── Config Modal ─────────── -->

@@ -8,7 +8,7 @@
   padding: 24rpx;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .logo-section { padding: 32rpx 0 20rpx; text-align: center; flex-shrink: 0; }
@@ -69,3 +69,36 @@
 .info-title { font-size: 28rpx; font-weight: 600; color: var(--gray-900); margin-bottom: 16rpx; }
 .info-item { font-size: 26rpx; color: var(--gray-500); line-height: 1.8; }
 .footer { text-align: center; padding: 16rpx 0; color: var(--gray-300); font-size: 22rpx; flex-shrink: 0; }
+
+/* ─────── 历史对局 ─────── */
+.history-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+.history-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 12rpx; display: flex; align-items: center; }
+.history-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
+.history-stats { font-size: 24rpx; color: var(--gray-500); margin-bottom: 16rpx; }
+.history-item { display: flex; align-items: center; padding: 18rpx 8rpx; border-bottom: 1rpx solid var(--gray-100); }
+.history-item:last-child { border-bottom: none; }
+.history-item:active { opacity: 0.7; }
+.history-role { font-size: 30rpx; font-weight: 600; color: var(--gray-900); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.history-result { font-size: 26rpx; font-weight: 700; padding: 4rpx 18rpx; border-radius: 8rpx; margin: 0 20rpx; flex-shrink: 0; }
+.history-result.win { color: var(--success); background: #DCFCE7; }
+.history-result.lose { color: var(--danger); background: #FEE2E2; }
+.history-duration { font-size: 24rpx; color: var(--gray-400); flex-shrink: 0; }
+
+/* ─────── 角色胜率 ─────── */
+.role-stats { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+.role-stats-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 16rpx; display: flex; align-items: center; }
+.role-stats-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
+.role-stats-list { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.role-stat-item { display: flex; align-items: center; background: var(--gray-50); border-radius: 12rpx; padding: 12rpx 18rpx; }
+.role-stat-name { font-size: 26rpx; font-weight: 600; color: var(--gray-800); margin-right: 12rpx; }
+.role-stat-value { font-size: 24rpx; color: var(--gray-500); }
+
+/* ─────── 游戏说明按钮 ─────── */
+.gameinfo-btn { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; font-size: 30rpx; font-weight: 600; color: var(--gray-700); flex-shrink: 0; }
+
+/* ─────── 说明弹窗 ─────── */
+.info-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; }
+.info-modal-body { position: relative; z-index: 999; width: 600rpx; background: #FFFFFF; border-radius: 28rpx; padding: 40rpx 36rpx; display: flex; flex-direction: column; align-items: center; }
+.info-modal-body .info-title { font-size: 34rpx; font-weight: 800; margin-bottom: 24rpx; text-align: center; }
+.info-modal-body .info-item { font-size: 28rpx; color: var(--gray-600); line-height: 1.9; margin-bottom: 12rpx; align-self: flex-start; }
+.info-modal-body .btn { margin-top: 24rpx; width: 100%; }

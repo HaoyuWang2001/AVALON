@@ -27,6 +27,16 @@ const ROUND_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒'];
 const VOTE_OPTIONS = ['不限', '15秒', '30秒', '45秒', '60秒'];
 const DEFAULT_AVATAR = '/images/default-avatar.png';
 
+function formatDuration(seconds) {
+  const sec = parseInt(seconds, 10) || 0;
+  if (sec <= 0) return '';
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  if (h > 0) return h + '小时' + (m > 0 ? m + '分钟' : '');
+  if (m > 0) return m + '分钟';
+  return '不足1分钟';
+}
+
 const TEAM_SIZES = {
   5: [2,3,2,3,3], 6: [2,3,4,3,4], 7: [2,3,3,4,4],
   8: [3,4,4,5,5], 9: [3,4,4,5,5], 10: [3,4,4,5,5],
@@ -102,7 +112,14 @@ Page({
     evilRoleNames: '',
     summarySpeech: '',
     summarySpec: '',
-    summaryLady: ''
+    summaryLady: '',
+
+    showInfo: false,
+    historyList: [],
+    totalWinRate: '',
+    goodWinRate: '',
+    evilWinRate: '',
+    roleStats: []
   },
 
   onLoad() {
@@ -126,10 +143,12 @@ Page({
 
     if (app.globalData.openId) {
       this.loadUserProfile();
+      this.loadHistoryAndStats();
     } else {
       app.openIdReadyCallback = () => {
         this.loadUserProfile();
         this.checkCurrentRoom();
+        this.loadHistoryAndStats();
       };
     }
 
@@ -141,6 +160,7 @@ Page({
   onShow() {
     if (getApp().globalData.openId) {
       this.checkCurrentRoom();
+      this.loadHistoryAndStats();
     }
   },
 
@@ -148,6 +168,7 @@ Page({
     this.checkCurrentRoom();
     if (getApp().globalData.openId) {
       this.loadUserProfile();
+      this.loadHistoryAndStats();
     }
     wx.stopPullDownRefresh();
   },
@@ -251,6 +272,55 @@ Page({
         }
       }
     }).catch(() => {});
+  },
+
+  loadHistoryAndStats() {
+    const openId = getApp().globalData.openId || wx.getStorageSync('openId');
+    if (!openId) return;
+    api.getUserHistory(openId, 10).then(res => {
+      if (res && res.success && Array.isArray(res.history)) {
+        const historyList = res.history.map(item => ({
+          gameId: item.gameId,
+          roleName: ROLE_NAMES[item.role] || item.role,
+          side: item.side,
+          isWin: !!(item.gameResult && item.gameResult.winner === item.side),
+          durationText: formatDuration(item.durationSeconds)
+        }));
+        this.setData({ historyList });
+      }
+    }).catch(() => {});
+    api.getUserStats(openId).then(res => {
+      if (res && res.success && res.stats) {
+        const s = res.stats;
+        const roleStats = (s.roles || []).filter(r => r.games > 0).map(r => ({
+          role: r.role,
+          roleName: ROLE_NAMES[r.role] || r.role,
+          games: r.games,
+          wins: r.wins,
+          winRate: r.winRate + '%'
+        }));
+        this.setData({
+          totalWinRate: s.totalGames > 0 ? s.totalWinRate + '%' : '',
+          goodWinRate: s.goodGames > 0 ? s.goodWinRate + '%' : '',
+          evilWinRate: s.evilGames > 0 ? s.evilWinRate + '%' : '',
+          roleStats
+        });
+      }
+    }).catch(() => {});
+  },
+
+  showInfoModal() {
+    this.setData({ showInfo: true });
+  },
+
+  closeInfo() {
+    this.setData({ showInfo: false });
+  },
+
+  openHistoryGame(e) {
+    const gameId = e.currentTarget.dataset.gameid;
+    if (!gameId) return;
+    wx.navigateTo({ url: `/pages/game/game?gameId=${gameId}&fromHistory=1` });
   },
 
   onAvatarError() {},

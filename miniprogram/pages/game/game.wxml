@@ -180,13 +180,19 @@
         <image src="/images/{{gameWinner === 'good' ? 'avalon-blue.png' : 'avalon-red.png'}}" class="gameend-img" mode="aspectFit"></image>
         <view class="gameend-title">{{gameWinner === 'good' ? '蓝方获胜' : '红方获胜'}}</view>
       </view>
+      <!-- 历史对局入口：返回首页 -->
+      <view class="bar-row" wx:if="{{fromHistory}}">
+        <button size="mini" class="btn btn-primary" bindtap="goHome">返回首页</button>
+      </view>
       <!-- 房主：返回房间；非房主：离开房间 -->
-      <view class="bar-row" wx:if="{{isHost}}">
-        <button size="mini" class="btn btn-primary" bindtap="endGame">返回房间</button>
-      </view>
-      <view class="bar-row" wx:else>
-        <button size="mini" class="btn btn-secondary" bindtap="leaveRoom">离开房间</button>
-      </view>
+      <block wx:else>
+        <view class="bar-row" wx:if="{{isHost}}">
+          <button size="mini" class="btn btn-primary" bindtap="endGame">返回房间</button>
+        </view>
+        <view class="bar-row" wx:else>
+          <button size="mini" class="btn btn-secondary" bindtap="leaveRoom">离开房间</button>
+        </view>
+      </block>
     </block>
   </view>
 

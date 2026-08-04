@@ -321,6 +321,14 @@ class ApiService {
       data
     });
   }
+
+  async getUserHistory(openId, limit = 10) {
+    return this.request(`/games/history/user?openId=${openId}&limit=${limit}`);
+  }
+
+  async getUserStats(openId) {
+    return this.request(`/games/stats?openId=${openId}`);
+  }
 }
 
 const apiService = new ApiService();

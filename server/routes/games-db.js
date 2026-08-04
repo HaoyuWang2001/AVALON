@@ -23,6 +23,106 @@ function emitGame(roomId, gameId) {
 function createRouter() {
   const router = express.Router();
   
+  // 按用户查历史对局（个人战绩）——必须注册在 /:gameId 之前，避免被参数路由吞掉
+  router.get('/history/user', async (req, res) => {
+    try {
+      const { openId } = req.query;
+      const limit = parseInt(req.query.limit) || 10;
+
+      if (!openId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+
+      const db = require('../config/db');
+      const history = await db.query(
+        `SELECT g.id as gameId, g.room_id as roomId, g.game_result as gameResult,
+                gp.role, gp.side,
+                (SELECT COUNT(*) FROM game_players WHERE game_id = g.id) as playerCount,
+                TIMESTAMPDIFF(SECOND, g.created_at, g.ended_at) as durationSeconds,
+                g.created_at as createdAt
+         FROM games g
+         JOIN game_players gp ON gp.game_id = g.id AND gp.open_id = ?
+         WHERE g.status = 'ended'
+         ORDER BY g.created_at DESC
+         LIMIT ?`,
+        [openId, limit]
+      );
+
+      const parsedHistory = history.map(record => ({
+        ...record,
+        gameResult: record.gameResult ? parseJson(record.gameResult) : null
+      }));
+
+      res.json({
+        success: true,
+        history: parsedHistory,
+        count: parsedHistory.length
+      });
+    } catch (error) {
+      console.error('获取用户历史对局API错误:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || '获取用户历史对局失败'
+      });
+    }
+  });
+
+  // 个人胜率统计——必须注册在 /:gameId 之前
+  router.get('/stats', async (req, res) => {
+    try {
+      const { openId } = req.query;
+
+      if (!openId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+
+      const db = require('../config/db');
+      const rows = await db.query(
+        `SELECT gp.role, gp.side,
+                CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN 1 ELSE 0 END as isWin
+         FROM games g
+         JOIN game_players gp ON gp.game_id = g.id AND gp.open_id = ?
+         WHERE g.status = 'ended'`,
+        [openId]
+      );
+
+      const stats = {
+        totalGames: rows.length,
+        totalWins: 0,
+        goodGames: 0,
+        goodWins: 0,
+        evilGames: 0,
+        evilWins: 0,
+        roles: {}
+      };
+      const roleMap = {};
+      for (const row of rows) {
+        const isWin = row.isWin === 1 || row.isWin === true;
+        if (isWin) stats.totalWins++;
+        if (row.side === 'good') { stats.goodGames++; if (isWin) stats.goodWins++; }
+        if (row.side === 'evil') { stats.evilGames++; if (isWin) stats.evilWins++; }
+        if (!roleMap[row.role]) roleMap[row.role] = { role: row.role, games: 0, wins: 0 };
+        roleMap[row.role].games++;
+        if (isWin) roleMap[row.role].wins++;
+      }
+      stats.totalWinRate = stats.totalGames > 0 ? Math.round(stats.totalWins / stats.totalGames * 1000) / 10 : 0;
+      stats.goodWinRate = stats.goodGames > 0 ? Math.round(stats.goodWins / stats.goodGames * 1000) / 10 : 0;
+      stats.evilWinRate = stats.evilGames > 0 ? Math.round(stats.evilWins / stats.evilGames * 1000) / 10 : 0;
+      stats.roles = Object.values(roleMap).map(r => ({
+        ...r,
+        winRate: r.games > 0 ? Math.round(r.wins / r.games * 1000) / 10 : 0
+      }));
+
+      res.json({ success: true, stats });
+    } catch (error) {
+      console.error('获取个人胜率API错误:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || '获取个人胜率失败'
+      });
+    }
+  });
+  
   // 开始游戏（仅房主）
   router.post('/start', async (req, res) => {
     try {

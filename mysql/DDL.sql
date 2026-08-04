@@ -95,6 +95,9 @@ CREATE TABLE game_players (
     open_id VARCHAR(64) NOT NULL COMMENT '玩家openId',
     role VARCHAR(50) NOT NULL COMMENT '角色',
     side VARCHAR(10) NOT NULL COMMENT '阵营：good/evil',
+    nick_name VARCHAR(64) NULL COMMENT '游戏开始时快照昵称',
+    avatar_url VARCHAR(512) NULL COMMENT '游戏开始时快照头像',
+    seat_number INT NULL COMMENT '游戏开始时座位号',
     reveal_confirmed BOOLEAN DEFAULT FALSE COMMENT '角色揭示是否已确认（全员确认后进入讨论）',
     lancelot_confirmed BOOLEAN DEFAULT FALSE COMMENT '兰斯抽卡是否已确认（全员确认后进入下一轮）',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '分配时间',
@@ -103,6 +106,7 @@ CREATE TABLE game_players (
     INDEX idx_game_id (game_id),
     INDEX idx_side (side),
     INDEX idx_role (role),
+    INDEX idx_game_players_open_id (open_id),
     CHECK (side IN ('good', 'evil'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='游戏玩家角色表';
 

@@ -218,9 +218,9 @@ class GameModel {
           const side = this.getRoleSide(role);
           
           await connection.execute(
-            `INSERT INTO game_players (game_id, open_id, role, side, created_at)
-             VALUES (?, ?, ?, ?, NOW())`,
-            [gameId, player.openId, role, side]
+            `INSERT INTO game_players (game_id, open_id, role, side, nick_name, avatar_url, seat_number, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+            [gameId, player.openId, role, side, player.nickName || null, player.avatarUrl || null, player.seatNumber || null]
           );
         }
 
@@ -303,10 +303,9 @@ class GameModel {
         // 队长校验（与 startGame 分配队长时使用相同的座位号排序）
         const [players] = await connection.execute(
           `SELECT gp.open_id FROM game_players gp
-           LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
            WHERE gp.game_id = ?
-           ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
-          [game[0].room_id, gameId]
+           ORDER BY COALESCE(gp.seat_number, 999999), gp.open_id`,
+          [gameId]
         );
 
         const teamLeaderIndex = game[0].team_leader_index;
@@ -371,10 +370,9 @@ class GameModel {
         // 队长校验
         const [players] = await connection.execute(
           `SELECT gp.open_id FROM game_players gp
-           LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
            WHERE gp.game_id = ?
-           ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
-          [game[0].room_id, gameId]
+           ORDER BY COALESCE(gp.seat_number, 999999), gp.open_id`,
+          [gameId]
         );
 
         const teamLeaderIndex = game[0].team_leader_index;
@@ -494,16 +492,15 @@ class GameModel {
       const roomConfig = roomRows.length ? parseJson(roomRows[0].room_config) : null;
       const rules = (roomConfig && roomConfig.rules) || {};
 
-      // 获取游戏玩家
+      // 获取游戏玩家（基于 game_players 快照，不依赖 room_players，房间删除后历史对局仍完整）
       const players = await db.query(
         `SELECT gp.open_id as openId, gp.role, gp.side, gp.reveal_confirmed as revealConfirmed,
                 gp.lancelot_confirmed as lancelotConfirmed,
-                p.nick_name as nickName, p.avatar_url as avatarUrl, p.seat_number as seatNumber
+                gp.nick_name as nickName, gp.avatar_url as avatarUrl, gp.seat_number as seatNumber
          FROM game_players gp
-         JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
          WHERE gp.game_id = ?
-         ORDER BY p.seat_number`,
-        [game.roomId, gameId]
+         ORDER BY COALESCE(gp.seat_number, 999999), gp.open_id`,
+        [gameId]
       );
 
       const playerCount = players.length;
@@ -763,10 +760,9 @@ class GameModel {
         // 验证队长身份（与 startGame 分配队长时使用相同的座位号排序）
         const [players] = await connection.execute(
           `SELECT gp.open_id, gp.role FROM game_players gp
-           LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
            WHERE gp.game_id = ?
-           ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
-          [game[0].room_id, gameId]
+           ORDER BY COALESCE(gp.seat_number, 999999), gp.open_id`,
+          [gameId]
         );
         
         const teamLeaderIndex = game[0].team_leader_index;
