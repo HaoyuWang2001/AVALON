@@ -235,7 +235,9 @@
   padding: 28rpx 32rpx 44rpx;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 16rpx;
+  min-height: 180rpx;
 }
 .bar-info { font-size: 28rpx; color: #6B7280; text-align: center; }
 .bar-row { display: flex; align-items: center; justify-content: center; gap: 16rpx; }
@@ -509,10 +511,10 @@ progress { border-radius: 12rpx; }
   display: flex; align-items: center; justify-content: center;
 }
 .mission-half-success {
-  background: linear-gradient(180deg, #8398A1 0%, #768692 50%, #8398A1 100%);
+  background: linear-gradient(180deg, #8398A1 0%, #99A4BC 50%, #8398A1 100%);
 }
 .mission-half-fail {
-  background: linear-gradient(180deg, #A0605B 0%, #96504B 50%, #A0605B 100%);
+  background: linear-gradient(180deg, #A0605B 0%, #986460 50%, #A0605B 100%);
 }
 .mission-half-success:active { background: #556B76; }
 .mission-half-fail:active { background: #7A403C; }
