@@ -142,16 +142,11 @@
 
     <!-- missionVote -->
     <block wx:if="{{currentPhase === 'missionVote'}}">
-      <block wx:if="{{isMissionTeamMember}}">
-        <block wx:if="{{!hasMissionVoted}}">
-          <view class="bar-row">
-            <button class="btn btn-success" bindtap="castMissionVote" data-vote="success">成功</button>
-            <button class="btn btn-danger" bindtap="castMissionVote" data-vote="fail">失败</button>
-          </view>
-        </block>
-        <view wx:else class="bar-info" style="color:#2ecc71;">已提交，等待其他队员</view>
+      <block wx:if="{{!isMissionTeamMember}}">
+        <view class="vote-waiting">
+          <view class="vote-waiting-spinner"></view>
+        </view>
       </block>
-      <view wx:else class="bar-info">等待任务队执行</view>
       <view class="bar-info" wx:if="{{approveSeats}}" style="color:#10B981;">赞成：{{approveSeats}}</view>
       <view class="bar-info" wx:if="{{rejectSeats}}" style="color:#EF4444;">反对：{{rejectSeats}}</view>
     </block>
@@ -285,6 +280,25 @@
     <view class="order-body">
       <image src="/images/up-arrow.png" class="order-arrow" data-order="asc" bindtap="selectSpeakingDirection" mode="aspectFit"></image>
       <image src="/images/down-arrow.png" class="order-arrow" data-order="desc" bindtap="selectSpeakingDirection" mode="aspectFit"></image>
+    </view>
+  </view>
+
+  <!-- 任务投票弹窗（仅任务队成员，不可关闭） -->
+  <view class="mission-modal" wx:if="{{currentPhase === 'missionVote' && isMissionTeamMember}}">
+    <view class="mission-mask" catchtap="noop" catchtouchmove="noop"></view>
+    <block wx:if="{{!hasMissionVoted}}">
+      <view class="mission-split">
+        <view class="mission-half mission-half-success" data-vote="success" bindtap="confirmMissionVote">
+          <text class="mission-half-emoji">✨</text>
+        </view>
+        <view class="mission-half mission-half-fail" data-vote="fail" bindtap="confirmMissionVote">
+          <text class="mission-half-emoji">💣</text>
+        </view>
+      </view>
+    </block>
+    <view wx:else class="mission-waiting">
+      <view class="mission-waiting-spinner"></view>
+      <text class="mission-waiting-text">等待其他玩家执行任务</text>
     </view>
   </view>
 </view>
