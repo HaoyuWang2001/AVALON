@@ -4,7 +4,7 @@
 .mission-card { margin-top: 8rpx; }
 .mission-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8rpx; }
 .mission-head-info { display: flex; align-items: center; gap: 16rpx; }
-.mission-phase { font-size: 26rpx; color: #6B7280; font-weight: 600; }
+.mission-phase { font-size: 32rpx; color: #6B7280; font-weight: 600; }
 .mission-lake { font-size: 24rpx; color: #0EA5E9; }
 .mission-actions { display: flex; gap: 12rpx; }
 .mini-btn {
@@ -237,9 +237,9 @@
   flex-direction: column;
   justify-content: center;
   gap: 16rpx;
-  min-height: 180rpx;
+  min-height: 100rpx;
 }
-.bar-info { font-size: 28rpx; color: #6B7280; text-align: center; }
+.bar-info { font-size: 32rpx; color: #6B7280; text-align: center; }
 .bar-row { display: flex; align-items: center; justify-content: center; gap: 16rpx; }
 .bar-row button { flex: 1; }
 /* 队伍投票：同意/反对 深色实底、白字、更明显圆角 */
