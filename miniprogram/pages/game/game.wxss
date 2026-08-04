@@ -129,11 +129,11 @@
 }
 /* 已投票（仅 teamVote）：左半紫色渐变 → 中间50%纯白 */
 .table-player.state-voted {
-  background: linear-gradient(to right, #EDE9FE 0%, #FFFFFF 50%);
+  background: linear-gradient(to right, #DDD6FE 0%, #FFFFFF 50%);
 }
 /* 车队成员+已投票：左紫渐变 + 右金渐变，中间纯白 */
 .table-player.state-team-voted {
-  background: linear-gradient(to right, #EDE9FE 0%, #FFFFFF 50%, #FEF3C7 100%);
+  background: linear-gradient(to right, #DDD6FE 0%, #FFFFFF 50%, #FEF3C7 100%);
 }
 
 /* 右侧选人复选框（仅车主选人期显示）：未选=空心灰圈，选中=紫底白勾 */
