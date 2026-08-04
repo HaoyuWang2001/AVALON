@@ -514,10 +514,14 @@ Page({
     const sel = this.data.localSelected.slice();
     const i = sel.indexOf(playerId);
     if (i === -1) sel.push(playerId); else sel.splice(i, 1);
-    // 就地刷新该玩家卡片的复选框勾选状态
+    // 重算所有玩家的 checked/disabled（基于新 localSelected，保证达到上限后立即禁用）
+    const requiredSize = this.data.requiredTeamSize || 0;
+    const isDiscussion = this.data.currentPhase === 'discussion';
+    const atLimit = sel.length >= requiredSize;
     const tablePlayers = this.data.tablePlayers.map(p => {
-      if (p.openId !== playerId) return p;
-      return { ...p, checked: sel.includes(playerId) };
+      const checked = sel.includes(p.openId);
+      const disabled = isDiscussion && atLimit && !checked;
+      return { ...p, checked, disabled };
     });
     this.setData({ localSelected: sel, tablePlayers });
   },
