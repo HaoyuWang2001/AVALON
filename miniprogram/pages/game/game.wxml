@@ -248,16 +248,18 @@
           <view wx:for="{{carsHistory}}" wx:key="round" class="info-round">
             <view class="info-round-title">第{{item.round}}轮</view>
             <view wx:for="{{item.details}}" wx:for-item="car" wx:key="index" class="info-car">
-              <view class="info-car-line">第{{car.index}}车 · 车主 {{getLeaderName(car.teamLeaderOpenId)}}</view>
-              <view class="info-car-line">票型：同意 {{getApproveCount(car.teamVotes)}} · 反对 {{getRejectCount(car.teamVotes)}}</view>
-              <view class="info-car-line info-car-result">结果：{{getCarOutcome(car)}}</view>
+              <view class="info-car-line">第{{car.index}}车 · 车主 {{car.leaderSeat}}号</view>
+              <view class="info-car-line">发车：{{car.sendSeats}}</view>
+              <view class="info-car-line">同意：{{car.approveSeats}}</view>
+              <view class="info-car-line">反对：{{car.rejectSeats}}</view>
+              <view class="info-car-line info-car-result">结果：{{car.outcomeText}}</view>
             </view>
           </view>
         </view>
         <view class="info-section" wx:if="{{lakeHistory.length > 0}}">
           <view class="info-section-title">湖仙验人</view>
           <view wx:for="{{lakeHistory}}" wx:key="round" class="info-row">
-            <text>第{{item.round}}轮 {{getLeaderName(item.inspectorOpenId)}} → {{getLeaderName(item.targetOpenId)}}</text>
+            <text>第{{item.round}}轮 {{item.inspectorSeat}}号 → {{item.targetSeat}}号</text>
             <text wx:if="{{item.result}}" class="{{item.result === 'good' ? 'txt-good' : 'txt-evil'}}">{{item.result === 'good' ? '好人' : '坏人'}}</text>
             <text wx:else class="txt-muted">保密</text>
           </view>

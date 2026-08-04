@@ -279,6 +279,30 @@ Page({
           teamVoteStatus: res.current.teamVoteStatus || null,
           currentPhase: phase
         }));
+
+        // 历史记录预计算（全部用座位号，避免 wxml 函数调用）
+        const nameSeat = id => {
+          const p = (res.players || []).find(x => x.openId === id);
+          return p ? String(p.seatNumber) : '?';
+        };
+        const buildCar = (car) => {
+          const tv = car.teamVotes || {};
+          return {
+            ...car,
+            leaderSeat: nameSeat(car.teamLeaderOpenId),
+            sendSeats: (car.nominatedTeam || []).map(nameSeat).join(' '),
+            approveSeats: Object.keys(tv).filter(id => tv[id] === 'approve').map(nameSeat).join(' '),
+            rejectSeats: Object.keys(tv).filter(id => tv[id] === 'reject').map(nameSeat).join(' '),
+            outcomeText: car.outcome === 'reject' ? '流车' : (car.missionSuccess ? '任务成功' : '任务失败')
+          };
+        };
+        const carsHistory = (res.history ? res.history.cars || [] : []).map(r => ({ ...r, details: (r.details || []).map(buildCar) }));
+        const lakeHistory = (res.history ? res.history.lake || [] : []).map(e => ({
+          ...e,
+          inspectorSeat: nameSeat(e.inspectorOpenId),
+          targetSeat: nameSeat(e.targetOpenId)
+        }));
+
         this.setData({
           gameState: res.current,
           playerRole: myRole,
@@ -315,8 +339,8 @@ Page({
           roomConfigVal: res.basic && res.basic.roomConfig ? res.basic.roomConfig : null,
           gameResult: res.basic && res.basic.result ? res.basic.result : null,
           isHost: isHost,
-          carsHistory: res.history ? res.history.cars || [] : [],
-          lakeHistory: res.history ? res.history.lake || [] : [],
+          carsHistory: carsHistory,
+          lakeHistory: lakeHistory,
           lancelotSwaps: res.history ? res.history.lancelotSwaps || [] : [],
           speakingOrder: res.current.speakingOrder || 'asc',
           speakingOrderIndex: (res.current.speakingOrder || 'asc') === 'desc' ? 1 : 0,
