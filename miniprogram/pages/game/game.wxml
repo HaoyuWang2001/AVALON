@@ -58,14 +58,12 @@
 
   <!-- 玩家列表（全宽大卡片，每玩家一行） -->
   <view class="player-list">
-    <view wx:for="{{tablePlayers}}" wx:key="openId" class="table-player"
+    <view wx:for="{{tablePlayers}}" wx:key="openId" class="table-player {{item.cardState}}"
       bindtap="onTablePlayerTap" data-id="{{item.openId}}">
       <text class="seat-no">{{item.seatNumber}}</text>
       <view class="tplayer-avatar-wrap">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
         <text wx:if="{{item.voteType}}" class="vote-type {{item.voteType === 'approve' ? 'txt-approve' : 'txt-reject'}}">{{item.voteType === 'approve' ? '✓' : '✗'}}</text>
-        <view wx:if="{{currentPhase === 'teamVote' && teamVoteStatus}}" class="vote-dot {{teamVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
-        <view wx:if="{{currentPhase === 'missionVote' && missionVoteStatus}}" class="vote-dot {{missionVoteStatus[item.openId] === 'voted' ? 'voted' : ''}}"></view>
       </view>
       <view class="tplayer-info">
         <text class="tplayer-name">{{item.nickName}}</text>
@@ -141,7 +139,6 @@
         <button class="btn btn-success" bindtap="castVote" data-vote="approve">同意</button>
         <button class="btn btn-danger" bindtap="castVote" data-vote="reject">反对</button>
       </view>
-      <view class="bar-info">已投 {{voteCount}}/{{playerTotal}}</view>
     </block>
 
     <!-- missionVote -->

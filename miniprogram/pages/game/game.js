@@ -11,11 +11,11 @@ const TAG_STYLES = {
   orange: 'ptag-orange'
 };
 
-// 为玩家卡片富化字段（checked/isLeader/voteType/tags[]）
+// 为玩家卡片富化字段（checked/cardState/isLeader/voteType/tags[]）
 function enrichTablePlayer(p, ctx) {
   const {
     leaderOpenId, myOpenId, hostOpenId, lakeHolderOpenId,
-    preNominatedTeam, nominatedTeam, teamVotes, currentPhase
+    preNominatedTeam, nominatedTeam, teamVotes, teamVoteStatus, currentPhase
   } = ctx;
 
   // 复选框勾选：预选队伍中包含该玩家
@@ -26,6 +26,22 @@ function enrichTablePlayer(p, ctx) {
   if (currentPhase !== 'teamVote') {
     const v = (teamVotes || {})[p.openId];
     if (v === 'approve' || v === 'reject') voteType = v;
+  }
+
+  // 车队/投票渐变状态：
+  //  teamVote：车队=右半金渐变，已投=左半紫渐变，可叠加
+  //  missionVote：仅车队=右半金渐变，投票状态不显示
+  let cardState = '';
+  if (currentPhase === 'teamVote' || currentPhase === 'missionVote') {
+    const inTeam = !!(nominatedTeam || []).includes(p.openId);
+    if (currentPhase === 'teamVote') {
+      const voted = (teamVoteStatus || {})[p.openId] === 'voted';
+      if (inTeam && voted) cardState = 'state-team-voted';
+      else if (inTeam) cardState = 'state-team';
+      else if (voted) cardState = 'state-voted';
+    } else if (inTeam) {
+      cardState = 'state-team';
+    }
   }
 
   // 标签数组：车主(金) / 我(紫) / 房主(蓝) / 湖仙(粉) / 预选(橙)，可叠加
@@ -43,6 +59,7 @@ function enrichTablePlayer(p, ctx) {
   return {
     ...p,
     checked,
+    cardState,
     isLeader: p.openId === leaderOpenId,
     voteType,
     tags
@@ -241,6 +258,7 @@ Page({
           preNominatedTeam: effPreTeam,
           nominatedTeam: res.current.nominatedTeam || [],
           teamVotes: res.current.teamVotes || {},
+          teamVoteStatus: res.current.teamVoteStatus || null,
           currentPhase: phase
         }));
         this.setData({
