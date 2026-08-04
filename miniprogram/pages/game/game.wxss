@@ -19,9 +19,16 @@
 .round-circle {
   width: 64rpx; height: 64rpx; border-radius: 50%;
   background: #D1D5DB; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.round-size {
+  font-size: 30rpx; font-weight: 800; color: #8B5CF6;
+  line-height: 1;
 }
 .round-circle.succ { background: #3B82F6; }
 .round-circle.fail { background: #EF4444; }
+.round-circle.succ .round-size,
+.round-circle.fail .round-size { color: #FFFFFF; }
 .round-circle.current {
   width: 80rpx; height: 80rpx;
   border: 6rpx solid #8B5CF6;

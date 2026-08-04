@@ -30,7 +30,9 @@
     <view class="rounds">
       <block wx:for="{{roundList}}" wx:key="round">
         <view class="round-connector" wx:if="{{index > 0}}"></view>
-        <view class="round-circle {{item.status}} {{item.isCurrent ? 'current' : ''}}"></view>
+        <view class="round-circle {{item.status}} {{item.isCurrent ? 'current' : ''}}">
+          <text class="round-size">{{item.size}}</text>
+        </view>
       </block>
     </view>
 

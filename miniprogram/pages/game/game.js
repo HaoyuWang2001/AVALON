@@ -254,7 +254,12 @@ Page({
           const m = missions.find(x => x.round === i);
           let status = 'todo';
           if (m) status = m.success ? 'succ' : 'fail';
-          roundList.push({ round: i, status, isCurrent: i === round });
+          roundList.push({
+            round: i,
+            status,
+            isCurrent: i === round,
+            size: getTeamSizeByRound((res.players || []).length, i)
+          });
         }
 
         const maxFailed = (res.basic && res.basic.roomConfig && res.basic.roomConfig.rules && res.basic.roomConfig.rules.maxFailedNominations) || 3;
