@@ -11,15 +11,19 @@ const TAG_STYLES = {
   orange: 'ptag-orange'
 };
 
-// 为玩家卡片富化字段（checked/cardState/isLeader/tags[]）
+// 为玩家卡片富化字段（checked/cardState/disabled/isLeader/tags[]）
 function enrichTablePlayer(p, ctx) {
   const {
     leaderOpenId, myOpenId, hostOpenId, lakeHolderOpenId,
-    preNominatedTeam, nominatedTeam, localSelected, teamVotes, teamVoteStatus, currentPhase
+    preNominatedTeam, nominatedTeam, localSelected, teamVotes, teamVoteStatus, currentPhase,
+    requiredTeamSize
   } = ctx;
 
   // 复选框勾选：本地临时选中（preNominate/discussion 车主选车）
   const checked = !!(localSelected || []).includes(p.openId);
+  // discussion 确认发车：已选满 requiredTeamSize 后，未选玩家复选框禁用（已选的可取消）
+  const atLimit = (localSelected || []).length >= (requiredTeamSize || 0);
+  const disabled = currentPhase === 'discussion' && atLimit && !checked;
 
   // 车队/投票渐变状态：
   //  teamVote：车队=右半金渐变，已投=左半紫渐变，可叠加
@@ -59,6 +63,7 @@ function enrichTablePlayer(p, ctx) {
     ...p,
     checked,
     cardState,
+    disabled,
     isLeader: p.openId === leaderOpenId,
     tags
   };
@@ -280,6 +285,8 @@ Page({
           .filter(id => tv[id] === 'reject')
           .sort((a, b) => seatNumOf(a) - seatNumOf(b))
           .map(seatOf).join(' ');
+        // 当前轮队伍人数（用本轮 round 局部变量，避免 setData 异步读旧 currentRound）
+        const teamSize = getTeamSizeByRound((res.players || []).length, round);
         // 长桌玩家富化（预计算 checked/cardState/标签，避免 wxml 函数调用）
         const hostOpenId = (res.players || []).find(p => p.isHost) ? (res.players || []).find(p => p.isHost).openId : '';
         const tablePlayers = (res.players || []).map(p => enrichTablePlayer(p, {
@@ -292,11 +299,9 @@ Page({
           localSelected: effectiveLocal,
           teamVotes: res.current.teamVotes || {},
           teamVoteStatus: res.current.teamVoteStatus || null,
+          requiredTeamSize: teamSize,
           currentPhase: phase
         }));
-
-        // 当前轮队伍人数（用本轮 round 局部变量，避免 setData 异步读旧 currentRound）
-        const teamSize = getTeamSizeByRound((res.players || []).length, round);
 
         // 历史记录预计算（全部用座位号，避免 wxml 函数调用）
         const nameSeat = id => {
@@ -502,6 +507,9 @@ Page({
     if (!this.checkIfTeamLeader()) return;
     if (this.data.currentPhase !== 'preNominate' && this.data.currentPhase !== 'discussion') return;
     const playerId = e.currentTarget.dataset.id;
+    // discussion 已满员时，未选中的禁用玩家不可再选（已选的可取消）
+    const target = this.data.tablePlayers.find(p => p.openId === playerId);
+    if (target && target.disabled && !target.checked) return;
     // 本地临时选中：点选/取消
     const sel = this.data.localSelected.slice();
     const i = sel.indexOf(playerId);

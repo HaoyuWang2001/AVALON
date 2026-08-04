@@ -164,6 +164,10 @@
   background: #8B5CF6;
   border-color: #8B5CF6;
 }
+.table-check.disabled {
+  background: #F3F4F6;
+  border-color: #E5E7EB;
+}
 
 /* 座位号徽章：内联，位于头像左侧并排 */
 .seat-no {

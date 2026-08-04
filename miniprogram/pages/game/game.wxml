@@ -70,7 +70,7 @@
           <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag {{tag.cls}}">{{tag.text}}</text>
         </view>
       </view>
-      <view wx:if="{{showSelectCheck}}" class="table-check {{item.checked ? 'checked' : ''}}"
+      <view wx:if="{{showSelectCheck}}" class="table-check {{item.checked ? 'checked' : ''}} {{item.disabled ? 'disabled' : ''}}"
         catchtap="onTablePlayerTap" data-id="{{item.openId}}">
         <text wx:if="{{item.checked}}">✓</text>
       </view>
