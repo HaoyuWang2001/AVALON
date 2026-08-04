@@ -45,8 +45,8 @@
     </view>
   </view>
 
-  <!-- 计时器卡片（仅 discussion，房主操控） -->
-  <view class="card timer-card" wx:if="{{currentPhase === 'discussion'}}">
+  <!-- 计时器卡片（仅 discussion 且已设置发言时限时显示） -->
+  <view class="card timer-card" wx:if="{{currentPhase === 'discussion' && hasSpeechTimeout}}">
     <image src="/images/stopwatch.png" class="timer-icon"></image>
     <text class="timer-num">{{timerSeconds}}s</text>
     <view wx:if="{{isHost}}" class="timer-btns">
@@ -120,7 +120,6 @@
           <button size="mini" class="btn btn-primary" bindtap="confirmNomination">确认发车 {{preNominatedTeam.length}}/{{requiredTeamSize}}</button>
         </view>
       </block>
-      <view wx:else class="bar-info">等待队长发车...</view>
     </block>
 
     <!-- lake：湖仙验人（必验） -->

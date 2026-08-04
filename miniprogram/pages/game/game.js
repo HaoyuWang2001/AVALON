@@ -113,6 +113,7 @@ Page({
     preTeamSeats: '',
     timerSeconds: 0,
     timerRunning: false,
+    hasSpeechTimeout: false,
     roomConfigVal: null,
     carsHistory: [],
     lakeHistory: [],
@@ -298,6 +299,7 @@ Page({
           hasMissionVoted: !!(res.current.missionVotes && res.current.missionVotes[myOpenId]),
           canAssassinateVar: ['assassin', 'morgana'].includes(myRole),
           gameWinner: res.basic && res.basic.result && res.basic.result.winner ? res.basic.result.winner : (missions.filter(r => r.success).length >= 3 ? 'good' : 'evil'),
+          hasSpeechTimeout: this._getSpeechTimeout() > 0,
         });
 
         if (phase === 'gameEnd') {
