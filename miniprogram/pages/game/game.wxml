@@ -129,9 +129,14 @@
 
     <!-- teamVote -->
     <block wx:if="{{currentPhase === 'teamVote'}}">
-      <view class="bar-row">
-        <button class="btn vote-approve" bindtap="castVote" data-vote="approve">同意</button>
-        <button class="btn vote-reject" bindtap="castVote" data-vote="reject">反对</button>
+      <block wx:if="{{!hasTeamVoted}}">
+        <view class="bar-row">
+          <button class="btn vote-approve" bindtap="castVote" data-vote="approve">同意</button>
+          <button class="btn vote-reject" bindtap="castVote" data-vote="reject">反对</button>
+        </view>
+      </block>
+      <view wx:else class="vote-waiting">
+        <view class="vote-waiting-spinner"></view>
       </view>
     </block>
 

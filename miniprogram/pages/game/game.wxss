@@ -256,6 +256,22 @@
 .vote-reject {
   background: #F0686B;
 }
+/* 队伍投票：已投后隐藏按钮，显示紫色循环等待动画 */
+.vote-waiting {
+  display: flex; align-items: center; justify-content: center;
+  padding: 20rpx 0;
+}
+.vote-waiting-spinner {
+  width: 72rpx; height: 72rpx;
+  border: 8rpx solid rgba(139, 92, 246, 0.2);
+  border-top-color: #8B5CF6;
+  border-radius: 50%;
+  animation: vote-spin 1s linear infinite;
+}
+@keyframes vote-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
 /* 计时器卡片（轮次卡下方，仅 discussion）：纵向布局，背景与其他卡片一致 */
 .timer-card {
