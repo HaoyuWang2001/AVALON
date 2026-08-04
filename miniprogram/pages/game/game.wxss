@@ -148,6 +148,10 @@
 .table-player.state-team-rejected {
   background: linear-gradient(to right, #FEE2E2 0%, #FFFFFF 50%, #FEF3C7 100%);
 }
+/* 刺杀阶段：睁眼狼淡红背景 */
+.table-player.state-evil {
+  background: #FEE2E2;
+}
 
 /* 右侧选人复选框（仅车主选人期显示）：未选=空心灰圈，选中=紫底白勾 */
 .table-check {
@@ -210,6 +214,7 @@
 .ptag-pink { background: #FCE7F3; color: #BE185D; }
 .ptag-gold { background: #FEF3C7; color: #B45309; }
 .ptag-orange { background: #FFEDD5; color: #C2410C; }
+.ptag-red { background: #FEE2E2; color: #EF4444; }
 
 /* 发言方向指示：紫色圆形箭头（无文字） */
 .dir-pill {

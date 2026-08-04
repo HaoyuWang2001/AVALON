@@ -307,6 +307,11 @@ async function castMissionVote(gameId, openId, vote, playerRole) {
   return res.body;
 }
 
+async function startAssassination(gameId, killerOpenId) {
+  const res = await apiPost(`/api/games/${gameId}/startAssassination`, { killerOpenId });
+  return res.body;
+}
+
 async function assassinate(gameId, killerOpenId, targetOpenId) {
   const res = await apiPost(`/api/games/${gameId}/assassinate`, { killerOpenId, targetOpenId });
   return res.body;
@@ -481,6 +486,7 @@ module.exports = {
   castVote,
   castMissionVote,
   assassinate,
+  startAssassination,
   endGame,
   submitPreNomination,
   selectSpeakingOrder,

@@ -2,13 +2,27 @@
 const app = getApp();
 const api = require('../../services/api.js');
 
+// 睁眼狼（刺杀阶段向所有玩家暴露身份）
+const EVIL_OPEN_EYES = ['morgana', 'assassin', 'minion', 'mordred'];
+
+// 角色中文名（模块级，供富化函数使用）
+const ROLE_NAMES_LOCAL = {
+  merlin: '梅林', percival: '派西维尔', loyal: '忠臣', mordred: '莫德雷德',
+  morgana: '莫甘娜', assassin: '刺客', minion: '爪牙', oberon: '奥伯伦',
+  lancelotBlue: '蓝兰', lancelotRed: '红兰'
+};
+function getRoleNameLocal(role) {
+  return ROLE_NAMES_LOCAL[role] || '未知';
+}
+
 // 标准标签配色：浅紫底深紫字 / 浅蓝底蓝字 / 浅粉底粉字 / 浅金底金字 / 浅橙底橙字
 const TAG_STYLES = {
   purple: 'ptag-purple',
   blue: 'ptag-blue',
   pink: 'ptag-pink',
   gold: 'ptag-gold',
-  orange: 'ptag-orange'
+  orange: 'ptag-orange',
+  red: 'ptag-red'
 };
 
 // 为玩家卡片富化字段（checked/cardState/disabled/isLeader/tags[]）
@@ -16,7 +30,7 @@ function enrichTablePlayer(p, ctx) {
   const {
     leaderOpenId, myOpenId, hostOpenId, lakeHolderOpenId,
     preNominatedTeam, nominatedTeam, localSelected, teamVotes, teamVoteStatus, currentPhase,
-    requiredTeamSize
+    requiredTeamSize, evilOpenEyes
   } = ctx;
 
   // 复选框勾选：本地临时选中（preNominate/discussion 车主选车）
@@ -25,11 +39,17 @@ function enrichTablePlayer(p, ctx) {
   const atLimit = (localSelected || []).length >= (requiredTeamSize || 0);
   const disabled = currentPhase === 'discussion' && atLimit && !checked;
 
+  // 刺杀阶段：睁眼狼淡红背景 + 角色名标签
+  const isEvilEyes = currentPhase === 'assassination'
+    && !!(evilOpenEyes || []).some(e => e.openId === p.openId);
+
   // 车队/投票渐变状态：
   //  teamVote：车队=右半金渐变，已投=左半紫渐变，可叠加
   //  missionVote：左半绿=赞成/红=反对（队伍投票结果），车队右半金渐变保留
   let cardState = '';
-  if (currentPhase === 'teamVote' || currentPhase === 'missionVote') {
+  if (isEvilEyes) {
+    cardState = 'state-evil';
+  } else if (currentPhase === 'teamVote' || currentPhase === 'missionVote') {
     const inTeam = !!(nominatedTeam || []).includes(p.openId);
     if (currentPhase === 'teamVote') {
       const voted = (teamVoteStatus || {})[p.openId] === 'voted';
@@ -47,8 +67,12 @@ function enrichTablePlayer(p, ctx) {
     }
   }
 
-  // 标签数组：车主(金) / 我(紫) / 房主(蓝) / 湖仙(粉) / 预选(橙)，可叠加
+  // 标签数组：车主(金) / 我(紫) / 房主(蓝) / 湖仙(粉) / 预选(橙) / 睁眼狼角色(红)，可叠加
   const tags = [];
+  if (isEvilEyes) {
+    const evil = (evilOpenEyes || []).find(e => e.openId === p.openId);
+    if (evil && evil.role) tags.push({ text: getRoleNameLocal(evil.role), cls: TAG_STYLES.red });
+  }
   if (p.openId === leaderOpenId) tags.push({ text: '车主', cls: TAG_STYLES.gold });
   if (p.openId === myOpenId) tags.push({ text: '我', cls: TAG_STYLES.purple });
   if (p.openId === hostOpenId) tags.push({ text: '房主', cls: TAG_STYLES.blue });
@@ -113,6 +137,7 @@ Page({
     hasMissionVoted: false,
     canAssassinateVar: false,
     gameWinner: '',
+    evilOpenEyes: [],
     nominatedTeam: [],
     teamVotes: {},
     approveSeats: '',
@@ -300,6 +325,7 @@ Page({
           teamVotes: res.current.teamVotes || {},
           teamVoteStatus: res.current.teamVoteStatus || null,
           requiredTeamSize: teamSize,
+          evilOpenEyes: res.current.evilOpenEyes || [],
           currentPhase: phase
         }));
 
@@ -384,6 +410,7 @@ Page({
           isMissionTeamMember: !!((res.current.nominatedTeam || []).includes(myOpenId)),
           hasMissionVoted: !!(res.current.missionVotes && res.current.missionVotes[myOpenId]),
           canAssassinateVar: ['assassin', 'morgana'].includes(myRole),
+          evilOpenEyes: res.current.evilOpenEyes || [],
           gameWinner: res.basic && res.basic.result && res.basic.result.winner ? res.basic.result.winner : (missions.filter(r => r.success).length >= 3 ? 'good' : 'evil'),
           hasSpeechTimeout: this._getSpeechTimeout() > 0,
         });
@@ -789,6 +816,27 @@ Page({
   canAssassinate() {
     // 与后端一致：assassin 或（无 assassin 时）morgana 可发起刺杀
     return ['assassin', 'morgana'].includes(this.data.playerRole);
+  },
+
+  // 任意阶段：刺客/莫甘娜开始刺杀（进入刺杀阶段）
+  startAssassination() {
+    const { gameId } = this.data;
+    wx.showModal({
+      title: '开始刺杀',
+      content: '确定开始刺杀梅林？（进入刺杀阶段后选择目标）',
+      success: (res) => {
+        if (res.confirm) {
+          wx.showLoading({ title: '进入刺杀...', mask: true });
+          api.startAssassination(gameId).then(() => {
+            wx.hideLoading();
+            this.fetchGameState();
+          }).catch(err => {
+            wx.hideLoading();
+            wx.showToast({ title: (err && err.message) || '开始刺杀失败', icon: 'none' });
+          });
+        }
+      }
+    });
   },
 
   assassinate(e) {

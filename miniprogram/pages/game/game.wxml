@@ -111,7 +111,7 @@
       <view class="bar-info">预选车：{{preTeamSeats || '无'}}<text class="dir-pill">{{speakingOrder === 'desc' ? '↓' : '↑'}}</text></view>
       <block wx:if="{{isTeamLeader}}">
         <view class="bar-row">
-          <button size="mini" class="btn btn-primary" bindtap="confirmNomination">确认发车 {{localSelected.length}}/{{requiredTeamSize}}</button>
+          <button size="mini" class="btn btn-primary" bindtap="confirmNomination">{{forcedSend ? '强制发车' : '确认发车'}} {{localSelected.length}}/{{requiredTeamSize}}</button>
         </view>
       </block>
     </block>
@@ -233,6 +233,7 @@
           </view>
         </view>
       </view>
+      <button wx:if="{{canAssassinateVar}}" class="btn btn-danger role-card-btn" bindtap="startAssassination">开始刺杀</button>
       <button class="btn btn-primary role-card-btn" bindtap="closeRoleModal">隐藏身份</button>
     </view>
   </view>

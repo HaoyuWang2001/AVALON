@@ -1,7 +1,7 @@
 const {
   createRoomAndStartGame, getGameState, confirmRevealAll, confirmLancelot,
   submitNomination, castVote, castMissionVote, submitPreNomination, selectSpeakingOrder,
-  assassinate, endGame,
+  assassinate, startAssassination, endGame,
   buildStandardRoomConfig, buildCustomBoard9, buildCustomBoard10, withConfigOverrides
 } = require('./helpers/testHelper');
 
@@ -114,6 +114,9 @@ describe('04b — Evil Win Paths', () => {
       const killer = assassin || morgana;
       const merlin = ps.find(p => p.role === 'merlin');
 
+      const startRes = await startAssassination(gId, killer.openId);
+      expect(startRes.success).toBe(true);
+      expect(startRes.current.phase).toBe('assassination');
       const assResult = await assassinate(gId, killer.openId, merlin.openId);
       expect(assResult.success).toBe(true);
       const state = await getGameState(gId);
@@ -130,7 +133,11 @@ describe('04b — Evil Win Paths', () => {
       const assassin = ps.find(p => p.role === 'assassin');
       const morgana = ps.find(p => p.role === 'morgana');
       const killerRole = assassin ? 'assassin' : 'morgana';
+      const killer = assassin || morgana;
       const nonKiller = ps.find(p => p.side === 'evil' && p.role !== killerRole);
+      // 先由合法刺杀者进入刺杀阶段
+      const startRes = await startAssassination(gId, killer.openId);
+      expect(startRes.success).toBe(true);
       if (nonKiller) {
         const res = await assassinate(gId, nonKiller.openId, ps[0].openId);
         expect(res.success).toBe(false);
@@ -142,6 +149,12 @@ describe('04b — Evil Win Paths', () => {
       const result = await createRoomAndStartGame(n, boardConfig({ config }));
       const gId = result.gameId;
       const goodPlayer = result.players.find(p => p.side === 'good');
+      const assassin = result.players.find(p => p.role === 'assassin');
+      const morgana = result.players.find(p => p.role === 'morgana');
+      const killer = assassin || morgana;
+      // 先由合法刺杀者进入刺杀阶段
+      const startRes = await startAssassination(gId, killer.openId);
+      expect(startRes.success).toBe(true);
       const res = await assassinate(gId, goodPlayer.openId, result.players[0].openId);
       expect(res.success).toBe(false);
       await endGame(gId);
@@ -155,6 +168,8 @@ describe('04b — Evil Win Paths', () => {
       const morgana = ps.find(p => p.role === 'morgana');
       const killer = assassin || morgana;
       const merlin = ps.find(p => p.role === 'merlin');
+      const startRes = await startAssassination(gId, killer.openId);
+      expect(startRes.success).toBe(true);
       await assassinate(gId, killer.openId, merlin.openId);
       const second = await assassinate(gId, killer.openId, merlin.openId);
       expect(second.success).toBe(false);
@@ -170,6 +185,8 @@ describe('04b — Evil Win Paths', () => {
     expect(ps.find(p => p.role === 'assassin')).toBeUndefined();
     const morgana = ps.find(p => p.role === 'morgana');
     const merlin = ps.find(p => p.role === 'merlin');
+    const startRes = await startAssassination(gId, morgana.openId);
+    expect(startRes.success).toBe(true);
     const assResult = await assassinate(gId, morgana.openId, merlin.openId);
     expect(assResult.success).toBe(true);
     const state = await getGameState(gId);

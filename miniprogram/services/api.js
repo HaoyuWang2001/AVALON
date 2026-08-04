@@ -215,6 +215,14 @@ class ApiService {
     });
   }
 
+  async startAssassination(gameId) {
+    const killerOpenId = this.openId || getApp().globalData.openId;
+    return this.request(`/games/${gameId}/startAssassination`, {
+      method: 'POST',
+      data: { killerOpenId }
+    });
+  }
+
   async assassinate(gameId, targetOpenId) {
     const killerOpenId = this.openId || getApp().globalData.openId;
     return this.request(`/games/${gameId}/assassinate`, {

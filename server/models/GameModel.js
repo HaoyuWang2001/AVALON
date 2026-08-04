@@ -704,7 +704,12 @@ class GameModel {
         lancelotConfirmedCount,
         lancelotTotalCount: playerCount,
         revealConfirmedCount,
-        revealTotalCount: playerCount
+        revealTotalCount: playerCount,
+        evilOpenEyes: game.currentPhase === 'assassination'
+          ? fullPlayers
+              .filter(p => EVIL_OPEN_EYES.includes(p.role))
+              .map(p => ({ openId: p.openId, seatNumber: p.seatNumber, role: p.role }))
+          : []
       };
 
       return {
@@ -1550,9 +1555,77 @@ class GameModel {
   }
 
   /**
+   * 开始刺杀（进入刺杀阶段，不判定）。
+   * 仅 assassin 可发起；无 assassin 时 morgana 可发起；任意阶段可调用；幂等。
+   * @param {string} gameId 游戏ID
+   * @param {string} killerOpenId 刺杀者openId
+   * @returns {Promise<Object>} 更新后的游戏状态
+   */
+  static async startAssassination(gameId, killerOpenId) {
+    try {
+      await db.transaction(async (connection) => {
+        const [game] = await connection.execute(
+          `SELECT current_phase, room_id
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId]
+        );
+
+        if (game.length === 0) {
+          throw new Error('游戏不存在');
+        }
+
+        if (game[0].current_phase === 'gameEnd') {
+          throw new Error('游戏已结束');
+        }
+
+        // 查找刺杀者：assassin 或（无 assassin 时）morgana
+        const [assassinPlayers] = await connection.execute(
+          `SELECT open_id FROM game_players WHERE game_id = ? AND role = 'assassin'`,
+          [gameId]
+        );
+        const [morganaPlayers] = await connection.execute(
+          `SELECT open_id FROM game_players WHERE game_id = ? AND role = 'morgana'`,
+          [gameId]
+        );
+
+        let validKillerOpenIds = [];
+        if (assassinPlayers.length > 0) {
+          validKillerOpenIds = assassinPlayers.map(p => p.open_id);
+        } else if (morganaPlayers.length > 0) {
+          validKillerOpenIds = morganaPlayers.map(p => p.open_id);
+        }
+
+        if (validKillerOpenIds.length === 0) {
+          throw new Error('本局无刺杀者角色');
+        }
+
+        if (!validKillerOpenIds.includes(killerOpenId)) {
+          throw new Error('只有刺杀者才能发起刺杀');
+        }
+
+        // 幂等：已处于刺杀阶段则直接返回
+        if (game[0].current_phase !== 'assassination') {
+          await connection.execute(
+            `UPDATE games 
+             SET current_phase = 'assassination',
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [gameId]
+          );
+        }
+      });
+
+      return await this.getState(gameId);
+    } catch (error) {
+      console.error('开始刺杀失败:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 刺客刺杀梅林
    * 仅 assassin 可发起；无 assassin 时 morgana 可发起
-   * 强制进入 assassination 阶段，执行后必定 gameEnd
+   * 需处于 assassination 阶段，执行后必定 gameEnd
    * @param {string} gameId 游戏ID
    * @param {string} killerOpenId 刺杀者openId
    * @param {string} targetOpenId 目标openId
@@ -1573,6 +1646,10 @@ class GameModel {
 
         if (game[0].current_phase === 'gameEnd') {
           throw new Error('游戏已结束');
+        }
+
+        if (game[0].current_phase !== 'assassination') {
+          throw new Error('当前不是刺杀阶段');
         }
 
         // 查找刺杀者：assassin 或（无 assassin 时）morgana

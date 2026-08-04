@@ -402,6 +402,42 @@ function createRouter() {
   });
 
   // 刺客刺杀梅林
+  // 开始刺杀（进入刺杀阶段，任意阶段可由刺客/莫甘娜发起；幂等）
+  router.post('/:gameId/startAssassination', async (req, res) => {
+    try {
+      const { gameId } = req.params;
+      const { killerOpenId } = req.body;
+
+      if (!gameId || !killerOpenId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+
+      const result = await GameModel.startAssassination(gameId, killerOpenId);
+
+      const db = require('../config/db');
+      const [gameRecord] = await db.query('SELECT room_id FROM games WHERE id = ?', [gameId]);
+      if (gameRecord && gameRecord.room_id) {
+        emitGame(gameRecord.room_id, gameId);
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error('开始刺杀API错误:', error);
+
+      if (error.message.includes('游戏不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+
+      if (error.message.includes('游戏已结束') ||
+          error.message.includes('本局无刺杀者角色') ||
+          error.message.includes('只有刺杀者才能发起刺杀')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
+      res.status(500).json({ success: false, message: error.message || '开始刺杀失败' });
+    }
+  });
+
   router.post('/:gameId/assassinate', async (req, res) => {
     try {
       const { gameId } = req.params;
@@ -428,6 +464,7 @@ function createRouter() {
       }
 
       if (error.message.includes('游戏已结束') ||
+          error.message.includes('当前不是刺杀阶段') ||
           error.message.includes('本局无刺杀者角色') ||
           error.message.includes('只有刺杀者才能发起刺杀') ||
           error.message.includes('目标不在此游戏中')) {
