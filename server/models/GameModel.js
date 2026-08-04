@@ -198,10 +198,11 @@ class GameModel {
         }
         const shuffledRoles = this.shuffleArray(roles);
         
-        // 4. 创建游戏记录（首位车长 = 当前时钟分钟 % 玩家人数；湖仙初始持有者 = 首车主 seat-1 取模）
+        // 4. 创建游戏记录（首位车长 = 当前时钟分钟 % 玩家人数；湖仙初始持有者 = 首车主 seat-1 取模，仅湖仙启用时）
         const firstLeaderIndex = playerCount > 0 ? (new Date().getMinutes() % playerCount) : 0;
         const firstLakeHolderIndex = (firstLeaderIndex - 1 + playerCount) % playerCount;
-        const firstLakeHolderOpenId = players[firstLakeHolderIndex] ? players[firstLakeHolderIndex].openId : null;
+        const lakeEnabled = !!(roomConfig && roomConfig.rules && roomConfig.rules.ladyOfTheLake);
+        const firstLakeHolderOpenId = lakeEnabled && players[firstLakeHolderIndex] ? players[firstLakeHolderIndex].openId : null;
         await connection.execute(
           `INSERT INTO games (id, room_id, owner_id, current_phase, current_round, 
                               team_leader_index, failed_nominations, lake_holder_open_id,
