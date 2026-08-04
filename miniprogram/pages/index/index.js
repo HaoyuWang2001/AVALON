@@ -656,7 +656,7 @@ Page({
       }
     }).then(res => {
       if (res.success) {
-        this.setData({ showConfig: false });
+        // 不主动关闭配置页：保持最后可见页面直到跳转房间页时自然关闭
         const app = getApp();
         app.globalData.roomId = res.roomId;
         wx.hideLoading();
