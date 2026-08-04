@@ -106,11 +106,20 @@
 
     <!-- discussion：车主确认发车 -->
     <block wx:if="{{currentPhase === 'discussion'}}">
-      <view class="bar-info">预选车：{{preTeamSeats || '无'}}<image src="/images/{{speakingOrder === 'desc' ? 'down-arrow.png' : 'up-arrow.png'}}" class="dir-pill-img" mode="aspectFit"></image></view>
+      <!-- 预选车+方向：仅非强制车时显示 -->
+      <view wx:if="{{!forcedSend}}" class="bar-info">预选车：{{preTeamSeats || '无'}}<image src="/images/{{speakingOrder === 'desc' ? 'down-arrow.png' : 'up-arrow.png'}}" class="dir-pill-img" mode="aspectFit"></image></view>
+      <!-- 车长：强制发车/确认发车按钮 -->
       <block wx:if="{{isTeamLeader}}">
         <view class="bar-row">
           <button size="mini" class="btn btn-primary" bindtap="confirmNomination">{{forcedSend ? '强制发车' : '确认发车'}} {{localSelected.length}}/{{requiredTeamSize}}</button>
         </view>
+      </block>
+      <!-- 非车长 + 强制车：等待动画 + 提示 -->
+      <block wx:if="{{!isTeamLeader && forcedSend}}">
+        <view class="vote-waiting">
+          <view class="vote-waiting-spinner"></view>
+        </view>
+        <view class="bar-info">等待车长发出强制车...</view>
       </block>
     </block>
 
