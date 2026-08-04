@@ -29,11 +29,6 @@ button::after { border: none; }
 .stat-divider { width: 1rpx; height: 48rpx; background: var(--gray-200); }
 
 /* ─── Start hint (host bottom bar 上方) ─── */
-.start-hint-bar {
-  position: fixed; left: 0; right: 0; bottom: 120rpx; z-index: 49;
-  text-align: center; font-size: 26rpx; color: var(--primary);
-  pointer-events: none;
-}
 
 /* ─── Card 3: Seats ─── */
 .seats-section { display: flex; flex-direction: column; gap: 10rpx; }
