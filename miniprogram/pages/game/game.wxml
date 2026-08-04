@@ -58,8 +58,8 @@
     </view>
   </view>
 
-  <!-- 玩家列表（全宽大卡片，每玩家一行） -->
-  <view class="player-list">
+  <!-- 玩家列表（全宽大卡片，每玩家一行）；padding-bottom 动态对齐底部栏，避免遮挡 -->
+  <view class="player-list" style="{{bottomBarHeight ? 'padding-bottom:' + bottomBarHeight + 'px' : ''}}">
     <view wx:for="{{tablePlayers}}" wx:key="openId" class="table-player {{item.cardState}}"
       bindtap="onTablePlayerTap" data-id="{{item.openId}}">
       <text class="seat-no">{{item.seatNumber}}</text>

@@ -188,6 +188,7 @@ Page({
     visionList: [],
     nominateMode: 'final',
     showSelectCheck: false,
+    bottomBarHeight: 0,
   },
 
   onLoad(options) {
@@ -350,7 +351,9 @@ Page({
             sendSeats: (car.nominatedTeam || []).map(nameSeat).join(' '),
             approveSeats: Object.keys(tv).filter(id => tv[id] === 'approve').map(nameSeat).join(' '),
             rejectSeats: Object.keys(tv).filter(id => tv[id] === 'reject').map(nameSeat).join(' '),
-            outcomeText: car.outcome === 'reject' ? '流车' : (car.missionSuccess ? '任务成功' : '任务失败')
+            outcomeText: car.outcome === 'reject' ? '流车'
+              : (car.missionSuccess == null ? '未进行任务'
+              : (car.missionSuccess ? '任务成功' : '任务失败'))
           };
         };
         const carsHistory = (res.history ? res.history.cars || [] : []).map(r => ({ ...r, details: (r.details || []).map(buildCar) }));
@@ -424,6 +427,9 @@ Page({
           hasSpeechTimeout: this._getSpeechTimeout() > 0,
         });
 
+        // 底部栏高度随阶段动态变化：渲染后重新测量，校准玩家列表底部留白
+        wx.nextTick(() => { this.measureBottomBar(); });
+
         // gameEnd 结果由底部框展示（wxml currentPhase === 'gameEnd' 渲染）
 
         // 离开 roleReveal（进入 preNominate 或后续阶段）：关闭身份确认页/蒙版/等待态
@@ -456,6 +462,17 @@ Page({
   },
 
   noop() {},
+
+  measureBottomBar() {
+    const windowWidth = (wx.getWindowInfo && wx.getWindowInfo().windowWidth) || wx.getSystemInfoSync().windowWidth || 375;
+    const rpxToPx = windowWidth / 750;
+    wx.createSelectorQuery().select('.bottom-bar').boundingClientRect(rect => {
+      if (rect && rect.height) {
+        // bottomBarHeight = 底部栏实际高度 + 固定 16rpx 间距（均转 px）
+        this.setData({ bottomBarHeight: rect.height + 16 * rpxToPx });
+      }
+    }).exec();
+  },
 
   confirmRoleReveal() {
     const { gameId } = this.data;
