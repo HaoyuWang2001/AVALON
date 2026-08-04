@@ -106,7 +106,7 @@
 
     <!-- discussion：车主确认发车 -->
     <block wx:if="{{currentPhase === 'discussion'}}">
-      <view class="bar-info">预选车：{{preTeamSeats || '无'}}<text class="dir-pill">{{speakingOrder === 'desc' ? '↓' : '↑'}}</text></view>
+      <view class="bar-info">预选车：{{preTeamSeats || '无'}}<image src="/images/{{speakingOrder === 'desc' ? 'down-arrow.png' : 'up-arrow.png'}}" class="dir-pill-img" mode="aspectFit"></image></view>
       <block wx:if="{{isTeamLeader}}">
         <view class="bar-row">
           <button size="mini" class="btn btn-primary" bindtap="confirmNomination">{{forcedSend ? '强制发车' : '确认发车'}} {{localSelected.length}}/{{requiredTeamSize}}</button>
