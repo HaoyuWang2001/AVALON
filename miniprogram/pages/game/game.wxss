@@ -519,6 +519,7 @@ progress { border-radius: 12rpx; }
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   background: #FFFFFF;
+  position: relative; z-index: 1;
 }
 .mission-waiting-spinner {
   width: 72rpx; height: 72rpx;
