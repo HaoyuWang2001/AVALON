@@ -422,9 +422,7 @@ Page({
           hasSpeechTimeout: this._getSpeechTimeout() > 0,
         });
 
-        if (phase === 'gameEnd') {
-          this.showGameEndResult(res.basic ? res.basic.result : null);
-        }
+        // gameEnd 结果由底部框展示（wxml currentPhase === 'gameEnd' 渲染）
 
         // 离开 roleReveal（进入 preNominate 或后续阶段）：关闭身份确认页/蒙版/等待态
         if (phase !== 'roleReveal') {
@@ -522,19 +520,17 @@ Page({
     this.setData({ showInfoModal: false });
   },
 
-  showGameEndResult(gameResult) {
-    if (gameResult) {
-      const winnerText = gameResult.winner === 'good' ? '好人获胜' : '坏人获胜';
-      wx.showModal({
-        title: '游戏结束',
-        content: `${winnerText}\n原因: ${gameResult.reason}`,
-        showCancel: false,
-        confirmText: '确定',
-        success: () => {
-          wx.navigateBack();
-        }
-      });
-    }
+  // 非房主：离开房间（退出房间 + 回首页）
+  leaveRoom() {
+    const { roomId } = this.data;
+    wx.showLoading({ title: '离开中...', mask: true });
+    api.leaveRoom(roomId).then(() => {
+      wx.hideLoading();
+      wx.reLaunch({ url: '/pages/index/index' });
+    }).catch(err => {
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '离开失败', icon: 'none' });
+    });
   },
 
   nominatePlayer(e) {

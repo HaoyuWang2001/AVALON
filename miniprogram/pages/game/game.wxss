@@ -322,9 +322,9 @@
 .result-title { font-size: 48rpx; font-weight: 800; color: #111827; }
 .result-sub { font-size: 30rpx; color: #6B7280; margin-top: 12rpx; }
 
-/* gameEnd 结果 */
-.game-end-icon { font-size: 110rpx; }
-.game-end-title { font-size: 44rpx; font-weight: 800; color: #111827; margin: 12rpx 0 20rpx; }
+/* gameEnd 结果（底部框） */
+.gameend-img { width: 160rpx; height: 160rpx; }
+.gameend-title { font-size: 44rpx; font-weight: 800; color: #111827; margin-left: 20rpx; }
 
 /* 队伍成员样式 */
 .team-member { display: flex; flex-direction: column; align-items: center; margin: 20rpx; }
