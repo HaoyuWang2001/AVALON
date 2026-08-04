@@ -937,17 +937,6 @@ class GameModel {
             // 下一车是否强制：流车数达阈值后跳过 preNominate/speakingOrder 直接进入 discussion
             const forcedNext = failedNominations >= maxFailedNominations;
             // 湖仙持有者随车长顺延
-            const [newLeaderPlayers] = await connection.execute(
-              `SELECT gp.open_id FROM game_players gp
-               LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
-               WHERE gp.game_id = ?
-               ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
-              [game[0].room_id, gameId]
-            );
-            const lakeHolderOpenId = newLeaderPlayers.length
-              ? newLeaderPlayers[(newTeamLeaderIndex - 1 + playerCount) % playerCount].open_id
-              : null;
-
             const nextPhase = forcedNext ? 'discussion' : 'preNominate';
             await connection.execute(
               `UPDATE games 
@@ -955,14 +944,13 @@ class GameModel {
                    team_leader_index = ?,
                    nominated_team = NULL,
                    failed_nominations = ?,
-                   lake_holder_open_id = ?,
                    pre_nominated_team = NULL,
                    speaking_order = 'asc',
                    discussion_set = FALSE,
                    lancelot_result = NULL,
                    updated_at = NOW()
                WHERE id = ?`,
-              [nextPhase, newTeamLeaderIndex, failedNominations, lakeHolderOpenId, gameId]
+              [nextPhase, newTeamLeaderIndex, failedNominations, gameId]
             );
           }
         }
@@ -1148,16 +1136,6 @@ class GameModel {
             // 进入下一回合触发链：先湖仙验人(lake)，再兰斯抽卡(lancelot)，最后 preNominate
             const newRound = game[0].current_round + 1;
             const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
-            const [newLeaderPlayers] = await connection.execute(
-              `SELECT gp.open_id FROM game_players gp
-               LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
-               WHERE gp.game_id = ?
-               ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
-              [game[0].room_id, gameId]
-            );
-            const lakeHolderOpenId = newLeaderPlayers.length
-              ? newLeaderPlayers[(newTeamLeaderIndex - 1 + playerCount) % playerCount].open_id
-              : null;
 
             // 湖仙触发条件：启用且完成轮次在 [ladyOfTheLakeRound, 4] 且仍有未当过湖仙的玩家
             const ladyRound = parseInt(rules.ladyOfTheLakeRound, 10) || 2;
@@ -1211,14 +1189,13 @@ class GameModel {
                      team_leader_index = ?,
                      nominated_team = NULL,
                      failed_nominations = 0,
-                     lake_holder_open_id = ?,
                      pre_nominated_team = NULL,
                      speaking_order = 'asc',
                      discussion_set = FALSE,
                      lancelot_result = ?,
                      updated_at = NOW()
                  WHERE id = ?`,
-                [newRound, newTeamLeaderIndex, lakeHolderOpenId, JSON.stringify({ switched: !!switched, round: game[0].current_round }), gameId]
+                [newRound, newTeamLeaderIndex, JSON.stringify({ switched: !!switched, round: game[0].current_round }), gameId]
               );
             } else {
               // 无湖仙/兰斯 → 直接进入下一轮 preNominate
@@ -1229,14 +1206,13 @@ class GameModel {
                      team_leader_index = ?,
                      nominated_team = NULL,
                      failed_nominations = 0,
-                     lake_holder_open_id = ?,
                      pre_nominated_team = NULL,
                      speaking_order = 'asc',
                      discussion_set = FALSE,
                      lancelot_result = NULL,
                      updated_at = NOW()
                  WHERE id = ?`,
-                [newRound, newTeamLeaderIndex, lakeHolderOpenId, gameId]
+                [newRound, newTeamLeaderIndex, gameId]
               );
             }
           }
@@ -1328,13 +1304,6 @@ class GameModel {
         const playerCount = parseInt(game[0].player_count, 10);
         const newRound = game[0].current_round + 1;
         const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
-        const [newLeaderPlayers] = await connection.execute(
-          `SELECT gp.open_id FROM game_players gp
-           LEFT JOIN room_players p ON gp.open_id = p.open_id AND p.room_id = ?
-           WHERE gp.game_id = ?
-           ORDER BY COALESCE(p.seat_number, 999999), gp.open_id`,
-          [game[0].room_id, gameId]
-        );
 
         if (lancelotEnabled && hasLancelot) {
           const switched = await maybeLancelotSwap(connection, gameId, game[0].current_round, rules);
