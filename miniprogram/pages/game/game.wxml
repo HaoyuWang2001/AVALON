@@ -22,7 +22,7 @@
         <text class="mission-phase">{{phaseText}}</text>
       </view>
       <view class="mission-actions">
-        <text class="mini-btn" wx:if="{{playerRole}}" bindtap="openRoleModal">查看身份</text>
+        <text class="mini-btn" wx:if="{{playerRole}}" bindtap="openRoleModal">身份</text>
         <text class="mini-btn" bindtap="openInfoModal">历史</text>
       </view>
     </view>
@@ -251,7 +251,7 @@
     <view class="modal-mask" bindtap="closeInfoModal"></view>
     <view class="info-modal-body">
       <view class="info-modal-title">游戏记录</view>
-      <scroll-view scroll-y class="info-modal-scroll">
+      <scroll-view scroll-y enable-flex class="info-modal-scroll">
         <view class="info-section" wx:if="{{carsHistory.length > 0}}">
           <view class="info-section-title">车次记录</view>
           <view wx:for="{{carsHistory}}" wx:key="round" class="info-round">
