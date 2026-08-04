@@ -64,6 +64,21 @@ function enrichTablePlayer(p, ctx) {
   };
 }
 
+// 队伍人数表（按玩家数与轮次）
+const TEAM_SIZES = {
+  5: [2, 3, 2, 3, 3],
+  6: [2, 3, 4, 3, 4],
+  7: [2, 3, 3, 4, 4],
+  8: [3, 4, 4, 5, 5],
+  9: [3, 4, 4, 5, 5],
+  10: [3, 4, 4, 5, 5],
+  11: [3, 4, 5, 6, 6],
+  12: [3, 4, 5, 6, 6],
+};
+function getTeamSizeByRound(playerCount, round) {
+  return (TEAM_SIZES[playerCount] || TEAM_SIZES[5])[round - 1] || 3;
+}
+
 Page({
   data: {
     roomId: '',
@@ -280,6 +295,9 @@ Page({
           currentPhase: phase
         }));
 
+        // 当前轮队伍人数（用本轮 round 局部变量，避免 setData 异步读旧 currentRound）
+        const teamSize = getTeamSizeByRound((res.players || []).length, round);
+
         // 历史记录预计算（全部用座位号，避免 wxml 函数调用）
         const nameSeat = id => {
           const p = (res.players || []).find(x => x.openId === id);
@@ -354,7 +372,7 @@ Page({
           phaseText: this.getPhaseText(phase),
           lastMissionResult: !!(missions.length > 0 && missions[missions.length - 1].success),
           isTeamLeader: !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
-          requiredTeamSize: this.getRequiredTeamSize(),
+          requiredTeamSize: teamSize,
           showSelectCheck: (phase === 'preNominate' || phase === 'discussion') && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
           voteCount: Object.keys(res.current.teamVotes || {}).length,
           playerTotal: (res.players || []).length,
@@ -531,18 +549,7 @@ Page({
 
   getRequiredTeamSize() {
     const playerCount = this.data.allPlayers?.length || 5;
-    const round = this.data.currentRound;
-    const sizes = {
-      5: [2, 3, 2, 3, 3],
-      6: [2, 3, 4, 3, 4],
-      7: [2, 3, 3, 4, 4],
-      8: [3, 4, 4, 5, 5],
-      9: [3, 4, 4, 5, 5],
-      10: [3, 4, 4, 5, 5],
-      11: [3, 4, 5, 6, 6],
-      12: [3, 4, 5, 6, 6],
-    };
-    return sizes[playerCount]?.[round - 1] || 3;
+    return getTeamSizeByRound(playerCount, this.data.currentRound);
   },
 
   // discussion 阶段：车主确认发车（提交 localSelected → teamVote）；强制发车时 forcedSend 为 true 直接进 missionVote
