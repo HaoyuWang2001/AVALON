@@ -800,29 +800,6 @@ Page({
     });
   },
 
-  castMissionVote(e) {
-    const vote = e.currentTarget.dataset.vote;
-    const { gameId, playerRole, playerSide } = this.data;
-
-    if (vote === 'fail') {
-      // 以当前阵营为准（兰斯洛特转换可能改变 side）；后端为最终裁决
-      const isEvil = playerSide === 'evil' || ['mordred', 'morgana', 'assassin', 'minion', 'oberon', 'lancelotRed'].includes(playerRole);
-      if (!isEvil) {
-        wx.showToast({
-          title: '只有坏人才能破坏任务',
-          icon: 'error',
-        });
-        return;
-      }
-    }
-
-    api.castMissionVote(gameId, vote, playerRole).then(res => {
-      console.log('任务投票成功:', res);
-    }).catch(err => {
-      wx.showToast({ title: (err && err.message) || '任务投票失败', icon: 'none' });
-    });
-  },
-
   getLeaderName(openId) {
     const p = (this.data.allPlayers || []).find(x => x.openId === openId);
     return p ? p.nickName : '未知';
