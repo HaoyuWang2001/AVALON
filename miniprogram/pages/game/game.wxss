@@ -98,14 +98,6 @@
 .disc-step-title { font-size: 28rpx; font-weight: 700; color: #374151; margin-bottom: 12rpx; }
 .disc-step-done { display: flex; align-items: center; gap: 12rpx; margin-top: 14rpx; }
 .step-undo { font-size: 24rpx; color: #8B5CF6; text-decoration: underline; padding: 4rpx 8rpx; }
-.direction-btns { display: flex; gap: 16rpx; margin-top: 8rpx; }
-.direction-btn {
-  flex: 1; text-align: center;
-  padding: 20rpx 0; font-size: 32rpx; font-weight: 700;
-  background: #FFFFFF; border: 2rpx solid #D1D5DB; border-radius: 14rpx;
-  color: #6B7280;
-}
-.direction-btn.direction-active { background: #8B5CF6; border-color: #8B5CF6; color: #fff; }
 .disc-final { margin-top: 24rpx; }
 
 /* ─────── 玩家列表（全宽大卡片） ─────── */
@@ -442,4 +434,26 @@ progress { border-radius: 12rpx; }
   .vote-buttons { flex-direction: column; gap: 20rpx; }
   .vote-buttons button { width: 100% !important; }
   .team-member { margin: 10rpx; }
+}
+
+/* ─────── 发言顺序弹窗（仅车主，不可关闭） ─────── */
+.order-modal {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 1300;
+  display: flex; align-items: center; justify-content: center;
+}
+.order-mask {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(17, 24, 39, 0.6);
+}
+.order-body {
+  position: relative; z-index: 1;
+  background: #FFFFFF; border-radius: 28rpx;
+  padding: 56rpx 48rpx;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 56rpx;
+  box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.2);
+}
+.order-arrow {
+  width: 140rpx; height: 140rpx;
 }

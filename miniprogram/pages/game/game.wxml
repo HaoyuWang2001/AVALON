@@ -99,13 +99,9 @@
     <!-- speakingOrder：车主确定发言顺序 -->
     <block wx:if="{{currentPhase === 'speakingOrder'}}">
       <view class="bar-info">预选车：{{preTeamSeats || '无'}}</view>
-      <block wx:if="{{isTeamLeader}}">
-        <view class="bar-row">
-          <view class="direction-btn {{speakingOrder === 'asc' ? 'direction-active' : ''}}" data-order="asc" bindtap="selectSpeakingDirection">↑</view>
-          <view class="direction-btn {{speakingOrder === 'desc' ? 'direction-active' : ''}}" data-order="desc" bindtap="selectSpeakingDirection">↓</view>
-        </view>
+      <block wx:if="{{!isTeamLeader}}">
+        <view class="bar-info">等待队长确定发言顺序...</view>
       </block>
-      <view wx:else class="bar-info">等待队长确定发言顺序...</view>
     </block>
 
     <!-- discussion：车主确认发车 -->
@@ -275,6 +271,15 @@
         </view>
       </scroll-view>
       <button class="btn btn-primary info-modal-close" bindtap="closeInfoModal">关闭</button>
+    </view>
+  </view>
+
+  <!-- 发言顺序弹窗（仅车主，不可关闭，期间阻断其他操作） -->
+  <view class="order-modal" wx:if="{{currentPhase === 'speakingOrder' && isTeamLeader}}">
+    <view class="order-mask" catchtap="noop" catchtouchmove="noop"></view>
+    <view class="order-body">
+      <image src="/images/up-arrow.png" class="order-arrow" data-order="asc" bindtap="selectSpeakingDirection" mode="aspectFit"></image>
+      <image src="/images/down-arrow.png" class="order-arrow" data-order="desc" bindtap="selectSpeakingDirection" mode="aspectFit"></image>
     </view>
   </view>
 </view>
