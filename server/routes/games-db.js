@@ -34,6 +34,7 @@ function createRouter() {
       }
 
       const db = require('../config/db');
+      const safeLimit = Math.min(Math.max(parseInt(req.query.limit) || 10, 1), 100);
       const history = await db.query(
         `SELECT g.id as gameId, g.room_id as roomId, g.game_result as gameResult,
                 gp.role, gp.side,
@@ -44,8 +45,8 @@ function createRouter() {
          JOIN game_players gp ON gp.game_id = g.id AND gp.open_id = ?
          WHERE g.status = 'ended'
          ORDER BY g.created_at DESC
-         LIMIT ?`,
-        [openId, limit]
+         LIMIT ${safeLimit}`,
+        [openId]
       );
 
       const parsedHistory = history.map(record => ({
@@ -97,7 +98,7 @@ function createRouter() {
       };
       const roleMap = {};
       for (const row of rows) {
-        const isWin = row.isWin === 1 || row.isWin === true;
+        const isWin = Number(row.isWin) === 1;
         if (isWin) stats.totalWins++;
         if (row.side === 'good') { stats.goodGames++; if (isWin) stats.goodWins++; }
         if (row.side === 'evil') { stats.evilGames++; if (isWin) stats.evilWins++; }
