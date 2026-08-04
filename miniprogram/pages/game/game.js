@@ -110,7 +110,7 @@ Page({
     carIndex: 1,
     lakeHolderOpenId: '',
     preNominatedTeam: [],
-    preTeamNames: '',
+    preTeamSeats: '',
     timerSeconds: 0,
     timerRunning: false,
     roomConfigVal: null,
@@ -225,10 +225,10 @@ Page({
         const effPreTeam = keepLocal
           ? this.data.preNominatedTeam
           : (res.current.preNominatedTeam || []);
-        // 预选车成员昵称（底部框信息行，空格分隔）
-        const preTeamNames = effPreTeam.map(id => {
+        // 预选车成员座位号（底部框信息行，空格分隔）
+        const preTeamSeats = effPreTeam.map(id => {
           const p = (res.players || []).find(x => x.openId === id);
-          return p ? p.nickName : '?';
+          return p ? String(p.seatNumber) : '?';
         }).join(' ');
         // 长桌玩家富化（预计算 checked/isLeader/voteType/标签，避免 wxml 函数调用）
         const hostOpenId = (res.players || []).find(p => p.isHost) ? (res.players || []).find(p => p.isHost).openId : '';
@@ -254,7 +254,7 @@ Page({
           teamLeaderOpenId: res.current.teamLeaderOpenId || '',
           nominatedTeam: keepLocal ? this.data.nominatedTeam : (res.current.nominatedTeam || []),
           preNominatedTeam: effPreTeam,
-          preTeamNames: preTeamNames,
+          preTeamSeats: preTeamSeats,
           teamVotes: res.current.teamVotes || {},
           missionVotes: res.current.missionVotes || {},
           missionResults: missions,

@@ -187,7 +187,7 @@
   width: 36rpx; height: 36rpx; border-radius: 50%;
   background: #8B5CF6; color: #FFFFFF;
   font-size: 24rpx; font-weight: 800; line-height: 1;
-  vertical-align: middle; margin-left: 8rpx;
+  vertical-align: middle; margin-left: 20rpx;
 }
 
 /* ─────── 底部按钮框（fixed 常驻） ─────── */
