@@ -817,7 +817,12 @@ Page({
       success: (res) => {
         if (res.confirm) {
           api.abandonGame(gameId).then(() => {
-            wx.navigateBack();
+            // room 页用 redirectTo 进入 game 页，页面栈无 room，需显式跳转
+            if (this.data.roomId) {
+              wx.redirectTo({ url: `/pages/room/room?roomId=${this.data.roomId}` });
+            } else {
+              wx.navigateBack();
+            }
           }).catch(err => {
             wx.showToast({ title: (err && err.message) || '放弃失败', icon: 'none' });
           });
@@ -833,7 +838,12 @@ Page({
       success: (res) => {
         if (res.confirm) {
           api.endGame(this.data.gameId).then(() => {
-            wx.navigateBack();
+            // room 页用 redirectTo 进入 game 页，页面栈无 room，需显式跳转
+            if (this.data.roomId) {
+              wx.redirectTo({ url: `/pages/room/room?roomId=${this.data.roomId}` });
+            } else {
+              wx.navigateBack();
+            }
           }).catch(err => {
             console.error('结束游戏失败:', err);
           });
