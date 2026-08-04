@@ -63,7 +63,6 @@
       <text class="seat-no">{{item.seatNumber}}</text>
       <view class="tplayer-avatar-wrap">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
-        <text wx:if="{{item.voteType}}" class="vote-type {{item.voteType === 'approve' ? 'txt-approve' : 'txt-reject'}}">{{item.voteType === 'approve' ? '✓' : '✗'}}</text>
       </view>
       <view class="tplayer-info">
         <text class="tplayer-name">{{item.nickName}}</text>

@@ -233,14 +233,6 @@
 .bar-row { display: flex; align-items: center; justify-content: center; gap: 16rpx; }
 .bar-row button { flex: 1; }
 
-/* 投票后公开票型 */
-.vote-type {
-  position: absolute; bottom: -6rpx; right: -4rpx;
-  font-size: 30rpx; font-weight: 800;
-}
-.txt-approve { color: #10B981; }
-.txt-reject { color: #EF4444; }
-
 /* 计时器卡片（轮次卡下方，仅 discussion）：纵向布局，背景与其他卡片一致 */
 .timer-card {
   display: flex; flex-direction: column; align-items: center; justify-content: center;

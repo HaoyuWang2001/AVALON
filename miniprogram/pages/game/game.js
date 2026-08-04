@@ -11,7 +11,7 @@ const TAG_STYLES = {
   orange: 'ptag-orange'
 };
 
-// 为玩家卡片富化字段（checked/cardState/isLeader/voteType/tags[]）
+// 为玩家卡片富化字段（checked/cardState/isLeader/tags[]）
 function enrichTablePlayer(p, ctx) {
   const {
     leaderOpenId, myOpenId, hostOpenId, lakeHolderOpenId,
@@ -21,16 +21,9 @@ function enrichTablePlayer(p, ctx) {
   // 复选框勾选：预选队伍中包含该玩家
   const checked = !!(preNominatedTeam || []).includes(p.openId);
 
-  // 票型：非 teamVote 阶段且公开时显示（后端已门控 teamVotes）
-  let voteType = '';
-  if (currentPhase !== 'teamVote') {
-    const v = (teamVotes || {})[p.openId];
-    if (v === 'approve' || v === 'reject') voteType = v;
-  }
-
   // 车队/投票渐变状态：
   //  teamVote：车队=右半金渐变，已投=左半紫渐变，可叠加
-  //  missionVote：仅车队=右半金渐变，投票状态不显示
+  //  missionVote：左半绿=赞成/红=反对（队伍投票结果），车队右半金渐变保留
   let cardState = '';
   if (currentPhase === 'teamVote' || currentPhase === 'missionVote') {
     const inTeam = !!(nominatedTeam || []).includes(p.openId);
@@ -67,7 +60,6 @@ function enrichTablePlayer(p, ctx) {
     checked,
     cardState,
     isLeader: p.openId === leaderOpenId,
-    voteType,
     tags
   };
 }
@@ -256,15 +248,25 @@ Page({
           const p = (res.players || []).find(x => x.openId === id);
           return p ? String(p.seatNumber) : '?';
         }).join(' ');
-        // 队伍投票结果（missionVote 及之后公开）：赞成/反对座位号
+        // 队伍投票结果（missionVote 及之后公开）：赞成/反对座位号（按座位号正序）
         const tv = res.current.teamVotes || {};
         const seatOf = id => {
           const p = (res.players || []).find(x => x.openId === id);
           return p ? String(p.seatNumber) : '?';
         };
-        const approveSeats = Object.keys(tv).filter(id => tv[id] === 'approve').map(seatOf).join(' ');
-        const rejectSeats = Object.keys(tv).filter(id => tv[id] === 'reject').map(seatOf).join(' ');
-        // 长桌玩家富化（预计算 checked/isLeader/voteType/标签，避免 wxml 函数调用）
+        const seatNumOf = id => {
+          const p = (res.players || []).find(x => x.openId === id);
+          return p ? (p.seatNumber || 999) : 999;
+        };
+        const approveSeats = Object.keys(tv)
+          .filter(id => tv[id] === 'approve')
+          .sort((a, b) => seatNumOf(a) - seatNumOf(b))
+          .map(seatOf).join(' ');
+        const rejectSeats = Object.keys(tv)
+          .filter(id => tv[id] === 'reject')
+          .sort((a, b) => seatNumOf(a) - seatNumOf(b))
+          .map(seatOf).join(' ');
+        // 长桌玩家富化（预计算 checked/cardState/标签，避免 wxml 函数调用）
         const hostOpenId = (res.players || []).find(p => p.isHost) ? (res.players || []).find(p => p.isHost).openId : '';
         const tablePlayers = (res.players || []).map(p => enrichTablePlayer(p, {
           leaderOpenId: res.current.teamLeaderOpenId || '',
@@ -619,14 +621,6 @@ Page({
   isVotingPhase() {
     const { currentPhase } = this.data;
     return currentPhase === 'teamVote' || currentPhase === 'missionVote';
-  },
-
-  // 队伍投票结束后公开票型（后端 teamVotes 已按 voteVisibility 门控）
-  publicVoteOf(openId) {
-    const { currentPhase, teamVotes } = this.data;
-    if (currentPhase === 'teamVote') return '';          // 投票中不显示
-    const v = (teamVotes || {})[openId];
-    return v === 'approve' || v === 'reject' ? v : '';
   },
 
   // ─────── 发言计时器（房主操控，仅 discussion） ───────
