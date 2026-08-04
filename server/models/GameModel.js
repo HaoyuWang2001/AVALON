@@ -926,6 +926,16 @@ class GameModel {
             );
             const failedNominations = game[0].failed_nominations + 1;
             const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
+            // 读取流车阈值（必配，无默认值）
+            const [roomRows] = await connection.execute(
+              'SELECT room_config FROM rooms WHERE id = ?',
+              [game[0].room_id]
+            );
+            const roomConfig = roomRows.length ? parseJson(roomRows[0].room_config) : null;
+            const rules = (roomConfig && roomConfig.rules) || {};
+            const maxFailedNominations = rules.maxFailedNominations;
+            // 下一车是否强制：流车数达阈值后跳过 preNominate/speakingOrder 直接进入 discussion
+            const forcedNext = failedNominations >= maxFailedNominations;
             // 湖仙持有者随车长顺延
             const [newLeaderPlayers] = await connection.execute(
               `SELECT gp.open_id FROM game_players gp
@@ -938,9 +948,10 @@ class GameModel {
               ? newLeaderPlayers[(newTeamLeaderIndex - 1 + playerCount) % playerCount].open_id
               : null;
 
+            const nextPhase = forcedNext ? 'discussion' : 'preNominate';
             await connection.execute(
               `UPDATE games 
-               SET current_phase = 'preNominate',
+               SET current_phase = ?,
                    team_leader_index = ?,
                    nominated_team = NULL,
                    failed_nominations = ?,
@@ -951,7 +962,7 @@ class GameModel {
                    lancelot_result = NULL,
                    updated_at = NOW()
                WHERE id = ?`,
-              [newTeamLeaderIndex, failedNominations, lakeHolderOpenId, gameId]
+              [nextPhase, newTeamLeaderIndex, failedNominations, lakeHolderOpenId, gameId]
             );
           }
         }

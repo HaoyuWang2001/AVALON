@@ -313,13 +313,15 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
   });
 
   // ─────────── 强制发车 ───────────
-  it('04-15 强制发车：达阈值→forcedCar=true 直接 missionVote→下一轮、流车数0', async () => {
+  it('04-15 强制发车：达阈值→跳过preNominate/speakingOrder直接进discussion→forcedCar=true→missionVote→下一轮、流车数0', async () => {
     const { gameId, players } = await setupGame(buildCustomBoard10());
     await driveToDiscussion(gameId, players);
     for (let k = 0; k < 3; k++) await rejectRound(gameId, players);
     const forced = await getGameState(gameId);
     expect(forced.current.failedNominations).toBe(3);
     expect(forced.current.forcedSend).toBe(true);
+    // 强制车：跳过 preNominate/speakingOrder，直接进入 discussion
+    expect(forced.current.phase).toBe('discussion');
 
     const n = players.length;
     const leader = players[leaderIndex(forced, players)];

@@ -15,11 +15,11 @@ const TAG_STYLES = {
 function enrichTablePlayer(p, ctx) {
   const {
     leaderOpenId, myOpenId, hostOpenId, lakeHolderOpenId,
-    preNominatedTeam, nominatedTeam, teamVotes, teamVoteStatus, currentPhase
+    preNominatedTeam, nominatedTeam, localSelected, teamVotes, teamVoteStatus, currentPhase
   } = ctx;
 
-  // 复选框勾选：预选队伍中包含该玩家
-  const checked = !!(preNominatedTeam || []).includes(p.openId);
+  // 复选框勾选：本地临时选中（preNominate/discussion 车主选车）
+  const checked = !!(localSelected || []).includes(p.openId);
 
   // 车队/投票渐变状态：
   //  teamVote：车队=右半金渐变，已投=左半紫渐变，可叠加
@@ -127,6 +127,7 @@ Page({
     carIndex: 1,
     lakeHolderOpenId: '',
     preNominatedTeam: [],
+    localSelected: [],
     preTeamSeats: '',
     timerSeconds: 0,
     timerRunning: false,
@@ -197,7 +198,10 @@ Page({
         const myOpenId = app.globalData.openId || '';
         const isHost = !!(res.players || []).some(p => p.openId === myOpenId && p.isHost);
         const isLeader = !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId;
-        const keepLocal = phase === 'preNominate' && isLeader;
+        // round 或 index(failedNominations) 更新时清空本地选中
+        const failed = res.current.failedNominations || 0;
+        const shouldResetLocal = this.data.currentRound !== round || this.data.failedNominations !== failed;
+        const effectiveLocal = shouldResetLocal ? [] : (this.data.localSelected || []);
 
         const missions = res.history ? res.history.missions || [] : [];
         const roundList = [];
@@ -209,7 +213,6 @@ Page({
         }
 
         const maxFailed = (res.basic && res.basic.roomConfig && res.basic.roomConfig.rules && res.basic.roomConfig.rules.maxFailedNominations) || 3;
-        const failed = res.current.failedNominations || 0;
         const total = maxFailed + 1;
         const forcedSend = !!res.current.forcedSend;
         const flowCars = [];
@@ -239,12 +242,8 @@ Page({
         });
 
         const myRole = res.player ? res.player.role : null;
-        // 预选阶段（车主未提交）保留本地选中，否则用后端值（统一供富化与 setData 使用）
-        const effPreTeam = keepLocal
-          ? this.data.preNominatedTeam
-          : (res.current.preNominatedTeam || []);
-        // 预选车成员座位号（底部框信息行，空格分隔）
-        const preTeamSeats = effPreTeam.map(id => {
+        // 预选车成员座位号（底部框信息行，基于后端 preNominatedTeam 展示，空格分隔）
+        const preTeamSeats = (res.current.preNominatedTeam || []).map(id => {
           const p = (res.players || []).find(x => x.openId === id);
           return p ? String(p.seatNumber) : '?';
         }).join(' ');
@@ -273,8 +272,9 @@ Page({
           myOpenId: myOpenId,
           hostOpenId,
           lakeHolderOpenId: res.current.lakeHolderOpenId || '',
-          preNominatedTeam: effPreTeam,
+          preNominatedTeam: res.current.preNominatedTeam || [],
           nominatedTeam: res.current.nominatedTeam || [],
+          localSelected: effectiveLocal,
           teamVotes: res.current.teamVotes || {},
           teamVoteStatus: res.current.teamVoteStatus || null,
           currentPhase: phase
@@ -289,8 +289,9 @@ Page({
           currentPhase: phase,
           currentRound: round,
           teamLeaderOpenId: res.current.teamLeaderOpenId || '',
-          nominatedTeam: keepLocal ? this.data.nominatedTeam : (res.current.nominatedTeam || []),
-          preNominatedTeam: effPreTeam,
+          nominatedTeam: res.current.nominatedTeam || [],
+          preNominatedTeam: res.current.preNominatedTeam || [],
+          localSelected: effectiveLocal,
           preTeamSeats: preTeamSeats,
           approveSeats: approveSeats,
           rejectSeats: rejectSeats,
@@ -317,8 +318,8 @@ Page({
           carsHistory: res.history ? res.history.cars || [] : [],
           lakeHistory: res.history ? res.history.lake || [] : [],
           lancelotSwaps: res.history ? res.history.lancelotSwaps || [] : [],
-          speakingOrder: keepLocal ? this.data.speakingOrder : (res.current.speakingOrder || 'asc'),
-          speakingOrderIndex: keepLocal ? this.data.speakingOrderIndex : ((res.current.speakingOrder || 'asc') === 'desc' ? 1 : 0),
+          speakingOrder: res.current.speakingOrder || 'asc',
+          speakingOrderIndex: (res.current.speakingOrder || 'asc') === 'desc' ? 1 : 0,
           speakingOrderConfirmed: !!res.current.discussionSet,
           lancelotResult: res.current.lancelotResult || null,
           lancelotConfirmedCount: res.current.lancelotConfirmedCount || 0,
@@ -330,7 +331,7 @@ Page({
           lastMissionResult: !!(missions.length > 0 && missions[missions.length - 1].success),
           isTeamLeader: !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
           requiredTeamSize: this.getRequiredTeamSize(),
-          showSelectCheck: phase === 'preNominate' && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
+          showSelectCheck: (phase === 'preNominate' || phase === 'discussion') && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
           voteCount: Object.keys(res.current.teamVotes || {}).length,
           playerTotal: (res.players || []).length,
           isMissionTeamMember: !!((res.current.nominatedTeam || []).includes(myOpenId)),
@@ -457,27 +458,27 @@ Page({
 
   nominatePlayer(e) {
     if (!this.checkIfTeamLeader()) return;
-    if (this.data.currentPhase !== 'preNominate') return;
+    if (this.data.currentPhase !== 'preNominate' && this.data.currentPhase !== 'discussion') return;
     const playerId = e.currentTarget.dataset.id;
-    // 预选车型阶段：点选/取消
-    const pre = this.data.preNominatedTeam.slice();
-    const i = pre.indexOf(playerId);
-    if (i === -1) pre.push(playerId); else pre.splice(i, 1);
+    // 本地临时选中：点选/取消
+    const sel = this.data.localSelected.slice();
+    const i = sel.indexOf(playerId);
+    if (i === -1) sel.push(playerId); else sel.splice(i, 1);
     // 就地刷新该玩家卡片的复选框勾选状态
     const tablePlayers = this.data.tablePlayers.map(p => {
       if (p.openId !== playerId) return p;
-      return { ...p, checked: pre.includes(playerId) };
+      return { ...p, checked: sel.includes(playerId) };
     });
-    this.setData({ preNominatedTeam: pre, tablePlayers });
+    this.setData({ localSelected: sel, tablePlayers });
   },
 
-  // preNominate 阶段：车主提交预选车型（落库 → 后端切到 speakingOrder）
+  // preNominate 阶段：车主提交预选车型（发送 localSelected → 后端切到 speakingOrder）
   submitPreNomination() {
     if (!this.checkIfTeamLeader()) return;
     if (this.data.currentPhase !== 'preNominate') return;
-    const { gameId, preNominatedTeam } = this.data;
+    const { gameId, localSelected } = this.data;
     wx.showLoading({ title: '提交中...', mask: true });
-    api.submitPreNomination(gameId, preNominatedTeam).then(() => {
+    api.submitPreNomination(gameId, localSelected).then(() => {
       wx.hideLoading();
       this.fetchGameState();
     }).catch(err => {
@@ -520,21 +521,21 @@ Page({
     return sizes[playerCount]?.[round - 1] || 3;
   },
 
-  // discussion 阶段：车主确认发车（提交最终队伍 → teamVote）；强制发车时从 preNominate 直接发车
+  // discussion 阶段：车主确认发车（提交 localSelected → teamVote）；强制发车时 forcedSend 为 true 直接进 missionVote
   confirmNomination() {
-    const { gameId, preNominatedTeam, forcedSend, currentPhase } = this.data;
+    const { gameId, localSelected, forcedSend, currentPhase } = this.data;
     const canSend = currentPhase === 'discussion' || (currentPhase === 'preNominate' && forcedSend);
     if (!canSend) {
-      wx.showToast({ title: '请先完成预选与发言方向', icon: 'none' });
+      wx.showToast({ title: '请先完成选车', icon: 'none' });
       return;
     }
     const requiredSize = this.getRequiredTeamSize();
-    if (preNominatedTeam.length !== requiredSize) {
-      wx.showToast({ title: `预选车型需 ${requiredSize} 人（当前${preNominatedTeam.length}）`, icon: 'none' });
+    if (localSelected.length !== requiredSize) {
+      wx.showToast({ title: `需要 ${requiredSize} 人（当前${localSelected.length}）`, icon: 'none' });
       return;
     }
     wx.showLoading({ title: '提交中...', mask: true });
-    api.submitNomination(gameId, preNominatedTeam, forcedSend ? true : undefined).then(res => {
+    api.submitNomination(gameId, localSelected, forcedSend ? true : undefined).then(res => {
       wx.hideLoading();
       if (res && res.success === false) {
         wx.showToast({ title: res.message || '提交失败', icon: 'none' });
@@ -555,7 +556,7 @@ Page({
   // 长桌玩家点击（按阶段分发）
   onTablePlayerTap(e) {
     const { currentPhase } = this.data;
-    if (currentPhase === 'preNominate') {
+    if (currentPhase === 'preNominate' || currentPhase === 'discussion') {
       this.nominatePlayer(e);
     } else if (currentPhase === 'lake') {
       this.lakeInspect(e);

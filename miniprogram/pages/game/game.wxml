@@ -84,14 +84,11 @@
       <view class="bar-info">已确认 {{revealConfirmedCount}}/{{revealTotalCount}}</view>
     </block>
 
-    <!-- preNominate：车主预选车型（提交预选；强制发车时直接确认发车） -->
+    <!-- preNominate：车主预选车型（提交预选） -->
     <block wx:if="{{currentPhase === 'preNominate'}}">
       <block wx:if="{{isTeamLeader}}">
-        <view class="bar-row" wx:if="{{!forcedSend}}">
-          <button size="mini" class="btn btn-primary" bindtap="submitPreNomination">提交预选（{{preNominatedTeam.length}}人）</button>
-        </view>
-        <view class="bar-row" wx:else>
-          <button size="mini" class="btn btn-primary" bindtap="confirmNomination">确认发车（{{preNominatedTeam.length}}/{{requiredTeamSize}}）</button>
+        <view class="bar-row">
+          <button size="mini" class="btn btn-primary" bindtap="submitPreNomination">提交预选（{{localSelected.length}}人）</button>
         </view>
       </block>
       <view wx:else class="bar-info">等待队长预选...</view>
@@ -114,7 +111,7 @@
       <view class="bar-info">预选车：{{preTeamSeats || '无'}}<text class="dir-pill">{{speakingOrder === 'desc' ? '↓' : '↑'}}</text></view>
       <block wx:if="{{isTeamLeader}}">
         <view class="bar-row">
-          <button size="mini" class="btn btn-primary" bindtap="confirmNomination">确认发车 {{preNominatedTeam.length}}/{{requiredTeamSize}}</button>
+          <button size="mini" class="btn btn-primary" bindtap="confirmNomination">确认发车 {{localSelected.length}}/{{requiredTeamSize}}</button>
         </view>
       </block>
     </block>
