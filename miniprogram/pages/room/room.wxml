@@ -64,8 +64,8 @@
     <view wx:else class="empty-hint">等待配置房间...</view>
   </view>
 
-  <!-- Card 4: Waiting Area -->
-  <view class="card waiting-card">
+  <!-- Card 4: Waiting Area（与观战区同样受 spectatorAllowed 控制，关闭观战后隐藏） -->
+  <view class="card waiting-card" wx:if="{{spectatorAllowed}}">
     <view class="card-header">
       <text class="card-title">等待区 ({{unseatedPlayers.length}})</text>
       <text wx:if="{{currentUser && currentUser.seatNumber != 0}}" class="btn-round btn-purple" bindtap="leaveSeat">进入等待区</text>
