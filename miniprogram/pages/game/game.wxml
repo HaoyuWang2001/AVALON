@@ -1,7 +1,7 @@
 <!--pages/game/game.wxml-->
 <view class="game-page">
-  <!-- 顶部操作栏（公共组件：左=暂回首页 右=炸掉会议） -->
-  <top-bar>
+  <!-- 顶部操作栏（公共组件：左=暂回首页 右=炸掉会议）；历史对局入口不展示 -->
+  <top-bar wx:if="{{!fromHistory}}">
     <text slot="left" class="btn-round btn-purple" bindtap="backToHome">暂回首页</text>
     <text slot="right" class="btn-round btn-danger" bindtap="abandonGame" wx:if="{{isHost}}">炸掉会议</text>
   </top-bar>
