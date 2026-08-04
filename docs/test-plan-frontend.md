@@ -14,38 +14,32 @@
 ### 2.1 生命周期总览图
 
 ```
-  开局
- (roleReveal)
-    |  全员确认身份
-    v
-    +------------------------------------------------------+
-    |               轮次循环 (第 1~5 轮)                    |
-    |                                                      |
-    | [预选] --> [发言序] --> [讨论] --确认发车--> [队伍投票] |
-    |  preNominate speakingOrder discussion    teamVote    |
-    |    ^                                        | 通过   |
-    |    | 流车(下一位车主)                          |       |
-    |    +-----------------------------------------+       |
-    |                       发车成功                       |
-    +---------------------------------------------+-------+
-                                                  v
-                                              [任务投票]
-                                             (missionVote)
-                                                  |
-          +---------------------------------------+----------------------+
-          |                                       |                      |
-          v                                       v                      v
-    成功达 3 次                            失败达 3 次              未达 3 次
-          |                                       |                      |
-          v                                       v                      v
-   [刺杀阶段] --刺杀-->                   [游戏结束] -----------> 下一轮(round+1)
-          |                                 (坏人胜利)               |
-          v                                                          |
-     [游戏结束] <----------------------------------------------------+
-     (好人胜/坏人胜)                  --> 回到轮次循环顶部 [预选]
+   roleReveal
+      |
+      | all players confirm identity
+      v
+   ROUND LOOP (round 1..5):
+   [preNominate] -> [speakingOrder] -> [discussion] -> [teamVote] --approve--> [missionVote]
+        ^                                                              |
+        |                                                              |
+        +---- reject (next leader, round unchanged) -------------------+
+                                                              |
+                                                              | mission result
+                                                              v
+                                             +--------------+--------------+
+                                             |              |              |
+                                             v              v              v
+                                       3 successes     3 fails      < 3 both
+                                             |              |              |
+                                             v              v              v
+                                      [assassination]  [gameEnd]      next round
+                                             |          (evil wins)       |
+                                             v                             |
+                                       [gameEnd] <------------------------+
+                                     (good/evil wins)
 ```
 
-> 图示说明：`[队伍投票]` 下方 `| 通过` 表示发车成功；`+--+` 为流车回环（下一位车主回到预选）。`[任务投票]` 三出口分别对应累计成功/失败/继续循环。
+> 图示说明：`[teamVote]` 处 reject → 流车（下一位车主，round 不变）回 `[preNominate]`；approve → 发车成功进入 `[missionVote]`。`[missionVote]` 三出口分别对应累计成功/失败/继续循环。
 
 ### 2.2 特殊环节（a-d）
 
