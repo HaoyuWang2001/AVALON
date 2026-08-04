@@ -179,6 +179,16 @@
 .ptag-blue { background: #DBEAFE; color: #1D4ED8; }
 .ptag-pink { background: #FCE7F3; color: #BE185D; }
 .ptag-gold { background: #FEF3C7; color: #B45309; }
+.ptag-orange { background: #FFEDD5; color: #C2410C; }
+
+/* 发言方向指示：紫色圆形箭头（无文字） */
+.dir-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36rpx; height: 36rpx; border-radius: 50%;
+  background: #8B5CF6; color: #FFFFFF;
+  font-size: 24rpx; font-weight: 800; line-height: 1;
+  vertical-align: middle; margin-left: 8rpx;
+}
 
 /* ─────── 底部按钮框（fixed 常驻） ─────── */
 .bottom-bar {

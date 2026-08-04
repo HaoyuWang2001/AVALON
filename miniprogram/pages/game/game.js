@@ -2,12 +2,13 @@
 const app = getApp();
 const api = require('../../services/api.js');
 
-// 标准标签配色：浅紫底深紫字 / 浅蓝底蓝字 / 浅粉底粉字 / 浅金底金字
+// 标准标签配色：浅紫底深紫字 / 浅蓝底蓝字 / 浅粉底粉字 / 浅金底金字 / 浅橙底橙字
 const TAG_STYLES = {
   purple: 'ptag-purple',
   blue: 'ptag-blue',
   pink: 'ptag-pink',
-  gold: 'ptag-gold'
+  gold: 'ptag-gold',
+  orange: 'ptag-orange'
 };
 
 // 为玩家卡片富化字段（checked/isLeader/voteType/tags[]）
@@ -27,12 +28,17 @@ function enrichTablePlayer(p, ctx) {
     if (v === 'approve' || v === 'reject') voteType = v;
   }
 
-  // 标签数组：车主(金) / 我(紫) / 房主(蓝) / 湖仙(粉)，可叠加
+  // 标签数组：车主(金) / 我(紫) / 房主(蓝) / 湖仙(粉) / 预选(橙)，可叠加
   const tags = [];
   if (p.openId === leaderOpenId) tags.push({ text: '车主', cls: TAG_STYLES.gold });
   if (p.openId === myOpenId) tags.push({ text: '我', cls: TAG_STYLES.purple });
   if (p.openId === hostOpenId) tags.push({ text: '房主', cls: TAG_STYLES.blue });
   if (p.openId === lakeHolderOpenId) tags.push({ text: '湖仙', cls: TAG_STYLES.pink });
+  // 车主确认预选后（speakingOrder/discussion 阶段）展示预选队伍成员
+  if ((currentPhase === 'speakingOrder' || currentPhase === 'discussion')
+      && (preNominatedTeam || []).includes(p.openId)) {
+    tags.push({ text: '预选', cls: TAG_STYLES.orange });
+  }
 
   return {
     ...p,
@@ -104,6 +110,7 @@ Page({
     carIndex: 1,
     lakeHolderOpenId: '',
     preNominatedTeam: [],
+    preTeamNames: '',
     timerSeconds: 0,
     timerRunning: false,
     roomConfigVal: null,
@@ -218,6 +225,11 @@ Page({
         const effPreTeam = keepLocal
           ? this.data.preNominatedTeam
           : (res.current.preNominatedTeam || []);
+        // 预选车成员昵称（底部框信息行，空格分隔）
+        const preTeamNames = effPreTeam.map(id => {
+          const p = (res.players || []).find(x => x.openId === id);
+          return p ? p.nickName : '?';
+        }).join(' ');
         // 长桌玩家富化（预计算 checked/isLeader/voteType/标签，避免 wxml 函数调用）
         const hostOpenId = (res.players || []).find(p => p.isHost) ? (res.players || []).find(p => p.isHost).openId : '';
         const tablePlayers = (res.players || []).map(p => enrichTablePlayer(p, {
@@ -242,6 +254,7 @@ Page({
           teamLeaderOpenId: res.current.teamLeaderOpenId || '',
           nominatedTeam: keepLocal ? this.data.nominatedTeam : (res.current.nominatedTeam || []),
           preNominatedTeam: effPreTeam,
+          preTeamNames: preTeamNames,
           teamVotes: res.current.teamVotes || {},
           missionVotes: res.current.missionVotes || {},
           missionResults: missions,

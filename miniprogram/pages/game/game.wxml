@@ -102,6 +102,7 @@
 
     <!-- speakingOrder：车主确定发言顺序 -->
     <block wx:if="{{currentPhase === 'speakingOrder'}}">
+      <view class="bar-info">预选车：{{preTeamNames || '无'}}<text class="dir-pill">{{speakingOrder === 'desc' ? '↓' : '↑'}}</text></view>
       <block wx:if="{{isTeamLeader}}">
         <view class="bar-row">
           <view class="direction-btn {{speakingOrder === 'asc' ? 'direction-active' : ''}}" data-order="asc" bindtap="selectSpeakingDirection">↑</view>
@@ -113,6 +114,7 @@
 
     <!-- discussion：车主确认发车 -->
     <block wx:if="{{currentPhase === 'discussion'}}">
+      <view class="bar-info">预选车：{{preTeamNames || '无'}}<text class="dir-pill">{{speakingOrder === 'desc' ? '↓' : '↑'}}</text></view>
       <block wx:if="{{isTeamLeader}}">
         <view class="bar-row">
           <button size="mini" class="btn btn-primary" bindtap="confirmNomination">确认发车 {{preNominatedTeam.length}}/{{requiredTeamSize}}</button>
