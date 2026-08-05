@@ -165,8 +165,8 @@
           <view class="vote-waiting-spinner"></view>
         </view>
       </block>
-      <view class="bar-info" wx:if="{{approveSeats}}" style="color:#10B981;">赞成：{{approveSeats}}</view>
-      <view class="bar-info" wx:if="{{rejectSeats}}" style="color:#EF4444;">反对：{{rejectSeats}}</view>
+      <view class="bar-info" wx:if="{{approveSeats}}" style="color:#10B981;font-weight:700;">赞成：{{approveSeats}}</view>
+      <view class="bar-info" wx:if="{{rejectSeats}}" style="color:#EF4444;font-weight:700;">反对：{{rejectSeats}}</view>
     </block>
 
     <!-- assassination -->
