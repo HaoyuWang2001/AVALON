@@ -24,9 +24,9 @@
         <text class="stat-value">{{seatedPlayers.length}}/{{playerCount}}</text>
       </view>
       <view class="stat-divider"></view>
-      <view class="info-stat-item" wx:if="{{spectatorAllowed}}">
+      <view class="info-stat-item">
         <text class="stat-label">观战</text>
-        <text class="stat-value">{{spectatorPlayers.length}}{{spectatorMax > 0 ? '/' + spectatorMax : ''}}</text>
+        <text class="stat-value">{{spectatorAllowed ? (spectatorPlayers.length + (spectatorMax > 0 ? '/' + spectatorMax : '')) : '-/-'}}</text>
       </view>
     </view>
   </view>
@@ -64,11 +64,11 @@
     <view wx:else class="empty-hint">等待配置房间...</view>
   </view>
 
-  <!-- Card 4: Waiting Area（与观战区同样受 spectatorAllowed 控制，关闭观战后隐藏） -->
-  <view class="card waiting-card" wx:if="{{spectatorAllowed}}">
+  <!-- Card 4: Waiting Area（等待区永远存在） -->
+  <view class="card waiting-card">
     <view class="card-header">
       <text class="card-title">等待区 ({{unseatedPlayers.length}})</text>
-      <text wx:if="{{currentUser && currentUser.seatNumber != 0}}" class="btn-round btn-purple" bindtap="leaveSeat">进入等待区</text>
+      <text wx:if="{{currentUser && (currentUser.seatNumber > 0 && !currentUser.isReady || currentUser.seatNumber < 0)}}" class="btn-round btn-purple" bindtap="leaveSeat">进入等待区</text>
     </view>
     <scroll-view scroll-x class="waiting-scroll" wx:if="{{unseatedPlayers.length > 0}}">
       <view class="waiting-list">
