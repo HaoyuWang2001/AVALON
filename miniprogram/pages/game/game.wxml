@@ -40,7 +40,7 @@
       <!-- gameEnd：原因显示框（刺杀链路 + 胜负原因）替代流车指示 -->
       <view class="flow-reason" wx:if="{{currentPhase === 'gameEnd'}}">
         <view class="flow-reason-chain" wx:if="{{gameAssassination}}">刺客刺杀 {{gameAssassination.targetSeat}}号 · {{gameAssassination.correct ? '刺杀成功' : '刺杀失败'}}</view>
-        <view class="flow-reason-result">{{gameResult && gameResult.abandoned ? '游戏已放弃：' : (gameWinner === 'good' ? '蓝方获胜：' : '红方获胜：')}}{{gameResult && gameResult.reason}}</view>
+        <view class="flow-reason-result" wx:if="{{!gameAssassination}}">{{gameResult && gameResult.abandoned ? '游戏已放弃：' : (gameWinner === 'good' ? '蓝方获胜：' : '红方获胜：')}}{{gameResult && gameResult.reason}}</view>
       </view>
       <view class="flow-cars" wx:else>
         <block wx:for="{{flowCars}}" wx:key="index">
