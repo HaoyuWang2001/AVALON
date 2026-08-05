@@ -985,8 +985,8 @@ Page({
   startAssassination() {
     const { gameId } = this.data;
     wx.showModal({
-      title: '开始刺杀',
-      content: '确定开始刺杀梅林？（进入刺杀阶段后选择目标）',
+      title: '确定开刀',
+      content: '确定开刀？',
       success: (res) => {
         if (res.confirm) {
           wx.showLoading({ title: '进入刺杀...', mask: true });
