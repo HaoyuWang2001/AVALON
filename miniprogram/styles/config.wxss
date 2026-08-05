@@ -76,6 +76,9 @@
   font-size: 20rpx; color: transparent; margin-top: 4rpx;
 }
 .check-on { background: var(--primary); border-color: var(--primary); color: white; }
+/* 选中框随阵营配色：好人蓝 / 坏人红 */
+.role-good .check-on { background: #2563EB; border-color: #2563EB; color: white; }
+.role-evil .check-on { background: #DC2626; border-color: #DC2626; color: white; }
 .loyal-count { font-size: 28rpx; font-weight: 800; color: #2563EB; margin-top: 2rpx; }
 .role-count-evil { font-size: 28rpx; font-weight: 800; color: #DC2626; margin-top: 2rpx; }
 
