@@ -590,3 +590,16 @@ progress { border-radius: 12rpx; }
 .mission-waiting-text {
   font-size: 32rpx; color: #8B5CF6; margin-top: 24rpx;
 }
+
+/* ─────── socket 断链重连遮罩 ─────── */
+.reconnect-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; }
+.reconnect-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); }
+.reconnect-box { position: relative; z-index: 1; background: #FFFFFF; border-radius: 28rpx; padding: 56rpx 64rpx; display: flex; flex-direction: column; align-items: center; }
+.reconnect-spinner {
+  width: 80rpx; height: 80rpx;
+  border: 8rpx solid rgba(139, 92, 246, 0.2);
+  border-top-color: #8B5CF6;
+  border-radius: 50%;
+  animation: vote-spin 1s linear infinite;
+}
+.reconnect-text { font-size: 30rpx; color: #6B7280; margin-top: 28rpx; }

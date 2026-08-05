@@ -6,6 +6,8 @@ class ApiService {
   constructor() {
     this.openId = null;
     this.nickName = '';
+    this._socketHandlers = {};
+    this._socketStatusCallbacks = [];
   }
 
   login(code) {
@@ -279,12 +281,23 @@ class ApiService {
 
   connectSocket(roomId, playerId) {
     const WSSURL = 'wss://haoyu-wang141.top:8082';
-    if (this._socketTask) this.disconnectSocket();
+    this._socketIntentionalClose = false;
+    this._socketRoomId = roomId;
+    this._socketPlayerId = playerId;
+    // 关闭旧连接（不清理 handlers/status 回调，重连需保留已注册处理器）
+    if (this._socketTask) {
+      try { this._socketTask.close({ code: 1000 }); } catch (e) {}
+      this._socketTask = null;
+    }
+    if (this._socketRetryTimer) { clearTimeout(this._socketRetryTimer); this._socketRetryTimer = null; }
+    this._emitSocketStatus('connecting');
     const task = wx.connectSocket({ url: WSSURL });
     this._socketTask = task;
-    this._socketRoomId = roomId;
-    this._socketHandlers = {};
-    task.onOpen(() => { task.send({ data: JSON.stringify({ type: 'joinRoom', roomId, playerId }) }); });
+    task.onOpen(() => {
+      this._socketRetryCount = 0;
+      this._emitSocketStatus('open');
+      task.send({ data: JSON.stringify({ type: 'joinRoom', roomId, playerId }) });
+    });
     task.onMessage((res) => {
       try {
         const msg = JSON.parse(res.data);
@@ -293,22 +306,60 @@ class ApiService {
         }
       } catch (e) {}
     });
-    task.onClose(() => { this._socketTask = null; });
-    task.onError(() => { this._socketTask = null; });
+    task.onClose(() => {
+      if (this._socketTask === task) this._socketTask = null;
+      if (this._socketIntentionalClose) return; // 主动断开（离开页面），不广播状态、不重连
+      this._emitSocketStatus('closed');
+      this._scheduleReconnect();
+    });
+    task.onError(() => {
+      if (this._socketTask === task) this._socketTask = null;
+      if (this._socketIntentionalClose) return;
+      this._emitSocketStatus('closed');
+      this._scheduleReconnect();
+    });
     return task;
   }
 
+  // 指数退避重连：1s/2s/4s/8s，上限 15s；重连后 onOpen 自动重新 joinRoom，
+  // 服务端 pushCurrentGameState 会推送全量状态（gameState 消息）恢复视图
+  _scheduleReconnect() {
+    if (this._socketIntentionalClose) return;
+    if (this._socketRetryTimer) return;
+    if (this._socketRetryCount == null) this._socketRetryCount = 0;
+    const delay = Math.min(1000 * Math.pow(2, this._socketRetryCount), 15000);
+    this._socketRetryCount++;
+    this._emitSocketStatus('connecting');
+    this._socketRetryTimer = setTimeout(() => {
+      this._socketRetryTimer = null;
+      if (this._socketIntentionalClose) return;
+      if (this._socketRoomId) this.connectSocket(this._socketRoomId, this._socketPlayerId);
+    }, delay);
+  }
+
+  onSocketStatus(fn) {
+    this._socketStatusCallbacks.push(fn);
+  }
+
+  _emitSocketStatus(status) {
+    (this._socketStatusCallbacks || []).forEach(fn => { try { fn(status); } catch (e) {} });
+  }
+
   onSocketMessage(type, fn) {
-    if (!this._socketHandlers) this._socketHandlers = {};
     if (!this._socketHandlers[type]) this._socketHandlers[type] = [];
     this._socketHandlers[type].push(fn);
   }
 
   disconnectSocket() {
+    this._socketIntentionalClose = true;
+    if (this._socketRetryTimer) { clearTimeout(this._socketRetryTimer); this._socketRetryTimer = null; }
     if (this._socketTask) {
-      try { this._socketTask.close(); } catch (e) {}
+      try { this._socketTask.close({ code: 1000 }); } catch (e) {}
       this._socketTask = null;
     }
+    // 离开页面：清理本页注册的处理器与状态回调，避免旧实例残留
+    this._socketHandlers = {};
+    this._socketStatusCallbacks = [];
   }
 
   async getUserProfile(openId) {

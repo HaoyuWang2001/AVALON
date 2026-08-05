@@ -356,5 +356,14 @@
       <text class="mission-waiting-text">等待其他队员完成任务...</text>
     </view>
   </view>
+
+  <!-- socket 断链重连遮罩 -->
+  <view class="reconnect-overlay" wx:if="{{socketReconnecting}}">
+    <view class="reconnect-mask" catchtap="noop" catchtouchmove="noop"></view>
+    <view class="reconnect-box">
+      <view class="reconnect-spinner"></view>
+      <view class="reconnect-text">连接中断，正在重连...</view>
+    </view>
+  </view>
 </view>
 </view>

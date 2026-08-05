@@ -201,6 +201,7 @@ Page({
     showLakeResult: false,
     lakeResult: '',
     oldLakeOpenIds: [],
+    socketReconnecting: false,
   },
 
   onLoad(options) {
@@ -226,28 +227,35 @@ Page({
     });
 
     api.onSocketMessage('gameUpdated', () => { this.fetchGameState(); });
+    api.onSocketMessage('gameState', () => { this.fetchGameState(); });
+    api.onSocketStatus(status => { this.onSocketStatusChange(status); });
     api.connectSocket(roomId || '', app.globalData.openId);
-    this.initGamePolling();
   },
 
   onShow() {
     this.fetchGameState();
+    // 后台/熄屏后 socket 可能已断开：onShow 兜底主动重连（不依赖后台被节流的定时器）
     if (!api._socketTask && this.data.roomId) {
       api.connectSocket(this.data.roomId, app.globalData.openId);
-      api.onSocketMessage('gameUpdated', () => { this.fetchGameState(); });
     }
   },
 
   onHide() {},
 
   onUnload() {
-    if (this.gamePolling) clearInterval(this.gamePolling);
     this._stopTimer();
     api.disconnectSocket();
   },
 
-  initGamePolling() {
-    this.gamePolling = setInterval(() => { this.fetchGameState(); }, 5000);
+  // socket 连接状态变化：断链→显示重连 loading；恢复→隐藏并同步一次状态
+  onSocketStatusChange(status) {
+    if (status === 'open') {
+      this.setData({ socketReconnecting: false });
+      this.fetchGameState();
+    } else if (status === 'closed') {
+      this.setData({ socketReconnecting: true });
+    }
+    // 'connecting' 不改变状态，避免初始加载与重连中途闪烁
   },
 
   fetchGameState() {

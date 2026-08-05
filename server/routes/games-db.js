@@ -20,6 +20,19 @@ function emitGame(roomId, gameId) {
   socket.emitToRoom(roomId, 'gameUpdated', { roomId, gameId });
 }
 
+// 从 gameId 解析 room_id 后广播 gameUpdated（客户端游戏操作请求只携带 gameId）
+async function emitGameForGame(gameId) {
+  try {
+    const db = require('../config/db');
+    const [gameRecord] = await db.query('SELECT room_id FROM games WHERE id = ?', [gameId]);
+    if (gameRecord && gameRecord.room_id) {
+      emitGame(gameRecord.room_id, gameId);
+    }
+  } catch (e) {
+    console.error('emitGameForGame 失败:', e.message);
+  }
+}
+
 function createRouter() {
   const router = express.Router();
   
@@ -236,7 +249,7 @@ function createRouter() {
       
       const result = await GameModel.submitNomination(gameId, openId, nominatedTeam, forcedCar === true);
       
-      emitGame(req.body.roomId || null, req.body.gameId);
+      await emitGameForGame(req.body.gameId);
 
       res.json(result);
     } catch (error) {
@@ -287,7 +300,7 @@ function createRouter() {
       
       const result = await GameModel.castVote(gameId, openId, vote);
       
-      emitGame(req.body.roomId || null, req.body.gameId);
+      await emitGameForGame(req.body.gameId);
 
       res.json(result);
     } catch (error) {
@@ -336,7 +349,7 @@ function createRouter() {
       
       const result = await GameModel.castMissionVote(gameId, openId, vote, playerRole);
       
-      emitGame(req.body.roomId || null, req.body.gameId);
+      await emitGameForGame(req.body.gameId);
 
       res.json(result);
     } catch (error) {
@@ -413,7 +426,7 @@ function createRouter() {
 
       const result = await GameModel.submitPreNomination(gameId, openId, preNominatedTeam);
 
-      emitGame(req.body.roomId || null, req.body.gameId);
+      await emitGameForGame(req.body.gameId);
 
       res.json(result);
     } catch (error) {
@@ -447,7 +460,7 @@ function createRouter() {
 
       const result = await GameModel.setSpeakingOrder(gameId, openId, speakingOrder);
 
-      emitGame(req.body.roomId || null, req.body.gameId);
+      await emitGameForGame(req.body.gameId);
 
       res.json(result);
     } catch (error) {
@@ -552,6 +565,8 @@ function createRouter() {
       }
 
       const result = await GameModel.assassinate(gameId, killerOpenId, targetOpenId);
+
+      await emitGameForGame(gameId);
 
       res.json(result);
     } catch (error) {
