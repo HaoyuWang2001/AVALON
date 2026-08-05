@@ -500,11 +500,12 @@ Page({
         // 底部栏高度随阶段动态变化：渲染后重新测量，校准玩家列表底部留白
         wx.nextTick(() => { this.measureBottomBar(); });
 
-        // socket 生命周期：游戏结束断开且不重连；活跃阶段首次获取状态后惰性建链
+        // socket 生命周期：游戏结束停止重连但保留健康 socket（可收后续事件）；
+        // 活跃阶段首次获取状态后惰性建链
         if (phase === 'gameEnd') {
-          api.disconnectSocket();
+          api.stopReconnect();
           this.setData({ socketReconnecting: false });
-          // 刺杀结算动画：从活跃阶段首次进入 gameEnd 且有刺杀记录时播放（全员）
+          // 刺杀结算动画（全员）：从活跃阶段首次进入 gameEnd 且有刺杀记录时播放
           const prevPhase = this.data.currentPhase;
           if (gameAssassination && prevPhase && prevPhase !== 'gameEnd') {
             this.playAssassinationAnim(gameAssassination.correct);

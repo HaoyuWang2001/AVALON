@@ -362,6 +362,12 @@ class ApiService {
     this._socketStatusCallbacks = [];
   }
 
+  // 停止重连但不关闭健康 socket（gameEnd 使用）：断链后不再重连，健康连接保持可收事件
+  stopReconnect() {
+    this._socketIntentionalClose = true;
+    if (this._socketRetryTimer) { clearTimeout(this._socketRetryTimer); this._socketRetryTimer = null; }
+  }
+
   async getUserProfile(openId) {
     return this.request(`/users/${openId}`);
   }
