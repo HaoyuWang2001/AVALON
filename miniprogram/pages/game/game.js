@@ -70,9 +70,10 @@ function enrichTablePlayer(p, ctx) {
 
   // 标签数组：车主(金) / 我(紫) / 房主(蓝) / 湖仙(粉) / 预选(橙) / 睁眼狼角色(红)，可叠加
   const tags = [];
+  let evilRoleName = '';
   if (isEvilEyes) {
     const evil = (evilOpenEyes || []).find(e => e.openId === p.openId);
-    if (evil && evil.role) tags.push({ text: getRoleNameLocal(evil.role), cls: TAG_STYLES.red });
+    if (evil && evil.role) evilRoleName = getRoleNameLocal(evil.role);
   }
   if (p.openId === leaderOpenId) tags.push({ text: '车主', cls: TAG_STYLES.gold });
   if (p.openId === myOpenId) tags.push({ text: '我', cls: TAG_STYLES.purple });
@@ -96,6 +97,7 @@ function enrichTablePlayer(p, ctx) {
     disabled,
     isLeader: p.openId === leaderOpenId,
     isOldLake,
+    evilRoleName,
     tags
   };
 }
@@ -202,6 +204,7 @@ Page({
     lakeResult: '',
     oldLakeOpenIds: [],
     socketReconnecting: false,
+    isEvilEyesUser: false,
   },
 
   onLoad(options) {
@@ -461,6 +464,7 @@ Page({
           hasTeamVoted: !!(res.current.teamVoteStatus && res.current.teamVoteStatus[myOpenId] === 'voted'),
           canAssassinateVar: ['assassin', 'morgana'].includes(myRole),
           evilOpenEyes: res.current.evilOpenEyes || [],
+          isEvilEyesUser: (res.current.evilOpenEyes || []).some(e => e.openId === myOpenId),
           gameWinner: (res.basic && res.basic.result && res.basic.result.winner) || null,
           hasSpeechTimeout: this._getSpeechTimeout() > 0,
         });

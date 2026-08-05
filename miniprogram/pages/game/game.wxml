@@ -72,6 +72,7 @@
           <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag {{tag.cls}}">{{tag.text}}</text>
         </view>
       </view>
+      <view wx:if="{{item.evilRoleName}}" class="tplayer-evil-role">{{item.evilRoleName}}</view>
       <view wx:if="{{showSelectCheck}}" class="table-check {{item.checked ? 'checked' : ''}} {{item.disabled ? 'disabled' : ''}}"
         catchtap="onTablePlayerTap" data-id="{{item.openId}}">
         <text wx:if="{{item.checked}}">✓</text>
@@ -180,7 +181,15 @@
 
     <!-- assassination -->
     <block wx:if="{{currentPhase === 'assassination'}}">
-      <view class="bar-info">{{canAssassinateVar ? '选择刺杀目标' : '等待刺客行动'}}</view>
+      <!-- 睁眼狼：提问 -->
+      <view wx:if="{{isEvilEyesUser}}" class="bar-info bar-assassin-q">问：谁是梅林？</view>
+      <!-- 非睁眼狼：红色等待动画 + 开刀文字 -->
+      <block wx:else>
+        <view class="vote-waiting">
+          <view class="vote-waiting-spinner assassin-waiting-spinner"></view>
+        </view>
+        <view class="bar-info bar-assassin-wait">刺客正在开刀</view>
+      </block>
     </block>
 
     <!-- gameEnd -->

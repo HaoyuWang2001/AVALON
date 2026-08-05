@@ -153,6 +153,18 @@
   background: #FEE2E2;
 }
 
+/* 刺杀阶段睁眼狼角色名（卡片右侧）：深红底、浅红字、加粗放大 */
+.tplayer-evil-role {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  padding: 12rpx 24rpx;
+  border-radius: 14rpx;
+  background: #DC2626;
+  color: #FEE2E2;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
 /* 右侧选人复选框（仅车主选人期显示）：未选=空心灰圈，选中=紫底白勾 */
 .table-check {
   flex-shrink: 0;
@@ -303,6 +315,14 @@
   border-radius: 50%;
   animation: vote-spin 1s linear infinite;
 }
+/* 刺杀阶段等待动画：红色 */
+.assassin-waiting-spinner {
+  border-color: rgba(239, 68, 68, 0.2);
+  border-top-color: #EF4444;
+}
+.assassin-waiting-text, .bar-assassin-wait { color: #EF4444; }
+/* 睁眼狼提问文字：红色加粗强调 */
+.bar-assassin-q { color: #DC2626; font-weight: 700; }
 @keyframes vote-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
