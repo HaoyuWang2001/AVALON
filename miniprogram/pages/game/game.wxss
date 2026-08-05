@@ -173,6 +173,20 @@
   border-color: #E5E7EB;
 }
 
+/* 湖仙验人单选圈：未选=白底灰圈，选中=紫圈+紫点（仅湖仙持有者显示） */
+.table-radio {
+  flex-shrink: 0;
+  width: 44rpx; height: 44rpx;
+  border-radius: 50%;
+  border: 3rpx solid #D1D5DB;
+  background: #FFFFFF;
+  margin-left: 20rpx;
+  display: flex; align-items: center; justify-content: center;
+}
+.table-radio-dot { width: 24rpx; height: 24rpx; border-radius: 50%; background: transparent; }
+.table-radio.radio-on { border-color: #8B5CF6; }
+.table-radio.radio-on .table-radio-dot { background: #8B5CF6; }
+
 /* 座位号徽章：内联，位于头像左侧并排 */
 .seat-no {
   flex-shrink: 0;

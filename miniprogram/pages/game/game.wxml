@@ -76,6 +76,10 @@
         catchtap="onTablePlayerTap" data-id="{{item.openId}}">
         <text wx:if="{{item.checked}}">✓</text>
       </view>
+      <view wx:if="{{currentPhase === 'lake' && isLakeHolder && item.openId !== playerId}}"
+        class="table-radio {{item.openId === lakeTargetOpenId ? 'radio-on' : ''}}">
+        <view class="table-radio-dot"></view>
+      </view>
     </view>
   </view>
 
@@ -131,9 +135,14 @@
       </block>
     </block>
 
-    <!-- lake：湖仙验人（必验） -->
+    <!-- lake：湖仙验人（必验，单选目标后底部确认） -->
     <block wx:if="{{currentPhase === 'lake'}}">
-      <view class="bar-info">湖仙持有者点击玩家卡牌查验阵营（结果仅你可见）</view>
+      <block wx:if="{{isLakeHolder}}">
+        <view class="bar-row">
+          <button size="mini" class="btn btn-primary" bindtap="confirmLakeInspect" disabled="{{!lakeTargetOpenId}}">确认查验</button>
+        </view>
+      </block>
+      <view wx:else class="bar-info bar-waiting">等待湖仙查验...</view>
     </block>
 
     <!-- lancelot：兰斯抽卡结果展示 + 全员确认 -->
@@ -284,10 +293,10 @@
           <view wx:for="{{carsHistory}}" wx:key="round" class="info-round">
             <view class="info-round-title">第{{item.round}}轮</view>
             <view wx:for="{{item.details}}" wx:for-item="car" wx:key="index" class="info-car">
-              <view class="info-car-line">第{{car.index}}车 · 车主 {{car.leaderSeat}}号</view>
+              <view class="info-car-line">{{car.forced ? '【强制车】' : ''}}第{{car.index}}车 · 车主 {{car.leaderSeat}}号</view>
               <view class="info-car-line">发车：{{car.sendSeats}}</view>
-              <view class="info-car-line">同意：{{car.approveSeats}}</view>
-              <view class="info-car-line">反对：{{car.rejectSeats}}</view>
+              <view class="info-car-line" wx:if="{{car.approveSeats}}">同意：{{car.approveSeats}}</view>
+              <view class="info-car-line" wx:if="{{car.rejectSeats}}">反对：{{car.rejectSeats}}</view>
               <view class="info-car-line info-car-result">结果：{{car.outcomeText}}</view>
             </view>
           </view>

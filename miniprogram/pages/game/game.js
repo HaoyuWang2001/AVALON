@@ -189,6 +189,8 @@ Page({
     nominateMode: 'final',
     showSelectCheck: false,
     bottomBarHeight: 0,
+    lakeTargetOpenId: '',
+    isLakeHolder: false,
   },
 
   onLoad(options) {
@@ -348,6 +350,7 @@ Page({
           const tv = car.teamVotes || {};
           return {
             ...car,
+            forced: car.index === maxFailed + 1,
             leaderSeat: nameSeat(car.teamLeaderOpenId),
             sendSeats: (car.nominatedTeam || []).map(nameSeat).join(' '),
             approveSeats: Object.keys(tv).filter(id => tv[id] === 'approve').map(nameSeat).join(' '),
@@ -388,6 +391,8 @@ Page({
           maxFailedNominations: maxFailed,
           carIndex: res.current.index || 1,
           lakeHolderOpenId: res.current.lakeHolderOpenId || '',
+          isLakeHolder: !!res.current.lakeHolderOpenId && res.current.lakeHolderOpenId === myOpenId,
+          lakeTargetOpenId: phase === 'lake' ? this.data.lakeTargetOpenId : '',
           revealConfirmed: res.player ? !!res.player.revealConfirmed : false,
           revealConfirmedCount: res.current.revealConfirmedCount || 0,
           revealTotalCount: res.current.revealTotalCount || 0,
@@ -661,31 +666,33 @@ Page({
     if (currentPhase === 'preNominate' || currentPhase === 'discussion') {
       this.nominatePlayer(e);
     } else if (currentPhase === 'lake') {
-      this.lakeInspect(e);
+      // 湖仙验人：持有者点击卡片单选目标（不可选自己），底部按钮确认
+      if (this.data.isLakeHolder) {
+        const targetOpenId = e.currentTarget.dataset.id;
+        if (targetOpenId && targetOpenId !== this.data.playerId) {
+          this.setData({ lakeTargetOpenId: targetOpenId });
+        }
+      }
     } else if (currentPhase === 'assassination') {
       this.assassinate(e);
     }
   },
 
-  // lake 阶段：湖仙选择被查验者（必验，不可跳过）
-  lakeInspect(e) {
-    const targetOpenId = e.currentTarget.dataset.id;
-    const { gameId } = this.data;
-    wx.showModal({
-      title: '湖仙验人',
-      content: '确认查验该玩家的阵营？（结果仅你可见）',
-      success: (res) => {
-        if (res.confirm) {
-          wx.showLoading({ title: '验人中...', mask: true });
-          api.lakeInspect(gameId, targetOpenId).then(() => {
-            wx.hideLoading();
-            this.fetchGameState();
-          }).catch(err => {
-            wx.hideLoading();
-            wx.showToast({ title: (err && err.message) || '验人失败', icon: 'none' });
-          });
-        }
-      }
+  // lake 阶段：底部"确认查验"按钮（需先选中目标）
+  confirmLakeInspect() {
+    const { gameId, lakeTargetOpenId } = this.data;
+    if (!lakeTargetOpenId) {
+      wx.showToast({ title: '请先选择查验目标', icon: 'none' });
+      return;
+    }
+    wx.showLoading({ title: '验人中...', mask: true });
+    api.lakeInspect(gameId, lakeTargetOpenId).then(() => {
+      wx.hideLoading();
+      this.setData({ lakeTargetOpenId: '' });
+      this.fetchGameState();
+    }).catch(err => {
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '验人失败', icon: 'none' });
     });
   },
 
