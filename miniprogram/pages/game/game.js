@@ -398,13 +398,14 @@ Page({
         };
         const buildCar = (car) => {
           const tv = car.teamVotes || {};
+          const bySeat = (a, b) => (Number(a.seat) || 999) - (Number(b.seat) || 999);
           return {
             ...car,
             forced: car.index === maxFailed + 1,
             leaderSeat: seatInfo(car.teamLeaderOpenId),
-            sendSeats: (car.nominatedTeam || []).map(seatInfo),
-            approveSeats: Object.keys(tv).filter(id => tv[id] === 'approve').map(seatInfo),
-            rejectSeats: Object.keys(tv).filter(id => tv[id] === 'reject').map(seatInfo),
+            sendSeats: (car.nominatedTeam || []).map(seatInfo).sort(bySeat),
+            approveSeats: Object.keys(tv).filter(id => tv[id] === 'approve').map(seatInfo).sort(bySeat),
+            rejectSeats: Object.keys(tv).filter(id => tv[id] === 'reject').map(seatInfo).sort(bySeat),
             outcomeText: car.outcome === 'reject' ? '流车'
               : (car.missionSuccess == null ? '未进行任务'
               : (car.missionSuccess ? '任务成功' : '任务失败'))
@@ -441,6 +442,47 @@ Page({
             targetSeat: tp ? tp.seatNumber : '?',
             correct: !!asn.correct
           };
+        }
+
+        // 游戏记录合并时间线：发车轮次(紫)连续发车+任务信息，湖仙/兰斯洛特按其轮次插入打断，刺客开刀(红)末尾
+        const lancelotRaw = res.history ? res.history.lancelotSwaps || [] : [];
+        const lakeByRound = {};
+        lakeHistory.forEach(e => { lakeByRound[e.round] = e; });
+        const lancelotByRound = {};
+        lancelotRaw.forEach(e => { lancelotByRound[e.round] = e; });
+        const recordTimeline = [];
+        let carGroup = null;
+        const flushCarGroup = () => {
+          if (carGroup && carGroup.details.length) recordTimeline.push(carGroup);
+          carGroup = null;
+        };
+        for (let r = 1; r <= 5; r++) {
+          const cars = carsHistory.find(c => c.round === r);
+          if (cars && cars.details.length) {
+            if (!carGroup) carGroup = { type: 'car', title: '发车轮次', cls: 'rec-purple', details: [] };
+            carGroup.details.push(...cars.details);
+          }
+          if (lakeByRound[r]) {
+            flushCarGroup();
+            const e = lakeByRound[r];
+            recordTimeline.push({
+              type: 'lake', title: '湖仙验人', cls: 'rec-purple', round: r,
+              inspectorSeat: e.inspectorSeat, targetSeat: e.targetSeat, result: e.result
+            });
+          }
+          if (lancelotByRound[r]) {
+            recordTimeline.push({
+              type: 'lancelot', title: '兰斯洛特转换判定', cls: 'rec-purple', round: r,
+              switched: !!lancelotByRound[r].switched
+            });
+          }
+        }
+        flushCarGroup();
+        if (gameAssassination) {
+          recordTimeline.push({
+            type: 'assassination', title: '刺客开刀', cls: 'rec-red',
+            targetSeat: gameAssassination.targetSeat, correct: gameAssassination.correct
+          });
         }
 
         this.setData({
@@ -485,6 +527,7 @@ Page({
           carsHistory: carsHistory,
           lakeHistory: lakeHistory,
           lancelotSwaps: res.history ? res.history.lancelotSwaps || [] : [],
+          recordTimeline: recordTimeline,
           speakingOrder: res.current.speakingOrder || 'asc',
           speakingOrderIndex: (res.current.speakingOrder || 'asc') === 'desc' ? 1 : 0,
           speakingOrderConfirmed: !!res.current.discussionSet,

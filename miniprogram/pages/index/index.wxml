@@ -356,7 +356,7 @@
               </view>
               <view class="rule-row" wx:if="{{allowSpectator && spectatorLimited}}">
                 <text class="rule-label">上限人数</text>
-                <input class="spectator-input" type="number" maxlength="3" placeholder="1-100" value="{{maxSpectators || ''}}" bindinput="onSpectatorLimitInput"/>
+                <input class="spectator-input {{spectatorLimitInvalid ? 'input-invalid' : ''}}" type="number" maxlength="3" placeholder="1-100" value="{{maxSpectators || ''}}" bindinput="onSpectatorLimitInput"/>
               </view>
             </view>
           <view style="height:60rpx"></view>

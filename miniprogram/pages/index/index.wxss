@@ -74,7 +74,7 @@
 .history-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
 .history-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 12rpx; display: flex; align-items: center; }
 .history-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
-.history-stats { font-size: 24rpx; color: var(--gray-500); margin-bottom: 16rpx; }
+.history-stats { font-size: 24rpx; color: var(--gray-600); margin-bottom: 16rpx; }
 .history-item { display: flex; align-items: center; padding: 18rpx 8rpx; border-bottom: 1rpx solid var(--gray-100); }
 .history-item:last-child { border-bottom: none; }
 .history-item:active { opacity: 0.7; }
@@ -82,7 +82,7 @@
 .history-result { font-size: 26rpx; font-weight: 700; padding: 4rpx 18rpx; border-radius: 8rpx; margin: 0 20rpx; flex-shrink: 0; }
 .history-result.win { color: var(--success); background: #DCFCE7; }
 .history-result.lose { color: var(--danger); background: #FEE2E2; }
-.history-duration { font-size: 24rpx; color: var(--gray-400); flex-shrink: 0; }
+.history-duration { font-size: 24rpx; color: var(--gray-600); flex-shrink: 0; }
 
 /* ─────── 角色胜率 ─────── */
 .role-stats { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }

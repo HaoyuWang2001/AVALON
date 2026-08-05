@@ -222,7 +222,7 @@
   <!-- 任务结果全屏弹窗 -->
   <view class="result-overlay" wx:if="{{currentPhase === 'missionResult'}}">
     <view class="result-card">
-      <view class="result-emoji">{{lastMissionResult ? '✅' : '❌'}}</view>
+      <view class="result-emoji">{{lastMissionResult ? '👍' : '❌'}}</view>
       <view class="result-title">{{lastMissionResult ? '任务成功' : '任务失败'}}</view>
       <view class="result-sub">{{lastMissionResult ? '好人获得1分' : '坏人获得1分'}}</view>
     </view>
@@ -303,10 +303,10 @@
     <view class="info-modal-body">
       <view class="info-modal-title">游戏记录</view>
       <scroll-view scroll-y enable-flex class="info-modal-scroll">
-        <view class="info-section" wx:if="{{carsHistory.length > 0}}">
-          <view class="info-section-title">车次记录</view>
-          <view wx:for="{{carsHistory}}" wx:key="round" class="info-round">
-            <view class="info-round-title">第{{item.round}}轮</view>
+        <view wx:for="{{recordTimeline}}" wx:key="index" class="info-section">
+          <view class="info-section-title {{item.cls}}">{{item.title}}</view>
+          <!-- 发车轮次：连续发车信息+任务信息 -->
+          <block wx:if="{{item.type === 'car'}}">
             <view wx:for="{{item.details}}" wx:for-item="car" wx:key="index" class="info-car">
               <view class="info-car-line">{{car.forced ? '【强制车】' : ''}}第{{car.index}}车 · 车主<text class="{{car.leaderSeat.isMe ? 'seat-me' : ''}}"> {{car.leaderSeat.seat}}</text>号</view>
               <view class="info-car-line">发车：<text wx:for="{{car.sendSeats}}" wx:key="seat" wx:for-item="s" wx:for-index="si" class="{{s.isMe ? 'seat-me' : ''}}">{{si > 0 ? ' ' : ''}}{{s.seat}}</text></view>
@@ -314,21 +314,23 @@
               <view class="info-car-line" wx:if="{{car.rejectSeats.length}}">反对：<text wx:for="{{car.rejectSeats}}" wx:key="seat" wx:for-item="s" wx:for-index="si" class="{{s.isMe ? 'seat-me' : ''}}">{{si > 0 ? ' ' : ''}}{{s.seat}}</text></view>
               <view class="info-car-line info-car-result">结果：{{car.outcomeText}}</view>
             </view>
-          </view>
-        </view>
-        <view class="info-section" wx:if="{{lakeHistory.length > 0}}">
-          <view class="info-section-title">湖仙验人</view>
-          <view wx:for="{{lakeHistory}}" wx:key="round" class="info-row">
-            <text>第{{item.round}}轮 <text class="{{item.inspectorSeat.isMe ? 'seat-me' : ''}}">{{item.inspectorSeat.seat}}</text>号 → <text class="{{item.targetSeat.isMe ? 'seat-me' : ''}}">{{item.targetSeat.seat}}</text>号</text>
-            <text wx:if="{{item.result}}" class="{{item.result === 'good' ? 'txt-good' : 'txt-evil'}}">{{item.result === 'good' ? '好人' : '坏人'}}</text>
-            <text wx:else class="txt-muted">保密</text>
-          </view>
-        </view>
-        <view class="info-section" wx:if="{{lancelotSwaps.length > 0}}">
-          <view class="info-section-title">兰斯洛特</view>
-          <view wx:for="{{lancelotSwaps}}" wx:key="round" class="info-row">
-            第{{item.round}}轮 {{item.switched ? '身份转换' : '身份保持'}}
-          </view>
+          </block>
+          <!-- 湖仙验人 -->
+          <block wx:elif="{{item.type === 'lake'}}">
+            <view class="info-row">
+              <text>第{{item.round}}轮 <text class="{{item.inspectorSeat.isMe ? 'seat-me' : ''}}">{{item.inspectorSeat.seat}}</text>号 → <text class="{{item.targetSeat.isMe ? 'seat-me' : ''}}">{{item.targetSeat.seat}}</text>号</text>
+              <text wx:if="{{item.result}}" class="{{item.result === 'good' ? 'txt-good' : 'txt-evil'}}">{{item.result === 'good' ? '好人' : '坏人'}}</text>
+              <text wx:else class="txt-muted">保密</text>
+            </view>
+          </block>
+          <!-- 兰斯洛特转换判定 -->
+          <block wx:elif="{{item.type === 'lancelot'}}">
+            <view class="info-row">第{{item.round}}轮 {{item.switched ? '身份转换' : '身份保持'}}</view>
+          </block>
+          <!-- 刺客开刀 -->
+          <block wx:elif="{{item.type === 'assassination'}}">
+            <view class="info-row">刺客刺杀 {{item.targetSeat}}号 · {{item.correct ? '刺杀成功' : '刺杀失败'}}</view>
+          </block>
         </view>
       </scroll-view>
       <button class="btn btn-primary info-modal-close" bindtap="closeInfoModal">关闭</button>

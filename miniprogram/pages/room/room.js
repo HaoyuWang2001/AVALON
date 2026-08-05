@@ -4,6 +4,7 @@ const api = require('../../services/api.js');
 
 const GOOD_ROLES = ['merlin', 'percival', 'lancelotBlue'];
 const EVIL_ROLES = ['morgana', 'assassin', 'mordred', 'minion', 'oberon', 'lancelotRed'];
+const FORCED_ROLES = ['merlin', 'percival', 'morgana'];
 
 const ROLE_NAMES = {
   merlin: '梅林', percival: '派西', loyal: '忠臣',
@@ -99,6 +100,7 @@ Page({
     allowSpectator: true,
     maxSpectators: 1,
     spectatorLimited: false,
+    spectatorLimitInvalid: false,
 
     goodRoleNames: '',
     evilRoleNames: '',
@@ -183,6 +185,8 @@ Page({
           });
         }
 
+        const wasGameStarted = this.data.gameStarted;
+
         this.setData({
           roomInfo: room,
           players: players,
@@ -213,7 +217,7 @@ Page({
         }
         this.setData({ canStartGame: canStart, startHint: hint });
 
-        if (room.gameStarted && !this.data.gameStarted) {
+        if (room.gameStarted && !wasGameStarted) {
           this.navigatingToGame = true;
           wx.redirectTo({ url: `/pages/game/game?gameId=${room.activeGameId}&roomId=${this.data.roomId}` });
         }
@@ -418,6 +422,7 @@ Page({
     const selected = {};
     GOOD_ROLES.forEach(r => { selected[r] = (roles.good || []).includes(r); });
     EVIL_ROLES.forEach(r => { selected[r] = (roles.evil || []).includes(r); });
+    FORCED_ROLES.forEach(r => { selected[r] = true; });
 
     const patch = { selectedRoles: selected, playerCount: n || 5 };
 
@@ -473,6 +478,14 @@ Page({
   },
 
   finishConfig() {
+    if (this.data.spectatorLimited) {
+      const n = Number(this.data.maxSpectators);
+      if (!n || n < 1 || n > 100) {
+        this.setData({ spectatorLimitInvalid: true });
+        wx.showToast({ title: '观战人数需在 1-100 之间', icon: 'none' });
+        return;
+      }
+    }
     const config = this.getRoomConfig();
     wx.showLoading({ title: '保存中...', mask: true });
     api.updateRoomConfig(this.data.roomId, config).then(() => {
@@ -511,6 +524,7 @@ Page({
     EVIL_ROLES.forEach(r => { selected[r] = false; });
     def.good.forEach(r => { if (r !== 'loyal') selected[r] = true; });
     def.evil.forEach(r => { selected[r] = true; });
+    FORCED_ROLES.forEach(r => { selected[r] = true; });
 
     const rules = buildDefaultRule();
     const hasLancelot = selected.lancelotBlue || selected.lancelotRed;
@@ -533,6 +547,8 @@ Page({
   onRoleToggle(e) {
     const role = e.currentTarget.dataset.role;
     const current = this.data.selectedRoles;
+    // 梅林/派西/莫甘娜必选，不可点击取消
+    if (current[role] && FORCED_ROLES.includes(role)) return;
     current[role] = !current[role];
     this.setData({ selectedRoles: current });
     this.computeAll();
@@ -582,10 +598,10 @@ Page({
   },
 
   onSpectatorLimitInput(e) {
-    let val = parseInt(e.detail.value) || 1;
-    if (val < 1) val = 1;
-    if (val > 100) val = 100;
-    this.setData({ maxSpectators: val });
+    const val = e.detail.value;
+    const num = parseInt(val, 10);
+    const invalid = val !== '' && (isNaN(num) || num < 1 || num > 100);
+    this.setData({ maxSpectators: val, spectatorLimitInvalid: invalid });
   },
 
   // ─────────── Page 5: Limits + Meta ───────────
@@ -728,7 +744,7 @@ Page({
       meta,
       spectator: {
         allow: this.data.allowSpectator,
-        max: this.data.spectatorLimited ? this.data.maxSpectators : 0
+        max: this.data.spectatorLimited ? (Number(this.data.maxSpectators) || 0) : 0
       }
     };
   }
