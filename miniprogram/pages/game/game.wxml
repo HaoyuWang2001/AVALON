@@ -3,7 +3,7 @@
   <!-- 顶部操作栏（公共组件：左=暂回首页 右=炸掉会议）；游戏结束阶段不展示（同历史对局） -->
   <top-bar wx:if="{{currentPhase !== 'gameEnd'}}">
     <text slot="left" class="btn-round btn-purple" bindtap="backToHome">暂回首页</text>
-    <text slot="right" class="btn-round btn-danger" bindtap="abandonGame" wx:if="{{isHost}}">炸掉会议</text>
+    <text slot="right" class="btn-round btn-danger" bindtap="abandonGame" wx:if="{{isHost}}">炸房</text>
   </top-bar>
 
   <view class="container">

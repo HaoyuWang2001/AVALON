@@ -1022,12 +1022,8 @@ Page({
       success: (res) => {
         if (res.confirm) {
           api.abandonGame(gameId).then(() => {
-            // room 页用 redirectTo 进入 game 页，页面栈无 room，需显式跳转
-            if (this.data.roomId) {
-              wx.redirectTo({ url: `/pages/room/room?roomId=${this.data.roomId}` });
-            } else {
-              wx.navigateBack();
-            }
+            // 放弃后留在游戏页刷新，与其他玩家看到相同的「游戏已放弃」gameEnd 页，不跳转
+            this.fetchGameState();
           }).catch(err => {
             wx.showToast({ title: (err && err.message) || '放弃失败', icon: 'none' });
           });
