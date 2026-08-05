@@ -76,7 +76,7 @@
         catchtap="onTablePlayerTap" data-id="{{item.openId}}">
         <text wx:if="{{item.checked}}">✓</text>
       </view>
-      <view wx:if="{{currentPhase === 'lake' && isLakeHolder && item.openId !== playerId}}"
+      <view wx:if="{{currentPhase === 'lake' && isLakeHolder && item.openId !== playerId && !item.isOldLake}}"
         class="table-radio {{item.openId === lakeTargetOpenId ? 'radio-on' : ''}}">
         <view class="table-radio-dot"></view>
       </view>
@@ -293,10 +293,10 @@
           <view wx:for="{{carsHistory}}" wx:key="round" class="info-round">
             <view class="info-round-title">第{{item.round}}轮</view>
             <view wx:for="{{item.details}}" wx:for-item="car" wx:key="index" class="info-car">
-              <view class="info-car-line">{{car.forced ? '【强制车】' : ''}}第{{car.index}}车 · 车主 {{car.leaderSeat}}号</view>
-              <view class="info-car-line">发车：{{car.sendSeats}}</view>
-              <view class="info-car-line" wx:if="{{car.approveSeats}}">同意：{{car.approveSeats}}</view>
-              <view class="info-car-line" wx:if="{{car.rejectSeats}}">反对：{{car.rejectSeats}}</view>
+              <view class="info-car-line">{{car.forced ? '【强制车】' : ''}}第{{car.index}}车 · 车主<text class="{{car.leaderSeat.isMe ? 'seat-me' : ''}}"> {{car.leaderSeat.seat}}</text>号</view>
+              <view class="info-car-line">发车：<text wx:for="{{car.sendSeats}}" wx:key="seat" wx:for-item="s" wx:for-index="si" class="{{s.isMe ? 'seat-me' : ''}}">{{si > 0 ? ' ' : ''}}{{s.seat}}</text></view>
+              <view class="info-car-line" wx:if="{{car.approveSeats.length}}">同意：<text wx:for="{{car.approveSeats}}" wx:key="seat" wx:for-item="s" wx:for-index="si" class="{{s.isMe ? 'seat-me' : ''}}">{{si > 0 ? ' ' : ''}}{{s.seat}}</text></view>
+              <view class="info-car-line" wx:if="{{car.rejectSeats.length}}">反对：<text wx:for="{{car.rejectSeats}}" wx:key="seat" wx:for-item="s" wx:for-index="si" class="{{s.isMe ? 'seat-me' : ''}}">{{si > 0 ? ' ' : ''}}{{s.seat}}</text></view>
               <view class="info-car-line info-car-result">结果：{{car.outcomeText}}</view>
             </view>
           </view>
@@ -304,7 +304,7 @@
         <view class="info-section" wx:if="{{lakeHistory.length > 0}}">
           <view class="info-section-title">湖仙验人</view>
           <view wx:for="{{lakeHistory}}" wx:key="round" class="info-row">
-            <text>第{{item.round}}轮 {{item.inspectorSeat}}号 → {{item.targetSeat}}号</text>
+            <text>第{{item.round}}轮 <text class="{{item.inspectorSeat.isMe ? 'seat-me' : ''}}">{{item.inspectorSeat.seat}}</text>号 → <text class="{{item.targetSeat.isMe ? 'seat-me' : ''}}">{{item.targetSeat.seat}}</text>号</text>
             <text wx:if="{{item.result}}" class="{{item.result === 'good' ? 'txt-good' : 'txt-evil'}}">{{item.result === 'good' ? '好人' : '坏人'}}</text>
             <text wx:else class="txt-muted">保密</text>
           </view>
@@ -317,6 +317,15 @@
         </view>
       </scroll-view>
       <button class="btn btn-primary info-modal-close" bindtap="closeInfoModal">关闭</button>
+    </view>
+  </view>
+
+  <!-- 湖仙查验结果弹窗（纯图片，好人蓝/坏人红） -->
+  <view class="lake-result-modal" wx:if="{{showLakeResult}}">
+    <view class="modal-mask" bindtap="closeLakeResult"></view>
+    <view class="lake-result-body">
+      <image src="/images/{{lakeResult === 'evil' ? 'avalon-red.png' : 'avalon-blue.png'}}" class="lake-result-img" mode="aspectFit"/>
+      <button class="btn btn-primary" bindtap="closeLakeResult">知道了</button>
     </view>
   </view>
 

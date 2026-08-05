@@ -229,6 +229,9 @@
 .ptag-gold { background: #FEF3C7; color: #B45309; }
 .ptag-orange { background: #FFEDD5; color: #C2410C; }
 .ptag-red { background: #FEE2E2; color: #EF4444; }
+.ptag-grey { background: #E5E7EB; color: #6B7280; }
+/* 游戏记录中自己的座位号：紫色加粗 */
+.seat-me { color: #8B5CF6; font-weight: 700; }
 
 /* 发言方向指示：箭头图片 */
 .dir-pill-img {
@@ -496,6 +499,21 @@
 .txt-evil { color: #EF4444; font-weight: 700; }
 .txt-muted { color: #9CA3AF; }
 .info-modal-close { margin-top: 16rpx; }
+
+/* ─────── 湖仙查验结果弹窗 ─────── */
+.lake-result-modal {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+}
+.lake-result-body {
+  position: relative; z-index: 999;
+  width: 520rpx;
+  background: #FFFFFF; border-radius: 28rpx;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 48rpx 36rpx;
+}
+.lake-result-img { width: 360rpx; height: 360rpx; margin-bottom: 40rpx; }
+.lake-result-body .btn { width: 100%; }
 
 /* 工具函数样式 */
 progress { border-radius: 12rpx; }

@@ -22,13 +22,14 @@ const TAG_STYLES = {
   pink: 'ptag-pink',
   gold: 'ptag-gold',
   orange: 'ptag-orange',
-  red: 'ptag-red'
+  red: 'ptag-red',
+  grey: 'ptag-grey'
 };
 
 // 为玩家卡片富化字段（checked/cardState/disabled/isLeader/tags[]）
 function enrichTablePlayer(p, ctx) {
   const {
-    leaderOpenId, myOpenId, hostOpenId, lakeHolderOpenId,
+    leaderOpenId, myOpenId, hostOpenId, lakeHolderOpenId, oldLakeOpenIds,
     preNominatedTeam, nominatedTeam, localSelected, teamVotes, teamVoteStatus, currentPhase,
     requiredTeamSize, evilOpenEyes
   } = ctx;
@@ -77,6 +78,11 @@ function enrichTablePlayer(p, ctx) {
   if (p.openId === myOpenId) tags.push({ text: '我', cls: TAG_STYLES.purple });
   if (p.openId === hostOpenId) tags.push({ text: '房主', cls: TAG_STYLES.blue });
   if (p.openId === lakeHolderOpenId) tags.push({ text: '湖仙', cls: TAG_STYLES.pink });
+  // 老湖仙：已被查验过（曾持有湖仙令牌）的玩家，非当前持有者；整局持续，且不可再被查验
+  const isOldLake = !!(oldLakeOpenIds && oldLakeOpenIds.has(p.openId));
+  if (isOldLake && p.openId !== lakeHolderOpenId) {
+    tags.push({ text: '老湖仙', cls: TAG_STYLES.grey });
+  }
   // 车主确认预选后（speakingOrder/discussion 阶段）展示预选队伍成员
   if ((currentPhase === 'speakingOrder' || currentPhase === 'discussion')
       && (preNominatedTeam || []).includes(p.openId)) {
@@ -89,6 +95,7 @@ function enrichTablePlayer(p, ctx) {
     cardState,
     disabled,
     isLeader: p.openId === leaderOpenId,
+    isOldLake,
     tags
   };
 }
@@ -191,6 +198,9 @@ Page({
     bottomBarHeight: 0,
     lakeTargetOpenId: '',
     isLakeHolder: false,
+    showLakeResult: false,
+    lakeResult: '',
+    oldLakeOpenIds: [],
   },
 
   onLoad(options) {
@@ -324,6 +334,8 @@ Page({
           .map(seatOf).join(' ');
         // 当前轮队伍人数（用本轮 round 局部变量，避免 setData 异步读旧 currentRound）
         const teamSize = getTeamSizeByRound((res.players || []).length, round);
+        // 老湖仙集合：所有已被查验过（lake_history.target_open_id）的玩家
+        const oldLakeOpenIds = new Set((res.history ? res.history.lake || [] : []).map(e => e.targetOpenId));
         // 长桌玩家富化（预计算 checked/cardState/标签，避免 wxml 函数调用）
         const hostOpenId = (res.players || []).find(p => p.isHost) ? (res.players || []).find(p => p.isHost).openId : '';
         const tablePlayers = (res.players || []).map(p => enrichTablePlayer(p, {
@@ -331,6 +343,7 @@ Page({
           myOpenId: myOpenId,
           hostOpenId,
           lakeHolderOpenId: res.current.lakeHolderOpenId || '',
+          oldLakeOpenIds,
           preNominatedTeam: res.current.preNominatedTeam || [],
           nominatedTeam: res.current.nominatedTeam || [],
           localSelected: effectiveLocal,
@@ -346,15 +359,25 @@ Page({
           const p = (res.players || []).find(x => x.openId === id);
           return p ? String(p.seatNumber) : '?';
         };
+        // 座位信息：{seat, isMe}，供游戏记录中高亮自己的座位号
+        const meSeatNum = (() => {
+          const me = (res.players || []).find(x => x.openId === myOpenId);
+          return me ? me.seatNumber : null;
+        })();
+        const seatInfo = id => {
+          const p = (res.players || []).find(x => x.openId === id);
+          const seat = p ? p.seatNumber : '?';
+          return { seat, isMe: typeof seat === 'number' && meSeatNum != null && seat === meSeatNum };
+        };
         const buildCar = (car) => {
           const tv = car.teamVotes || {};
           return {
             ...car,
             forced: car.index === maxFailed + 1,
-            leaderSeat: nameSeat(car.teamLeaderOpenId),
-            sendSeats: (car.nominatedTeam || []).map(nameSeat).join(' '),
-            approveSeats: Object.keys(tv).filter(id => tv[id] === 'approve').map(nameSeat).join(' '),
-            rejectSeats: Object.keys(tv).filter(id => tv[id] === 'reject').map(nameSeat).join(' '),
+            leaderSeat: seatInfo(car.teamLeaderOpenId),
+            sendSeats: (car.nominatedTeam || []).map(seatInfo),
+            approveSeats: Object.keys(tv).filter(id => tv[id] === 'approve').map(seatInfo),
+            rejectSeats: Object.keys(tv).filter(id => tv[id] === 'reject').map(seatInfo),
             outcomeText: car.outcome === 'reject' ? '流车'
               : (car.missionSuccess == null ? '未进行任务'
               : (car.missionSuccess ? '任务成功' : '任务失败'))
@@ -363,8 +386,8 @@ Page({
         const carsHistory = (res.history ? res.history.cars || [] : []).map(r => ({ ...r, details: (r.details || []).map(buildCar) }));
         const lakeHistory = (res.history ? res.history.lake || [] : []).map(e => ({
           ...e,
-          inspectorSeat: nameSeat(e.inspectorOpenId),
-          targetSeat: nameSeat(e.targetOpenId)
+          inspectorSeat: seatInfo(e.inspectorOpenId),
+          targetSeat: seatInfo(e.targetOpenId)
         }));
 
         this.setData({
@@ -393,6 +416,7 @@ Page({
           lakeHolderOpenId: res.current.lakeHolderOpenId || '',
           isLakeHolder: !!res.current.lakeHolderOpenId && res.current.lakeHolderOpenId === myOpenId,
           lakeTargetOpenId: phase === 'lake' ? this.data.lakeTargetOpenId : '',
+          oldLakeOpenIds: [...oldLakeOpenIds],
           revealConfirmed: res.player ? !!res.player.revealConfirmed : false,
           revealConfirmedCount: res.current.revealConfirmedCount || 0,
           revealTotalCount: res.current.revealTotalCount || 0,
@@ -666,10 +690,10 @@ Page({
     if (currentPhase === 'preNominate' || currentPhase === 'discussion') {
       this.nominatePlayer(e);
     } else if (currentPhase === 'lake') {
-      // 湖仙验人：持有者点击卡片单选目标（不可选自己），底部按钮确认
+      // 湖仙验人：持有者点击卡片单选目标（不可选自己/老湖仙），底部按钮确认
       if (this.data.isLakeHolder) {
         const targetOpenId = e.currentTarget.dataset.id;
-        if (targetOpenId && targetOpenId !== this.data.playerId) {
+        if (targetOpenId && targetOpenId !== this.data.playerId && !this.data.oldLakeOpenIds.includes(targetOpenId)) {
           this.setData({ lakeTargetOpenId: targetOpenId });
         }
       }
@@ -686,14 +710,24 @@ Page({
       return;
     }
     wx.showLoading({ title: '验人中...', mask: true });
-    api.lakeInspect(gameId, lakeTargetOpenId).then(() => {
+    api.lakeInspect(gameId, lakeTargetOpenId).then(res => {
       wx.hideLoading();
-      this.setData({ lakeTargetOpenId: '' });
+      const lake = (res && res.history && res.history.lake) || [];
+      const last = lake[lake.length - 1];
+      this.setData({
+        lakeTargetOpenId: '',
+        showLakeResult: !!(last && last.result),
+        lakeResult: (last && last.result) || ''
+      });
       this.fetchGameState();
     }).catch(err => {
       wx.hideLoading();
       wx.showToast({ title: (err && err.message) || '验人失败', icon: 'none' });
     });
+  },
+
+  closeLakeResult() {
+    this.setData({ showLakeResult: false });
   },
 
   // lancelot 阶段：确认抽卡结果（全员确认后进入下一轮）
