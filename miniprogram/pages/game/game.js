@@ -423,7 +423,7 @@ Page({
           hasTeamVoted: !!(res.current.teamVoteStatus && res.current.teamVoteStatus[myOpenId] === 'voted'),
           canAssassinateVar: ['assassin', 'morgana'].includes(myRole),
           evilOpenEyes: res.current.evilOpenEyes || [],
-          gameWinner: res.basic && res.basic.result && res.basic.result.winner ? res.basic.result.winner : (missions.filter(r => r.success).length >= 3 ? 'good' : 'evil'),
+          gameWinner: (res.basic && res.basic.result && res.basic.result.winner) || null,
           hasSpeechTimeout: this._getSpeechTimeout() > 0,
         });
 

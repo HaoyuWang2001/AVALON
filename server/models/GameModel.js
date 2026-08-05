@@ -427,9 +427,10 @@ class GameModel {
 
         await connection.execute(
           `UPDATE games 
-           SET status = 'abandoned', ended_at = NOW(), updated_at = NOW()
+           SET status = 'abandoned', current_phase = 'gameEnd', ended_at = NOW(),
+               game_result = ?, updated_at = NOW()
            WHERE id = ?`,
-          [gameId]
+          [JSON.stringify({ winner: null, reason: '房主放弃游戏', abandoned: true }), gameId]
         );
 
         const roomId = game[0].room_id;

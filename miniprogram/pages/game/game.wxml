@@ -176,12 +176,17 @@
 
     <!-- gameEnd -->
     <block wx:if="{{currentPhase === 'gameEnd'}}">
-      <view class="bar-row">
+      <!-- 房主放弃/异常结束：无胜负 -->
+      <view class="bar-row" wx:if="{{gameResult && gameResult.abandoned}}">
+        <view class="gameend-title">游戏已放弃</view>
+      </view>
+      <!-- 正常结束：蓝/红方获胜 -->
+      <view class="bar-row" wx:else>
         <image src="/images/{{gameWinner === 'good' ? 'avalon-blue.png' : 'avalon-red.png'}}" class="gameend-img" mode="aspectFit"></image>
         <view class="gameend-title">{{gameWinner === 'good' ? '蓝方获胜' : '红方获胜'}}</view>
       </view>
-      <!-- 历史对局入口：返回首页 -->
-      <view class="bar-row" wx:if="{{fromHistory}}">
+      <!-- 历史对局入口 或 已放弃：返回首页 -->
+      <view class="bar-row" wx:if="{{fromHistory || (gameResult && gameResult.abandoned)}}">
         <button size="mini" class="btn btn-primary" bindtap="goHome">返回首页</button>
       </view>
       <!-- 房主：返回房间；非房主：离开房间 -->
