@@ -212,6 +212,9 @@ Page({
     socketReconnecting: false,
     isEvilEyesUser: false,
     gameAssassination: null,
+    showAssassinationAnim: false,
+    assassinationSuccess: false,
+    assassinationPhase: '',
   },
 
   onLoad(options) {
@@ -248,6 +251,8 @@ Page({
 
   onUnload() {
     this._stopTimer();
+    if (this._assnAnimTimer) clearTimeout(this._assnAnimTimer);
+    if (this._assnAnimTimer2) clearTimeout(this._assnAnimTimer2);
     api.disconnectSocket();
   },
 
@@ -499,6 +504,11 @@ Page({
         if (phase === 'gameEnd') {
           api.disconnectSocket();
           this.setData({ socketReconnecting: false });
+          // 刺杀结算动画：从活跃阶段首次进入 gameEnd 且有刺杀记录时播放（全员）
+          const prevPhase = this.data.currentPhase;
+          if (gameAssassination && prevPhase && prevPhase !== 'gameEnd') {
+            this.playAssassinationAnim(gameAssassination.correct);
+          }
         } else if (!api._socketTask && this.data.roomId) {
           api.connectSocket(this.data.roomId, app.globalData.openId);
         }
@@ -774,6 +784,19 @@ Page({
 
   closeLakeResult() {
     this.setData({ showLakeResult: false });
+  },
+
+  // 刺杀结算全屏动画：阶段1 刀落下 → 阶段2 成功/失败，全员播放
+  playAssassinationAnim(correct) {
+    this.setData({ showAssassinationAnim: true, assassinationSuccess: !!correct, assassinationPhase: 'knife' });
+    if (this._assnAnimTimer) clearTimeout(this._assnAnimTimer);
+    if (this._assnAnimTimer2) clearTimeout(this._assnAnimTimer2);
+    this._assnAnimTimer = setTimeout(() => {
+      this.setData({ assassinationPhase: 'result' });
+      this._assnAnimTimer2 = setTimeout(() => {
+        this.setData({ showAssassinationAnim: false, assassinationPhase: '' });
+      }, 1400);
+    }, 1200);
   },
 
   // lancelot 阶段：确认抽卡结果（全员确认后进入下一轮）

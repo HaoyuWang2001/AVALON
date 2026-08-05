@@ -374,5 +374,22 @@
       <view class="reconnect-text">连接中断，正在重连...</view>
     </view>
   </view>
+
+  <!-- 刺杀结算全屏动画：阶段1 刀落下 → 阶段2 成功/失败 -->
+  <view class="assassin-anim" wx:if="{{showAssassinationAnim}}">
+    <view class="assassin-anim-bg {{assassinationSuccess ? 'anim-success' : 'anim-fail'}}"></view>
+    <view class="assassin-anim-scene" wx:if="{{assassinationPhase === 'knife'}}">
+      <text class="assassin-knife">🔪</text>
+    </view>
+    <view class="assassin-anim-scene" wx:if="{{assassinationPhase === 'result'}}">
+      <view class="assassin-anim-ring r1"></view>
+      <view class="assassin-anim-ring r2"></view>
+      <view class="assassin-anim-ring r3"></view>
+      <view class="assassin-anim-center">
+        <text class="assassin-anim-emoji">{{assassinationSuccess ? '💀' : '🛡️'}}</text>
+        <text class="assassin-anim-text">{{assassinationSuccess ? '刺杀成功' : '刺杀失败'}}</text>
+      </view>
+    </view>
+  </view>
 </view>
 </view>
