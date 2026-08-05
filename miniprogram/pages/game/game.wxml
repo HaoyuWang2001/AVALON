@@ -278,15 +278,14 @@
       <view class="role-vision" wx:if="{{visionList.length > 0}}">
         <view wx:for="{{visionList}}" wx:key="openId" class="role-vision-item">
           <view class="role-vision-seat" wx:if="{{item.seat}}">{{item.seat}}</view>
-          <image src="{{item.avatar}}" class="role-vision-avatar"></image>
-          <text class="role-vision-name">{{item.name}}</text>
+          <view class="role-vision-spacer"></view>
           <view class="role-vision-tags">
             <text wx:if="{{item.roleText}}" class="role-vision-tag role-vision-tag-role">{{item.roleText}}</text>
             <text wx:if="{{item.campText}}" class="role-vision-tag {{item.side === 'evil' ? 'tag-evil' : 'tag-good'}}">{{item.campText}}</text>
           </view>
         </view>
       </view>
-      <button wx:if="{{canAssassinateVar}}" class="btn btn-danger role-card-btn" bindtap="startAssassination">开始刺杀</button>
+      <button wx:if="{{canAssassinateVar}}" class="btn btn-sm btn-ghost" bindtap="startAssassination">开始刺杀</button>
       <button class="btn btn-primary role-card-btn" bindtap="closeRoleModal">隐藏身份</button>
     </view>
   </view>
