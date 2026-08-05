@@ -570,11 +570,7 @@ Page({
       // 确认成功：进入等待状态——保持身份页，隐藏按钮，显示紫色加载
       this.setData({ roleWaiting: true, showRoleMask: false });
       this.fetchGameState();
-      if (res && res.current && res.current.phase === 'discussion') {
-        // 已是最后确认者，全员确认完成 → 进入 discussion
-        this.setData({ showRolePage: false, showRoleModal: false });
-        wx.showToast({ title: '全员已确认，进入讨论', icon: 'success' });
-      }
+      // 全员确认后后端进入 preNominate，fetchGameState 的 phase!=='roleReveal' 分支自动关闭身份页
     }).catch(err => {
       wx.showToast({ title: (err && err.message) || '确认失败', icon: 'none' });
     });
@@ -610,11 +606,14 @@ Page({
 
   // 全屏页"隐藏身份"（若 roleReveal 未确认则触发确认）
   closeRolePage() {
-    if (this.data.currentPhase === 'roleReveal' && !this.data.revealConfirmed) {
-      this.confirmRoleReveal();
-    } else {
-      this.setData({ showRolePage: false });
+    if (this.data.currentPhase === 'roleReveal') {
+      // roleReveal：未确认则确认；已确认（等待他人）不可关闭身份页
+      if (!this.data.revealConfirmed) {
+        this.confirmRoleReveal();
+      }
+      return;
     }
+    this.setData({ showRolePage: false });
   },
 
   backToHome() {
