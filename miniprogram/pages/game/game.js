@@ -36,9 +36,9 @@ function enrichTablePlayer(p, ctx) {
 
   // 复选框勾选：本地临时选中（preNominate/discussion 车主选车）
   const checked = !!(localSelected || []).includes(p.openId);
-  // discussion 确认发车：已选满 requiredTeamSize 后，未选玩家复选框禁用（已选的可取消）
+  // 已选满 requiredTeamSize 后，未选玩家复选框禁用（已选的可取消）；preNominate 允许 0~车人数
   const atLimit = (localSelected || []).length >= (requiredTeamSize || 0);
-  const disabled = currentPhase === 'discussion' && atLimit && !checked;
+  const disabled = atLimit && !checked;
 
   // 刺杀阶段：睁眼狼淡红背景 + 角色名标签
   const isEvilEyes = currentPhase === 'assassination'
@@ -663,13 +663,12 @@ Page({
     const sel = this.data.localSelected.slice();
     const i = sel.indexOf(playerId);
     if (i === -1) sel.push(playerId); else sel.splice(i, 1);
-    // 重算所有玩家的 checked/disabled（基于新 localSelected，保证达到上限后立即禁用）
+    // 重算所有玩家的 checked/disabled（基于新 localSelected，保证达到上限后立即禁用；preNominate 允许 0~车人数）
     const requiredSize = this.data.requiredTeamSize || 0;
-    const isDiscussion = this.data.currentPhase === 'discussion';
     const atLimit = sel.length >= requiredSize;
     const tablePlayers = this.data.tablePlayers.map(p => {
       const checked = sel.includes(p.openId);
-      const disabled = isDiscussion && atLimit && !checked;
+      const disabled = atLimit && !checked;
       return { ...p, checked, disabled };
     });
     this.setData({ localSelected: sel, tablePlayers });
