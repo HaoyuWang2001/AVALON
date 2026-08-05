@@ -1270,8 +1270,8 @@ class GameModel {
           throw new Error('被查验者不在本局游戏中');
         }
         const [used] = await connection.execute(
-          'SELECT COUNT(*) as cnt FROM lake_history WHERE game_id = ? AND target_open_id = ?',
-          [gameId, targetOpenId]
+          'SELECT COUNT(*) as cnt FROM lake_history WHERE game_id = ? AND (target_open_id = ? OR inspector_open_id = ?)',
+          [gameId, targetOpenId, targetOpenId]
         );
         if (parseInt(used[0].cnt, 10) > 0) {
           throw new Error('该玩家已当过湖仙，不可重复查验');

@@ -345,8 +345,13 @@ Page({
           .map(seatOf).join(' ');
         // 当前轮队伍人数（用本轮 round 局部变量，避免 setData 异步读旧 currentRound）
         const teamSize = getTeamSizeByRound((res.players || []).length, round);
-        // 老湖仙集合：所有已被查验过（lake_history.target_open_id）的玩家
-        const oldLakeOpenIds = new Set((res.history ? res.history.lake || [] : []).map(e => e.targetOpenId));
+        // 老湖仙集合：持有过湖仙令牌的玩家（验人者 inspector ∪ 被查验者 target），
+        // 首位持有者作为验人者也在集合内；与后端 exhausted 逻辑一致
+        const oldLakeOpenIds = new Set();
+        (res.history ? res.history.lake || [] : []).forEach(e => {
+          oldLakeOpenIds.add(e.inspectorOpenId);
+          oldLakeOpenIds.add(e.targetOpenId);
+        });
         // 长桌玩家富化（预计算 checked/cardState/标签，避免 wxml 函数调用）
         const hostOpenId = (res.players || []).find(p => p.isHost) ? (res.players || []).find(p => p.isHost).openId : '';
         const tablePlayers = (res.players || []).map(p => enrichTablePlayer(p, {
