@@ -438,6 +438,13 @@
 .role-vision { width: 100%; border-top: 1rpx solid #E5E7EB; padding-top: 24rpx; margin-bottom: 28rpx; }
 .role-vision-item { display: flex; align-items: center; padding: 14rpx 0; }
 .role-vision-avatar { width: 72rpx; height: 72rpx; border-radius: 50%; margin-right: 20rpx; background: #F3F4F6; }
+.role-vision-seat {
+  width: 48rpx; height: 48rpx; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: #fff; font-size: 26rpx; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-right: 14rpx; flex-shrink: 0;
+}
 .role-vision-name { flex: 1; font-size: 30rpx; color: #111827; font-weight: 600; }
 .role-vision-tags { display: flex; gap: 10rpx; flex-wrap: wrap; align-items: center; }
 .role-vision-tag { font-size: 26rpx; font-weight: 700; padding: 6rpx 20rpx; border-radius: 22rpx; background: #EDE9FE; color: #6D28D9; }

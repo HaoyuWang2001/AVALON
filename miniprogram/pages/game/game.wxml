@@ -225,6 +225,7 @@
       <view class="role-vision" wx:if="{{visionList.length > 0}}">
         <view wx:for="{{visionList}}" wx:key="openId" class="role-vision-item">
           <image src="{{item.avatar}}" class="role-vision-avatar"></image>
+          <view class="role-vision-seat" wx:if="{{item.seat}}">{{item.seat}}</view>
           <text class="role-vision-name">{{item.name}}</text>
           <view class="role-vision-tags">
             <text wx:if="{{item.roleText}}" class="role-vision-tag role-vision-tag-role">{{item.roleText}}</text>
@@ -259,6 +260,7 @@
       <view class="role-vision" wx:if="{{visionList.length > 0}}">
         <view wx:for="{{visionList}}" wx:key="openId" class="role-vision-item">
           <image src="{{item.avatar}}" class="role-vision-avatar"></image>
+          <view class="role-vision-seat" wx:if="{{item.seat}}">{{item.seat}}</view>
           <text class="role-vision-name">{{item.name}}</text>
           <view class="role-vision-tags">
             <text wx:if="{{item.roleText}}" class="role-vision-tag role-vision-tag-role">{{item.roleText}}</text>

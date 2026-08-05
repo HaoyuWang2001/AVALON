@@ -286,6 +286,7 @@ Page({
           const np = (res.players || []).find(x => x.openId === v.openId);
           return {
             openId: v.openId,
+            seat: np && np.seatNumber != null ? np.seatNumber : null,
             name: np ? np.nickName : '?',
             avatar: np && np.avatarUrl ? np.avatarUrl : '/images/default-avatar.png',
             role: v.role || null,
