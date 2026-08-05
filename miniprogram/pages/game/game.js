@@ -527,16 +527,18 @@ Page({
           this._stopTimer();
         }
         if (phase === 'roleReveal' && res.player && res.player.role) {
-          // 身份页显示在蒙版下方（而非 room 样式棋盘）
-          this.setData({ showRolePage: true });
-          if (!this.data.revealConfirmed) {
-            // roleReveal 未确认：蒙版盖在身份页上；已点击确认（roleWaiting）则不再弹蒙版
-            this.setData({ showRoleMask: !this.data.roleWaiting });
+          // 身份页显示在蒙版下方；等待态（span/按钮）只由后端 revealConfirmed 派生
+          const confirmed = !!this.data.revealConfirmed;
+          this.setData({ showRolePage: true, roleWaiting: confirmed });
+          if (!confirmed) {
+            // 未确认：蒙版盖在身份页上 + 确认身份按钮
+            this.setData({ showRoleMask: true });
             // 禁用返回手势：roleReveal 未确认时必须点按钮才能继续
             if (wx.enableAlertBeforeUnload) {
               wx.enableAlertBeforeUnload({ message: '是否暂时挂起游戏回到首页？' });
             }
           } else {
+            // 已确认：无蒙版，显示「等待其他玩家确认身份」span
             this.setData({ showRoleMask: false });
           }
         } else {
