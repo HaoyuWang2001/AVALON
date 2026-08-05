@@ -37,9 +37,10 @@
     </view>
 
     <view class="flow-area">
-      <!-- gameEnd：胜负原因替代流车指示 -->
+      <!-- gameEnd：原因显示框（刺杀链路 + 胜负原因）替代流车指示 -->
       <view class="flow-reason" wx:if="{{currentPhase === 'gameEnd'}}">
-        {{gameResult && gameResult.abandoned ? '游戏已放弃：' : (gameWinner === 'good' ? '蓝方获胜：' : '红方获胜：')}}{{gameResult && gameResult.reason}}
+        <view class="flow-reason-chain" wx:if="{{gameAssassination}}">刺客刺杀 {{gameAssassination.targetSeat}}号 · {{gameAssassination.correct ? '刺杀成功' : '刺杀失败'}}</view>
+        <view class="flow-reason-result">{{gameResult && gameResult.abandoned ? '游戏已放弃：' : (gameWinner === 'good' ? '蓝方获胜：' : '红方获胜：')}}{{gameResult && gameResult.reason}}</view>
       </view>
       <view class="flow-cars" wx:else>
         <block wx:for="{{flowCars}}" wx:key="index">
@@ -204,11 +205,8 @@
         <text class="gameend-emoji">🏳️</text>
         <view class="gameend-title">游戏已放弃</view>
       </view>
-      <!-- 正常结束：刺杀链路 + 胜负 -->
+      <!-- 正常结束：胜负 -->
       <block wx:else>
-        <view class="bar-row" wx:if="{{gameAssassination}}">
-          <view class="gameend-chain">刺客刺杀了 {{gameAssassination.targetSeat}}号 · {{gameAssassination.correct ? '刺杀成功' : '刺杀失败'}}</view>
-        </view>
         <view class="bar-row">
           <image src="/images/{{gameWinner === 'good' ? 'avalon-blue.png' : 'avalon-red.png'}}" class="gameend-img" mode="aspectFit"></image>
           <view class="gameend-title">{{gameWinner === 'good' ? '蓝方获胜' : '红方获胜'}}</view>
