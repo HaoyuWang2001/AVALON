@@ -66,7 +66,13 @@ function enrichTablePlayer(p, ctx) {
       else if (vote === 'reject') cardState = 'state-rejected';
       else if (inTeam) cardState = 'state-team';
     }
+  } else if (currentPhase === 'gameEnd') {
+    // 游戏结束：按阵营着色（仅判断 side）
+    cardState = p.side === 'evil' ? 'state-gameend-evil' : 'state-gameend-good';
   }
+
+  // 游戏结束：全员身份名（右侧徽标）
+  const roleName = currentPhase === 'gameEnd' ? getRoleNameLocal(p.role) : '';
 
   // 标签数组：车主(金) / 我(紫) / 房主(蓝) / 湖仙(粉) / 预选(橙) / 睁眼狼角色(红)，可叠加
   const tags = [];
@@ -98,6 +104,7 @@ function enrichTablePlayer(p, ctx) {
     isLeader: p.openId === leaderOpenId,
     isOldLake,
     evilRoleName,
+    roleName,
     tags
   };
 }
@@ -205,6 +212,7 @@ Page({
     oldLakeOpenIds: [],
     socketReconnecting: false,
     isEvilEyesUser: false,
+    gameAssassination: null,
   },
 
   onLoad(options) {
@@ -406,6 +414,17 @@ Page({
           targetSeat: seatInfo(e.targetOpenId)
         }));
 
+        // 刺杀链路：仅刺杀结算时有 assassination 记录
+        const asn = res.basic && res.basic.result && res.basic.result.assassination;
+        let gameAssassination = null;
+        if (asn) {
+          const tp = (res.players || []).find(x => x.openId === asn.target);
+          gameAssassination = {
+            targetSeat: tp ? tp.seatNumber : '?',
+            correct: !!asn.correct
+          };
+        }
+
         this.setData({
           gameState: res.current,
           playerRole: myRole,
@@ -471,6 +490,7 @@ Page({
           evilOpenEyes: res.current.evilOpenEyes || [],
           isEvilEyesUser: (res.current.evilOpenEyes || []).some(e => e.openId === myOpenId),
           gameWinner: (res.basic && res.basic.result && res.basic.result.winner) || null,
+          gameAssassination: gameAssassination,
           hasSpeechTimeout: this._getSpeechTimeout() > 0,
         });
 
@@ -715,7 +735,10 @@ Page({
         }
       }
     } else if (currentPhase === 'assassination') {
-      this.assassinate(e);
+      // 仅刺客/莫甘娜（canAssassinateVar）可点击卡片刺杀；非刺客点击无反应
+      if (this.data.canAssassinateVar) {
+        this.assassinate(e);
+      }
     }
   },
 

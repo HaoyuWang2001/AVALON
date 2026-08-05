@@ -73,6 +73,7 @@
         </view>
       </view>
       <view wx:if="{{item.evilRoleName}}" class="tplayer-evil-role">{{item.evilRoleName}}</view>
+      <view wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="tplayer-gameend-role">{{item.roleName}}</view>
       <view wx:if="{{showSelectCheck}}" class="table-check {{item.checked ? 'checked' : ''}} {{item.disabled ? 'disabled' : ''}}"
         catchtap="onTablePlayerTap" data-id="{{item.openId}}">
         <text wx:if="{{item.checked}}">✓</text>
@@ -198,24 +199,20 @@
       <view class="bar-row" wx:if="{{gameResult && gameResult.abandoned}}">
         <view class="gameend-title">游戏已放弃</view>
       </view>
-      <!-- 正常结束：蓝/红方获胜 -->
-      <view class="bar-row" wx:else>
-        <image src="/images/{{gameWinner === 'good' ? 'avalon-blue.png' : 'avalon-red.png'}}" class="gameend-img" mode="aspectFit"></image>
-        <view class="gameend-title">{{gameWinner === 'good' ? '蓝方获胜' : '红方获胜'}}</view>
-      </view>
-      <!-- 历史对局入口 或 已放弃：返回首页 -->
-      <view class="bar-row" wx:if="{{fromHistory || (gameResult && gameResult.abandoned)}}">
-        <button size="mini" class="btn btn-primary" bindtap="goHome">返回首页</button>
-      </view>
-      <!-- 房主：返回房间；非房主：离开房间 -->
+      <!-- 正常结束：刺杀链路 + 胜负 -->
       <block wx:else>
-        <view class="bar-row" wx:if="{{isHost}}">
-          <button size="mini" class="btn btn-primary" bindtap="endGame">返回房间</button>
+        <view class="bar-row" wx:if="{{gameAssassination}}">
+          <view class="gameend-chain">刺客刺杀了 {{gameAssassination.targetSeat}}号 · {{gameAssassination.correct ? '刺杀成功' : '刺杀失败'}}</view>
         </view>
-        <view class="bar-row" wx:else>
-          <button size="mini" class="btn btn-secondary" bindtap="leaveRoom">离开房间</button>
+        <view class="bar-row">
+          <image src="/images/{{gameWinner === 'good' ? 'avalon-blue.png' : 'avalon-red.png'}}" class="gameend-img" mode="aspectFit"></image>
+          <view class="gameend-title">{{gameWinner === 'good' ? '蓝方获胜' : '红方获胜'}}</view>
         </view>
       </block>
+      <!-- 统一返回首页 -->
+      <view class="bar-row">
+        <button size="mini" class="btn btn-primary" bindtap="goHome">返回首页</button>
+      </view>
     </block>
   </view>
 

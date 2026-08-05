@@ -153,6 +153,23 @@
   background: #FEE2E2;
 }
 
+/* 游戏结束：全员按阵营着色（好人蓝/坏人红，坏人红同刺杀阶段） */
+.table-player.state-gameend-good { background: #DBEAFE; }
+.table-player.state-gameend-evil { background: #FEE2E2; }
+
+/* 游戏结束身份徽标（卡片右侧）：白底深字加粗，蓝/红底上都清晰 */
+.tplayer-gameend-role {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  padding: 10rpx 22rpx;
+  border-radius: 14rpx;
+  background: #FFFFFF;
+  color: #111827;
+  font-size: 32rpx;
+  font-weight: 700;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.08);
+}
+
 /* 刺杀阶段睁眼狼角色名（卡片右侧）：深红底、浅红字、加粗放大 */
 .tplayer-evil-role {
   flex-shrink: 0;
@@ -363,6 +380,8 @@
 /* gameEnd 结果（底部框） */
 .gameend-img { width: 160rpx; height: 160rpx; }
 .gameend-title { font-size: 44rpx; font-weight: 800; color: #111827; margin-left: 20rpx; }
+/* 刺杀链路：先指名→成功/失败→胜负 */
+.gameend-chain { font-size: 30rpx; font-weight: 600; color: #374151; }
 
 /* 队伍成员样式 */
 .team-member { display: flex; flex-direction: column; align-items: center; margin: 20rpx; }
