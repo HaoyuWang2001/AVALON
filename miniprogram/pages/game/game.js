@@ -417,6 +417,21 @@ Page({
           targetSeat: seatInfo(e.targetOpenId)
         }));
 
+        // 湖仙查验实时通知：新查验发生时向非验人者提示（结果保密）
+        const rawLake = res.history ? res.history.lake || [] : [];
+        if (rawLake.length > 0) {
+          const lastLake = rawLake[rawLake.length - 1];
+          const lakeKey = `${lastLake.round}:${lastLake.inspectorOpenId}:${lastLake.targetOpenId}`;
+          if (this._lastLakeKey !== lakeKey) {
+            this._lastLakeKey = lakeKey;
+            if (lastLake.inspectorOpenId !== myOpenId) {
+              const lp = (res.players || []).find(x => x.openId === lastLake.targetOpenId);
+              const lSeat = lp ? lp.seatNumber : '?';
+              wx.showToast({ title: `湖仙查验了 ${lSeat}号（结果保密）`, icon: 'none' });
+            }
+          }
+        }
+
         // 刺杀链路：仅刺杀结算时有 assassination 记录
         const asn = res.basic && res.basic.result && res.basic.result.assassination;
         let gameAssassination = null;
