@@ -656,11 +656,12 @@ Page({
       }
     }).then(res => {
       if (res.success) {
-        // 不主动关闭配置页：保持最后可见页面直到跳转房间页时自然关闭
+        // navigateTo 保留 index 在栈底，需先关闭配置弹窗，避免返回时仍显示
+        this.setData({ showConfig: false });
         const app = getApp();
         app.globalData.roomId = res.roomId;
         wx.hideLoading();
-        wx.redirectTo({ url: `/pages/room/room?roomId=${res.roomId}&isHost=true` });
+        wx.navigateTo({ url: `/pages/room/room?roomId=${res.roomId}&isHost=true` });
       } else {
         wx.hideLoading();
         wx.showToast({ title: res.message || '创建失败', icon: 'error' });
@@ -693,7 +694,7 @@ Page({
       if (res.success) {
         const app = getApp();
         app.globalData.roomId = roomId;
-        wx.redirectTo({ url: `/pages/room/room?roomId=${roomId}&isHost=false` });
+        wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}&isHost=false` });
       }
     });
   }

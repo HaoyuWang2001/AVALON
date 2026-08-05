@@ -238,15 +238,10 @@ Page({
     api.onSocketMessage('gameUpdated', () => { this.fetchGameState(); });
     api.onSocketMessage('gameState', () => { this.fetchGameState(); });
     api.onSocketStatus(status => { this.onSocketStatusChange(status); });
-    api.connectSocket(roomId || '', app.globalData.openId);
   },
 
   onShow() {
     this.fetchGameState();
-    // 后台/熄屏后 socket 可能已断开：onShow 兜底主动重连（不依赖后台被节流的定时器）
-    if (!api._socketTask && this.data.roomId) {
-      api.connectSocket(this.data.roomId, app.globalData.openId);
-    }
   },
 
   onHide() {},
@@ -254,6 +249,11 @@ Page({
   onUnload() {
     this._stopTimer();
     api.disconnectSocket();
+  },
+
+  // 下拉刷新：强制 HTTP fetch 恢复（活跃对局服务端不可达/断链时手动恢复）
+  onPullDownRefresh() {
+    this.fetchGameState().finally(() => wx.stopPullDownRefresh());
   },
 
   // socket 连接状态变化：断链→显示重连 loading；恢复→隐藏并同步一次状态
@@ -269,7 +269,7 @@ Page({
 
   fetchGameState() {
     const { gameId } = this.data;
-    api.getGameState(gameId).then(res => {
+    return api.getGameState(gameId).then(res => {
       if (res.success && res.current) {
         const phase = res.current.phase || 'roleReveal';
         const round = res.current.round || 1;
@@ -494,6 +494,14 @@ Page({
 
         // 底部栏高度随阶段动态变化：渲染后重新测量，校准玩家列表底部留白
         wx.nextTick(() => { this.measureBottomBar(); });
+
+        // socket 生命周期：游戏结束断开且不重连；活跃阶段首次获取状态后惰性建链
+        if (phase === 'gameEnd') {
+          api.disconnectSocket();
+          this.setData({ socketReconnecting: false });
+        } else if (!api._socketTask && this.data.roomId) {
+          api.connectSocket(this.data.roomId, app.globalData.openId);
+        }
 
         // gameEnd 结果由底部框展示（wxml currentPhase === 'gameEnd' 渲染）
 

@@ -368,9 +368,9 @@
     </view>
   </view>
 
-  <!-- socket 断链重连遮罩 -->
+  <!-- socket 断链重连遮罩（mask 不拦 touchmove，保证下拉刷新可穿透触发） -->
   <view class="reconnect-overlay" wx:if="{{socketReconnecting}}">
-    <view class="reconnect-mask" catchtap="noop" catchtouchmove="noop"></view>
+    <view class="reconnect-mask" catchtap="noop"></view>
     <view class="reconnect-box">
       <view class="reconnect-spinner"></view>
       <view class="reconnect-text">连接中断，正在重连...</view>
