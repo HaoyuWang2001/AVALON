@@ -583,7 +583,7 @@ Page({
   },
 
   onLadyRoundChange(e) {
-    this.setData({ ladyOfTheLakeRound: e.detail.value });
+    this.setData({ ladyOfTheLakeRound: e.detail.value + 1 });
   },
 
   onSpectatorToggle() {
