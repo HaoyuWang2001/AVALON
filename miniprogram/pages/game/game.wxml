@@ -1,7 +1,7 @@
 <!--pages/game/game.wxml-->
 <view class="game-page">
-  <!-- 顶部操作栏（公共组件：左=暂回首页 右=炸掉会议）；历史对局入口不展示 -->
-  <top-bar wx:if="{{!fromHistory}}">
+  <!-- 顶部操作栏（公共组件：左=暂回首页 右=炸掉会议）；游戏结束阶段不展示（同历史对局） -->
+  <top-bar wx:if="{{currentPhase !== 'gameEnd'}}">
     <text slot="left" class="btn-round btn-purple" bindtap="backToHome">暂回首页</text>
     <text slot="right" class="btn-round btn-danger" bindtap="abandonGame" wx:if="{{isHost}}">炸掉会议</text>
   </top-bar>
@@ -37,7 +37,11 @@
     </view>
 
     <view class="flow-area">
-      <view class="flow-cars">
+      <!-- gameEnd：胜负原因替代流车指示 -->
+      <view class="flow-reason" wx:if="{{currentPhase === 'gameEnd'}}">
+        {{gameResult && gameResult.abandoned ? '游戏已放弃：' : (gameWinner === 'good' ? '蓝方获胜：' : '红方获胜：')}}{{gameResult && gameResult.reason}}
+      </view>
+      <view class="flow-cars" wx:else>
         <block wx:for="{{flowCars}}" wx:key="index">
           <view class="flow-car {{item.state}} {{item.isLast ? 'last' : ''}} {{item.isForced ? 'is-forced' : ''}}">
             <text class="flow-car-icon">{{item.state === 'failed' ? '🚫' : (item.isLast ? '⚡' : '')}}</text>

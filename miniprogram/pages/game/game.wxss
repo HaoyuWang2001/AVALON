@@ -37,6 +37,8 @@
 /* 流车图（置于卡片左侧，上边距加大，灰实线分隔） */
 .flow-area { margin: 40rpx 40rpx 0 20rpx; padding: 32rpx 32rpx 10rpx; border-top: 2rpx solid #E5E7EB; }
 .flow-cars { display: flex; align-items: flex-end; justify-content: flex-start; gap: 28rpx; }
+/* 游戏结束：胜负原因（替代流车指示） */
+.flow-reason { font-size: 28rpx; font-weight: 600; color: #374151; text-align: center; padding-bottom: 20rpx; }
 .flow-car {
   position: relative;
   width: 48rpx; height: 72rpx; border-radius: 14rpx;

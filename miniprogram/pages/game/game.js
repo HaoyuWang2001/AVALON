@@ -128,7 +128,6 @@ Page({
   data: {
     roomId: '',
     gameId: '',
-    fromHistory: false,
     gameState: null,
     playerRole: null,
     playerSide: null,
@@ -216,7 +215,7 @@ Page({
   },
 
   onLoad(options) {
-    const { roomId, gameId, fromHistory } = options;
+    const { roomId, gameId } = options;
     if (!gameId) {
       // 无有效 gameId（如游戏已结束/房间重置后误入），回退到房间页
       wx.showToast({ title: '游戏不存在或已结束', icon: 'none' });
@@ -234,7 +233,6 @@ Page({
       gameId: gameId || '',
       playerId: app.globalData.openId || '',
       userInfo: app.globalData.userInfo,
-      fromHistory: fromHistory === '1',
     });
 
     api.onSocketMessage('gameUpdated', () => { this.fetchGameState(); });
