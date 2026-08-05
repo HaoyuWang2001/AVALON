@@ -201,6 +201,7 @@
     <block wx:if="{{currentPhase === 'gameEnd'}}">
       <!-- 房主放弃/异常结束：无胜负 -->
       <view class="bar-row" wx:if="{{gameResult && gameResult.abandoned}}">
+        <text class="gameend-emoji">🏳️</text>
         <view class="gameend-title">游戏已放弃</view>
       </view>
       <!-- 正常结束：刺杀链路 + 胜负 -->

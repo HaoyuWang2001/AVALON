@@ -382,6 +382,8 @@
 /* gameEnd 结果（底部框） */
 .gameend-img { width: 160rpx; height: 160rpx; }
 .gameend-title { font-size: 44rpx; font-weight: 800; color: #111827; margin-left: 20rpx; }
+/* 游戏已放弃 emoji */
+.gameend-emoji { font-size: 120rpx; line-height: 1; }
 /* 刺杀链路：先指名→成功/失败→胜负 */
 .gameend-chain { font-size: 30rpx; font-weight: 600; color: #374151; }
 
