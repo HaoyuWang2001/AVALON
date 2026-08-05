@@ -98,7 +98,7 @@ Page({
     swiperPage: 0,
 
     allowSpectator: true,
-    maxSpectators: 1,
+    maxSpectators: '',
     spectatorLimited: false,
     spectatorLimitInvalid: false,
 
@@ -435,7 +435,7 @@ Page({
       const max = rc.spectator.max || 0;
       patch.allowSpectator = rc.spectator.allow !== false;
       patch.spectatorLimited = max > 0;
-      patch.maxSpectators = max > 0 ? max : 1;
+      patch.maxSpectators = max > 0 ? max : '';
     }
     if (rc.meta) {
       patch.roomName = rc.meta.roomName || '';
@@ -592,9 +592,7 @@ Page({
 
   onSpectatorLimitMode(e) {
     const limited = e.currentTarget.dataset.val === 'true';
-    let maxSpectators = this.data.maxSpectators;
-    if (limited && (!maxSpectators || maxSpectators < 1)) maxSpectators = 1;
-    this.setData({ spectatorLimited: limited, maxSpectators });
+    this.setData({ spectatorLimited: limited });
   },
 
   onSpectatorLimitInput(e) {

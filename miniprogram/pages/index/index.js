@@ -106,7 +106,7 @@ Page({
     swiperPage: 0,
 
     allowSpectator: true,
-    maxSpectators: 1,
+    maxSpectators: '',
     spectatorLimited: false,
     spectatorLimitInvalid: false,
 
@@ -489,9 +489,7 @@ Page({
 
   onSpectatorLimitMode(e) {
     const limited = e.currentTarget.dataset.val === 'true';
-    let maxSpectators = this.data.maxSpectators;
-    if (limited && (!maxSpectators || maxSpectators < 1)) maxSpectators = 1;
-    this.setData({ spectatorLimited: limited, maxSpectators });
+    this.setData({ spectatorLimited: limited });
   },
 
   onSpectatorLimitInput(e) {

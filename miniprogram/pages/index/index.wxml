@@ -146,13 +146,15 @@
                 <text class="loyal-count">×{{loyalCount}}</text>
               </view>
               <view wx:for="{{['merlin','percival','lancelotBlue']}}" wx:key="*this"
-                class="role-card role-good {{selectedRoles[item] ? 'role-selected' : ''}}"
+                class="role-card {{selectedRoles[item] ? 'role-good' : ''}}"
                 data-role="{{item}}" bindtap="onRoleToggle">
                 <view class="role-img-placeholder">
                   <image src="/images/avalon-blue.png" class="role-img"/>
                 </view>
                 <text class="role-name">{{item === 'merlin' ? '梅林' : item === 'percival' ? '派西' : '蓝兰'}}</text>
-                <view class="role-check {{selectedRoles[item] ? 'check-on' : ''}}">
+                <!-- 梅林/派西必选：固定 ×1，无选中框 -->
+                <text wx:if="{{item === 'merlin' || item === 'percival'}}" class="loyal-count">×1</text>
+                <view wx:else class="role-check {{selectedRoles[item] ? 'check-on' : ''}}">
                   <text wx:if="{{selectedRoles[item]}}">✓</text>
                 </view>
               </view>
@@ -165,13 +167,15 @@
             <scroll-view class="role-scroll" scroll-x show-scrollbar="{{false}}">
             <view class="role-scroll-row">
               <view wx:for="{{['morgana','assassin','oberon','mordred','minion','lancelotRed']}}" wx:key="*this"
-                class="role-card role-evil {{selectedRoles[item] ? 'role-selected' : ''}}"
+                class="role-card {{selectedRoles[item] ? 'role-evil' : ''}}"
                 data-role="{{item}}" bindtap="onRoleToggle">
                 <view class="role-img-placeholder">
                   <image src="/images/avalon-red.png" class="role-img"/>
                 </view>
                 <text class="role-name">{{item === 'morgana' ? '莫甘娜' : item === 'assassin' ? '刺客' : item === 'oberon' ? '奥伯伦' : item === 'mordred' ? '莫德雷德' : item === 'minion' ? '爪牙' : '红兰'}}</text>
-                <view class="role-check {{selectedRoles[item] ? 'check-on' : ''}}">
+                <!-- 莫甘娜必选：固定 ×1，无选中框 -->
+                <text wx:if="{{item === 'morgana'}}" class="role-count-evil">×1</text>
+                <view wx:else class="role-check {{selectedRoles[item] ? 'check-on' : ''}}">
                   <text wx:if="{{selectedRoles[item]}}">✓</text>
                 </view>
               </view>

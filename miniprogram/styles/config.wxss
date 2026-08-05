@@ -55,15 +55,19 @@
   display: flex; flex-direction: column; align-items: center;
   transition: all 0.2s;
 }
-.role-selected { background: #F3E8FF; border-color: var(--primary-light); }
-.role-loyal { background: #ECFDF5; border-color: #6EE7B7; }
+/* 选中态：好人卡浅蓝 / 坏人卡浅红；未选中保持灰色 */
+.role-good { background: #DBEAFE; border-color: #93C5FD; }
+.role-evil { background: #FEE2E2; border-color: #FCA5A5; }
+.role-loyal { background: #DBEAFE; border-color: #93C5FD; }
 .role-img-placeholder {
   width: 80rpx; height: 80rpx; border-radius: 16rpx;
   background: linear-gradient(135deg, #EDE9FE, #DDD6FE);
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 10rpx;
 }
-.role-loyal .role-img-placeholder { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); }
+.role-loyal .role-img-placeholder { background: linear-gradient(135deg, #BFDBFE, #93C5FD); }
+.role-good .role-img-placeholder { background: linear-gradient(135deg, #BFDBFE, #93C5FD); }
+.role-evil .role-img-placeholder { background: linear-gradient(135deg, #FECACA, #FCA5A5); }
 .role-img-text { font-size: 36rpx; }
 .role-name { font-size: 24rpx; font-weight: 600; color: var(--gray-700); margin-bottom: 4rpx; }
 .role-check {
@@ -72,7 +76,8 @@
   font-size: 20rpx; color: transparent; margin-top: 4rpx;
 }
 .check-on { background: var(--primary); border-color: var(--primary); color: white; }
-.loyal-count { font-size: 28rpx; font-weight: 800; color: #059669; margin-top: 2rpx; }
+.loyal-count { font-size: 28rpx; font-weight: 800; color: #2563EB; margin-top: 2rpx; }
+.role-count-evil { font-size: 28rpx; font-weight: 800; color: #DC2626; margin-top: 2rpx; }
 
 /* ─────── Role summary ─────── */
 .role-summary { padding: 12rpx 28rpx; text-align: center; }
