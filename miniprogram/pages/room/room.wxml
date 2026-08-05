@@ -431,7 +431,7 @@
         <view class="nav-dots">
           <view wx:for="{{visiblePages}}" wx:key="*this" class="nav-dot {{index === logicalPage ? 'dot-active' : ''}}"></view>
         </view>
-        <view class="nav-btn btn-square {{logicalPage === visiblePages.length - 1 ? 'nav-disabled' : ''}}" bindtap="nextPage">下一步 ▶</view>
+        <view class="nav-btn btn-square {{(logicalPage === visiblePages.length - 1) || (logicalPage === 0 && roleWarning) ? 'nav-disabled' : ''}}" bindtap="nextPage">下一步 ▶</view>
       </view>
     </view>
   </view>

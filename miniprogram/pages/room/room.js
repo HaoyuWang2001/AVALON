@@ -629,7 +629,8 @@ Page({
   },
 
   nextPage() {
-    const { logicalPage, visiblePages } = this.data;
+    const { logicalPage, visiblePages, roleWarning } = this.data;
+    if (logicalPage === 0 && roleWarning) return;
     if (logicalPage < visiblePages.length - 1) {
       const newPage = logicalPage + 1;
       this.setData({ logicalPage: newPage, swiperPage: visiblePages[newPage] });
