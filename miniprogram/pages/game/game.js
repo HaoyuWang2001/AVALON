@@ -23,7 +23,7 @@ const TAG_STYLES = {
   gold: 'ptag-gold',
   orange: 'ptag-orange',
   red: 'ptag-red',
-  grey: 'ptag-grey'
+  grey: 'ptag-pink-deep'
 };
 
 // 为玩家卡片富化字段（checked/cardState/disabled/isLeader/tags[]）

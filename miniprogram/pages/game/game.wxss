@@ -241,7 +241,8 @@
 .ptag-gold { background: #FEF3C7; color: #B45309; }
 .ptag-orange { background: #FFEDD5; color: #C2410C; }
 .ptag-red { background: #FEE2E2; color: #EF4444; }
-.ptag-grey { background: #E5E7EB; color: #6B7280; }
+/* 老湖仙：与湖仙同粉色系，略深以区分 */
+.ptag-pink-deep { background: #FBCFE8; color: #9D174D; }
 /* 游戏记录中自己的座位号：紫色加粗 */
 .seat-me { color: #8B5CF6; font-weight: 700; }
 
