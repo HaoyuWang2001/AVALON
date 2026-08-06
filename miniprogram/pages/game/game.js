@@ -225,7 +225,6 @@ Page({
     assassinationPhase: '',
     missionVoteReady: false,
     voteCountdown: 0,
-    teamVoteReveal: false,
     revealApproveSeats: '',
     revealRejectSeats: '',
     showMissionAnim: false,
@@ -630,21 +629,21 @@ Page({
         // 队伍投票完成 → 任务投票（通过）或流车（否决）：5s 倒计时先让所有人看清票型
         const needsCountdown = (phase === 'missionVote' && prevPhaseForTransitions !== 'missionVote') || isTeamVoteReject;
         if (needsCountdown) {
-          this.setData({ missionVoteReady: false, voteCountdown: 5, teamVoteReveal: isTeamVoteReject });
+          this.setData({ missionVoteReady: false, voteCountdown: 5 });
           if (this._voteCountdownTimer) clearInterval(this._voteCountdownTimer);
           this._voteCountdownTimer = setInterval(() => {
             const n = this.data.voteCountdown - 1;
             if (n <= 0) {
               clearInterval(this._voteCountdownTimer);
               this._voteCountdownTimer = null;
-              this.setData({ voteCountdown: 0, missionVoteReady: true, teamVoteReveal: false });
+              this.setData({ voteCountdown: 0, missionVoteReady: true });
             } else {
               this.setData({ voteCountdown: n });
             }
           }, 1000);
         } else if (phase !== 'missionVote') {
-          // 流车票型展示期（teamVoteReveal）内不覆盖倒计时/展示态，由 interval 到 0 统一清除
-          if (!this.data.teamVoteReveal) {
+          // 票型倒计时展示期（voteCountdown>0，含流车）内不覆盖，由 interval 到 0 统一清除
+          if (this.data.voteCountdown <= 0) {
             this.setData({ missionVoteReady: false, voteCountdown: 0 });
             if (this._voteCountdownTimer) {
               clearInterval(this._voteCountdownTimer);

@@ -91,6 +91,20 @@
 
   <!-- 底部按钮框（fixed 常驻） -->
   <view class="bottom-bar">
+    <!-- 队伍投票结果票型倒计时（teamVote→missionVote/preNominate/discussion 统一，底部框内） -->
+    <block wx:if="{{voteCountdown > 0}}">
+      <view class="vote-countdown">
+        <image src="/images/stopwatch.png" class="timer-icon"></image>
+        <text class="vote-countdown-num">{{voteCountdown}}s</text>
+      </view>
+      <view class="bar-info vote-reveal-line">
+        <text class="txt-approve">同意：{{approveSeats || revealApproveSeats}}</text>
+        <text class="vote-line-sep"> / </text>
+        <text class="txt-reject">反对：{{rejectSeats || revealRejectSeats}}</text>
+      </view>
+    </block>
+
+    <block wx:if="{{voteCountdown === 0}}">
     <!-- roleReveal：确认进度 -->
     <block wx:if="{{currentPhase === 'roleReveal'}}">
       <view class="bar-info">已确认 {{revealConfirmedCount}}/{{revealTotalCount}}</view>
@@ -192,29 +206,15 @@
 
     <!-- missionVote -->
     <block wx:if="{{currentPhase === 'missionVote'}}">
-      <!-- 倒计时：stopwatch 在左、x s 在右，替代等待 span -->
-      <view wx:if="{{!missionVoteReady && voteCountdown > 0}}" class="vote-waiting">
-        <view class="vote-countdown">
-          <image src="/images/stopwatch.png" class="timer-icon"></image>
-          <text class="vote-countdown-num">{{voteCountdown}}s</text>
-        </view>
-      </view>
-      <view wx:elif="{{!isMissionTeamMember}}" class="vote-waiting">
+      <view wx:if="{{!isMissionTeamMember}}" class="vote-waiting">
         <view class="vote-waiting-spinner"></view>
       </view>
-      <view class="bar-info" wx:if="{{approveSeats}}" style="color:#10B981;font-weight:700;">赞成：{{approveSeats}}</view>
-      <view class="bar-info" wx:if="{{rejectSeats}}" style="color:#EF4444;font-weight:700;">反对：{{rejectSeats}}</view>
-    </block>
-
-    <!-- 流车票型 5s 展示（覆盖底部栏，显示刚结束的队伍投票结果） -->
-    <view class="teamvote-reveal" wx:if="{{teamVoteReveal}}">
-      <view class="vote-countdown">
-        <image src="/images/stopwatch.png" class="timer-icon"></image>
-        <text class="vote-countdown-num">{{voteCountdown}}s</text>
+      <view class="bar-info vote-reveal-line" wx:if="{{approveSeats || rejectSeats}}">
+        <text class="txt-approve">同意：{{approveSeats}}</text>
+        <text class="vote-line-sep"> / </text>
+        <text class="txt-reject">反对：{{rejectSeats}}</text>
       </view>
-      <view class="bar-info" wx:if="{{revealApproveSeats}}" style="color:#10B981;font-weight:700;">赞成：{{revealApproveSeats}}</view>
-      <view class="bar-info" wx:if="{{revealRejectSeats}}" style="color:#EF4444;font-weight:700;">反对：{{revealRejectSeats}}</view>
-    </view>
+    </block>
 
     <!-- assassination -->
     <block wx:if="{{currentPhase === 'assassination'}}">
@@ -247,6 +247,7 @@
       <view class="bar-row">
         <button size="mini" class="btn btn-primary" bindtap="goHome">返回首页</button>
       </view>
+    </block>
     </block>
   </view>
 
