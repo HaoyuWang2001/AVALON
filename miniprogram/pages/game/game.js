@@ -643,10 +643,13 @@ Page({
             }
           }, 1000);
         } else if (phase !== 'missionVote') {
-          this.setData({ missionVoteReady: false, voteCountdown: 0, teamVoteReveal: false });
-          if (this._voteCountdownTimer) {
-            clearInterval(this._voteCountdownTimer);
-            this._voteCountdownTimer = null;
+          // 流车票型展示期（teamVoteReveal）内不覆盖倒计时/展示态，由 interval 到 0 统一清除
+          if (!this.data.teamVoteReveal) {
+            this.setData({ missionVoteReady: false, voteCountdown: 0 });
+            if (this._voteCountdownTimer) {
+              clearInterval(this._voteCountdownTimer);
+              this._voteCountdownTimer = null;
+            }
           }
         }
 
