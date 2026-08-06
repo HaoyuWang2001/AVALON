@@ -363,7 +363,7 @@ function createRouter() {
       }
       
       if (error.message.includes('当前不是任务投票阶段') ||
-          error.message.includes('只有坏人才能破坏任务') ||
+          error.message.includes('只有红方才能破坏任务') ||
           error.message.includes('只有任务队成员才能投票') ||
           error.message.includes('已投票')) {
         return res.status(400).json({ 

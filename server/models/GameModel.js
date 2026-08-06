@@ -1021,14 +1021,14 @@ class GameModel {
 
         // 好人必须投成功（固定规则，按当前阵营 side）
         if (vote === 'fail' && currentSide !== 'evil') {
-          throw new Error('只有坏人才能破坏任务');
+          throw new Error('只有红方才能破坏任务');
         }
         // 必败强制：兰斯洛特（任意，当前为 evil 时）/奥伯伦 必须投失败
         if (vote === 'success' && currentSide === 'evil') {
           const mustFail = ((role === 'lancelotBlue' || role === 'lancelotRed') && rules.lancelotMustFail) ||
                            (role === 'oberon' && rules.oberonMustFailMission);
           if (mustFail) {
-            throw new Error('你当前阵营为坏人，必须投失败票');
+            throw new Error('你当前阵营为红方，必须投失败票');
           }
         }
 
@@ -1127,7 +1127,7 @@ class GameModel {
                    game_result = ?,
                    updated_at = NOW()
                WHERE id = ?`,
-              [JSON.stringify({ winner: 'evil', reason: '坏人完成3个任务' }), gameId]
+              [JSON.stringify({ winner: 'evil', reason: '红方完成3个任务' }), gameId]
             );
             await this._resetRoomAfterEnd(connection, game[0].room_id);
           } else if (successCount >= 3) {

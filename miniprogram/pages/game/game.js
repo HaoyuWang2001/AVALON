@@ -361,7 +361,7 @@ Page({
             role: v.role || null,
             side: v.side || null,
             roleText: v.role ? this.getRoleName(v.role) : '',
-            campText: v.side ? (v.side === 'evil' ? '坏人' : '好人') : ''
+            campText: v.side ? (v.side === 'evil' ? '红方' : '蓝方') : ''
           };
         });
 
@@ -1094,7 +1094,7 @@ Page({
       // 以当前阵营为准（兰斯洛特转换可能改变 side）；后端为最终裁决
       const isEvil = playerSide === 'evil' || ['mordred', 'morgana', 'assassin', 'minion', 'oberon', 'lancelotRed'].includes(playerRole);
       if (!isEvil) {
-        wx.showToast({ title: '只有坏人才能破坏任务', icon: 'error' });
+        wx.showToast({ title: '只有红方才能破坏任务', icon: 'error' });
         return;
       }
     }
@@ -1343,16 +1343,16 @@ Page({
 
   getRoleDesc(role) {
     const roleDesc = {
-      'merlin': '知道所有坏人（除莫德雷德），需要隐藏身份',
+      'merlin': '知道所有红方（除莫德雷德），需要隐藏身份',
       'percival': '知道梅林和莫甘娜，需要保护梅林',
-      'loyal': '好人阵营，不知道其他角色身份',
-      'mordred': '坏人，梅林看不到他',
-      'morgana': '坏人，假扮梅林迷惑派西维尔',
-      'assassin': '坏人，游戏结束时可以刺杀梅林',
-      'minion': '坏人，帮助破坏任务',
-      'oberon': '坏人，不知道其他坏人身份，坏人看不到他',
-      'lancelotBlue': '蓝兰，好人阵营兰斯洛特，可能被换阵营',
-      'lancelotRed': '红兰，坏人阵营兰斯洛特，可能被换阵营'
+      'loyal': '蓝方阵营，不知道其他角色身份',
+      'mordred': '红方，梅林看不到他',
+      'morgana': '红方，假扮梅林迷惑派西维尔',
+      'assassin': '红方，游戏结束时可以刺杀梅林',
+      'minion': '红方，帮助破坏任务',
+      'oberon': '红方，不知道其他红方身份，红方看不到他',
+      'lancelotBlue': '蓝兰，蓝方阵营兰斯洛特，可能被换阵营',
+      'lancelotRed': '红兰，红方阵营兰斯洛特，可能被换阵营'
     };
     return roleDesc[role] || '角色信息错误';
   },

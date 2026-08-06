@@ -552,7 +552,7 @@ Page({
     const loyal = this.data.playerCount - goodCount - evilCount;
     let warning = '';
     if (loyal < 0) {
-      warning = `好人+坏人超出总人数 ${Math.abs(loyal)} 位，请减少选择`;
+      warning = `蓝方+红方超出总人数 ${Math.abs(loyal)} 位，请减少选择`;
     }
     this.setData({ loyalCount: Math.max(loyal, 0), roleWarning: warning, goodCount, evilCount });
   },

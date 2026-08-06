@@ -83,16 +83,16 @@ const ROLE_NAMES = {
 
 // 角色描述
 const ROLE_DESCRIPTIONS = {
-  [ROLES.MERLIN]: '知道所有坏人（除莫德雷德），需要隐藏身份',
+  [ROLES.MERLIN]: '知道所有红方（除莫德雷德），需要隐藏身份',
   [ROLES.PERCIVAL]: '知道梅林和莫甘娜，需要保护梅林',
-  [ROLES.LOYAL]: '好人阵营，不知道其他角色身份',
-  [ROLES.MORDRED]: '坏人，梅林看不到他',
-  [ROLES.MORGANA]: '坏人，假扮梅林迷惑派西维尔',
-  [ROLES.ASSASSIN]: '坏人，游戏结束时可以刺杀梅林',
-  [ROLES.MINION]: '坏人，帮助破坏任务',
-  [ROLES.OBERON]: '坏人，不知道其他坏人身份，坏人看不到他',
-  [ROLES.LANCELOT_BLUE]: '好人阵营的兰斯洛特，与红兰斯洛特成对出现',
-  [ROLES.LANCELOT_RED]: '坏人阵营的兰斯洛特，与蓝兰斯洛特成对出现'
+  [ROLES.LOYAL]: '蓝方阵营，不知道其他角色身份',
+  [ROLES.MORDRED]: '红方，梅林看不到他',
+  [ROLES.MORGANA]: '红方，假扮梅林迷惑派西维尔',
+  [ROLES.ASSASSIN]: '红方，游戏结束时可以刺杀梅林',
+  [ROLES.MINION]: '红方，帮助破坏任务',
+  [ROLES.OBERON]: '红方，不知道其他红方身份，红方看不到他',
+  [ROLES.LANCELOT_BLUE]: '蓝方阵营的兰斯洛特，与红兰斯洛特成对出现',
+  [ROLES.LANCELOT_RED]: '红方阵营的兰斯洛特，与蓝兰斯洛特成对出现'
 };
 
 // 工具函数

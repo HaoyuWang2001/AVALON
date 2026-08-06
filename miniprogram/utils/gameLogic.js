@@ -33,12 +33,12 @@ function isMissionSuccess(missionVotes, playerCount, round) {
 function isGameOver(missionResults, assassinSuccess) {
   const successfulMissions = missionResults.filter(r => r.success).length;
 
-  // 好人胜利条件：3个任务成功
+  // 蓝方胜利条件：3个任务成功
   if (successfulMissions >= 3) {
     return { over: true, winner: 'good', reason: '完成任务' };
   }
 
-  // 坏人胜利条件：3个任务失败
+  // 红方胜利条件：3个任务失败
   const failedMissions = missionResults.filter(r => !r.success).length;
   if (failedMissions >= 3) {
     return { over: true, winner: 'evil', reason: '破坏任务' };
@@ -62,7 +62,7 @@ function getRoleVision(playerRole, allPlayers) {
 
   switch (playerRole) {
     case 'merlin':
-      // 梅林知道所有坏人（除莫德雷德）
+      // 梅林知道所有红方（除莫德雷德）
       vision.knows = allPlayers
         .filter(p => p.side === 'evil' && p.role !== 'mordred')
         .map(p => ({ openId: p.openId, side: 'evil' }));

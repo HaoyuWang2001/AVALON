@@ -245,7 +245,7 @@
     <view class="result-card">
       <view class="result-emoji">{{lastMissionResult ? '👍' : '❌'}}</view>
       <view class="result-title">{{lastMissionResult ? '任务成功' : '任务失败'}}</view>
-      <view class="result-sub">{{lastMissionResult ? '好人获得1分' : '坏人获得1分'}}</view>
+      <view class="result-sub">{{lastMissionResult ? '蓝方获得1分' : '红方获得1分'}}</view>
     </view>
   </view>
 
@@ -258,7 +258,7 @@
       </view>
       <view class="role-tags">
         <text class="role-tag role-tag-name">{{roleName}}</text>
-        <text class="role-tag role-tag-side {{playerSide === 'evil' ? 'tag-evil' : 'tag-good'}}">{{playerSide === 'evil' ? '坏人阵营' : '好人阵营'}}</text>
+        <text class="role-tag role-tag-side {{playerSide === 'evil' ? 'tag-evil' : 'tag-good'}}">{{playerSide === 'evil' ? '红方阵营' : '蓝方阵营'}}</text>
       </view>
       <view class="role-card-desc">{{roleDesc}}</view>
       <view class="role-vision" wx:if="{{visionList.length > 0}}">
@@ -294,7 +294,7 @@
       </view>
       <view class="role-tags">
         <text class="role-tag role-tag-name">{{roleName}}</text>
-        <text class="role-tag role-tag-side {{playerSide === 'evil' ? 'tag-evil' : 'tag-good'}}">{{playerSide === 'evil' ? '坏人阵营' : '好人阵营'}}</text>
+        <text class="role-tag role-tag-side {{playerSide === 'evil' ? 'tag-evil' : 'tag-good'}}">{{playerSide === 'evil' ? '红方阵营' : '蓝方阵营'}}</text>
       </view>
       <view class="role-vision" wx:if="{{visionList.length > 0 || canAssassinateVar}}">
         <view wx:for="{{visionList}}" wx:key="openId" class="role-vision-item">
@@ -339,7 +339,7 @@
           <block wx:elif="{{item.type === 'lake'}}">
             <view class="info-row">
               <text>第{{item.round}}轮 <text class="{{item.inspectorSeat.isMe ? 'seat-me' : ''}}">{{item.inspectorSeat.seat}}</text>号 → <text class="{{item.targetSeat.isMe ? 'seat-me' : ''}}">{{item.targetSeat.seat}}</text>号</text>
-              <text wx:if="{{item.result}}" class="{{item.result === 'good' ? 'txt-good' : 'txt-evil'}}">{{item.result === 'good' ? '好人' : '坏人'}}</text>
+              <text wx:if="{{item.result}}" class="{{item.result === 'good' ? 'txt-good' : 'txt-evil'}}">{{item.result === 'good' ? '蓝方' : '红方'}}</text>
               <text wx:else class="txt-muted">保密</text>
             </view>
           </block>
@@ -357,7 +357,7 @@
     </view>
   </view>
 
-  <!-- 湖仙查验结果弹窗（仅验人者，纯图片好人蓝/坏人红；"知道了"= 本人确认，不可关闭） -->
+  <!-- 湖仙查验结果弹窗（仅验人者，纯图片蓝方蓝/红方红；"知道了"= 本人确认，不可关闭） -->
   <view class="lake-result-modal" wx:if="{{showLakeResult}}">
     <view class="modal-mask" catchtap="noop"></view>
     <view class="lake-result-body">

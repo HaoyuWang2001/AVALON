@@ -143,7 +143,7 @@
             </view>
 
             <view class="config-section">
-              <view class="section-title"><image src="/images/avalon-blue.png" class="section-icon"/>好人</view>
+              <view class="section-title"><image src="/images/avalon-blue.png" class="section-icon"/>蓝方</view>
               <scroll-view class="role-scroll" scroll-x show-scrollbar="{{false}}">
               <view class="role-scroll-row">
                 <view class="role-card role-loyal">
@@ -171,7 +171,7 @@
             </view>
 
             <view class="config-section">
-              <view class="section-title"><image src="/images/avalon-red.png" class="section-icon"/>坏人</view>
+              <view class="section-title"><image src="/images/avalon-red.png" class="section-icon"/>红方</view>
               <scroll-view class="role-scroll" scroll-x show-scrollbar="{{false}}">
               <view class="role-scroll-row">
                 <view wx:for="{{['morgana','assassin','oberon','mordred','minion','lancelotRed']}}" wx:key="*this"
@@ -228,8 +228,8 @@
               </view>
               <view class="rule-row">
                 <view class="rule-col">
-                  <text class="rule-label">坏人互知身份</text>
-                  <text class="rule-desc">除奥伯伦外，坏人互相知道对方具体身份</text>
+                  <text class="rule-label">红方互知身份</text>
+                  <text class="rule-desc">除奥伯伦外，红方互相知道对方具体身份</text>
                 </view>
                 <switch checked="{{rules.evilKnowsEachOther}}" data-field="evilKnowsEachOther" bindchange="onRuleToggle" color="#8B5CF6"/>
               </view>
@@ -256,7 +256,7 @@
             </view>
 
             <view class="config-section" hidden="{{!selectedRoles.oberon && !selectedRoles.lancelotRed}}">
-              <view class="section-title">💣 坏人强制任务失败</view>
+              <view class="section-title">💣 红方强制任务失败</view>
               <view class="rule-row" hidden="{{!selectedRoles.oberon}}">
                 <view class="rule-col">
                   <text class="rule-label">奥伯伦必须任务失败</text>
@@ -267,7 +267,7 @@
               <view class="rule-row" hidden="{{!selectedRoles.lancelotBlue && !selectedRoles.lancelotRed}}">
                 <view class="rule-col">
                   <text class="rule-label">兰斯洛特必须任务失败</text>
-                  <text class="rule-desc">当前为坏人阵营的兰斯洛特若被选入任务队伍，必须投失败票</text>
+                  <text class="rule-desc">当前为红方阵营的兰斯洛特若被选入任务队伍，必须投失败票</text>
                 </view>
                 <switch checked="{{rules.lancelotMustFail}}" data-field="lancelotMustFail" bindchange="onRuleToggle" color="#8B5CF6"/>
               </view>
@@ -386,11 +386,11 @@
                   <text class="summary-value">{{playerCount}}人</text>
                 </view>
                 <view class="summary-row">
-                  <text class="summary-label">好人</text>
+                  <text class="summary-label">蓝方</text>
                   <text class="summary-value">{{goodRoleNames}}</text>
                 </view>
                 <view class="summary-row">
-                  <text class="summary-label">坏人</text>
+                  <text class="summary-label">红方</text>
                   <text class="summary-value">{{evilRoleNames}}</text>
                 </view>
                 <view class="summary-row">
@@ -398,7 +398,7 @@
                   <text class="summary-value">{{summaryLady}}</text>
                 </view>
                 <view class="summary-row">
-                  <text class="summary-label">坏人互知</text>
+                  <text class="summary-label">红方互知</text>
                   <text class="summary-value">{{rules.evilKnowsEachOther ? '是' : '否'}}</text>
                 </view>
               </view>

@@ -224,8 +224,8 @@ describe('constants', () => {
 
   describe('getRoleDescription', () => {
     it('should return description for known roles', () => {
-      expect(getRoleDescription(ROLES.MERLIN)).toContain('坏人');
-      expect(getRoleDescription(ROLES.ASSASSIN)).toContain('坏人');
+      expect(getRoleDescription(ROLES.MERLIN)).toContain('红方');
+      expect(getRoleDescription(ROLES.ASSASSIN)).toContain('红方');
     });
 
     it('should return 角色信息错误 for unknown roles', () => {
