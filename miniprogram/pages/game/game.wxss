@@ -365,6 +365,9 @@
 .timer-icon { width: 96rpx; height: 96rpx; }
 .timer-num { font-size: 56rpx; font-weight: 800; color: #8B5CF6; line-height: 1; }
 .timer-btns { display: flex; gap: 16rpx; margin-top: 8rpx; }
+/* 票型展示倒计时：复用计时框样式，改为横向 */
+.vote-countdown { flex-direction: row; gap: 16rpx; padding: 12rpx 24rpx; }
+.timer-label { font-size: 26rpx; color: var(--gray-500); font-weight: 600; }
 .timer-btn {
   font-size: 26rpx; font-weight: 700; color: #fff;
   background: #8B5CF6; border-radius: 12rpx;
@@ -712,3 +715,31 @@ progress { border-radius: 12rpx; }
   60% { transform: scale(1.12); }
   100% { transform: scale(1); opacity: 1; }
 }
+
+/* ─────── 任务结果全屏动画（全员） ─────── */
+.mission-anim {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 2500;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.mission-anim-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+.mission-anim-bg.anim-mission-success { background: radial-gradient(circle, rgba(16,185,129,0.92), rgba(0,0,0,0.85)); }
+.mission-anim-bg.anim-mission-fail { background: radial-gradient(circle, rgba(220,38,38,0.92), rgba(0,0,0,0.85)); }
+.mission-anim-ring {
+  position: absolute;
+  width: 200rpx; height: 200rpx;
+  border-radius: 50%;
+  border: 6rpx solid rgba(255,255,255,0.65);
+  animation: ring-expand 1.2s ease-out infinite;
+}
+.mission-anim-ring.r2 { animation-delay: 0.4s; }
+.mission-anim-ring.r3 { animation-delay: 0.8s; }
+.mission-anim-center {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+  animation: center-pop 0.5s ease-out;
+}
+.mission-anim-img { width: 360rpx; height: 360rpx; margin-bottom: 24rpx; }
+.mission-anim-text { font-size: 76rpx; font-weight: 900; color: #fff; text-shadow: 0 4rpx 12rpx rgba(0,0,0,0.5); }
+.mission-anim-sub { font-size: 36rpx; font-weight: 700; color: #fff; margin-top: 16rpx; text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.4); }

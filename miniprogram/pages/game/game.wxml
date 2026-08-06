@@ -183,6 +183,12 @@
       </block>
       <view class="bar-info" wx:if="{{approveSeats}}" style="color:#10B981;font-weight:700;">赞成：{{approveSeats}}</view>
       <view class="bar-info" wx:if="{{rejectSeats}}" style="color:#EF4444;font-weight:700;">反对：{{rejectSeats}}</view>
+      <!-- 票型展示倒计时框：任务投票弹窗出现前让大家看清票型 -->
+      <view class="timer-card vote-countdown" wx:if="{{!missionVoteReady && voteCountdown > 0}}">
+        <image src="/images/stopwatch.png" class="timer-icon"></image>
+        <text class="timer-num">{{voteCountdown}}s</text>
+        <text class="timer-label">后开始任务投票</text>
+      </view>
     </block>
 
     <!-- assassination -->
@@ -355,8 +361,8 @@
     </view>
   </view>
 
-  <!-- 任务投票弹窗（仅任务队成员，不可关闭） -->
-  <view class="mission-modal" wx:if="{{currentPhase === 'missionVote' && isMissionTeamMember}}">
+  <!-- 任务投票弹窗（仅任务队成员，不可关闭；投票前有 5s 票型倒计时） -->
+  <view class="mission-modal" wx:if="{{currentPhase === 'missionVote' && isMissionTeamMember && missionVoteReady}}">
     <view class="mission-mask" catchtap="noop" catchtouchmove="noop"></view>
     <block wx:if="{{!hasMissionVoted}}">
       <view class="mission-split">
@@ -397,6 +403,19 @@
         <text class="assassin-anim-emoji">{{assassinationSuccess ? '💀' : '🛡️'}}</text>
         <text class="assassin-anim-text">{{assassinationSuccess ? '刺杀成功' : '刺杀失败'}}</text>
       </view>
+    </view>
+  </view>
+
+  <!-- 任务结果全屏动画（全员）：成功蓝图 / 失败红图 -->
+  <view class="mission-anim" wx:if="{{showMissionAnim}}">
+    <view class="mission-anim-bg {{missionAnimSuccess ? 'anim-mission-success' : 'anim-mission-fail'}}"></view>
+    <view class="mission-anim-ring r1"></view>
+    <view class="mission-anim-ring r2"></view>
+    <view class="mission-anim-ring r3"></view>
+    <view class="mission-anim-center">
+      <image src="/images/{{missionAnimSuccess ? 'avalon-blue.png' : 'avalon-red.png'}}" class="mission-anim-img" mode="aspectFit"/>
+      <text class="mission-anim-text">{{missionAnimSuccess ? '任务成功' : '任务失败'}}</text>
+      <text class="mission-anim-sub">{{missionAnimSuccess ? '好人获得1分' : '坏人获得1分'}}</text>
     </view>
   </view>
 </view>

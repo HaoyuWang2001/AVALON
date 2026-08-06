@@ -215,6 +215,10 @@ Page({
     showAssassinationAnim: false,
     assassinationSuccess: false,
     assassinationPhase: '',
+    missionVoteReady: false,
+    voteCountdown: 0,
+    showMissionAnim: false,
+    missionAnimSuccess: false,
   },
 
   onLoad(options) {
@@ -253,6 +257,8 @@ Page({
     this._stopTimer();
     if (this._assnAnimTimer) clearTimeout(this._assnAnimTimer);
     if (this._assnAnimTimer2) clearTimeout(this._assnAnimTimer2);
+    if (this._missionAnimTimer) clearTimeout(this._missionAnimTimer);
+    if (this._voteCountdownTimer) clearInterval(this._voteCountdownTimer);
     api.disconnectSocket();
   },
 
@@ -287,6 +293,21 @@ Page({
         const effectiveLocal = shouldResetLocal ? [] : (this.data.localSelected || []);
 
         const missions = res.history ? res.history.missions || [] : [];
+
+        // 任务结果强制动画：新任务结算时全员播放（首次拉取只记录基准，避免进入进行中对局误播）
+        if (!this._missionKeyInit) {
+          this._missionKeyInit = true;
+          if (missions.length > 0) {
+            this._lastMissionKey = `${missions[missions.length - 1].round}:${missions[missions.length - 1].success ? '1' : '0'}`;
+          }
+        } else if (missions.length > 0) {
+          const lastM = missions[missions.length - 1];
+          const mKey = `${lastM.round}:${lastM.success ? '1' : '0'}`;
+          if (this._lastMissionKey !== mKey) {
+            this._lastMissionKey = mKey;
+            this.playMissionAnim(!!lastM.success);
+          }
+        }
         const roundList = [];
         for (let i = 1; i <= 5; i++) {
           const m = missions.find(x => x.round === i);
@@ -570,6 +591,28 @@ Page({
           }
         } else if (!api._socketTask && this.data.roomId) {
           api.connectSocket(this.data.roomId, app.globalData.openId);
+        }
+
+        // 队伍投票完成 → 任务投票：5s 倒计时先让所有人看清票型，再弹出任务投票弹窗
+        if (phase === 'missionVote' && this.data.currentPhase !== 'missionVote') {
+          this.setData({ missionVoteReady: false, voteCountdown: 5 });
+          if (this._voteCountdownTimer) clearInterval(this._voteCountdownTimer);
+          this._voteCountdownTimer = setInterval(() => {
+            const n = this.data.voteCountdown - 1;
+            if (n <= 0) {
+              clearInterval(this._voteCountdownTimer);
+              this._voteCountdownTimer = null;
+              this.setData({ voteCountdown: 0, missionVoteReady: true });
+            } else {
+              this.setData({ voteCountdown: n });
+            }
+          }, 1000);
+        } else if (phase !== 'missionVote') {
+          this.setData({ missionVoteReady: false, voteCountdown: 0 });
+          if (this._voteCountdownTimer) {
+            clearInterval(this._voteCountdownTimer);
+            this._voteCountdownTimer = null;
+          }
         }
 
         // gameEnd 结果由底部框展示（wxml currentPhase === 'gameEnd' 渲染）
@@ -862,6 +905,16 @@ Page({
         this.setData({ showAssassinationAnim: false, assassinationPhase: '' });
       }, 1400);
     }, 1200);
+  },
+
+  // 任务结果全屏动画（全员）：成功蓝图/失败红图，约 2.6s 自动关闭
+  playMissionAnim(success) {
+    this.setData({ showMissionAnim: true, missionAnimSuccess: !!success });
+    if (this._missionAnimTimer) clearTimeout(this._missionAnimTimer);
+    this._missionAnimTimer = setTimeout(() => {
+      this.setData({ showMissionAnim: false });
+      this._missionAnimTimer = null;
+    }, 2600);
   },
 
   // lancelot 阶段：确认抽卡结果（全员确认后进入下一轮）
