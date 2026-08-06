@@ -305,8 +305,8 @@
             <text wx:if="{{item.campText}}" class="role-vision-tag {{item.side === 'evil' ? 'tag-evil' : 'tag-good'}}">{{item.campText}}</text>
           </view>
         </view>
-        <!-- 开刀条目：左侧紫色座位牌 + 红色开刀块填满剩余行，点击开始刺杀 -->
-        <view wx:if="{{canAssassinateVar}}" class="role-vision-knife-row" bindtap="startAssassination">
+        <!-- 开刀条目：左侧紫色座位牌 + 红色开刀块填满剩余行，点击开始刺杀；刺杀/gameEnd阶段隐藏 -->
+        <view wx:if="{{canAssassinateVar && currentPhase !== 'assassination' && currentPhase !== 'gameEnd'}}" class="role-vision-knife-row" bindtap="startAssassination">
           <view class="role-vision-seat">?</view>
           <view class="role-vision-knife">
             <text class="role-vision-knife-text">开刀</text>
