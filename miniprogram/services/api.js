@@ -7,6 +7,7 @@ class ApiService {
     this.openId = null;
     this.nickName = '';
     this._socketHandlers = {};
+    this._persistentHandlers = {};
     this._socketStatusCallbacks = [];
   }
 
@@ -309,8 +310,9 @@ class ApiService {
     task.onMessage((res) => {
       try {
         const msg = JSON.parse(res.data);
-        if (msg.type && this._socketHandlers[msg.type]) {
-          this._socketHandlers[msg.type].forEach(fn => fn(msg));
+        if (msg.type) {
+          if (this._socketHandlers[msg.type]) this._socketHandlers[msg.type].forEach(fn => fn(msg));
+          if (this._persistentHandlers[msg.type]) this._persistentHandlers[msg.type].forEach(fn => fn(msg));
         }
       } catch (e) {}
     });
@@ -358,6 +360,12 @@ class ApiService {
     this._socketHandlers[type].push(fn);
   }
 
+  // 全局持久消息处理器（不受页面 disconnectSocket 清除，如"被移出房间"通知）
+  onSocketMessagePersistent(type, fn) {
+    if (!this._persistentHandlers[type]) this._persistentHandlers[type] = [];
+    this._persistentHandlers[type].push(fn);
+  }
+
   // 通过 socket 发送自定义消息（如发言计时器 timerUpdate），经后端中转广播到房间
   sendSocket(type, payload = {}) {
     if (!this._socketTask) return;
@@ -373,7 +381,7 @@ class ApiService {
       try { this._socketTask.close({ code: 1000 }); } catch (e) {}
       this._socketTask = null;
     }
-    // 离开页面：清理本页注册的处理器与状态回调，避免旧实例残留
+    // 离开页面：清理本页注册的处理器与状态回调（保留全局持久处理器），避免旧实例残留
     this._socketHandlers = {};
     this._socketStatusCallbacks = [];
   }

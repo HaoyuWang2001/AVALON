@@ -14,6 +14,17 @@ function broadcastToRoom(roomId, message) {
   });
 }
 
+// 向指定玩家（playerId=openId）定向发送一条消息（如游戏开始移出观战者通知）
+function sendToPlayer(playerId, message) {
+  if (!wss || !playerId) return;
+  const text = JSON.stringify(message);
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1 && client.playerId === playerId) {
+      client.send(text);
+    }
+  });
+}
+
 module.exports = {
   getWSS: () => wss,
   setWSS: (server) => { wss = server; },
@@ -21,5 +32,6 @@ module.exports = {
   getIO: () => ({ to: (roomId) => ({ emit: (event, data) => broadcastToRoom(roomId, { type: event, ...data }) }) }),
   setIO: (server) => { wss = server; },
   broadcastToRoom,
+  sendToPlayer,
   emitToRoom: (roomId, event, data) => broadcastToRoom(roomId, { type: event, ...data })
 };

@@ -16,6 +16,18 @@ App({
       this.globalData.openId = savedOpenId;
     }
     this.weixinLogin();
+
+    // 全局持久通知：游戏开始被移出房间（等待区玩家）→ 弹窗并返回首页
+    api.onSocketMessagePersistent('kickedFromRoom', (msg) => {
+      wx.showModal({
+        title: '游戏已开始',
+        content: (msg && msg.reason) || '您已离开房间，正在返回首页',
+        showCancel: false,
+        success: () => {
+          wx.reLaunch({ url: '/pages/index/index' });
+        }
+      });
+    });
   },
 
   weixinLogin: function () {

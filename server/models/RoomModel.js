@@ -269,9 +269,11 @@ class RoomModel {
     
     try {
       await db.transaction(async (connection) => {
-        const [rooms] = await connection.execute('SELECT game_started, room_config FROM rooms WHERE id = ? FOR UPDATE', [roomId]);
+        const [rooms] = await connection.execute('SELECT game_started, room_config, owner_id FROM rooms WHERE id = ? FOR UPDATE', [roomId]);
         if (rooms.length === 0) throw new Error('房间不存在');
         const gameStarted = !!rooms[0].game_started;
+        const roomOwnerId = rooms[0].owner_id;
+        const isRoomOwner = openId === roomOwnerId;
         
         // 游戏进行中：仅允许以观战者身份加入（自动落座 -1）
         let effectiveSeat = seat;
@@ -286,11 +288,17 @@ class RoomModel {
         const roomConfig = rooms[0].room_config ? (typeof rooms[0].room_config === 'string' ? JSON.parse(rooms[0].room_config) : rooms[0].room_config) : null;
         
         if (effectiveSeat === -1) {
-          const [observerCount] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND seat_number = -1', [roomId]);
-          try {
-            this._assertSpectatorAllowed(roomConfig, observerCount[0].count);
-          } catch (e) {
-            throw new Error(gameStarted ? '游戏已开始且观战区已满' : e.message);
+          // 观战名额排除房主；房主总能进入观战区、不占名额
+          const [observerCount] = await connection.execute(
+            'SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND seat_number = -1 AND open_id != ?',
+            [roomId, roomOwnerId]
+          );
+          if (!isRoomOwner) {
+            try {
+              this._assertSpectatorAllowed(roomConfig, observerCount[0].count);
+            } catch (e) {
+              throw new Error(gameStarted ? '游戏已开始且观战区已满' : e.message);
+            }
           }
         }
         

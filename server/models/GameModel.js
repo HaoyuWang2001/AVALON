@@ -141,7 +141,8 @@ class GameModel {
   static async start(roomId) {
     try {
       let game = null;
-      
+      let kickedObservers = [];   // 被移出的等待区玩家 openId（事务外通知）
+
       await db.transaction(async (connection) => {
         const gameId = uuidv4();
         
@@ -242,6 +243,21 @@ class GameModel {
           'UPDATE rooms SET game_started = TRUE, updated_at = NOW() WHERE id = ?',
           [roomId]
         );
+
+        // 6.5 游戏开始：移出等待区（seat=0，未入座）玩家；房主若在等待区则移到观战区(-1)保留（房间不能无主）
+        const [waitingRows] = await connection.execute(
+          'SELECT open_id FROM room_players WHERE room_id = ? AND seat_number = 0',
+          [roomId]
+        );
+        await connection.execute(
+          'DELETE FROM room_players WHERE room_id = ? AND seat_number = 0 AND open_id != ?',
+          [roomId, ownerId]
+        );
+        await connection.execute(
+          'UPDATE room_players SET seat_number = -1 WHERE room_id = ? AND open_id = ? AND seat_number = 0',
+          [roomId, ownerId]
+        );
+        kickedObservers = waitingRows.filter(w => w.open_id !== ownerId).map(w => w.open_id);
         
         // 7. 组装游戏数据
         const playersWithRoles = players.map((player, index) => ({
@@ -266,7 +282,13 @@ class GameModel {
           updatedAt: new Date()
         };
       });
-      
+
+      // 通知被移出的等待区玩家（事务外，定向推送）
+      const socket = require('../config/socket');
+      for (const openId of kickedObservers) {
+        socket.sendToPlayer(openId, { type: 'kickedFromRoom', reason: '游戏已开始，您已离开房间' });
+      }
+
       return game;
     } catch (error) {
       console.error('开始游戏失败:', error);
