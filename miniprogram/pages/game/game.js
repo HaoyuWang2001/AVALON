@@ -270,12 +270,18 @@ Page({
 
   onShow() {
     this.fetchGameState();
+    // 轮询兜底：即使 socket 半开/断线，视图也能周期刷新（每 5s）
+    if (this._gamePollingTimer) clearInterval(this._gamePollingTimer);
+    this._gamePollingTimer = setInterval(() => { this.fetchGameState(); }, 5000);
   },
 
-  onHide() {},
+  onHide() {
+    if (this._gamePollingTimer) { clearInterval(this._gamePollingTimer); this._gamePollingTimer = null; }
+  },
 
   onUnload() {
     this._stopTimer();
+    if (this._gamePollingTimer) { clearInterval(this._gamePollingTimer); this._gamePollingTimer = null; }
     if (this._teamVoteRevealTimer) clearInterval(this._teamVoteRevealTimer);
     if (this._assnAnimTimer) clearTimeout(this._assnAnimTimer);
     if (this._assnAnimTimer2) clearTimeout(this._assnAnimTimer2);

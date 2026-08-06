@@ -302,12 +302,27 @@ class ApiService {
     this._emitSocketStatus('connecting');
     const task = wx.connectSocket({ url: WSSURL });
     this._socketTask = task;
+    this._lastSocketMessageAt = Date.now();
+    // 消息超时兜底：半开连接（收不到数据且无 onClose）时主动断开重连
+    if (this._socketTimeoutTimer) clearInterval(this._socketTimeoutTimer);
+    this._socketTimeoutTimer = setInterval(() => {
+      if (this._socketIntentionalClose) return;
+      if (Date.now() - this._lastSocketMessageAt > 70000) {
+        // 超过 70s 无任何消息：判定半开 → 强制重连并提示
+        this._emitSocketStatus('closed');
+        if (this._socketTask) { try { this._socketTask.close({ code: 1000 }); } catch (e) {} }
+        this._socketTask = null;
+        this._scheduleReconnect();
+      }
+    }, 5000);
     task.onOpen(() => {
       this._socketRetryCount = 0;
+      this._lastSocketMessageAt = Date.now();
       this._emitSocketStatus('open');
       task.send({ data: JSON.stringify({ type: 'joinRoom', roomId, playerId }) });
     });
     task.onMessage((res) => {
+      this._lastSocketMessageAt = Date.now();
       try {
         const msg = JSON.parse(res.data);
         if (msg.type) {
@@ -377,6 +392,7 @@ class ApiService {
   disconnectSocket() {
     this._socketIntentionalClose = true;
     if (this._socketRetryTimer) { clearTimeout(this._socketRetryTimer); this._socketRetryTimer = null; }
+    if (this._socketTimeoutTimer) { clearInterval(this._socketTimeoutTimer); this._socketTimeoutTimer = null; }
     if (this._socketTask) {
       try { this._socketTask.close({ code: 1000 }); } catch (e) {}
       this._socketTask = null;

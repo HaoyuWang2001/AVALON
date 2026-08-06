@@ -208,6 +208,9 @@ wss.on('connection', (ws) => {
   console.log('Client connected:', ws._socket ? ws._socket.remoteAddress : 'unknown');
   ws.roomId = null;
   ws.playerId = null;
+  // 心跳保活标记：收到 pong 置 true；未响应则定时 terminate（清理半开连接）
+  ws.isAlive = true;
+  ws.on('pong', () => { ws.isAlive = true; });
 
   // 发送 JSON 帧 {type, ...}
   function send(msg) {
@@ -327,6 +330,18 @@ async function startServer() {
         console.error('teamVoteReveal 定时推进失败:', e.message);
       }
     }, 1000);
+
+    // WebSocket 心跳保活：每 30s ping 一次，未回 pong 的连接视为半开并强制断开
+    // （小程序协议层会自动回复 pong，无需前端代码；解决网络静默断开导致的"假死"连接）
+    setInterval(() => {
+      wss.clients.forEach((ws) => {
+        if (ws.isAlive === false) {
+          return ws.terminate();
+        }
+        ws.isAlive = false;
+        try { ws.ping(); } catch (e) {}
+      });
+    }, 30000);
   } catch (error) {
     console.error('服务器启动失败:', error);
     process.exit(1);
