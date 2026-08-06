@@ -80,13 +80,8 @@ function enrichTablePlayer(p, ctx) {
   // 游戏结束：全员身份名（右侧徽标）
   const roleName = currentPhase === 'gameEnd' ? getRoleNameLocal(p.role) : '';
 
-  // 标签数组：车主(金) / 我(紫) / 房主(蓝) / 湖仙(粉) / 预选(橙) / 睁眼狼角色(红)，可叠加
+  // 标签数组：车主(金) / 我(紫) / 房主(蓝) / 湖仙(粉) / 预选(橙)，可叠加
   const tags = [];
-  let evilRoleName = '';
-  if (isEvilEyes) {
-    const evil = (evilOpenEyes || []).find(e => e.openId === p.openId);
-    if (evil && evil.role) evilRoleName = getRoleNameLocal(evil.role);
-  }
   if (p.openId === leaderOpenId) tags.push({ text: '车主', cls: TAG_STYLES.gold });
   if (p.openId === myOpenId) tags.push({ text: '我', cls: TAG_STYLES.purple });
   if (p.openId === hostOpenId) tags.push({ text: '房主', cls: TAG_STYLES.blue });
@@ -109,7 +104,6 @@ function enrichTablePlayer(p, ctx) {
     disabled,
     isLeader: p.openId === leaderOpenId,
     isOldLake,
-    evilRoleName,
     roleName,
     tags
   };
@@ -185,6 +179,7 @@ Page({
     showRolePage: false,
     showRoleMask: false,
     roleWaiting: false,
+    roleMaskViewed: false,
     showInfoModal: false,
     showVoteModal: false,
     showMissionModal: false,
@@ -656,10 +651,11 @@ Page({
         if (phase === 'roleReveal' && res.player && res.player.role) {
           // 身份页显示在蒙版下方；等待态（span/按钮）只由后端 revealConfirmed 派生
           const confirmed = !!this.data.revealConfirmed;
+          const viewed = this.data.roleMaskViewed;
           this.setData({ showRolePage: true, roleWaiting: confirmed });
           if (!confirmed) {
-            // 未确认：蒙版盖在身份页上 + 确认身份按钮
-            this.setData({ showRoleMask: true });
+            // 未确认：仅当用户尚未查看过身份时弹盖板（已查看则保持消失，不被拉取覆盖）
+            this.setData({ showRoleMask: !viewed });
             // 禁用返回手势：roleReveal 未确认时必须点按钮才能继续
             if (wx.enableAlertBeforeUnload) {
               wx.enableAlertBeforeUnload({ message: '是否暂时挂起游戏回到首页？' });
@@ -705,10 +701,9 @@ Page({
     });
   },
 
-  // 蒙版"查看身份" → 打开全屏 confirmReveal 页（roleReveal 阶段）
+  // 蒙版"查看身份" → 打开全屏 confirmReveal 页（roleReveal 阶段）；本地变量记住已查看，拉取不再覆盖
   dismissRoleMask() {
-    wx.setStorageSync('avalon_roleMask_' + this.data.gameId, true);
-    this.setData({ showRoleMask: false });
+    this.setData({ showRoleMask: false, roleMaskViewed: true });
     this.openRolePage();
   },
 
