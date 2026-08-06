@@ -159,9 +159,11 @@
 
     <!-- lancelot：兰斯抽卡结果展示 + 全员确认 -->
     <block wx:if="{{currentPhase === 'lancelot'}}">
-      <view class="bar-info">兰斯洛特抽卡{{lancelotResult && lancelotResult.switched ? '：身份转换！' : '：未转换'}}</view>
-      <view class="bar-row">
-        <button size="mini" class="btn btn-primary" bindtap="confirmLancelot">确认（{{lancelotConfirmedCount}}/{{lancelotTotalCount}}）</button>
+      <view class="bar-waiting">
+        <view class="vote-waiting">
+          <view class="vote-waiting-spinner"></view>
+        </view>
+        <view class="bar-info bar-waiting">等待所有玩家确认兰斯洛特转换结果</view>
       </view>
     </block>
 
@@ -353,6 +355,26 @@
     <view class="lake-result-body">
       <image src="/images/{{lakeResult === 'evil' ? 'avalon-red.png' : 'avalon-blue.png'}}" class="lake-result-img" mode="aspectFit"/>
       <button class="btn btn-primary" bindtap="closeLakeResult">知道了</button>
+    </view>
+  </view>
+
+  <!-- 湖仙查验信息弹窗（非湖仙玩家收到新查验时提示，结果保密，仅按钮可关闭） -->
+  <view class="lake-info-modal" wx:if="{{showLakeInfo}}">
+    <view class="modal-mask" catchtap="noop"></view>
+    <view class="lake-info-body">
+      <view class="lake-info-title">湖仙验人</view>
+      <view class="lake-info-text">{{lakeInfoText}}</view>
+      <button class="btn btn-primary" bindtap="closeLakeInfo">知道了</button>
+    </view>
+  </view>
+
+  <!-- 兰斯洛特抽卡弹窗（全员可见抽卡结果，仅按钮触发确认提交） -->
+  <view class="lancelot-modal" wx:if="{{currentPhase === 'lancelot' && !lancelotConfirmedByMe}}">
+    <view class="modal-mask" catchtap="noop"></view>
+    <view class="lancelot-body">
+      <view class="lancelot-title">兰斯洛特抽卡</view>
+      <view class="lancelot-result">{{lancelotResult && lancelotResult.switched ? '身份转换' : '未转换'}}</view>
+      <button class="btn btn-primary" bindtap="confirmLancelot">确认</button>
     </view>
   </view>
 

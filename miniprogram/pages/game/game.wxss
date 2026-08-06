@@ -571,6 +571,50 @@
 .lake-result-img { width: 360rpx; height: 360rpx; margin-bottom: 40rpx; }
 .lake-result-body .btn { width: 100%; }
 
+/* ─────── 湖仙查验信息弹窗 ─────── */
+.lake-info-modal {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+}
+.lake-info-body {
+  position: relative; z-index: 999;
+  width: 520rpx;
+  background: #FFFFFF; border-radius: 28rpx;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 48rpx 36rpx;
+}
+.lake-info-title {
+  font-size: 36rpx; font-weight: 700; color: #1F2937;
+  margin-bottom: 24rpx;
+}
+.lake-info-text {
+  font-size: 30rpx; color: #4B5563; text-align: center;
+  line-height: 1.5; margin-bottom: 40rpx;
+}
+.lake-info-body .btn { width: 100%; }
+
+/* ─────── 兰斯洛特抽卡弹窗 ─────── */
+.lancelot-modal {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+}
+.lancelot-body {
+  position: relative; z-index: 999;
+  width: 520rpx;
+  background: #FFFFFF; border-radius: 28rpx;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 48rpx 36rpx;
+}
+.lancelot-title {
+  font-size: 36rpx; font-weight: 700; color: #1F2937;
+  margin-bottom: 24rpx;
+}
+.lancelot-result {
+  font-size: 44rpx; font-weight: 800; color: #8B5CF6;
+  margin-bottom: 40rpx;
+}
+.lancelot-body .btn { width: 100%; }
+
 /* 工具函数样式 */
 progress { border-radius: 12rpx; }
 

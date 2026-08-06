@@ -208,6 +208,9 @@ Page({
     isLakeHolder: false,
     showLakeResult: false,
     lakeResult: '',
+    showLakeInfo: false,
+    lakeInfoText: '',
+    lancelotConfirmedByMe: false,
     oldLakeOpenIds: [],
     socketReconnecting: false,
     isEvilEyesUser: false,
@@ -439,7 +442,7 @@ Page({
           targetSeat: seatInfo(e.targetOpenId)
         }));
 
-        // 湖仙查验实时通知：新查验发生时向非验人者提示（结果保密）
+        // 湖仙查验实时通知：新查验发生时向非验人者弹窗提示（结果保密）
         const rawLake = res.history ? res.history.lake || [] : [];
         if (rawLake.length > 0) {
           const lastLake = rawLake[rawLake.length - 1];
@@ -447,9 +450,11 @@ Page({
           if (this._lastLakeKey !== lakeKey) {
             this._lastLakeKey = lakeKey;
             if (lastLake.inspectorOpenId !== myOpenId) {
+              const ip = (res.players || []).find(x => x.openId === lastLake.inspectorOpenId);
               const lp = (res.players || []).find(x => x.openId === lastLake.targetOpenId);
+              const iSeat = ip ? ip.seatNumber : '?';
               const lSeat = lp ? lp.seatNumber : '?';
-              wx.showToast({ title: `湖仙查验了 ${lSeat}号（结果保密）`, icon: 'none' });
+              this.setData({ showLakeInfo: true, lakeInfoText: `湖仙${iSeat}号验${lSeat}号身份（结果保密）` });
             }
           }
         }
@@ -615,6 +620,13 @@ Page({
             clearInterval(this._voteCountdownTimer);
             this._voteCountdownTimer = null;
           }
+        }
+
+        // 兰斯洛特抽卡：进入该阶段时复位本人确认标记，离开时复位
+        if (phase === 'lancelot' && prevPhaseForTransitions !== 'lancelot') {
+          this.setData({ lancelotConfirmedByMe: false });
+        } else if (phase !== 'lancelot') {
+          this.setData({ lancelotConfirmedByMe: false });
         }
 
         // gameEnd 结果由底部框展示（wxml currentPhase === 'gameEnd' 渲染）
@@ -896,6 +908,10 @@ Page({
     this.setData({ showLakeResult: false });
   },
 
+  closeLakeInfo() {
+    this.setData({ showLakeInfo: false });
+  },
+
   // 刺杀结算全屏动画：阶段1 刀落下 → 阶段2 成功/失败，全员播放
   playAssassinationAnim(correct) {
     this.setData({ showAssassinationAnim: true, assassinationSuccess: !!correct, assassinationPhase: 'knife' });
@@ -925,6 +941,7 @@ Page({
     wx.showLoading({ title: '确认中...', mask: true });
     api.confirmLancelot(gameId).then(() => {
       wx.hideLoading();
+      this.setData({ lancelotConfirmedByMe: true });
       this.fetchGameState();
     }).catch(err => {
       wx.hideLoading();
