@@ -171,12 +171,22 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
       expect(seen.some(s => s.role === 'lancelotRed')).toBe(false);
     });
 
-    it('T12 evilKnowsEachOther=false：睁眼狼互认不可见', async () => {
-      const cfg = withConfigOverrides(config(), { rules: { evilKnowsEachOther: false } });
+    it('T12 evilKnowsEachOther=false：睁眼狼互见但不知对方身份', async () => {
+      const cfg = withConfigOverrides(config(), { rules: { evilKnowsEachOther: false, evilsKnowRedLancelot: false } });
       const { gameId, players } = await startBoard(cfg);
       const openEye = players.find(p => EVIL_OPEN_EYES.includes(p.role));
+      expect(openEye).toBeDefined();
       const seen = await visionOf(gameId, openEye.openId);
-      expect(seen).toEqual([]);
+      const seenIds = seen.map(s => s.openId).sort();
+      const expected = players.filter(p =>
+        EVIL_OPEN_EYES.includes(p.role) && p.openId !== openEye.openId
+      ).map(p => p.openId).sort();
+      expect(seenIds).toEqual([...new Set(expected)].sort());
+      for (const s of seen) {
+        expect(s.role).toBeUndefined();
+        expect(s.side).toBe('evil');
+        expect(s.canIdentity).toBe(false);
+      }
     });
   });
 

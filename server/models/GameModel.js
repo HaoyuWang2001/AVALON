@@ -82,15 +82,14 @@ function buildVision(requester, players, roomConfig) {
   const role = requester.role;
 
   if (EVIL_OPEN_EYES.includes(role)) {
-    // 睁眼狼互认（evilKnowsEachOther）；oberon 互隐；lancelotRed 视 evilsKnowRedLancelot（默认 true）
-    if (rules.evilKnowsEachOther) {
-      for (const p of players) {
-        if (p.openId === requester.openId) continue;
-        if (EVIL_OPEN_EYES.includes(p.role)) {
-          add(p, 'role');
-        } else if (p.role === LANCELOT_RED && rules.evilsKnowRedLancelot !== false) {
-          add(p, 'role');
-        }
+    // 睁眼狼互见：始终能看到其他睁眼狼；evilKnowsEachOther 仅决定是否知道对方具体身份
+    // oberon 互隐（EVIL_OPEN_EYES 不含 oberon）；红兰按 evilsKnowRedLancelot 独立可见（默认 true）
+    for (const p of players) {
+      if (p.openId === requester.openId) continue;
+      if (EVIL_OPEN_EYES.includes(p.role)) {
+        add(p, rules.evilKnowsEachOther ? 'role' : 'side');
+      } else if (p.role === LANCELOT_RED && rules.evilsKnowRedLancelot !== false) {
+        add(p, 'role');
       }
     }
   } else if (role === OBERON) {

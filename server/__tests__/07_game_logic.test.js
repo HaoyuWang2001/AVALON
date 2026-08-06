@@ -103,10 +103,15 @@ describe('07 — Game Logic Unit Tests', () => {
       expect(seen.length).toBe(0);
     });
 
-    it('evilKnowsEachOther=false: open-eye sees only self (no others)', () => {
+    it('evilKnowsEachOther=false: open-eye still sees fellow open-eye evils without identity', () => {
       const cfg = { rules: { evilKnowsEachOther: false, evilsKnowRedLancelot: true } };
       const seen = buildVision({ openId: 'd', role: 'assassin', side: 'evil' }, players, cfg);
-      expect(seen.length).toBe(0);
+      const morgana = seen.find(s => s.openId === 'c');
+      expect(morgana).toBeDefined();
+      expect(morgana.role).toBeUndefined();
+      expect(morgana.side).toBe('evil');
+      expect(morgana.canIdentity).toBe(false);
+      expect(seen.some(s => s.openId === 'd')).toBe(false);
     });
   });
 
