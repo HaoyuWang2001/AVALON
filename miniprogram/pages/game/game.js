@@ -305,6 +305,11 @@ Page({
         const effectiveLocal = shouldResetLocal ? [] : (this.data.localSelected || []);
 
         const missions = res.history ? res.history.missions || [] : [];
+        // 捕获进入本次拉取前的阶段（setData 之前）与本人确认状态（供过渡检测/弹窗使用，需在引用前声明）
+        const prevPhaseForTransitions = this.data.currentPhase;
+        const playerLakeConfirmed = !!(res.player && res.player.lakeConfirmed);
+        const playerLancelotConfirmed = !!(res.player && res.player.lancelotConfirmed);
+        const isInGame = !!(res.player && res.player.role);
 
         // 任务结果强制动画：新任务结算时全员播放（首次拉取只记录基准，避免进入进行中对局误播）
         if (!this._missionKeyInit) {
@@ -524,12 +529,6 @@ Page({
             targetSeat: gameAssassination.targetSeat, correct: gameAssassination.correct
           });
         }
-
-        // 捕获进入本次拉取前的阶段（setData 之前），供过渡检测使用
-        const prevPhaseForTransitions = this.data.currentPhase;
-        const playerLakeConfirmed = !!(res.player && res.player.lakeConfirmed);
-        const playerLancelotConfirmed = !!(res.player && res.player.lancelotConfirmed);
-        const isInGame = !!(res.player && res.player.role);
 
         this.setData({
           gameState: res.current,
