@@ -358,6 +358,14 @@ class ApiService {
     this._socketHandlers[type].push(fn);
   }
 
+  // 通过 socket 发送自定义消息（如发言计时器 timerUpdate），经后端中转广播到房间
+  sendSocket(type, payload = {}) {
+    if (!this._socketTask) return;
+    try {
+      this._socketTask.send({ data: JSON.stringify({ type, roomId: this._socketRoomId, ...payload }) });
+    } catch (e) {}
+  }
+
   disconnectSocket() {
     this._socketIntentionalClose = true;
     if (this._socketRetryTimer) { clearTimeout(this._socketRetryTimer); this._socketRetryTimer = null; }

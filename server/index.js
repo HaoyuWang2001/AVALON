@@ -75,6 +75,10 @@ const wss = new WebSocketServer({ server });
 const socket = require('./config/socket');
 socket.setWSS(wss);
 
+// 发言计时器内存缓存（不进 DB）：roomId → { running, endAt, gameId }；
+// 房主广播 endAt，各端本地倒计时；仅用于新加入者/观众 join 时恢复
+const timerCache = new Map();
+
 app.use(cors());
 app.use(express.json());
 
@@ -220,6 +224,8 @@ wss.on('connection', (ws) => {
       if (gameRows.length === 0) return;
       const GameModel = require('./models/GameModel');
       const state = await GameModel.getState(gameRows[0].id, playerId);
+      // 附加发言计时器状态（内存缓存，不进 DB；供新加入者/观众恢复倒计时）
+      state.timer = timerCache.get(roomId) || { running: false, endAt: null };
       send({ type: 'gameState', roomId, gameId: gameRows[0].id, state });
     } catch (error) {
       console.error('推送游戏状态失败:', error);
@@ -262,6 +268,13 @@ wss.on('connection', (ws) => {
       case 'gameUpdate': {
         const { type, ...payload } = msg;
         socket.broadcastToRoom(msg.roomId, { ...payload, type: 'gameUpdated' });
+        break;
+      }
+      case 'timerUpdate': {
+        // 房主广播发言计时器状态（running/endAt/remaining），中转并缓存供新加入者恢复
+        const { roomId, running, endAt, remaining } = msg;
+        if (roomId) timerCache.set(roomId, { running, endAt, remaining, gameId: msg.gameId });
+        socket.broadcastToRoom(roomId, { type: 'timerUpdate', running, endAt, remaining });
         break;
       }
       default:

@@ -194,6 +194,7 @@ Page({
     preTeamSeats: '',
     timerSeconds: 0,
     timerRunning: false,
+    timerEndAt: 0,
     hasSpeechTimeout: false,
     roomConfigVal: null,
     carsHistory: [],
@@ -251,6 +252,7 @@ Page({
 
     api.onSocketMessage('gameUpdated', () => { this.fetchGameState(); });
     api.onSocketMessage('gameState', () => { this.fetchGameState(); });
+    api.onSocketMessage('timerUpdate', (msg) => { this.applyTimerUpdate(!!msg.running, msg.endAt || 0, msg.remaining); });
     api.onSocketStatus(status => { this.onSocketStatusChange(status); });
   },
 
@@ -642,9 +644,13 @@ Page({
         if (phase !== 'roleReveal') {
           this.setData({ showRolePage: false, showRoleMask: false, roleWaiting: false });
         }
-        // 计时器仅在 discussion 阶段运行
+        // 计时器仅在 discussion 阶段运行；join/重连快照附带后端缓存的 timer 状态用于校准
         if (phase === 'discussion') {
-          this._ensureTimerInit();
+          if (res.timer && (res.timer.running || typeof res.timer.remaining === 'number')) {
+            this.applyTimerUpdate(!!res.timer.running, res.timer.endAt || 0, res.timer.remaining);
+          } else {
+            this._ensureTimerInit();
+          }
         } else {
           this._stopTimer();
         }
@@ -984,55 +990,80 @@ Page({
     const limits = (rc && rc.limits) || {};
     return parseInt(limits.speechTimeout, 10) || 0;
   },
+  // 进入 discussion 时初始化本地显示时长（若尚无任何状态）
   _ensureTimerInit() {
     if (this.timerInterval) return;
     const sec = this._getSpeechTimeout();
-    if (this.data.timerSeconds === 0 && sec > 0) {
+    if (this.data.timerEndAt === 0 && this.data.timerSeconds === 0 && sec > 0) {
       this.setData({ timerSeconds: sec, timerRunning: false });
     }
   },
   _stopTimer() {
+    this._stopTimerTicking();
+    if (this.data.timerRunning) this.setData({ timerRunning: false });
+  },
+  // 收到房主广播（或 join 快照/本地操作）：统一应用计时状态并驱动本地倒计时
+  // running=true 时按 endAt 本地递减；否则用 remaining 显示当前剩余（暂停/重置）
+  applyTimerUpdate(running, endAt, remaining) {
+    this.setData({ timerRunning: running, timerEndAt: endAt || 0 });
+    if (running && endAt > 0) {
+      this._tickTimer(endAt);
+      if (!this.timerInterval) {
+        this.timerInterval = setInterval(() => this._tickTimer(this.data.timerEndAt), 1000);
+      }
+    } else {
+      this._stopTimerTicking();
+      if (typeof remaining === 'number') {
+        this.setData({ timerSeconds: Math.max(0, Math.ceil(remaining)) });
+      }
+    }
+  },
+  _tickTimer(endAt) {
+    if (!endAt) { this.setData({ timerSeconds: 0 }); return; }
+    const remaining = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+    this.setData({ timerSeconds: remaining });
+    if (remaining <= 0) {
+      this._stopTimerTicking();
+      if (this.data.timerRunning) this.setData({ timerRunning: false });
+      wx.showToast({ title: '发言时间到', icon: 'none' });
+    }
+  },
+  _stopTimerTicking() {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
-    this.setData({ timerRunning: false });
+  },
+  // 房主操作：仅房主可发起，经 socket 广播 endAt/状态，各端本地倒计时
+  _timerHostGuard() {
+    if (!this.data.isHost) {
+      wx.showToast({ title: '仅房主可操作计时器', icon: 'none' });
+      return false;
+    }
+    return true;
   },
   startTimer() {
-    if (!this.checkIfTeamLeader()) return;
+    if (!this._timerHostGuard()) return;
     if (this.data.timerRunning) return;
-    if (this.data.timerSeconds <= 0) {
-      const sec = this._getSpeechTimeout();
-      if (!sec) { wx.showToast({ title: '未设置发言时限', icon: 'none' }); return; }
-      this.setData({ timerSeconds: sec });
-    }
-    this.setData({ timerRunning: true });
-    this.timerInterval = setInterval(() => {
-      let s = this.data.timerSeconds - 1;
-      if (s <= 0) {
-        s = 0;
-        clearInterval(this.timerInterval);
-        this.timerInterval = null;
-        this.setData({ timerSeconds: s, timerRunning: false });
-        wx.showToast({ title: '发言时间到', icon: 'none' });
-      } else {
-        this.setData({ timerSeconds: s });
-      }
-    }, 1000);
+    const sec = this._getSpeechTimeout();
+    if (!sec) { wx.showToast({ title: '未设置发言时限', icon: 'none' }); return; }
+    const endAt = Date.now() + sec * 1000;
+    api.sendSocket('timerUpdate', { gameId: this.data.gameId, running: true, endAt, remaining: sec });
+    this.applyTimerUpdate(true, endAt, sec);
   },
   pauseTimer() {
-    if (!this.checkIfTeamLeader()) return;
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-      this.timerInterval = null;
-    }
-    this.setData({ timerRunning: false });
+    if (!this._timerHostGuard()) return;
+    // 广播当前剩余秒数（暂停），各端统一显示该剩余
+    const remaining = this.data.timerEndAt > 0 ? Math.max(0, Math.ceil((this.data.timerEndAt - Date.now()) / 1000)) : (this.data.timerSeconds || 0);
+    api.sendSocket('timerUpdate', { gameId: this.data.gameId, running: false, endAt: null, remaining });
+    this.applyTimerUpdate(false, 0, remaining);
   },
   resetTimer() {
-    if (!this.checkIfTeamLeader()) return;
-    this.pauseTimer();
-    const sec = this._getSpeechTimeout();
-    this.setData({ timerSeconds: sec || 0 });
+    if (!this._timerHostGuard()) return;
+    const sec = this._getSpeechTimeout() || 0;
+    // 恢复满时长并暂停（running:false, remaining=时长），待再次启动
+    api.sendSocket('timerUpdate', { gameId: this.data.gameId, running: false, endAt: null, remaining: sec });
+    this.applyTimerUpdate(false, 0, sec);
   },
 
   castVote(e) {
