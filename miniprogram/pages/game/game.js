@@ -1200,9 +1200,12 @@ Page({
   assassinate(e) {
     const targetOpenId = e.currentTarget.dataset.id;
     const { gameId } = this.data;
+    const tp = (this.data.allPlayers || []).find(x => x.openId === targetOpenId);
+    const seat = tp && tp.seatNumber != null ? tp.seatNumber : '?';
+    const name = tp && tp.nickName ? tp.nickName : '';
     wx.showModal({
       title: '刺杀梅林',
-      content: '确认刺杀该玩家为梅林？',
+      content: `确认刺杀${seat}号${name}？`,
       success: (res) => {
         if (res.confirm) {
           api.assassinate(gameId, targetOpenId).then(() => {

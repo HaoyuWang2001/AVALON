@@ -94,7 +94,7 @@ Page({
     speechTimeoutIndex: 0,
     roundTimeoutIndex: 0,
     voteTimeoutIndex: 0,
-    voteRevealDurationIndex: 1,
+    voteRevealDurationIndex: 2,
 
     speechOptions: SPEECH_OPTIONS,
     roundOptions: ROUND_OPTIONS,
@@ -439,7 +439,7 @@ Page({
       speechTimeoutIndex: 0,
       roundTimeoutIndex: 0,
       voteTimeoutIndex: 0,
-      voteRevealDurationIndex: 1,
+      voteRevealDurationIndex: 2,
       goodCount: def.good.filter(r => r !== 'loyal').length + (def.good.includes('loyal') ? 0 : 0),
       evilCount: def.evil.length,
     });
