@@ -598,6 +598,24 @@ class GameModel {
           missionSuccess: row.missionSuccess === null ? null : row.missionSuccess === 1
         });
       }
+
+      // 最近一次队伍投票结果（后端权威，来自归档 team_votes；座位升序）：
+      // missionVote 时为刚通过的队伍投票，流车时为刚否决的队伍投票（完整含最后投票者）
+      let teamVoteResult = { approveSeats: '', rejectSeats: '' };
+      if (carRows.length > 0) {
+        const lastCarRow = carRows[carRows.length - 1];
+        const lastTv = parseJson(lastCarRow.teamVotes) || {};
+        const seatOfB = (id) => {
+          const p = players.find(x => x.openId === id);
+          return p && p.seatNumber != null ? p.seatNumber : null;
+        };
+        const toSeats = (voteVal) => Object.keys(lastTv)
+          .filter(id => lastTv[id] === voteVal)
+          .map(seatOfB).filter(s => s != null)
+          .sort((a, b) => a - b)
+          .join(' ');
+        teamVoteResult = { approveSeats: toSeats('approve'), rejectSeats: toSeats('reject') };
+      }
       const cars = Object.keys(carsMap).map(round => ({
         round: parseInt(round),
         details: carsMap[round]
@@ -699,6 +717,7 @@ class GameModel {
         teamVoteStatus: game.currentPhase === 'teamVote' ? buildVoteStatus(teamVotesObj) : null,
         missionVoteStatus: game.currentPhase === 'missionVote' ? buildVoteStatus(missionVotesObj) : null,
         lakeHolderOpenId: game.lakeHolderOpenId || null,
+        teamVoteResult,
         speakingOrder: game.speakingOrder || 'asc',
         discussionSet: !!(game.discussionSet === 1 || game.discussionSet === true),
         lancelotResult: game.lancelotResult || null,

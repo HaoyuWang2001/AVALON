@@ -225,8 +225,7 @@ Page({
     assassinationPhase: '',
     missionVoteReady: false,
     voteCountdown: 0,
-    revealApproveSeats: '',
-    revealRejectSeats: '',
+    teamVoteResult: { approveSeats: '', rejectSeats: '' },
     showMissionAnim: false,
     missionAnimSuccess: false,
   },
@@ -309,12 +308,9 @@ Page({
         const playerLakeConfirmed = !!(res.player && res.player.lakeConfirmed);
         const playerLancelotConfirmed = !!(res.player && res.player.lancelotConfirmed);
         const isInGame = !!(res.player && res.player.role);
-        // 流车：队伍投票被否决（teamVote → preNominate/discussion 强制车），需 5s 展示票型
+        // 流车：队伍投票被否决（teamVote → preNominate/discussion 强制车），触发 5s 票型倒计时
         const isTeamVoteReject = prevPhaseForTransitions === 'teamVote'
           && (phase === 'preNominate' || phase === 'discussion');
-        // 保存刚结束的 teamVote 票型（旧 data 值），供流车 5s 展示
-        const savedApproveSeats = isTeamVoteReject ? this.data.approveSeats : '';
-        const savedRejectSeats = isTeamVoteReject ? this.data.rejectSeats : '';
 
         // 任务结果强制动画：新任务结算时全员播放（首次拉取只记录基准，避免进入进行中对局误播）
         if (!this._missionKeyInit) {
@@ -554,8 +550,7 @@ Page({
           preTeamSeats: preTeamSeats,
           approveSeats: approveSeats,
           rejectSeats: rejectSeats,
-          revealApproveSeats: savedApproveSeats,
-          revealRejectSeats: savedRejectSeats,
+          teamVoteResult: res.current.teamVoteResult || { approveSeats: '', rejectSeats: '' },
           teamVotes: res.current.teamVotes || {},
           missionVotes: res.current.missionVotes || {},
           missionResults: missions,
@@ -642,8 +637,9 @@ Page({
             }
           }, 1000);
         } else if (phase !== 'missionVote') {
-          // 票型倒计时展示期（voteCountdown>0，含流车）内不覆盖，由 interval 到 0 统一清除
-          if (this.data.voteCountdown <= 0) {
+          // 票型倒计时展示期（voteCountdown>0 且有 interval）内不覆盖，由 interval 到 0 统一清除；
+          // 兜底：interval 丢失（异常）时强制清零，防止阶段栏被误隐藏
+          if (this.data.voteCountdown <= 0 || !this._voteCountdownTimer) {
             this.setData({ missionVoteReady: false, voteCountdown: 0 });
             if (this._voteCountdownTimer) {
               clearInterval(this._voteCountdownTimer);

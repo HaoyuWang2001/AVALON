@@ -98,9 +98,9 @@
         <text class="vote-countdown-num">{{voteCountdown}}s</text>
       </view>
       <view class="bar-info vote-reveal-line">
-        <text class="txt-approve">同意：{{approveSeats || revealApproveSeats}}</text>
+        <text class="txt-approve">同意：{{teamVoteResult.approveSeats}}</text>
         <text class="vote-line-sep"> / </text>
-        <text class="txt-reject">反对：{{rejectSeats || revealRejectSeats}}</text>
+        <text class="txt-reject">反对：{{teamVoteResult.rejectSeats}}</text>
       </view>
     </block>
 
@@ -209,10 +209,10 @@
       <view wx:if="{{!isMissionTeamMember}}" class="vote-waiting">
         <view class="vote-waiting-spinner"></view>
       </view>
-      <view class="bar-info vote-reveal-line" wx:if="{{approveSeats || rejectSeats}}">
-        <text class="txt-approve">同意：{{approveSeats}}</text>
+      <view class="bar-info vote-reveal-line" wx:if="{{teamVoteResult.approveSeats || teamVoteResult.rejectSeats}}">
+        <text class="txt-approve">同意：{{teamVoteResult.approveSeats}}</text>
         <text class="vote-line-sep"> / </text>
-        <text class="txt-reject">反对：{{rejectSeats}}</text>
+        <text class="txt-reject">反对：{{teamVoteResult.rejectSeats}}</text>
       </view>
     </block>
 
