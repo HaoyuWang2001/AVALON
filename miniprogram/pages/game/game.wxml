@@ -181,9 +181,12 @@
 
     <!-- missionVote -->
     <block wx:if="{{currentPhase === 'missionVote'}}">
-      <!-- 倒计时：替代等待 span，大号紫色数字 -->
+      <!-- 倒计时：stopwatch 在左、x s 在右，替代等待 span -->
       <view wx:if="{{!missionVoteReady && voteCountdown > 0}}" class="vote-waiting">
-        <text class="vote-countdown-num">{{voteCountdown}}s</text>
+        <view class="vote-countdown">
+          <image src="/images/stopwatch.png" class="timer-icon"></image>
+          <text class="vote-countdown-num">{{voteCountdown}}s</text>
+        </view>
       </view>
       <view wx:elif="{{!isMissionTeamMember}}" class="vote-waiting">
         <view class="vote-waiting-spinner"></view>
