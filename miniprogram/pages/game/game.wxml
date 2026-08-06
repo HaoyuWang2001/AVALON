@@ -209,7 +209,8 @@
       <view wx:if="{{!isMissionTeamMember}}" class="vote-waiting">
         <view class="vote-waiting-spinner"></view>
       </view>
-      <view class="bar-info vote-reveal-line" wx:if="{{teamVoteResult.approveSeats || teamVoteResult.rejectSeats}}">
+      <view wx:if="{{isForcedMissionVote}}" class="bar-info bar-waiting">本轮是强制车</view>
+      <view wx:elif="{{teamVoteResult.approveSeats || teamVoteResult.rejectSeats}}" class="bar-info vote-reveal-line">
         <text class="txt-approve">同意：{{teamVoteResult.approveSeats}}</text>
         <text class="vote-line-sep"> / </text>
         <text class="txt-reject">反对：{{teamVoteResult.rejectSeats}}</text>

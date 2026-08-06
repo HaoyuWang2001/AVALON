@@ -226,6 +226,7 @@ Page({
     missionVoteReady: false,
     voteCountdown: 0,
     teamVoteResult: { approveSeats: '', rejectSeats: '' },
+    isForcedMissionVote: false,
     showMissionAnim: false,
     missionAnimSuccess: false,
   },
@@ -308,9 +309,9 @@ Page({
         const playerLakeConfirmed = !!(res.player && res.player.lakeConfirmed);
         const playerLancelotConfirmed = !!(res.player && res.player.lancelotConfirmed);
         const isInGame = !!(res.player && res.player.role);
-        // 流车：队伍投票被否决（teamVote → preNominate/discussion 强制车），触发 5s 票型倒计时
-        const isTeamVoteReject = prevPhaseForTransitions === 'teamVote'
-          && (phase === 'preNominate' || phase === 'discussion');
+        // 离开 teamVote（→missionVote 通过 / →preNominate/discussion 流车）：触发 5s 票型倒计时
+        // 强制车发车为 discussion→missionVote（prev 非 teamVote），不触发
+        const isLeavingTeamVote = phase !== 'teamVote' && prevPhaseForTransitions === 'teamVote';
 
         // 任务结果强制动画：新任务结算时全员播放（首次拉取只记录基准，避免进入进行中对局误播）
         if (!this._missionKeyInit) {
@@ -621,8 +622,8 @@ Page({
           api.connectSocket(this.data.roomId, app.globalData.openId);
         }
 
-        // 队伍投票完成 → 任务投票（通过）或流车（否决）：5s 倒计时先让所有人看清票型
-        const needsCountdown = (phase === 'missionVote' && prevPhaseForTransitions !== 'missionVote') || isTeamVoteReject;
+        // 离开 teamVote（通过→missionVote / 流车→preNominate/discussion）：5s 倒计时看票型；强制车(discussion→missionVote)不触发
+        const needsCountdown = isLeavingTeamVote;
         if (needsCountdown) {
           this.setData({ missionVoteReady: false, voteCountdown: 5 });
           if (this._voteCountdownTimer) clearInterval(this._voteCountdownTimer);
@@ -646,6 +647,11 @@ Page({
               this._voteCountdownTimer = null;
             }
           }
+        }
+
+        // 进入 missionVote 时判定当前车是否为强制车（来源 discussion=强制车，teamVote=正常通过）
+        if (phase === 'missionVote' && prevPhaseForTransitions !== 'missionVote') {
+          this.setData({ isForcedMissionVote: prevPhaseForTransitions === 'discussion' });
         }
 
         // gameEnd 结果由底部框展示（wxml currentPhase === 'gameEnd' 渲染）
