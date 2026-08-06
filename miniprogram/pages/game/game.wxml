@@ -77,7 +77,6 @@
           <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag {{tag.cls}}">{{tag.text}}</text>
         </view>
       </view>
-      <view wx:if="{{item.evilRoleName}}" class="tplayer-evil-role">{{item.evilRoleName}}</view>
       <view wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="tplayer-gameend-role">{{item.roleName}}</view>
       <view wx:if="{{showSelectCheck}}" class="table-check {{item.checked ? 'checked' : ''}} {{item.disabled ? 'disabled' : ''}}"
         catchtap="onTablePlayerTap" data-id="{{item.openId}}">
@@ -383,7 +382,18 @@
     <view class="modal-mask" catchtap="noop"></view>
     <view class="lancelot-body">
       <view class="lancelot-title">兰斯洛特抽卡</view>
-      <view class="lancelot-result">{{lancelotResult && lancelotResult.switched ? '身份转换' : '未转换'}}</view>
+      <!-- 转换：蓝图 紫色弧形双箭头(上凸→/下凸←) 红图；未转换：文字 -->
+      <block wx:if="{{lancelotResult && lancelotResult.switched}}">
+        <view class="lancelot-swap">
+          <image src="/images/avalon-blue.png" class="lancelot-swap-img" mode="aspectFit"/>
+          <view class="lancelot-swap-arrows">
+            <view class="lancelot-arrow lancelot-arrow-up"></view>
+            <view class="lancelot-arrow lancelot-arrow-down"></view>
+          </view>
+          <image src="/images/avalon-red.png" class="lancelot-swap-img" mode="aspectFit"/>
+        </view>
+      </block>
+      <view wx:else class="lancelot-result">未转换</view>
       <button class="btn btn-primary" bindtap="confirmLancelot">确认</button>
     </view>
   </view>

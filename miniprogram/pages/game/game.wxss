@@ -617,6 +617,49 @@
   font-size: 44rpx; font-weight: 800; color: #8B5CF6;
   margin-bottom: 40rpx;
 }
+/* 兰斯转换图示：左蓝图 + 中间紫色弧形双箭头 + 右红图 */
+.lancelot-swap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40rpx;
+}
+.lancelot-swap-img { width: 130rpx; height: 130rpx; }
+.lancelot-swap-arrows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 16rpx;
+  gap: 10rpx;
+}
+.lancelot-arrow { position: relative; width: 96rpx; height: 48rpx; }
+/* 上箭头：上凸弧，方向 蓝→红（箭头尖朝右） */
+.lancelot-arrow-up {
+  border-top: 4rpx solid #8B5CF6;
+  border-radius: 48rpx 48rpx 0 0;
+}
+/* 下箭头：下凹弧，方向 红→蓝（箭头尖朝左） */
+.lancelot-arrow-down {
+  border-bottom: 4rpx solid #8B5CF6;
+  border-radius: 0 0 48rpx 48rpx;
+}
+.lancelot-arrow-up::after,
+.lancelot-arrow-down::after {
+  content: '';
+  position: absolute;
+  width: 14rpx; height: 14rpx;
+  border-top: 4rpx solid #8B5CF6;
+  border-right: 4rpx solid #8B5CF6;
+}
+.lancelot-arrow-up::after {
+  right: -2rpx; top: -4rpx;
+  transform: rotate(45deg);
+}
+.lancelot-arrow-down::after {
+  left: -2rpx; bottom: -4rpx;
+  transform: rotate(-135deg);
+}
 .lancelot-body .btn { width: 100%; }
 
 /* 工具函数样式 */
