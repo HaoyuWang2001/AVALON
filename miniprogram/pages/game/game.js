@@ -1045,11 +1045,16 @@ Page({
   startTimer() {
     if (!this._timerHostGuard()) return;
     if (this.data.timerRunning) return;
-    const sec = this._getSpeechTimeout();
-    if (!sec) { wx.showToast({ title: '未设置发言时限', icon: 'none' }); return; }
-    const endAt = Date.now() + sec * 1000;
-    api.sendSocket('timerUpdate', { gameId: this.data.gameId, running: true, endAt, remaining: sec });
-    this.applyTimerUpdate(true, endAt, sec);
+    // 继续计时：以当前剩余为准（暂停后=暂停剩余；首次/重置后=speechTimeout；归零后=speechTimeout）
+    let remain = this.data.timerSeconds;
+    if (!remain || remain <= 0) {
+      const sec = this._getSpeechTimeout();
+      if (!sec) { wx.showToast({ title: '未设置发言时限', icon: 'none' }); return; }
+      remain = sec;
+    }
+    const endAt = Date.now() + remain * 1000;
+    api.sendSocket('timerUpdate', { gameId: this.data.gameId, running: true, endAt, remaining: remain });
+    this.applyTimerUpdate(true, endAt, remain);
   },
   pauseTimer() {
     if (!this._timerHostGuard()) return;
