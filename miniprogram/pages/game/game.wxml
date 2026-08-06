@@ -192,7 +192,7 @@
 
     <!-- teamVote -->
     <block wx:if="{{currentPhase === 'teamVote'}}">
-      <block wx:if="{{!hasTeamVoted}}">
+      <block wx:if="{{isInGame && !hasTeamVoted}}">
         <view class="bar-row">
           <button class="btn vote-approve" bindtap="castVote" data-vote="approve">同意</button>
           <button class="btn vote-reject" bindtap="castVote" data-vote="reject">反对</button>
@@ -200,7 +200,7 @@
       </block>
       <view wx:else class="vote-waiting vote-waiting-col">
         <view class="vote-waiting-spinner"></view>
-        <text class="vote-waiting-text">等待全部玩家投票...</text>
+        <text class="vote-waiting-text">{{isInGame ? '等待全部玩家投票...' : '观战中，等待玩家投票...'}}</text>
       </view>
     </block>
 
