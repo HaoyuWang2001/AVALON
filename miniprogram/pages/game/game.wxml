@@ -206,6 +206,16 @@
       <view class="bar-info" wx:if="{{rejectSeats}}" style="color:#EF4444;font-weight:700;">反对：{{rejectSeats}}</view>
     </block>
 
+    <!-- 流车票型 5s 展示（覆盖底部栏，显示刚结束的队伍投票结果） -->
+    <view class="teamvote-reveal" wx:if="{{teamVoteReveal}}">
+      <view class="vote-countdown">
+        <image src="/images/stopwatch.png" class="timer-icon"></image>
+        <text class="vote-countdown-num">{{voteCountdown}}s</text>
+      </view>
+      <view class="bar-info" wx:if="{{revealApproveSeats}}" style="color:#10B981;font-weight:700;">赞成：{{revealApproveSeats}}</view>
+      <view class="bar-info" wx:if="{{revealRejectSeats}}" style="color:#EF4444;font-weight:700;">反对：{{revealRejectSeats}}</view>
+    </view>
+
     <!-- assassination -->
     <block wx:if="{{currentPhase === 'assassination'}}">
       <!-- 睁眼狼：提问 -->

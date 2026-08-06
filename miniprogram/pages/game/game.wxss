@@ -299,6 +299,21 @@
   min-height: 100rpx;
 }
 .bar-info { font-size: 32rpx; color: #6B7280; text-align: center; }
+/* 流车票型 5s 展示覆盖层：盖住底部栏区域，显示 stopwatch+票型 */
+.teamvote-reveal {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 910;
+  background: #FFFFFF;
+  border-top: 2rpx solid #E5E7EB;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  padding: 28rpx 32rpx 44rpx;
+  min-height: 100rpx;
+}
 /* 预选车信息行：紫色加粗，文字与箭头垂直居中 */
 .bar-preteam {
   color: #8B5CF6;

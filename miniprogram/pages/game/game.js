@@ -225,6 +225,9 @@ Page({
     assassinationPhase: '',
     missionVoteReady: false,
     voteCountdown: 0,
+    teamVoteReveal: false,
+    revealApproveSeats: '',
+    revealRejectSeats: '',
     showMissionAnim: false,
     missionAnimSuccess: false,
   },
@@ -307,6 +310,12 @@ Page({
         const playerLakeConfirmed = !!(res.player && res.player.lakeConfirmed);
         const playerLancelotConfirmed = !!(res.player && res.player.lancelotConfirmed);
         const isInGame = !!(res.player && res.player.role);
+        // 流车：队伍投票被否决（teamVote → preNominate/discussion 强制车），需 5s 展示票型
+        const isTeamVoteReject = prevPhaseForTransitions === 'teamVote'
+          && (phase === 'preNominate' || phase === 'discussion');
+        // 保存刚结束的 teamVote 票型（旧 data 值），供流车 5s 展示
+        const savedApproveSeats = isTeamVoteReject ? this.data.approveSeats : '';
+        const savedRejectSeats = isTeamVoteReject ? this.data.rejectSeats : '';
 
         // 任务结果强制动画：新任务结算时全员播放（首次拉取只记录基准，避免进入进行中对局误播）
         if (!this._missionKeyInit) {
@@ -546,6 +555,8 @@ Page({
           preTeamSeats: preTeamSeats,
           approveSeats: approveSeats,
           rejectSeats: rejectSeats,
+          revealApproveSeats: savedApproveSeats,
+          revealRejectSeats: savedRejectSeats,
           teamVotes: res.current.teamVotes || {},
           missionVotes: res.current.missionVotes || {},
           missionResults: missions,
@@ -616,22 +627,23 @@ Page({
           api.connectSocket(this.data.roomId, app.globalData.openId);
         }
 
-        // 队伍投票完成 → 任务投票：5s 倒计时先让所有人看清票型，再弹出任务投票弹窗
-        if (phase === 'missionVote' && prevPhaseForTransitions !== 'missionVote') {
-          this.setData({ missionVoteReady: false, voteCountdown: 5 });
+        // 队伍投票完成 → 任务投票（通过）或流车（否决）：5s 倒计时先让所有人看清票型
+        const needsCountdown = (phase === 'missionVote' && prevPhaseForTransitions !== 'missionVote') || isTeamVoteReject;
+        if (needsCountdown) {
+          this.setData({ missionVoteReady: false, voteCountdown: 5, teamVoteReveal: isTeamVoteReject });
           if (this._voteCountdownTimer) clearInterval(this._voteCountdownTimer);
           this._voteCountdownTimer = setInterval(() => {
             const n = this.data.voteCountdown - 1;
             if (n <= 0) {
               clearInterval(this._voteCountdownTimer);
               this._voteCountdownTimer = null;
-              this.setData({ voteCountdown: 0, missionVoteReady: true });
+              this.setData({ voteCountdown: 0, missionVoteReady: true, teamVoteReveal: false });
             } else {
               this.setData({ voteCountdown: n });
             }
           }, 1000);
         } else if (phase !== 'missionVote') {
-          this.setData({ missionVoteReady: false, voteCountdown: 0 });
+          this.setData({ missionVoteReady: false, voteCountdown: 0, teamVoteReveal: false });
           if (this._voteCountdownTimer) {
             clearInterval(this._voteCountdownTimer);
             this._voteCountdownTimer = null;
