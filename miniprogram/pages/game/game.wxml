@@ -149,7 +149,12 @@
           <button size="mini" class="btn btn-primary" bindtap="confirmLakeInspect" disabled="{{!lakeTargetOpenId}}">确认查验</button>
         </view>
       </block>
-      <view wx:else class="bar-info bar-waiting">等待湖仙查验...</view>
+      <block wx:else>
+        <view class="vote-waiting">
+          <view class="vote-waiting-spinner"></view>
+        </view>
+        <view class="bar-info bar-waiting">等待湖仙查验...</view>
+      </block>
     </block>
 
     <!-- lancelot：兰斯抽卡结果展示 + 全员确认 -->
@@ -176,19 +181,15 @@
 
     <!-- missionVote -->
     <block wx:if="{{currentPhase === 'missionVote'}}">
-      <block wx:if="{{!isMissionTeamMember}}">
-        <view class="vote-waiting">
-          <view class="vote-waiting-spinner"></view>
-        </view>
-      </block>
+      <!-- 倒计时：替代等待 span，大号紫色数字 -->
+      <view wx:if="{{!missionVoteReady && voteCountdown > 0}}" class="vote-waiting">
+        <text class="vote-countdown-num">{{voteCountdown}}s</text>
+      </view>
+      <view wx:elif="{{!isMissionTeamMember}}" class="vote-waiting">
+        <view class="vote-waiting-spinner"></view>
+      </view>
       <view class="bar-info" wx:if="{{approveSeats}}" style="color:#10B981;font-weight:700;">赞成：{{approveSeats}}</view>
       <view class="bar-info" wx:if="{{rejectSeats}}" style="color:#EF4444;font-weight:700;">反对：{{rejectSeats}}</view>
-      <!-- 票型展示倒计时框：任务投票弹窗出现前让大家看清票型 -->
-      <view class="timer-card vote-countdown" wx:if="{{!missionVoteReady && voteCountdown > 0}}">
-        <image src="/images/stopwatch.png" class="timer-icon"></image>
-        <text class="timer-num">{{voteCountdown}}s</text>
-        <text class="timer-label">后开始任务投票</text>
-      </view>
     </block>
 
     <!-- assassination -->
@@ -415,7 +416,6 @@
     <view class="mission-anim-center">
       <image src="/images/{{missionAnimSuccess ? 'avalon-blue.png' : 'avalon-red.png'}}" class="mission-anim-img" mode="aspectFit"/>
       <text class="mission-anim-text">{{missionAnimSuccess ? '任务成功' : '任务失败'}}</text>
-      <text class="mission-anim-sub">{{missionAnimSuccess ? '好人获得1分' : '坏人获得1分'}}</text>
     </view>
   </view>
 </view>
