@@ -85,7 +85,7 @@
   <view class="card spectator-card" wx:if="{{spectatorAllowed}}">
     <view class="card-header">
       <text class="card-title">观战区 ({{spectatorPlayers.length}})</text>
-      <text wx:if="{{currentUser && currentUser.seatNumber >= 0}}" class="btn-round btn-purple" bindtap="becomeSpectator">进入观战区</text>
+      <text wx:if="{{currentUser && currentUser.seatNumber >= 0 && !currentUserReady}}" class="btn-round btn-purple" bindtap="becomeSpectator">进入观战区</text>
     </view>
     <scroll-view scroll-x class="waiting-scroll" wx:if="{{spectatorPlayers.length > 0}}">
       <view class="waiting-list">
