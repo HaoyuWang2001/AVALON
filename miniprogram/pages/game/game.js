@@ -1163,6 +1163,7 @@ Page({
           wx.showLoading({ title: '进入刺杀...', mask: true });
           api.startAssassination(gameId).then(() => {
             wx.hideLoading();
+            this.setData({ showRoleModal: false });
             this.fetchGameState();
           }).catch(err => {
             wx.hideLoading();
