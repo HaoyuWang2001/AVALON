@@ -100,6 +100,7 @@ CREATE TABLE game_players (
     seat_number INT NULL COMMENT '游戏开始时座位号',
     reveal_confirmed BOOLEAN DEFAULT FALSE COMMENT '角色揭示是否已确认（全员确认后进入讨论）',
     lancelot_confirmed BOOLEAN DEFAULT FALSE COMMENT '兰斯抽卡是否已确认（全员确认后进入下一轮）',
+    lake_confirmed BOOLEAN DEFAULT FALSE COMMENT '湖仙查验是否已确认（全员确认后进入下一阶段）',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '分配时间',
     UNIQUE KEY uk_game_player (game_id, open_id),
     FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,

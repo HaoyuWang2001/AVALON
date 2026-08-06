@@ -141,6 +141,10 @@
 .table-player.state-voted {
   background: linear-gradient(to right, #DDD6FE 0%, #FFFFFF 50%);
 }
+/* 湖仙/兰斯确认阶段：已确认玩家卡片左半紫色渐变（与投票阶段"已投"同款） */
+.table-player.state-confirmed {
+  background: linear-gradient(to right, #DDD6FE 0%, #FFFFFF 50%);
+}
 /* 车队成员+已投票：左紫渐变 + 右金渐变，中间纯白 */
 .table-player.state-team-voted {
   background: linear-gradient(to right, #DDD6FE 0%, #FFFFFF 50%, #FEF3C7 100%);
@@ -558,7 +562,7 @@
 
 /* ─────── 湖仙查验结果弹窗 ─────── */
 .lake-result-modal {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1100;
   display: flex; align-items: center; justify-content: center;
 }
 .lake-result-body {

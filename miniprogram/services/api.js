@@ -209,6 +209,14 @@ class ApiService {
     });
   }
 
+  async confirmLake(gameId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/games/${gameId}/confirmLake`, {
+      method: 'POST',
+      data: { openId }
+    });
+  }
+
   async abandonGame(gameId) {
     const openId = this.openId || getApp().globalData.openId;
     return this.request(`/games/${gameId}/abandon`, {

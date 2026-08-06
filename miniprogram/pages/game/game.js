@@ -66,6 +66,12 @@ function enrichTablePlayer(p, ctx) {
       else if (vote === 'reject') cardState = 'state-rejected';
       else if (inTeam) cardState = 'state-team';
     }
+  } else if (currentPhase === 'lakeConfirm' || currentPhase === 'lancelot') {
+    // 确认阶段：已确认的玩家卡片左半紫色渐变（与投票阶段"已投"同款）
+    const confirmed = currentPhase === 'lakeConfirm'
+      ? (p.lakeConfirmed === 1 || p.lakeConfirmed === true)
+      : (p.lancelotConfirmed === 1 || p.lancelotConfirmed === true);
+    if (confirmed) cardState = 'state-confirmed';
   } else if (currentPhase === 'gameEnd') {
     // 游戏结束：按阵营着色（仅判断 side）
     cardState = p.side === 'evil' ? 'state-gameend-evil' : 'state-gameend-good';
@@ -210,7 +216,10 @@ Page({
     lakeResult: '',
     showLakeInfo: false,
     lakeInfoText: '',
-    lancelotConfirmedByMe: false,
+    isLakeInspector: false,
+    isInGame: false,
+    playerLakeConfirmed: false,
+    playerLancelotConfirmed: false,
     oldLakeOpenIds: [],
     socketReconnecting: false,
     isEvilEyesUser: false,
@@ -442,21 +451,26 @@ Page({
           targetSeat: seatInfo(e.targetOpenId)
         }));
 
-        // 湖仙查验实时通知：新查验发生时向非验人者弹窗提示（结果保密）
-        const rawLake = res.history ? res.history.lake || [] : [];
-        if (rawLake.length > 0) {
-          const lastLake = rawLake[rawLake.length - 1];
-          const lakeKey = `${lastLake.round}:${lastLake.inspectorOpenId}:${lastLake.targetOpenId}`;
-          if (this._lastLakeKey !== lakeKey) {
-            this._lastLakeKey = lakeKey;
-            if (lastLake.inspectorOpenId !== myOpenId) {
-              const ip = (res.players || []).find(x => x.openId === lastLake.inspectorOpenId);
-              const lp = (res.players || []).find(x => x.openId === lastLake.targetOpenId);
-              const iSeat = ip ? ip.seatNumber : '?';
-              const lSeat = lp ? lp.seatNumber : '?';
-              this.setData({ showLakeInfo: true, lakeInfoText: `湖仙${iSeat}号验${lSeat}号身份（结果保密）` });
-            }
-          }
+        // 湖仙确认阶段（lakeConfirm）：所有玩家确认。验人者仅看结果图弹窗（结果保密），
+        // 非验人者看「湖仙X号验Y号身份（结果保密）」确认弹窗；均由后端 lakeConfirmed 驱动（重连恢复）。
+        if (phase === 'lakeConfirm') {
+          const rawLakeConfirm = res.history ? res.history.lake || [] : [];
+          const lastLakeConfirm = rawLakeConfirm.length ? rawLakeConfirm[rawLakeConfirm.length - 1] : null;
+          const lpConfirm = (res.players || []).find(x => x.openId === (lastLakeConfirm ? lastLakeConfirm.targetOpenId : ''));
+          const ipConfirm = (res.players || []).find(x => x.openId === (lastLakeConfirm ? lastLakeConfirm.inspectorOpenId : ''));
+          const lSeatConfirm = lpConfirm ? lpConfirm.seatNumber : '?';
+          const iSeatConfirm = ipConfirm ? ipConfirm.seatNumber : '?';
+          const isLakeInspector = !!(lastLakeConfirm && lastLakeConfirm.inspectorOpenId === myOpenId);
+          const lakeConfirmed = !!playerLakeConfirmed;
+          this.setData({
+            isLakeInspector,
+            lakeInfoText: `湖仙${iSeatConfirm}号验${lSeatConfirm}号身份（结果保密）`,
+            showLakeResult: isInGame && isLakeInspector && !lakeConfirmed && !!(lastLakeConfirm && lastLakeConfirm.result),
+            lakeResult: (lastLakeConfirm && lastLakeConfirm.result) || '',
+            showLakeInfo: isInGame && !isLakeInspector && !lakeConfirmed
+          });
+        } else if (phase !== 'lake') {
+          this.setData({ isLakeInspector: false, showLakeResult: false, showLakeInfo: false });
         }
 
         // 刺杀链路：仅刺杀结算时有 assassination 记录
@@ -513,9 +527,15 @@ Page({
 
         // 捕获进入本次拉取前的阶段（setData 之前），供过渡检测使用
         const prevPhaseForTransitions = this.data.currentPhase;
+        const playerLakeConfirmed = !!(res.player && res.player.lakeConfirmed);
+        const playerLancelotConfirmed = !!(res.player && res.player.lancelotConfirmed);
+        const isInGame = !!(res.player && res.player.role);
 
         this.setData({
           gameState: res.current,
+          isInGame,
+          playerLakeConfirmed,
+          playerLancelotConfirmed,
           playerRole: myRole,
           playerSide: res.player ? res.player.side : null,
           roleName: this.getRoleName(myRole),
@@ -620,13 +640,6 @@ Page({
             clearInterval(this._voteCountdownTimer);
             this._voteCountdownTimer = null;
           }
-        }
-
-        // 兰斯洛特抽卡：进入该阶段时复位本人确认标记，离开时复位
-        if (phase === 'lancelot' && prevPhaseForTransitions !== 'lancelot') {
-          this.setData({ lancelotConfirmedByMe: false });
-        } else if (phase !== 'lancelot') {
-          this.setData({ lancelotConfirmedByMe: false });
         }
 
         // gameEnd 结果由底部框展示（wxml currentPhase === 'gameEnd' 渲染）
@@ -880,7 +893,7 @@ Page({
     }
   },
 
-  // lake 阶段：底部"确认查验"按钮（需先选中目标）
+  // lake 阶段：底部"确认查验"按钮（需先选中目标）；结果图弹窗由 lakeConfirm 阶段驱动
   confirmLakeInspect() {
     const { gameId, lakeTargetOpenId } = this.data;
     if (!lakeTargetOpenId) {
@@ -888,15 +901,9 @@ Page({
       return;
     }
     wx.showLoading({ title: '验人中...', mask: true });
-    api.lakeInspect(gameId, lakeTargetOpenId).then(res => {
+    api.lakeInspect(gameId, lakeTargetOpenId).then(() => {
       wx.hideLoading();
-      const lake = (res && res.history && res.history.lake) || [];
-      const last = lake[lake.length - 1];
-      this.setData({
-        lakeTargetOpenId: '',
-        showLakeResult: !!(last && last.result),
-        lakeResult: (last && last.result) || ''
-      });
+      this.setData({ lakeTargetOpenId: '' });
       this.fetchGameState();
     }).catch(err => {
       wx.hideLoading();
@@ -904,12 +911,17 @@ Page({
     });
   },
 
-  closeLakeResult() {
-    this.setData({ showLakeResult: false });
-  },
-
-  closeLakeInfo() {
-    this.setData({ showLakeInfo: false });
+  // lakeConfirm 阶段：确认湖仙查验（全员确认后进入下一阶段）；验人者结果图弹窗的"知道了"也走此提交
+  confirmLake() {
+    const { gameId } = this.data;
+    wx.showLoading({ title: '确认中...', mask: true });
+    api.confirmLake(gameId).then(() => {
+      wx.hideLoading();
+      this.fetchGameState();
+    }).catch(err => {
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '确认失败', icon: 'none' });
+    });
   },
 
   // 刺杀结算全屏动画：阶段1 刀落下 → 阶段2 成功/失败，全员播放
@@ -941,7 +953,6 @@ Page({
     wx.showLoading({ title: '确认中...', mask: true });
     api.confirmLancelot(gameId).then(() => {
       wx.hideLoading();
-      this.setData({ lancelotConfirmedByMe: true });
       this.fetchGameState();
     }).catch(err => {
       wx.hideLoading();
@@ -1199,6 +1210,7 @@ Page({
       'missionVote': '任务投票',
       'missionResult': '任务结果',
       'lake': '湖仙验人',
+      'lakeConfirm': '湖仙确认',
       'lancelot': '兰斯抽卡',
       'assassination': '刺杀阶段',
       'gameEnd': '游戏结束'

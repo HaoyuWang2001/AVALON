@@ -337,6 +337,11 @@ async function lakeInspect(gameId, openId, targetOpenId) {
   return res.body;
 }
 
+async function confirmLake(gameId, openId) {
+  const res = await apiPost(`/api/games/${gameId}/confirmLake`, { openId });
+  return res.body;
+}
+
 async function confirmLancelot(gameId, openId) {
   const res = await apiPost(`/api/games/${gameId}/confirmLancelot`, { openId });
   return res.body;
@@ -491,6 +496,7 @@ module.exports = {
   submitPreNomination,
   selectSpeakingOrder,
   lakeInspect,
+  confirmLake,
   confirmLancelot,
   abandonGame,
   createRoomWithPlayers,

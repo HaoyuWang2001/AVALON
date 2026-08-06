@@ -149,6 +149,10 @@ async function main() {
       res = await request('POST', `/games/${arg('game')}/confirmLancelot`, { openId: arg('openId') });
       console.log(JSON.stringify(res.body));
       break;
+    case 'lakeconfirm':
+      res = await request('POST', `/games/${arg('game')}/confirmLake`, { openId: arg('openId') });
+      console.log(JSON.stringify(res.body));
+      break;
     case 'nominate': {
       const team = arg('team', '').split(',').filter(Boolean);
       const body = { gameId: arg('game'), openId: arg('openId'), nominatedTeam: team };

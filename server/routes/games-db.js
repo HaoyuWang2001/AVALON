@@ -669,6 +669,41 @@ function createRouter() {
     }
   });
 
+  // 确认湖仙查验（lakeConfirm → lancelot/preNominate，全员确认后自动进入下一阶段）
+  router.post('/:gameId/confirmLake', async (req, res) => {
+    try {
+      const { gameId } = req.params;
+      const { openId } = req.body;
+
+      if (!gameId || !openId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+
+      const result = await GameModel.confirmLake(gameId, openId);
+
+      const db = require('../config/db');
+      const [gameRecord] = await db.query('SELECT room_id FROM games WHERE id = ?', [gameId]);
+      if (gameRecord && gameRecord.room_id) {
+        emitGame(gameRecord.room_id, gameId);
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error('确认湖仙查验API错误:', error);
+
+      if (error.message.includes('游戏不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+
+      if (error.message.includes('当前不是湖仙确认阶段') ||
+          error.message.includes('你不在本局游戏中')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
+      res.status(500).json({ success: false, message: error.message || '确认湖仙查验失败' });
+    }
+  });
+
   // 结束游戏
   router.post('/end', async (req, res) => {
     try {

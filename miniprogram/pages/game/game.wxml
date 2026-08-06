@@ -157,6 +157,16 @@
       </block>
     </block>
 
+    <!-- lakeConfirm：湖仙查验全员确认（确认按钮在弹窗，底部仅等待文案） -->
+    <block wx:if="{{currentPhase === 'lakeConfirm'}}">
+      <view class="bar-waiting">
+        <view class="vote-waiting">
+          <view class="vote-waiting-spinner"></view>
+        </view>
+        <view class="bar-info bar-waiting">等待所有玩家确认湖仙验人结果</view>
+      </view>
+    </block>
+
     <!-- lancelot：兰斯抽卡结果展示 + 全员确认 -->
     <block wx:if="{{currentPhase === 'lancelot'}}">
       <view class="bar-waiting">
@@ -349,27 +359,27 @@
     </view>
   </view>
 
-  <!-- 湖仙查验结果弹窗（纯图片，好人蓝/坏人红） -->
+  <!-- 湖仙查验结果弹窗（仅验人者，纯图片好人蓝/坏人红；"知道了"= 本人确认，不可关闭） -->
   <view class="lake-result-modal" wx:if="{{showLakeResult}}">
-    <view class="modal-mask" bindtap="closeLakeResult"></view>
+    <view class="modal-mask" catchtap="noop"></view>
     <view class="lake-result-body">
       <image src="/images/{{lakeResult === 'evil' ? 'avalon-red.png' : 'avalon-blue.png'}}" class="lake-result-img" mode="aspectFit"/>
-      <button class="btn btn-primary" bindtap="closeLakeResult">知道了</button>
+      <button class="btn btn-primary" bindtap="confirmLake">知道了</button>
     </view>
   </view>
 
-  <!-- 湖仙查验信息弹窗（非湖仙玩家收到新查验时提示，结果保密，仅按钮可关闭） -->
+  <!-- 湖仙查验确认弹窗（非验人者，结果保密；仅按钮触发确认提交，不可关闭） -->
   <view class="lake-info-modal" wx:if="{{showLakeInfo}}">
     <view class="modal-mask" catchtap="noop"></view>
     <view class="lake-info-body">
       <view class="lake-info-title">湖仙验人</view>
       <view class="lake-info-text">{{lakeInfoText}}</view>
-      <button class="btn btn-primary" bindtap="closeLakeInfo">知道了</button>
+      <button class="btn btn-primary" bindtap="confirmLake">确认</button>
     </view>
   </view>
 
-  <!-- 兰斯洛特抽卡弹窗（全员可见抽卡结果，仅按钮触发确认提交） -->
-  <view class="lancelot-modal" wx:if="{{currentPhase === 'lancelot' && !lancelotConfirmedByMe}}">
+  <!-- 兰斯洛特抽卡弹窗（全员可见抽卡结果，仅按钮触发确认提交，不可关闭；重连由后端 lancelotConfirmed 恢复） -->
+  <view class="lancelot-modal" wx:if="{{currentPhase === 'lancelot' && isInGame && !playerLancelotConfirmed}}">
     <view class="modal-mask" catchtap="noop"></view>
     <view class="lancelot-body">
       <view class="lancelot-title">兰斯洛特抽卡</view>

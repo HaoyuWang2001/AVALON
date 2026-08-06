@@ -497,6 +497,7 @@ class GameModel {
       const players = await db.query(
         `SELECT gp.open_id as openId, gp.role, gp.side, gp.reveal_confirmed as revealConfirmed,
                 gp.lancelot_confirmed as lancelotConfirmed,
+                gp.lake_confirmed as lakeConfirmed,
                 gp.nick_name as nickName, gp.avatar_url as avatarUrl, gp.seat_number as seatNumber
          FROM game_players gp
          WHERE gp.game_id = ?
@@ -507,6 +508,7 @@ class GameModel {
       const playerCount = players.length;
       const revealConfirmedCount = players.filter(p => p.revealConfirmed === 1 || p.revealConfirmed === true).length;
       const lancelotConfirmedCount = players.filter(p => p.lancelotConfirmed === 1 || p.lancelotConfirmed === true).length;
+      const lakeConfirmedCount = players.filter(p => p.lakeConfirmed === 1 || p.lakeConfirmed === true).length;
       const carIndex = game.failedNominations + 1;
 
       // 当前车次队伍投票 / 任务投票
@@ -643,13 +645,15 @@ class GameModel {
           role: requesterInfo ? requesterInfo.role : null,
           side: requesterInfo ? requesterInfo.side : null,
           revealConfirmed: requesterInfo ? (requesterInfo.revealConfirmed === 1 || requesterInfo.revealConfirmed === true) : false,
+          lancelotConfirmed: requesterInfo ? (requesterInfo.lancelotConfirmed === 1 || requesterInfo.lancelotConfirmed === true) : false,
+          lakeConfirmed: requesterInfo ? (requesterInfo.lakeConfirmed === 1 || requesterInfo.lakeConfirmed === true) : false,
           vision
         };
         if (revealAll) {
           publicPlayers = fullPlayers;
         } else {
           publicPlayers = fullPlayers.map(p => {
-            const entry = { openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl, seatNumber: p.seatNumber, isHost: p.isHost, revealConfirmed: p.revealConfirmed === 1 || p.revealConfirmed === true };
+            const entry = { openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl, seatNumber: p.seatNumber, isHost: p.isHost, revealConfirmed: p.revealConfirmed === 1 || p.revealConfirmed === true, lancelotConfirmed: p.lancelotConfirmed === 1 || p.lancelotConfirmed === true, lakeConfirmed: p.lakeConfirmed === 1 || p.lakeConfirmed === true };
             if (p.openId === openId) {
               entry.role = p.role;
               entry.side = p.side;
@@ -701,6 +705,8 @@ class GameModel {
         lancelotResult: game.lancelotResult || null,
         lancelotConfirmedCount,
         lancelotTotalCount: playerCount,
+        lakeConfirmedCount,
+        lakeTotalCount: playerCount,
         revealConfirmedCount,
         revealTotalCount: playerCount,
         evilOpenEyes: game.currentPhase === 'assassination'
@@ -1229,10 +1235,11 @@ class GameModel {
   }
 
   /**
-   * 湖仙验人：lake → 下一阶段。
+   * 湖仙验人（lake → lakeConfirm）。
    * 仅当前湖仙持有者可调用；需处于 lake 阶段；必验（不可跳过）。
    * 目标须为未当过湖仙的在局玩家；结果（当前阵营）仅验人者可见（getState 门控）。
-   * 验人后令牌传给被查验者；若兰斯触发则进入 lancelot，否则进入下一轮 preNominate。
+   * 记录结果并把令牌传给被查验者；随后进入 lakeConfirm 阶段等待全员确认
+   * （兰斯判定与下一轮推进在 confirmLake 中完成，与兰斯洛特确认流程镜像）。
    * @param {string} gameId 游戏ID
    * @param {string} openId 湖仙持有者openId
    * @param {string} targetOpenId 被查验者openId
@@ -1290,62 +1297,142 @@ class GameModel {
           [targetOpenId, gameId]
         );
 
-        // 读取房间规则，判定兰斯是否触发
-        const roomRows = await connection.execute('SELECT room_config FROM rooms WHERE id = ?', [game[0].room_id]);
-        const roomConfig = roomRows[0].length ? parseJson(roomRows[0][0].room_config) : null;
-        const rules = (roomConfig && roomConfig.rules) || {};
-        const swapRound = rules.lancelotSwapRound;
-        const lancelotEnabled = typeof swapRound === 'number'
-          && game[0].current_round >= swapRound && game[0].current_round <= 4;
-        const [lancelotPlayers] = await connection.execute(
-          `SELECT COUNT(*) as cnt FROM game_players WHERE game_id = ? AND role IN ('lancelotBlue','lancelotRed')`,
+        // 进入湖仙确认阶段（保持当前轮次，兰斯判定/下一轮推进由 confirmLake 完成）
+        await connection.execute(
+          `UPDATE games 
+           SET current_phase = 'lakeConfirm',
+               nominated_team = NULL,
+               updated_at = NOW()
+           WHERE id = ?`,
           [gameId]
         );
-        const hasLancelot = parseInt(lancelotPlayers[0].cnt, 10) > 0;
+        // 重置全员确认标记，供本次 lakeConfirm 阶段使用
+        await connection.execute(
+          'UPDATE game_players SET lake_confirmed = FALSE, lancelot_confirmed = FALSE WHERE game_id = ?',
+          [gameId]
+        );
+      });
 
-        const playerCount = parseInt(game[0].player_count, 10);
-        const newRound = game[0].current_round + 1;
-        const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
+      return await this.getState(gameId);
+    } catch (error) {
+      console.error('湖仙验人失败:', error);
+      throw error;
+    }
+  }
 
-        if (lancelotEnabled && hasLancelot) {
-          const switched = await maybeLancelotSwap(connection, gameId, game[0].current_round, rules);
-          await connection.execute(
-            `UPDATE games 
-             SET current_phase = 'lancelot',
-                 current_round = ?,
-                 team_leader_index = ?,
-                 nominated_team = NULL,
-                 failed_nominations = 0,
-                 pre_nominated_team = NULL,
-                 speaking_order = 'asc',
-                 discussion_set = FALSE,
-                 lancelot_result = ?,
-                 updated_at = NOW()
-             WHERE id = ?`,
-            [newRound, newTeamLeaderIndex, JSON.stringify({ switched: !!switched, round: game[0].current_round }), gameId]
+  /**
+   * 确认湖仙查验（lakeConfirm → lancelot/preNominate）。
+   * 全员确认（game_players.lake_confirmed）后：若兰斯触发则进入 lancelot（抽卡），
+   * 否则进入下一轮 preNominate；幂等。
+   * @param {string} gameId 游戏ID
+   * @param {string} openId 玩家openId
+   * @returns {Promise<Object>} 更新后的游戏状态
+   */
+  static async confirmLake(gameId, openId) {
+    try {
+      await db.transaction(async (connection) => {
+        const [game] = await connection.execute(
+          `SELECT current_phase, current_round, team_leader_index, lake_holder_open_id, room_id, failed_nominations,
+                  (SELECT COUNT(*) FROM game_players WHERE game_id = ?) as player_count
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId, gameId]
+        );
+
+        if (game.length === 0) {
+          throw new Error('游戏不存在');
+        }
+
+        if (game[0].current_phase !== 'lakeConfirm') {
+          throw new Error('当前不是湖仙确认阶段');
+        }
+
+        // 校验 openId 是游戏内玩家
+        const [gp] = await connection.execute(
+          'SELECT open_id FROM game_players WHERE game_id = ? AND open_id = ?',
+          [gameId, openId]
+        );
+        if (gp.length === 0) {
+          throw new Error('你不在本局游戏中');
+        }
+
+        // 幂等标记确认
+        await connection.execute(
+          'UPDATE game_players SET lake_confirmed = TRUE WHERE game_id = ? AND open_id = ?',
+          [gameId, openId]
+        );
+
+        const [counts] = await connection.execute(
+          `SELECT COUNT(*) as total,
+                  SUM(CASE WHEN lake_confirmed THEN 1 ELSE 0 END) as confirmed
+           FROM game_players WHERE game_id = ?`,
+          [gameId]
+        );
+        const total = parseInt(counts[0].total, 10);
+        const confirmed = parseInt(counts[0].confirmed, 10);
+
+        // 全员确认后：判定兰斯是否触发，进入 lancelot 或下一轮 preNominate
+        if (total > 0 && confirmed >= total) {
+          // 读取房间规则，判定兰斯是否触发（current_round 仍是刚完成的轮次）
+          const roomRows = await connection.execute('SELECT room_config FROM rooms WHERE id = ?', [game[0].room_id]);
+          const roomConfig = roomRows[0].length ? parseJson(roomRows[0][0].room_config) : null;
+          const rules = (roomConfig && roomConfig.rules) || {};
+          const swapRound = rules.lancelotSwapRound;
+          const lancelotEnabled = typeof swapRound === 'number'
+            && game[0].current_round >= swapRound && game[0].current_round <= 4;
+          const [lancelotPlayers] = await connection.execute(
+            `SELECT COUNT(*) as cnt FROM game_players WHERE game_id = ? AND role IN ('lancelotBlue','lancelotRed')`,
+            [gameId]
           );
-        } else {
+          const hasLancelot = parseInt(lancelotPlayers[0].cnt, 10) > 0;
+
+          const playerCount = parseInt(game[0].player_count, 10);
+          const newRound = game[0].current_round + 1;
+          const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
+
+          if (lancelotEnabled && hasLancelot) {
+            const switched = await maybeLancelotSwap(connection, gameId, game[0].current_round, rules);
+            await connection.execute(
+              `UPDATE games 
+               SET current_phase = 'lancelot',
+                   current_round = ?,
+                   team_leader_index = ?,
+                   nominated_team = NULL,
+                   failed_nominations = 0,
+                   pre_nominated_team = NULL,
+                   speaking_order = 'asc',
+                   discussion_set = FALSE,
+                   lancelot_result = ?,
+                   updated_at = NOW()
+               WHERE id = ?`,
+              [newRound, newTeamLeaderIndex, JSON.stringify({ switched: !!switched, round: game[0].current_round }), gameId]
+            );
+          } else {
+            await connection.execute(
+              `UPDATE games 
+               SET current_phase = 'preNominate',
+                   current_round = ?,
+                   team_leader_index = ?,
+                   nominated_team = NULL,
+                   failed_nominations = 0,
+                   pre_nominated_team = NULL,
+                   speaking_order = 'asc',
+                   discussion_set = FALSE,
+                   lancelot_result = NULL,
+                   updated_at = NOW()
+               WHERE id = ?`,
+              [newRound, newTeamLeaderIndex, gameId]
+            );
+          }
           await connection.execute(
-            `UPDATE games 
-             SET current_phase = 'preNominate',
-                 current_round = ?,
-                 team_leader_index = ?,
-                 nominated_team = NULL,
-                 failed_nominations = 0,
-                 pre_nominated_team = NULL,
-                 speaking_order = 'asc',
-                 discussion_set = FALSE,
-                 lancelot_result = NULL,
-                 updated_at = NOW()
-             WHERE id = ?`,
-            [newRound, newTeamLeaderIndex, gameId]
+            'UPDATE game_players SET lake_confirmed = FALSE, lancelot_confirmed = FALSE WHERE game_id = ?',
+            [gameId]
           );
         }
       });
 
       return await this.getState(gameId);
     } catch (error) {
-      console.error('湖仙验人失败:', error);
+      console.error('确认湖仙查验失败:', error);
       throw error;
     }
   }
@@ -1412,7 +1499,7 @@ class GameModel {
             [gameId]
           );
           await connection.execute(
-            'UPDATE game_players SET lancelot_confirmed = FALSE WHERE game_id = ?',
+            'UPDATE game_players SET lake_confirmed = FALSE, lancelot_confirmed = FALSE WHERE game_id = ?',
             [gameId]
           );
         }
@@ -1538,7 +1625,7 @@ class GameModel {
           );
           // 重置全员确认标记，供后续 lancelot 阶段复用
           await connection.execute(
-            'UPDATE game_players SET reveal_confirmed = FALSE, lancelot_confirmed = FALSE WHERE game_id = ?',
+            'UPDATE game_players SET reveal_confirmed = FALSE, lancelot_confirmed = FALSE, lake_confirmed = FALSE WHERE game_id = ?',
             [gameId]
           );
         }
