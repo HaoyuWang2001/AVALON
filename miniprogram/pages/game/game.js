@@ -937,14 +937,14 @@ Page({
     }, 1200);
   },
 
-  // 任务结果全屏动画（全员）：成功蓝图/失败红图，约 2.6s 自动关闭
+  // 任务结果全屏动画（全员）：成功蓝图/失败红图，约 5s 自动关闭
   playMissionAnim(success) {
     this.setData({ showMissionAnim: true, missionAnimSuccess: !!success });
     if (this._missionAnimTimer) clearTimeout(this._missionAnimTimer);
     this._missionAnimTimer = setTimeout(() => {
       this.setData({ showMissionAnim: false });
       this._missionAnimTimer = null;
-    }, 2600);
+    }, 5000);
   },
 
   // lancelot 阶段：确认抽卡结果（全员确认后进入下一轮）
