@@ -329,15 +329,15 @@
               </picker>
             </view>
             <view class="rule-row">
-              <text class="rule-label">任务超时</text>
-              <picker class="rule-picker" mode="selector" range="{{roundOptions}}" value="{{roundTimeoutIndex}}" data-field="roundTimeoutIndex" bindchange="onLimitChange">
-                <text>{{roundOptions[roundTimeoutIndex]}}</text>
+              <text class="rule-label" style="color:#B0B0B0;">任务超时</text>
+              <picker class="rule-picker" mode="selector" range="{{roundOptions}}" value="{{roundTimeoutIndex}}" data-field="roundTimeoutIndex" bindchange="onLimitChange" disabled>
+                <text style="color:#B0B0B0;">{{roundOptions[roundTimeoutIndex]}}</text>
               </picker>
             </view>
             <view class="rule-row">
-              <text class="rule-label">投票超时</text>
-              <picker class="rule-picker" mode="selector" range="{{voteOptions}}" value="{{voteTimeoutIndex}}" data-field="voteTimeoutIndex" bindchange="onLimitChange">
-                <text>{{voteOptions[voteTimeoutIndex]}}</text>
+              <text class="rule-label" style="color:#B0B0B0;">投票超时</text>
+              <picker class="rule-picker" mode="selector" range="{{voteOptions}}" value="{{voteTimeoutIndex}}" data-field="voteTimeoutIndex" bindchange="onLimitChange" disabled>
+                <text style="color:#B0B0B0;">{{voteOptions[voteTimeoutIndex]}}</text>
               </picker>
             </view>
             <view class="rule-row">
