@@ -506,6 +506,9 @@ Page({
           });
         }
 
+        // 捕获进入本次拉取前的阶段（setData 之前），供过渡检测使用
+        const prevPhaseForTransitions = this.data.currentPhase;
+
         this.setData({
           gameState: res.current,
           playerRole: myRole,
@@ -585,8 +588,7 @@ Page({
           api.stopReconnect();
           this.setData({ socketReconnecting: false });
           // 刺杀结算动画（全员）：从活跃阶段首次进入 gameEnd 且有刺杀记录时播放
-          const prevPhase = this.data.currentPhase;
-          if (gameAssassination && prevPhase && prevPhase !== 'gameEnd') {
+          if (gameAssassination && prevPhaseForTransitions && prevPhaseForTransitions !== 'gameEnd') {
             this.playAssassinationAnim(gameAssassination.correct);
           }
         } else if (!api._socketTask && this.data.roomId) {
@@ -594,7 +596,7 @@ Page({
         }
 
         // 队伍投票完成 → 任务投票：5s 倒计时先让所有人看清票型，再弹出任务投票弹窗
-        if (phase === 'missionVote' && this.data.currentPhase !== 'missionVote') {
+        if (phase === 'missionVote' && prevPhaseForTransitions !== 'missionVote') {
           this.setData({ missionVoteReady: false, voteCountdown: 5 });
           if (this._voteCountdownTimer) clearInterval(this._voteCountdownTimer);
           this._voteCountdownTimer = setInterval(() => {
