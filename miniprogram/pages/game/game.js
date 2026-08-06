@@ -923,7 +923,7 @@ Page({
     });
   },
 
-  // 刺杀结算全屏动画：阶段1 刀落下 → 阶段2 成功/失败，全员播放
+  // 刺杀结算全屏动画：阶段1 刀落下 → 阶段2 成功/失败，全员播放；总时长约 5s
   playAssassinationAnim(correct) {
     this.setData({ showAssassinationAnim: true, assassinationSuccess: !!correct, assassinationPhase: 'knife' });
     if (this._assnAnimTimer) clearTimeout(this._assnAnimTimer);
@@ -932,7 +932,7 @@ Page({
       this.setData({ assassinationPhase: 'result' });
       this._assnAnimTimer2 = setTimeout(() => {
         this.setData({ showAssassinationAnim: false, assassinationPhase: '' });
-      }, 1400);
+      }, 3800);
     }, 1200);
   },
 
