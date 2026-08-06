@@ -527,6 +527,23 @@
 .role-vision-tag-role { background: #EDE9FE; color: #6D28D9; }
 .role-vision-tag.tag-good { background: rgba(46, 204, 113, 0.14); color: #10B981; }
 .role-vision-tag.tag-evil { background: rgba(231, 76, 60, 0.14); color: #EF4444; }
+/* 开刀：行布局——左侧紫色座位牌(保留margin-right) + 红色开刀块填满剩余行，点击开始刺杀 */
+.role-vision-knife-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-top: 16rpx;
+}
+.role-vision-knife {
+  flex: 1;
+  padding: 20rpx 0;
+  border-radius: 16rpx;
+  background: #EF4444;
+  display: flex; align-items: center; justify-content: center;
+}
+.role-vision-knife-text {
+  color: #FFFFFF; font-size: 30rpx; font-weight: 700; letter-spacing: 6rpx;
+}
 
 /* ─────── 历史弹窗 ─────── */
 .info-modal {

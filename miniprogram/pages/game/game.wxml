@@ -305,12 +305,11 @@
             <text wx:if="{{item.campText}}" class="role-vision-tag {{item.side === 'evil' ? 'tag-evil' : 'tag-good'}}">{{item.campText}}</text>
           </view>
         </view>
-        <!-- 开刀条目：座位号? + 紫色标签"开刀"，点击开始刺杀 -->
-        <view wx:if="{{canAssassinateVar}}" class="role-vision-item" bindtap="startAssassination">
+        <!-- 开刀条目：左侧紫色座位牌 + 红色开刀块填满剩余行，点击开始刺杀 -->
+        <view wx:if="{{canAssassinateVar}}" class="role-vision-knife-row" bindtap="startAssassination">
           <view class="role-vision-seat">?</view>
-          <view class="role-vision-spacer"></view>
-          <view class="role-vision-tags">
-            <text class="role-vision-tag role-vision-tag-role">开刀</text>
+          <view class="role-vision-knife">
+            <text class="role-vision-knife-text">开刀</text>
           </view>
         </view>
       </view>
