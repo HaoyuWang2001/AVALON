@@ -26,3 +26,12 @@ Thumbs.db
 .env
 coverage/
 *.tmp/
+
+# Secrets & preview artifacts
+.keys/
+*.key
+.preview/
+
+# npm lockfiles（忽略根/miniprogram/preview，server 保留）
+**/package-lock.json
+!server/package-lock.json

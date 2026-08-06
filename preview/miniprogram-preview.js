@@ -7,10 +7,10 @@ const fs = require('fs');
 const ci = require('miniprogram-ci');
 
 const APPID = 'wxb021f21838eb4ced';
-const projectPath = path.resolve(__dirname, '..');
+const projectPath = path.resolve(__dirname, '../miniprogram');
 const privateKeyPath =
-  process.env.MP_PRIVATE_KEY || path.resolve(__dirname, '../../.keys/private.key');
-const outputDest = path.resolve(__dirname, '../../.preview/mp-preview.png');
+  process.env.MP_PRIVATE_KEY || path.resolve(__dirname, '../.keys/private.key');
+const outputDest = path.resolve(__dirname, '../.preview/mp-preview.png');
 
 (async () => {
   if (!fs.existsSync(privateKeyPath)) {

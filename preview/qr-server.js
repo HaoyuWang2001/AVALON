@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = parseInt(process.env.QR_PORT, 10) || 8099;
-const IMG_PATH = path.resolve(__dirname, '../../.preview/mp-preview.png');
+const IMG_PATH = path.resolve(__dirname, '../.preview/mp-preview.png');
 
 const PAGE_HTML = `<!DOCTYPE html>
 <html lang="zh-CN">

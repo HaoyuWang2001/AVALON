@@ -1,0 +1,14 @@
+{
+  "name": "avalon-preview",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AVALON 小程序真机预览工具（miniprogram-ci）",
+  "scripts": {
+    "preview": "node miniprogram-preview.js",
+    "preview:push": "node preview-push.js",
+    "qr:serve": "node qr-server.js"
+  },
+  "devDependencies": {
+    "miniprogram-ci": "^2.1.31"
+  }
+}

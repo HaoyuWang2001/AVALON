@@ -4,7 +4,7 @@
 const { execSync } = require('child_process');
 const path = require('path');
 
-const LOCAL_QR = path.resolve(__dirname, '../../.preview/mp-preview.png');
+const LOCAL_QR = path.resolve(__dirname, '../.preview/mp-preview.png');
 const PROD_HOST = 'lighthouse@114.132.51.227';
 const PROD_DIR = '/home/lighthouse/preview-qr';
 const URL = 'http://haoyu-wang141.top:8099/';
