@@ -71,7 +71,7 @@ function buildMinimalRoomConfig() {
       oberonKnowsRedLancelot: true,
       merlinKnowsLancelotSide: true
     },
-    limits: { speechTimeout: null, roundTimeout: null, voteTimeout: null },
+    limits: { speechTimeout: null, roundTimeout: null, voteTimeout: null, voteRevealDuration: 0 },
     meta: { roomName: 'Test Room', roomDescription: '', tags: [] },
     merlinVision: {
       canSee: ['assassin', 'morgana', 'minion', 'oberon'],

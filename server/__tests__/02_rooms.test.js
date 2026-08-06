@@ -19,7 +19,7 @@ function validConfig() {
       oberonMustFailMission: false, lancelotMustFail: false,
       voteVisibility: 'anonymous', missionFailDetail: 'count'
     },
-    limits: { speechTimeout: null, roundTimeout: null, voteTimeout: null },
+    limits: { speechTimeout: null, roundTimeout: null, voteTimeout: null, voteRevealDuration: 0 },
     meta: { roomName: '', roomDescription: '', tags: [] },
     merlinVision: { canSee: [], canIdentify: [] }
   };

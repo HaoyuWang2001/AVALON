@@ -460,6 +460,9 @@ class GameModel {
    */
   static async getState(gameId, openId = null) {
     try {
+      // 惰性推进：teamVoteReveal 超时立即推进（配合定时器，保证 voteRevealDuration=0 时即时进入下一阶段）
+      await this.maybeAdvanceTeamVoteReveal();
+
       // 获取游戏基本信息
       const games = await db.query(
         `SELECT id as gameId, room_id as roomId, owner_id as ownerId, current_phase as currentPhase, current_round as currentRound,
@@ -467,6 +470,7 @@ class GameModel {
                 failed_nominations as failedNominations, lake_holder_open_id as lakeHolderOpenId,
                 pre_nominated_team as preNominatedTeam, speaking_order as speakingOrder,
                 discussion_set as discussionSet, lancelot_result as lancelotResult,
+                vote_reveal_end_at as voteRevealEndAt, forced_car as forcedCar,
                 assassination, game_result as gameResult,
                 created_at as createdAt, ended_at as endedAt, updated_at as updatedAt,
                 status
@@ -578,7 +582,8 @@ class GameModel {
       const carRows = await db.query(
         `SELECT round, car_index as carIndex, team_leader_open_id as teamLeaderOpenId,
                 nominated_team as nominatedTeam, team_votes as teamVotes,
-                outcome, mission_votes as missionVotes, mission_success as missionSuccess
+                outcome, is_forced_car as isForcedCar,
+                mission_votes as missionVotes, mission_success as missionSuccess
          FROM game_cars 
          WHERE game_id = ? AND outcome != 'pending'
          ORDER BY round, car_index`,
@@ -594,27 +599,31 @@ class GameModel {
           nominatedTeam: parseJson(row.nominatedTeam) || [],
           teamVotes: parseJson(row.teamVotes) || {},
           outcome: row.outcome,
+          isForcedCar: row.isForcedCar === 1 || row.isForcedCar === true,
           missionVotes: parseJson(row.missionVotes) || null,
           missionSuccess: row.missionSuccess === null ? null : row.missionSuccess === 1
         });
       }
 
       // 最近一次队伍投票结果（后端权威，来自归档 team_votes；座位升序）：
-      // missionVote 时为刚通过的队伍投票，流车时为刚否决的队伍投票（完整含最后投票者）
+      // missionVote/teamVoteReveal 时显示；强制车轮次（isForcedCar）→ 空
+      const isForcedCarNow = game.forcedCar === 1 || game.forcedCar === true;
       let teamVoteResult = { approveSeats: '', rejectSeats: '' };
-      if (carRows.length > 0) {
+      if (!isForcedCarNow && carRows.length > 0) {
         const lastCarRow = carRows[carRows.length - 1];
         const lastTv = parseJson(lastCarRow.teamVotes) || {};
-        const seatOfB = (id) => {
-          const p = players.find(x => x.openId === id);
-          return p && p.seatNumber != null ? p.seatNumber : null;
-        };
-        const toSeats = (voteVal) => Object.keys(lastTv)
-          .filter(id => lastTv[id] === voteVal)
-          .map(seatOfB).filter(s => s != null)
-          .sort((a, b) => a - b)
-          .join(' ');
-        teamVoteResult = { approveSeats: toSeats('approve'), rejectSeats: toSeats('reject') };
+        if (Object.keys(lastTv).length > 0) {
+          const seatOfB = (id) => {
+            const p = players.find(x => x.openId === id);
+            return p && p.seatNumber != null ? p.seatNumber : null;
+          };
+          const toSeats = (voteVal) => Object.keys(lastTv)
+            .filter(id => lastTv[id] === voteVal)
+            .map(seatOfB).filter(s => s != null)
+            .sort((a, b) => a - b)
+            .join(' ');
+          teamVoteResult = { approveSeats: toSeats('approve'), rejectSeats: toSeats('reject') };
+        }
       }
       const cars = Object.keys(carsMap).map(round => ({
         round: parseInt(round),
@@ -718,6 +727,8 @@ class GameModel {
         missionVoteStatus: game.currentPhase === 'missionVote' ? buildVoteStatus(missionVotesObj) : null,
         lakeHolderOpenId: game.lakeHolderOpenId || null,
         teamVoteResult,
+        voteRevealEndAt: game.voteRevealEndAt ? new Date(game.voteRevealEndAt).getTime() : null,
+        isForcedCar: game.forcedCar === 1 || game.forcedCar === true,
         speakingOrder: game.speakingOrder || 'asc',
         discussionSet: !!(game.discussionSet === 1 || game.discussionSet === true),
         lancelotResult: game.lancelotResult || null,
@@ -810,16 +821,17 @@ class GameModel {
           if (!forcedCar) {
             throw new Error('本局为强制车，车长必须显式携带 forcedCar=true');
           }
-          // 记录本车（无队伍投票，outcome 待任务结束填 send）
+          // 记录本车（无队伍投票，outcome=send 直接发车；is_forced_car=TRUE 标识强制车）
           await connection.execute(
-            `INSERT INTO game_cars (game_id, round, car_index, team_leader_open_id, nominated_team, team_votes, outcome, created_at)
-             VALUES (?, ?, ?, ?, ?, '{}', 'pending', NOW())`,
+            `INSERT INTO game_cars (game_id, round, car_index, team_leader_open_id, nominated_team, team_votes, outcome, is_forced_car, created_at)
+             VALUES (?, ?, ?, ?, ?, '{}', 'send', TRUE, NOW())`,
             [gameId, game[0].current_round, carIndex, openId, JSON.stringify(nominatedTeam)]
           );
           await connection.execute(
             `UPDATE games 
              SET current_phase = 'missionVote', 
                  nominated_team = ?,
+                 forced_car = TRUE,
                  updated_at = NOW()
              WHERE id = ?`,
             [JSON.stringify(nominatedTeam), gameId]
@@ -927,58 +939,36 @@ class GameModel {
           const teamVotesObj = {};
           fullVotes.forEach(v => { teamVotesObj[v.open_id] = v.vote_value; });
           
-          if (approveCount > rejectCount) {
-            // 投票通过，进入任务投票阶段；记录发车
-            await connection.execute(
-              `UPDATE games 
-               SET current_phase = 'missionVote',
-                   updated_at = NOW()
-               WHERE id = ?`,
-              [gameId]
-            );
-            await connection.execute(
-              `UPDATE game_cars 
-               SET team_votes = ?, outcome = 'send'
-               WHERE game_id = ? AND round = ? AND car_index = ?`,
-              [JSON.stringify(teamVotesObj), gameId, game[0].current_round, carIndex]
-            );
-          } else {
-            // 投票否决：流车归档，重置本轮队伍投票，队长顺延，流车数+1
-            await connection.execute(
-              `UPDATE game_cars 
-               SET team_votes = ?, outcome = 'reject'
-               WHERE game_id = ? AND round = ? AND car_index = ?`,
-              [JSON.stringify(teamVotesObj), gameId, game[0].current_round, carIndex]
-            );
-            const failedNominations = game[0].failed_nominations + 1;
-            const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
-            // 读取流车阈值（必配，无默认值）
-            const [roomRows] = await connection.execute(
-              'SELECT room_config FROM rooms WHERE id = ?',
-              [game[0].room_id]
-            );
-            const roomConfig = roomRows.length ? parseJson(roomRows[0].room_config) : null;
-            const rules = (roomConfig && roomConfig.rules) || {};
-            const maxFailedNominations = rules.maxFailedNominations;
-            // 下一车是否强制：流车数达阈值后跳过 preNominate/speakingOrder 直接进入 discussion
-            const forcedNext = failedNominations >= maxFailedNominations;
-            // 湖仙持有者随车长顺延
-            const nextPhase = forcedNext ? 'discussion' : 'preNominate';
-            await connection.execute(
-              `UPDATE games 
-               SET current_phase = ?,
-                   team_leader_index = ?,
-                   nominated_team = NULL,
-                   failed_nominations = ?,
-                   pre_nominated_team = NULL,
-                   speaking_order = 'asc',
-                   discussion_set = FALSE,
-                   lancelot_result = NULL,
-                   updated_at = NOW()
-               WHERE id = ?`,
-              [nextPhase, newTeamLeaderIndex, failedNominations, gameId]
-            );
+          // 归档队伍投票结果（通过=send / 否决=reject），随后进入 teamVoteReveal 展示阶段
+          const outcome = approveCount > rejectCount ? 'send' : 'reject';
+          await connection.execute(
+            `UPDATE game_cars 
+             SET team_votes = ?, outcome = ?, is_forced_car = FALSE
+             WHERE game_id = ? AND round = ? AND car_index = ?`,
+            [JSON.stringify(teamVotesObj), outcome, gameId, game[0].current_round, carIndex]
+          );
+
+          // 读取票型展示时长 voteRevealDuration（必配，位于 limits；无默认）
+          const [roomRows] = await connection.execute(
+            'SELECT room_config FROM rooms WHERE id = ?',
+            [game[0].room_id]
+          );
+          const roomConfig = roomRows.length ? parseJson(roomRows[0].room_config) : null;
+          const limitsCfg = (roomConfig && roomConfig.limits) || {};
+          const revealDur = limitsCfg.voteRevealDuration;
+          if (typeof revealDur !== 'number' || revealDur < 0) {
+            throw new Error('未配置 voteRevealDuration');
           }
+
+          // 进入队伍投票票型展示阶段（保留 nominated_team；通过/流车的推进由 maybeAdvanceTeamVoteReveal 处理）
+          await connection.execute(
+            `UPDATE games 
+             SET current_phase = 'teamVoteReveal',
+                 vote_reveal_end_at = DATE_ADD(NOW(), INTERVAL ? SECOND),
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [revealDur, gameId]
+          );
         }
       });
       
@@ -987,6 +977,86 @@ class GameModel {
       console.error('投票失败:', error);
       throw error;
     }
+  }
+
+  /**
+   * 推进超时的队伍投票票型展示阶段（teamVoteReveal）：
+   * 扫描 vote_reveal_end_at 已到期的游戏，按最近归档 outcome 进入 missionVote（通过）或流车（否决）。
+   * 供后端定时器（index.js setInterval）+ getState 惰性兜底调用；返回被推进的 [{gameId, roomId}]。
+   */
+  static async maybeAdvanceTeamVoteReveal() {
+    const advanced = [];
+    try {
+      const rows = await db.query(
+        `SELECT id, room_id, current_round, team_leader_index, failed_nominations,
+                (SELECT COUNT(*) FROM game_players WHERE game_id = games.id) as player_count
+         FROM games
+         WHERE status = 'active' AND current_phase = 'teamVoteReveal'
+           AND vote_reveal_end_at IS NOT NULL AND vote_reveal_end_at <= NOW()
+         LIMIT 50`
+      );
+      for (const row of rows) {
+        try {
+          await db.transaction(async (connection) => {
+            const [game] = await connection.execute(
+              `SELECT id, room_id, current_round, team_leader_index, failed_nominations, nominated_team
+               FROM games WHERE id = ? AND status = 'active' AND current_phase = 'teamVoteReveal'
+                 AND vote_reveal_end_at IS NOT NULL AND vote_reveal_end_at <= NOW() FOR UPDATE`,
+              [row.id]
+            );
+            if (game.length === 0) return;
+
+            const [carRows] = await connection.execute(
+              `SELECT outcome FROM game_cars WHERE game_id = ? ORDER BY round DESC, car_index DESC LIMIT 1`,
+              [row.id]
+            );
+            if (carRows.length === 0) return;
+            const outcome = carRows[0].outcome;
+
+            if (outcome === 'send') {
+              // 通过：进入任务投票阶段（保留 nominated_team）
+              await connection.execute(
+                `UPDATE games SET current_phase = 'missionVote', vote_reveal_end_at = NULL, updated_at = NOW() WHERE id = ?`,
+                [row.id]
+              );
+            } else {
+              // 否决：流车——队长顺延、流车数+1、进入 preNominate 或 discussion（强制车）
+              const roomRows = await connection.execute('SELECT room_config FROM rooms WHERE id = ?', [game[0].room_id]);
+              const roomConfig = roomRows[0].length ? parseJson(roomRows[0][0].room_config) : null;
+              const rules = (roomConfig && roomConfig.rules) || {};
+              const maxFailed = rules.maxFailedNominations;
+              const playerCount = parseInt(row.player_count, 10);
+              const failedNominations = game[0].failed_nominations + 1;
+              const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
+              const forcedNext = failedNominations >= maxFailed;
+              const nextPhase = forcedNext ? 'discussion' : 'preNominate';
+              await connection.execute(
+                `UPDATE games 
+                 SET current_phase = ?,
+                     team_leader_index = ?,
+                     failed_nominations = ?,
+                     nominated_team = NULL,
+                     pre_nominated_team = NULL,
+                     speaking_order = 'asc',
+                     discussion_set = FALSE,
+                     lancelot_result = NULL,
+                     forced_car = FALSE,
+                     vote_reveal_end_at = NULL,
+                     updated_at = NOW()
+                 WHERE id = ?`,
+                [nextPhase, newTeamLeaderIndex, failedNominations, row.id]
+              );
+            }
+          });
+          advanced.push({ gameId: row.id, roomId: row.room_id });
+        } catch (e) {
+          console.error('推进 teamVoteReveal 失败:', e.message);
+        }
+      }
+    } catch (error) {
+      console.error('maybeAdvanceTeamVoteReveal 失败:', error);
+    }
+    return advanced;
   }
   
   /**
@@ -1201,6 +1271,7 @@ class GameModel {
                 `UPDATE games 
                  SET current_phase = 'lake',
                      nominated_team = NULL,
+                     forced_car = FALSE,
                      updated_at = NOW()
                  WHERE id = ?`,
                 [gameId]
@@ -1219,6 +1290,7 @@ class GameModel {
                      speaking_order = 'asc',
                      discussion_set = FALSE,
                      lancelot_result = ?,
+                     forced_car = FALSE,
                      updated_at = NOW()
                  WHERE id = ?`,
                 [newRound, newTeamLeaderIndex, JSON.stringify({ switched: !!switched, round: game[0].current_round }), gameId]
@@ -1236,6 +1308,7 @@ class GameModel {
                      speaking_order = 'asc',
                      discussion_set = FALSE,
                      lancelot_result = NULL,
+                     forced_car = FALSE,
                      updated_at = NOW()
                  WHERE id = ?`,
                 [newRound, newTeamLeaderIndex, gameId]

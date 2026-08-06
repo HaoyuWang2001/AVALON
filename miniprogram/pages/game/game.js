@@ -66,6 +66,15 @@ function enrichTablePlayer(p, ctx) {
       else if (vote === 'reject') cardState = 'state-rejected';
       else if (inTeam) cardState = 'state-team';
     }
+  } else if (currentPhase === 'teamVoteReveal') {
+    // 票型展示：绿=同意 / 红=反对 / 金=车队（与 missionVote 同款）
+    const inTeam = !!(nominatedTeam || []).includes(p.openId);
+    const vote = (teamVotes || {})[p.openId];
+    if (inTeam && vote === 'approve') cardState = 'state-team-approved';
+    else if (inTeam && vote === 'reject') cardState = 'state-team-rejected';
+    else if (vote === 'approve') cardState = 'state-approved';
+    else if (vote === 'reject') cardState = 'state-rejected';
+    else if (inTeam) cardState = 'state-team';
   } else if (currentPhase === 'lakeConfirm' || currentPhase === 'lancelot') {
     // 确认阶段：已确认的玩家卡片左半紫色渐变（与投票阶段"已投"同款）
     const confirmed = currentPhase === 'lakeConfirm'
@@ -224,9 +233,10 @@ Page({
     assassinationSuccess: false,
     assassinationPhase: '',
     missionVoteReady: false,
-    voteCountdown: 0,
     teamVoteResult: { approveSeats: '', rejectSeats: '' },
-    isForcedMissionVote: false,
+    isForcedCar: false,
+    voteRevealEndAt: 0,
+    voteRevealRemaining: 0,
     showMissionAnim: false,
     missionAnimSuccess: false,
   },
@@ -266,10 +276,10 @@ Page({
 
   onUnload() {
     this._stopTimer();
+    if (this._teamVoteRevealTimer) clearInterval(this._teamVoteRevealTimer);
     if (this._assnAnimTimer) clearTimeout(this._assnAnimTimer);
     if (this._assnAnimTimer2) clearTimeout(this._assnAnimTimer2);
     if (this._missionAnimTimer) clearTimeout(this._missionAnimTimer);
-    if (this._voteCountdownTimer) clearInterval(this._voteCountdownTimer);
     api.disconnectSocket();
   },
 
@@ -309,9 +319,6 @@ Page({
         const playerLakeConfirmed = !!(res.player && res.player.lakeConfirmed);
         const playerLancelotConfirmed = !!(res.player && res.player.lancelotConfirmed);
         const isInGame = !!(res.player && res.player.role);
-        // 离开 teamVote（→missionVote 通过 / →preNominate/discussion 流车）：触发 5s 票型倒计时
-        // 强制车发车为 discussion→missionVote（prev 非 teamVote），不触发
-        const isLeavingTeamVote = phase !== 'teamVote' && prevPhaseForTransitions === 'teamVote';
 
         // 任务结果强制动画：新任务结算时全员播放（首次拉取只记录基准，避免进入进行中对局误播）
         if (!this._missionKeyInit) {
@@ -552,6 +559,8 @@ Page({
           approveSeats: approveSeats,
           rejectSeats: rejectSeats,
           teamVoteResult: res.current.teamVoteResult || { approveSeats: '', rejectSeats: '' },
+          isForcedCar: !!res.current.isForcedCar,
+          voteRevealEndAt: res.current.voteRevealEndAt || 0,
           teamVotes: res.current.teamVotes || {},
           missionVotes: res.current.missionVotes || {},
           missionResults: missions,
@@ -622,36 +631,20 @@ Page({
           api.connectSocket(this.data.roomId, app.globalData.openId);
         }
 
-        // 离开 teamVote（通过→missionVote / 流车→preNominate/discussion）：5s 倒计时看票型；强制车(discussion→missionVote)不触发
-        const needsCountdown = isLeavingTeamVote;
-        if (needsCountdown) {
-          this.setData({ missionVoteReady: false, voteCountdown: 5 });
-          if (this._voteCountdownTimer) clearInterval(this._voteCountdownTimer);
-          this._voteCountdownTimer = setInterval(() => {
-            const n = this.data.voteCountdown - 1;
-            if (n <= 0) {
-              clearInterval(this._voteCountdownTimer);
-              this._voteCountdownTimer = null;
-              this.setData({ voteCountdown: 0, missionVoteReady: true });
-            } else {
-              this.setData({ voteCountdown: n });
-            }
-          }, 1000);
-        } else if (phase !== 'missionVote') {
-          // 票型倒计时展示期（voteCountdown>0 且有 interval）内不覆盖，由 interval 到 0 统一清除；
-          // 兜底：interval 丢失（异常）时强制清零，防止阶段栏被误隐藏
-          if (this.data.voteCountdown <= 0 || !this._voteCountdownTimer) {
-            this.setData({ missionVoteReady: false, voteCountdown: 0 });
-            if (this._voteCountdownTimer) {
-              clearInterval(this._voteCountdownTimer);
-              this._voteCountdownTimer = null;
-            }
+        // teamVoteReveal：后端驱动的票型展示阶段——本地按 voteRevealEndAt 倒计时，到 0 停止等待后端推进广播
+        if (phase === 'teamVoteReveal' && res.current.voteRevealEndAt) {
+          const endAt = res.current.voteRevealEndAt;
+          this.setData({ voteRevealEndAt: endAt });
+          this._tickTeamVoteReveal(endAt);
+          if (!this._teamVoteRevealTimer) {
+            this._teamVoteRevealTimer = setInterval(() => this._tickTeamVoteReveal(this.data.voteRevealEndAt), 1000);
           }
+        } else {
+          this._stopTeamVoteReveal();
         }
-
-        // 进入 missionVote 时判定当前车是否为强制车（来源 discussion=强制车，teamVote=正常通过）
-        if (phase === 'missionVote' && prevPhaseForTransitions !== 'missionVote') {
-          this.setData({ isForcedMissionVote: prevPhaseForTransitions === 'discussion' });
+        // 任务投票：票型展示阶段已过，进入 missionVote 直接可投
+        if (phase === 'missionVote') {
+          this.setData({ missionVoteReady: true });
         }
 
         // gameEnd 结果由底部框展示（wxml currentPhase === 'gameEnd' 渲染）
@@ -953,9 +946,23 @@ Page({
     }, 1200);
   },
 
+  // teamVoteReveal 票型展示倒计时：按后端 voteRevealEndAt（毫秒）本地计算剩余
+  _tickTeamVoteReveal(endAt) {
+    if (!endAt) { this.setData({ voteRevealRemaining: 0 }); return; }
+    const remaining = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+    this.setData({ voteRevealRemaining: remaining });
+    if (remaining <= 0) this._stopTeamVoteReveal();
+  },
+  _stopTeamVoteReveal() {
+    if (this._teamVoteRevealTimer) {
+      clearInterval(this._teamVoteRevealTimer);
+      this._teamVoteRevealTimer = null;
+    }
+    this.setData({ voteRevealRemaining: 0 });
+  },
+
   // 任务结果全屏动画（全员）：成功蓝图/失败红图，约 5s 自动关闭
-  playMissionAnim(success) {
-    this.setData({ showMissionAnim: true, missionAnimSuccess: !!success });
+  playMissionAnim(success) {    this.setData({ showMissionAnim: true, missionAnimSuccess: !!success });
     if (this._missionAnimTimer) clearTimeout(this._missionAnimTimer);
     this._missionAnimTimer = setTimeout(() => {
       this.setData({ showMissionAnim: false });
@@ -1258,6 +1265,7 @@ Page({
       'missionResult': '任务结果',
       'lake': '湖仙验人',
       'lakeConfirm': '湖仙确认',
+      'teamVoteReveal': '票型展示',
       'lancelot': '兰斯抽卡',
       'assassination': '刺杀阶段',
       'gameEnd': '游戏结束'

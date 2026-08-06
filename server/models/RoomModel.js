@@ -88,6 +88,12 @@ class RoomModel {
       throw new Error('lancelotSwapForce 必须是 switch 或 keep');
     }
 
+    // 队伍投票票型展示时长（limits.voteRevealDuration）：必须存在，允许 {0,3,5,8,10}（0 供测试立即推进）
+    const limits = roomConfig.limits || {};
+    if (![0, 3, 5, 8, 10].includes(limits.voteRevealDuration)) {
+      throw new Error('voteRevealDuration 必须为 0/3/5/8/10 秒');
+    }
+
     return true;
   }
 

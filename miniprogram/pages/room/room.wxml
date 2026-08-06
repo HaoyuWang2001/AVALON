@@ -348,6 +348,12 @@
                   <text>{{voteOptions[voteTimeoutIndex]}}</text>
                 </picker>
               </view>
+              <view class="rule-row">
+                <text class="rule-label">票型展示时长</text>
+                <picker class="rule-picker" mode="selector" range="{{voteRevealOptions}}" value="{{voteRevealDurationIndex}}" data-field="voteRevealDurationIndex" bindchange="onLimitChange">
+                  <text>{{voteRevealOptions[voteRevealDurationIndex]}}</text>
+                </picker>
+              </view>
               <view class="rule-hint">
                 💡 若任务或投票超时，未行动视为投出成功票或赞成票（必须出失败票的角色仍会出失败票）。
               </view>

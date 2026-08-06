@@ -7,7 +7,8 @@
 #       在服务器本机执行，仅需 host 具备 docker + docker compose，无需 host 安装 node。
 #
 # 用法:
-#   bash test-backend.sh [options] [suite...]
+#   bash test-backend.sh build                          # 只构建测试镜像（含最新代码）
+#   bash test-backend.sh [options] [suite...]           # 跑测试（需镜像已构建；--build 可强制先构建）
 #
 # 参数 suite: 测试文件名模式（jest testMatch），可多个，例如
 #       01_health 02_rooms 03_games_start 03b_lancelot_variant 04_games_flow
@@ -19,7 +20,7 @@
 #   -b             后台运行：nohup 写日志 + 每 60s 输出 通过/失败/跳过/已完成/剩余/预计时长
 #   --timeout <ms>  jest testTimeout（默认 60000）
 #   --verbose       jest --verbose
-#   --no-build      不重新构建测试镜像（默认构建，保证代码最新；构建含 npm ci 较慢）
+#   --build         先构建测试镜像再跑测试（默认不构建，用已构建镜像）
 #   -d/--dry-run    只打印将执行的命令，不实际执行
 #   --              之后所有参数原样透传给 jest
 #
@@ -30,11 +31,12 @@
 #           后台模式下据此估算"剩余用例/预计时长"；首次无基准则显示 --，跑完自动建立。
 #
 # 示例（新 agent context 复用）:
-#   bash test-backend.sh 04c_lake_confirm            # 单个套件（前台）
-#   bash test-backend.sh -b 03_games_start           # 单个套件（后台 + 进度）
-#   bash test-backend.sh all                         # 全部套件
-#   bash test-backend.sh -t 'T1[12]' 03_games_start  # 按用例名过滤
-#   bash test-backend.sh -d 04c                      # dry-run 查看命令
+#   bash test-backend.sh build                          # 先构建测试镜像
+#   bash test-backend.sh 04c_lake_confirm               # 单个套件（前台，用已构建镜像）
+#   bash test-backend.sh -b 03_games_start              # 单个套件（后台 + 进度）
+#   bash test-backend.sh all                            # 全部套件
+#   bash test-backend.sh -t 'T1[12]' 03_games_start     # 按用例名过滤
+#   bash test-backend.sh -d 04c                         # dry-run 查看命令
 
 set -uo pipefail
 
@@ -50,16 +52,18 @@ TNAME=""
 BACKGROUND=0
 TIMEOUT=60000
 VERBOSE=0
-BUILD=1
+BUILD=0
+BUILD_ONLY=0
 DRY=0
 PASSTHROUGH=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    build) BUILD_ONLY=1; shift ;;
     -t) TNAME="${2:-}"; shift 2 ;;
     -b) BACKGROUND=1; shift ;;
     --timeout) TIMEOUT="${2:-60000}"; shift 2 ;;
     --verbose) VERBOSE=1; shift ;;
-    --no-build) BUILD=0; shift ;;
+    --build) BUILD=1; shift ;;
     -d|--dry-run) DRY=1; shift ;;
     --) shift; PASSTHROUGH+=("$@"); break ;;
     *) SUITES+=("$1"); shift ;;
@@ -86,13 +90,25 @@ if [[ "$DRY" -eq 0 ]]; then
   fi
 fi
 
-# ---------- 构建测试镜像（保证代码最新） ----------
-if [[ "$BUILD" -eq 1 ]]; then
+# ---------- 构建测试镜像（含最新代码；build 子命令只构建，测试默认不构建） ----------
+if [[ "$BUILD" -eq 1 || "$BUILD_ONLY" -eq 1 ]]; then
   echo "🔨 构建测试镜像 avalon-server:test ..."
   if [[ "$DRY" -eq 1 ]]; then
     echo "docker compose -f $COMPOSE_FILE build test-backend"
   else
     docker compose -f "$COMPOSE_FILE" build test-backend || { echo "❌ 构建失败"; exit 3; }
+  fi
+  if [[ "$BUILD_ONLY" -eq 1 ]]; then
+    echo "✅ 测试镜像构建完成"
+    exit 0
+  fi
+fi
+
+# 跑测试但不构建时：确认镜像存在
+if [[ "$BUILD" -eq 0 && "$DRY" -eq 0 ]]; then
+  if ! docker image inspect avalon-server:test >/dev/null 2>&1; then
+    echo "❌ 测试镜像不存在，请先执行: bash test-backend.sh build"
+    exit 3
   fi
 fi
 

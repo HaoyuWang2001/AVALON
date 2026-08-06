@@ -91,11 +91,11 @@
 
   <!-- 底部按钮框（fixed 常驻） -->
   <view class="bottom-bar">
-    <!-- 队伍投票结果票型倒计时（teamVote→missionVote/preNominate/discussion 统一，底部框内） -->
-    <block wx:if="{{voteCountdown > 0}}">
+    <!-- teamVoteReveal：队伍投票票型展示阶段（后端推进，本地倒计时） -->
+    <block wx:if="{{currentPhase === 'teamVoteReveal'}}">
       <view class="vote-countdown">
         <image src="/images/stopwatch.png" class="timer-icon"></image>
-        <text class="vote-countdown-num">{{voteCountdown}}s</text>
+        <text class="vote-countdown-num">{{voteRevealRemaining}}s</text>
       </view>
       <view class="bar-info vote-reveal-line">
         <text class="txt-approve">同意：{{teamVoteResult.approveSeats}}</text>
@@ -104,7 +104,7 @@
       </view>
     </block>
 
-    <block wx:if="{{voteCountdown === 0}}">
+    <block wx:if="{{currentPhase !== 'teamVoteReveal'}}">
     <!-- roleReveal：确认进度 -->
     <block wx:if="{{currentPhase === 'roleReveal'}}">
       <view class="bar-info">已确认 {{revealConfirmedCount}}/{{revealTotalCount}}</view>
@@ -209,7 +209,7 @@
       <view wx:if="{{!isMissionTeamMember}}" class="vote-waiting">
         <view class="vote-waiting-spinner"></view>
       </view>
-      <view wx:if="{{isForcedMissionVote}}" class="bar-info bar-waiting">本轮是强制车</view>
+      <view wx:if="{{isForcedCar}}" class="bar-info bar-waiting">本轮是强制车</view>
       <view wx:elif="{{teamVoteResult.approveSeats || teamVoteResult.rejectSeats}}" class="bar-info vote-reveal-line">
         <text class="txt-approve">同意：{{teamVoteResult.approveSeats}}</text>
         <text class="vote-line-sep"> / </text>

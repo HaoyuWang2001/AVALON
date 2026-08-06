@@ -27,6 +27,7 @@ const DEFAULT_CONFIGS = {
 const SPEECH_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒', '150秒', '180秒'];
 const ROUND_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒'];
 const VOTE_OPTIONS = ['不限', '15秒', '30秒', '45秒', '60秒'];
+const VOTE_REVEAL_OPTIONS = ['3秒', '5秒', '8秒', '10秒'];
 
 const TEAM_SIZES = {
   5: [2,3,2,3,3], 6: [2,3,4,3,4], 7: [2,3,3,4,4],
@@ -85,10 +86,12 @@ Page({
     speechTimeoutIndex: 0,
     roundTimeoutIndex: 0,
     voteTimeoutIndex: 0,
+    voteRevealDurationIndex: 1,
 
     speechOptions: SPEECH_OPTIONS,
     roundOptions: ROUND_OPTIONS,
     voteOptions: VOTE_OPTIONS,
+    voteRevealOptions: VOTE_REVEAL_OPTIONS,
 
     roomName: '',
     roomDescription: 'Welcome Join the Conference!',
@@ -455,6 +458,10 @@ Page({
         const idx = VOTE_OPTIONS.indexOf(l.voteTimeout === null ? '不限' : l.voteTimeout + '秒');
         if (idx >= 0) patch.voteTimeoutIndex = idx;
       }
+      if (l.voteRevealDuration !== undefined) {
+        const idx = VOTE_REVEAL_OPTIONS.indexOf(l.voteRevealDuration + '秒');
+        if (idx >= 0) patch.voteRevealDurationIndex = idx;
+      }
     }
 
     this.setData(patch);
@@ -539,6 +546,7 @@ Page({
       speechTimeoutIndex: 0,
       roundTimeoutIndex: 0,
       voteTimeoutIndex: 0,
+      voteRevealDurationIndex: 1,
       goodCount: def.good.filter(r => r !== 'loyal').length + (def.good.includes('loyal') ? 0 : 0),
       evilCount: def.evil.length,
     });
@@ -723,7 +731,8 @@ Page({
     const limits = {
       speechTimeout: this.data.speechTimeoutIndex > 0 ? SPEECH_OPTIONS[this.data.speechTimeoutIndex] === '不限' ? null : parseInt(SPEECH_OPTIONS[this.data.speechTimeoutIndex]) : null,
       roundTimeout: this.data.roundTimeoutIndex > 0 ? ROUND_OPTIONS[this.data.roundTimeoutIndex] === '不限' ? null : parseInt(ROUND_OPTIONS[this.data.roundTimeoutIndex]) : null,
-      voteTimeout: this.data.voteTimeoutIndex > 0 ? VOTE_OPTIONS[this.data.voteTimeoutIndex] === '不限' ? null : parseInt(VOTE_OPTIONS[this.data.voteTimeoutIndex]) : null
+      voteTimeout: this.data.voteTimeoutIndex > 0 ? VOTE_OPTIONS[this.data.voteTimeoutIndex] === '不限' ? null : parseInt(VOTE_OPTIONS[this.data.voteTimeoutIndex]) : null,
+      voteRevealDuration: parseInt(VOTE_REVEAL_OPTIONS[this.data.voteRevealDurationIndex] || '5')
     };
 
     const meta = {

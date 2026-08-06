@@ -314,6 +314,19 @@ async function startServer() {
         console.log('数据库状态: http://localhost:' + PORT + '/api/debug/db/stats');
       }
     });
+
+    // 队伍投票票型展示阶段（teamVoteReveal）定时推进：每秒扫描超时游戏并广播
+    setInterval(async () => {
+      try {
+        const GameModel = require('./models/GameModel');
+        const advanced = await GameModel.maybeAdvanceTeamVoteReveal();
+        for (const { gameId, roomId } of advanced) {
+          socket.broadcastToRoom(roomId, { type: 'gameUpdated', roomId, gameId });
+        }
+      } catch (e) {
+        console.error('teamVoteReveal 定时推进失败:', e.message);
+      }
+    }, 1000);
   } catch (error) {
     console.error('服务器启动失败:', error);
     process.exit(1);
