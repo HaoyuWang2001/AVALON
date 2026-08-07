@@ -6,12 +6,9 @@
 .mission-head-info { display: flex; align-items: center; gap: 16rpx; }
 .mission-phase { font-size: 32rpx; color: #6B7280; font-weight: 600; }
 .mission-lake { font-size: 24rpx; color: #0EA5E9; }
-.mission-actions { display: flex; gap: 12rpx; }
-.mini-btn {
-  font-size: 24rpx; font-weight: 600; color: #fff;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  border-radius: 8rpx; padding: 10rpx 20rpx;
-}
+
+/* 顶栏图标按钮（方形）样式已移至 styles/buttons.wxss 共享 */
+.top-mini-actions { display: flex; align-items: center; gap: 12rpx; }
 
 /* 5 轮圆圈 */
 .rounds { display: flex; align-items: center; justify-content: center; margin: 40rpx 10rpx; }
@@ -246,7 +243,7 @@
 }
 .tplayer-crown {
   position: absolute;
-  top: -28rpx;
+  top: -40rpx;
   left: 50%;
   transform: translateX(-50%);
   font-size: 56rpx;

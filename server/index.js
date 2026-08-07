@@ -210,7 +210,16 @@ wss.on('connection', (ws) => {
   ws.playerId = null;
   // 心跳保活标记：收到 pong 置 true；未响应则定时 terminate（清理半开连接）
   ws.isAlive = true;
-  ws.on('pong', () => { ws.isAlive = true; });
+  ws.missedPongs = 0;
+  ws._pongLogged = false;
+  ws.on('pong', () => {
+    ws.isAlive = true;
+    ws.missedPongs = 0;
+    if (!ws._pongLogged) {
+      console.log('[ws] pong ok', ws.playerId || 'unknown');
+      ws._pongLogged = true;
+    }
+  });
 
   // 发送 JSON 帧 {type, ...}
   function send(msg) {
@@ -331,12 +340,31 @@ async function startServer() {
       }
     }, 1000);
 
-    // WebSocket 心跳保活：每 30s ping 一次，未回 pong 的连接视为半开并强制断开
-    // （小程序协议层会自动回复 pong，无需前端代码；解决网络静默断开导致的"假死"连接）
+    // WebSocket 心跳保活：
+    // 1) 应用层心跳：每 30s 广播 {type:'heartbeat'}，客户端 onMessage 会刷新其半开看门狗，
+    //    避免"健康但安静"的对局被前端误判为断线（协议层 ping 不触发客户端 onMessage）。
+    // 2) 协议层 ping/pong：连续 2 次未回 pong（≈90s）才 terminate，容忍单次丢失。
+    //    healthy 计数用于确认微信端是否自动回 pong（clients vs healthy 对比）。
     setInterval(() => {
+      const text = JSON.stringify({ type: 'heartbeat', ts: Date.now() });
+      let healthy = 0;
+      wss.clients.forEach((ws) => {
+        if (ws.readyState === 1) {
+          ws.send(text);
+          if (ws.isAlive) healthy++;
+        }
+      });
+      console.log(`[ws] clients=${wss.clients.size} healthy=${healthy}`);
+
       wss.clients.forEach((ws) => {
         if (ws.isAlive === false) {
-          return ws.terminate();
+          ws.missedPongs = (ws.missedPongs || 0) + 1;
+          if (ws.missedPongs >= 2) {
+            console.log('[ws] terminate', ws.playerId || 'unknown', '连续未pong');
+            return ws.terminate();
+          }
+        } else {
+          ws.missedPongs = 0;
         }
         ws.isAlive = false;
         try { ws.ping(); } catch (e) {}

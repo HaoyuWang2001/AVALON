@@ -1,9 +1,16 @@
 <!--pages/game/game.wxml-->
 <view class="game-page">
-  <!-- 顶部操作栏（公共组件：左=暂回首页 右=炸掉会议）；游戏结束阶段不展示（同历史对局） -->
-  <top-bar wx:if="{{currentPhase !== 'gameEnd'}}">
-    <text slot="left" class="btn-round btn-purple" bindtap="backToHome">暂回首页</text>
-    <text slot="right" class="btn-round btn-danger" bindtap="abandonGame" wx:if="{{isHost}}">炸房</text>
+  <!-- 顶部操作栏（公共组件）：始终显示；gameEnd 时隐藏左侧 ×/− 图标，保留身份/历史/配置 -->
+  <top-bar>
+    <view slot="left" class="top-icons" wx:if="{{currentPhase !== 'gameEnd'}}">
+      <text class="top-icon top-icon-danger" bindtap="abandonGame" wx:if="{{isHost}}">✕</text>
+      <text class="top-icon top-icon-home" bindtap="backToHome">−</text>
+    </view>
+    <view slot="right" class="top-mini-actions">
+      <image wx:if="{{playerRole}}" class="top-mini-icon" src="/images/my-role.png" mode="aspectFit" bindtap="openRoleModal"></image>
+      <image class="top-mini-icon" src="/images/history.png" mode="aspectFit" bindtap="openInfoModal"></image>
+      <image class="top-mini-icon" src="/images/profile.png" mode="aspectFit" bindtap="openConfigView"></image>
+    </view>
   </top-bar>
 
   <view class="container">
@@ -20,11 +27,6 @@
     <view class="mission-head">
       <view class="mission-head-info">
         <text class="mission-phase">{{phaseText}}</text>
-      </view>
-      <view class="mission-actions">
-        <text class="mini-btn" wx:if="{{playerRole}}" bindtap="openRoleModal">身份</text>
-        <text class="mini-btn" bindtap="openInfoModal">历史</text>
-        <text class="mini-btn" bindtap="openConfigView">配置</text>
       </view>
     </view>
 

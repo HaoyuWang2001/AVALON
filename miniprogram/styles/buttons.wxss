@@ -58,3 +58,18 @@
 }
 .bar-btn-primary { background: linear-gradient(135deg, var(--primary-deep), var(--primary-deeper)); box-shadow: 0 4rpx 16rpx rgba(124, 58, 237, 0.35); }
 .bar-btn.btn-disabled, .bar-btn[disabled] { background: var(--gray-200); color: var(--gray-400); box-shadow: none; }
+
+/* ─────── 顶栏图标按钮 ─────── */
+.top-icons { display: flex; align-items: center; gap: 16rpx; }
+.top-icon {
+  width: 60rpx; height: 60rpx; border-radius: 12rpx;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32rpx; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.top-icon-home { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); }
+.top-icon-danger { background: linear-gradient(135deg, #F87171, var(--danger)); }
+.top-mini-icon {
+  width: 60rpx; height: 60rpx; border-radius: 12rpx;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  padding: 10rpx; box-sizing: border-box;
+}

@@ -335,12 +335,14 @@ class ApiService {
     const task = wx.connectSocket({ url: WSSURL });
     this._socketTask = task;
     this._lastSocketMessageAt = Date.now();
-    // 消息超时兜底：半开连接（收不到数据且无 onClose）时主动断开重连
+    // 消息超时兜底：半开连接（收不到数据且无 onClose）时主动断开重连。
+    // 服务端每 30s 广播应用层 heartbeat，健康连接的时间戳恒 ≤30s；
+    // 90s（3×心跳）才触发，仅当服务器真正停止发消息时判死，避免"健康但安静"的对局被误杀。
     if (this._socketTimeoutTimer) clearInterval(this._socketTimeoutTimer);
     this._socketTimeoutTimer = setInterval(() => {
       if (this._socketIntentionalClose) return;
-      if (Date.now() - this._lastSocketMessageAt > 70000) {
-        // 超过 70s 无任何消息：判定半开 → 强制重连并提示
+      if (Date.now() - this._lastSocketMessageAt > 90000) {
+        console.log('[socket] 看门狗触发: 90s 无消息，强制重连', this._socketRoomId);
         this._emitSocketStatus('closed');
         if (this._socketTask) { try { this._socketTask.close({ code: 1000 }); } catch (e) {} }
         this._socketTask = null;
