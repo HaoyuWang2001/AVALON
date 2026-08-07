@@ -927,17 +927,18 @@ progress { border-radius: 12rpx; }
   font-weight: 600;
 }
 .mark-opt-role.mark-on { background: #ede9fe; border-color: #7c3aed; color: #5b21b6; }
+.mark-role-on-good { background: #dbeafe; border-color: #2563eb; color: #1e40af; }
+.mark-role-on-evil { background: #fee2e2; border-color: #dc2626; color: #991b1b; }
 .mark-clear-row {
   display: flex;
-  gap: 20rpx;
+  justify-content: center;
   margin-top: 32rpx;
 }
-.mark-confirm-btn, .mark-cancel-btn {
-  flex: 1;
+.mark-confirm-btn {
   font-size: 30rpx;
+  width: 100%;
+  max-width: 360rpx;
 }
-.mark-confirm-btn { background: #ede9fe; color: #6d28d9; }
-.mark-cancel-btn { background: #e5e7eb; color: #374151; }
 
 /* 只读配置缩略弹窗 */
 .config-view-overlay {

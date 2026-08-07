@@ -575,7 +575,7 @@
   <!-- 身份标记面板（长按卡片弹出，仅本人可见）：先猜阵营再猜身份 -->
   <view class="mark-mask" wx:if="{{showMarkPanel}}" bindtap="closeMarkPanel">
     <view class="mark-panel" catchtap="noop">
-      <view class="mark-panel-title">标记 {{markTargetName}}</view>
+      <view class="mark-panel-title">标记 {{markSeat}} 号身份</view>
       <view class="mark-sec-title">阵营</view>
       <view class="mark-side-row">
         <view class="mark-opt mark-opt-unknown {{markSideSel === '' ? 'mark-on' : ''}}" data-side="" bindtap="markPickSide">未知</view>
@@ -585,12 +585,11 @@
       <block wx:if="{{markSideSel}}">
         <view class="mark-sec-title">角色（{{markSideSel === 'good' ? '蓝方' : '红方'}}）</view>
         <view class="mark-role-wrap">
-          <view wx:for="{{markRoleOptions}}" wx:key="key" class="mark-opt mark-opt-role {{markRoleSel === item.key ? 'mark-on' : ''}}" data-role="{{item.key}}" bindtap="markPickRole">{{item.name}}</view>
+          <view wx:for="{{markRoleOptions}}" wx:key="key" class="mark-opt mark-opt-role {{markRoleSel === item.key ? (markSideSel === 'good' ? 'mark-role-on-good' : 'mark-role-on-evil') : ''}}" data-role="{{item.key}}" bindtap="markPickRole">{{item.name}}</view>
         </view>
       </block>
       <view class="mark-clear-row">
         <button size="mini" class="mark-confirm-btn" bindtap="markConfirm">确定</button>
-        <button size="mini" class="mark-cancel-btn" bindtap="markClear">清空</button>
       </view>
     </view>
   </view>

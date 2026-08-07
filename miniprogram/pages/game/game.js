@@ -312,6 +312,7 @@ Page({
     showMarkPanel: false,
     markTargetOpenId: '',
     markTargetName: '',
+    markSeat: 0,
     markSideSel: '',
     markRoleSel: '',
     markRoleOptions: [],
@@ -1044,6 +1045,7 @@ Page({
       showMarkPanel: true,
       markTargetOpenId: targetOpenId,
       markTargetName: target ? target.nickName : '',
+      markSeat: target ? target.seatNumber : 0,
       markSideSel: sideSel,
       markRoleSel: cur.role || '',
       markRoleOptions: this.buildMarkRoleOptions(sideSel)
@@ -1098,20 +1100,6 @@ Page({
     else call({ side: markSideSel });
   },
 
-  // 清空：清除全部标记后关闭
-  markClear() {
-    const { gameId, markTargetOpenId } = this.data;
-    if (!markTargetOpenId) return;
-    api.clearIdentityMark(gameId, markTargetOpenId, { side: true, role: true }).then(res => {
-      if (res && res.success === false) {
-        wx.showToast({ title: res.message || '清除失败', icon: 'none' });
-      } else {
-        this.setData({ showMarkPanel: false, markTargetOpenId: '' });
-      }
-    }).catch(err => {
-      wx.showToast({ title: (err && err.message) || '清除失败', icon: 'none' });
-    });
-  },
 
   noop() {},
 
