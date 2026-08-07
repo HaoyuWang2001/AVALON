@@ -71,6 +71,7 @@
       <text class="seat-no">{{item.seatNumber}}</text>
       <view class="tplayer-avatar-wrap">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
+        <text wx:if="{{item.isCrownHolder}}" class="tplayer-crown">👑</text>
       </view>
       <view class="tplayer-info">
         <text class="tplayer-name">{{item.nickName}}</text>

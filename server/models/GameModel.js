@@ -835,6 +835,21 @@ class GameModel {
           teamVoteResult = { approveSeats: toSeats('approve'), rejectSeats: toSeats('reject') };
         }
       }
+
+      // 皇冠持有者：最近一次实际队伍投票（team_votes 非空）的孤票者；动态计算不持久化；匿名票型不判定
+      let crownHolderOpenId = null;
+      if (rules.voteVisibility !== 'anonymous') {
+        for (let i = carRows.length - 1; i >= 0; i--) {
+          const tv = parseJson(carRows[i].teamVotes) || {};
+          const entries = Object.entries(tv);
+          if (entries.length === 0) continue; // 强制车/无队伍投票，向前找
+          const approve = entries.filter(([, v]) => v === 'approve');
+          const reject = entries.filter(([, v]) => v === 'reject');
+          if (approve.length === 1) crownHolderOpenId = approve[0][0];
+          else if (reject.length === 1) crownHolderOpenId = reject[0][0];
+          break;
+        }
+      }
       const cars = Object.keys(carsMap).map(round => ({
         round: parseInt(round),
         details: carsMap[round]
@@ -952,6 +967,7 @@ class GameModel {
         missionVoteStatus: game.currentPhase === 'missionVote' ? buildVoteStatus(missionVotesObj) : null,
         lakeHolderOpenId: game.lakeHolderOpenId || null,
         teamVoteResult,
+        crownHolderOpenId,
         voteRevealEndAt: game.voteRevealEndAt ? new Date(game.voteRevealEndAt).getTime() : null,
         isForcedCar: game.forcedCar === 1 || game.forcedCar === true,
         speakingOrder: game.speakingOrder || 'asc',

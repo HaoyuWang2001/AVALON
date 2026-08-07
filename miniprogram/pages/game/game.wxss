@@ -244,6 +244,14 @@
   width: 100rpx; height: 100rpx; border-radius: 50%;
   background: #F3F4F6;
 }
+.tplayer-crown {
+  position: absolute;
+  top: -18rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 40rpx;
+  z-index: 3;
+}
 .tplayer-info {
   flex: 1;
   display: flex; flex-direction: column; align-items: flex-start;

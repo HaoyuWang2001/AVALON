@@ -121,7 +121,7 @@ function enrichTablePlayer(p, ctx) {
   const {
     leaderOpenId, myOpenId, hostOpenId, lakeHolderOpenId, oldLakeOpenIds,
     preNominatedTeam, nominatedTeam, localSelected, teamVotes, teamVoteStatus, currentPhase,
-    requiredTeamSize, evilOpenEyes, identityMarks
+    requiredTeamSize, evilOpenEyes, identityMarks, crownHolderOpenId
   } = ctx;
 
   // 复选框勾选：本地临时选中（preNominate/discussion 车主选车）
@@ -214,6 +214,7 @@ function enrichTablePlayer(p, ctx) {
     isOldLake,
     roleName,
     isPreTeam: !!(preNominatedTeam || []).includes(p.openId),
+    isCrownHolder: p.openId === crownHolderOpenId,
     identityMark: (() => {
       const m = (identityMarks || {})[p.openId];
       if (!m) return null;
@@ -335,6 +336,7 @@ Page({
     gameAssassination: null,
     showAssassinationAnim: false,
     knifeProgress: 0,
+    crownHolderOpenId: '',
     identityMarks: {},
     showMarkPanel: false,
     markTargetOpenId: '',
@@ -564,6 +566,7 @@ Page({
           requiredTeamSize: teamSize,
           evilOpenEyes: res.current.evilOpenEyes || [],
           identityMarks: res.player && res.player.identityMarks ? res.player.identityMarks : {},
+          crownHolderOpenId: res.current.crownHolderOpenId || '',
           currentPhase: phase
         }));
 
@@ -716,6 +719,7 @@ Page({
           revealTotalCount: res.current.revealTotalCount || 0,
           vision: res.player ? res.player.vision || null : null,
           identityMarks: res.player && res.player.identityMarks ? res.player.identityMarks : {},
+          crownHolderOpenId: res.current.crownHolderOpenId || '',
           visionList: visionList,
           allPlayers: res.players || [],
           tablePlayers: tablePlayers,
