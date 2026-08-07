@@ -1071,4 +1071,4 @@ progress { border-radius: 12rpx; }
   overflow-y: auto;
   width: 100%;
 }
-.guide-pick-pre { background: rgba(245,158,11,0.3); border-color: #f59e0b; }
+.guide-pick-pre { background: rgba(167,139,250,0.35); border-color: #a78bfa; }
