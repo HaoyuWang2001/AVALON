@@ -1470,12 +1470,12 @@ Page({
     });
   },
 
-  // 长按开刀：按下开始读条（2s 从0→100），每次长按均从0开始
+  // 长按开刀：按下开始读条（1s 从0→100），每次长按均从0开始
   onKnifeTouchStart() {
     if (this._knifeTimer) return;
     let p = 0;
     this._knifeTimer = setInterval(() => {
-      p += 1;
+      p += 2;
       if (p >= 100) {
         clearInterval(this._knifeTimer);
         this._knifeTimer = null;
