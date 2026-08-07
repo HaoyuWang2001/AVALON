@@ -238,20 +238,19 @@ CREATE TABLE game_identity_marks (
 CREATE TABLE role_configurations (
     player_count INT PRIMARY KEY COMMENT '玩家数量',
     roles JSON NOT NULL COMMENT '角色配置数组',
-    team_sizes JSON NOT NULL COMMENT '队伍大小配置',
-    description VARCHAR(255) COMMENT '配置描述'
+    team_sizes JSON NOT NULL COMMENT '队伍大小配置'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色配置表';
 
-INSERT INTO role_configurations (player_count, roles, team_sizes, description) VALUES
-(5, '["merlin", "percival", "loyal", "morgana", "assassin"]', '[2,3,2,3,3]', '5人推荐局（莫甘娜+刺客）'),
-(6, '["merlin", "percival", "loyal", "loyal", "morgana", "assassin"]', '[2,3,4,3,4]', '6人推荐局（莫甘娜+刺客）'),
-(7, '["merlin", "percival", "loyal", "loyal", "morgana", "assassin", "oberon"]', '[2,3,3,4,4]', '7人推荐局（莫甘娜+刺客+奥伯伦）'),
-(8, '["merlin", "percival", "loyal", "loyal", "loyal", "morgana", "assassin", "minion"]', '[3,4,4,5,5]', '8人推荐局（莫甘娜+刺客+爪牙）'),
-(9, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "mordred"]', '[3,4,4,5,5]', '9人推荐局（莫甘娜+刺客+莫德雷德）'),
-(10, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "mordred", "oberon"]', '[3,4,4,5,5]', '10人推荐局（莫甘娜+刺客+莫德雷德+奥伯伦）'),
-(11, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "lancelotBlue", "morgana", "mordred", "oberon", "lancelotRed"]', '[3,4,5,6,6]', '11人推荐局（含蓝红兰斯洛特）'),
-(12, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "lancelotBlue", "morgana", "assassin", "mordred", "oberon", "lancelotRed"]', '[3,4,5,6,6]', '12人推荐局（含蓝红兰斯洛特）')
-ON DUPLICATE KEY UPDATE roles=VALUES(roles), team_sizes=VALUES(team_sizes), description=VALUES(description);
+INSERT INTO role_configurations (player_count, roles, team_sizes) VALUES
+(5, '["merlin", "percival", "loyal", "morgana", "assassin"]', '[2,3,2,3,3]'),
+(6, '["merlin", "percival", "loyal", "loyal", "morgana", "assassin"]', '[2,3,4,3,4]'),
+(7, '["merlin", "percival", "loyal", "loyal", "morgana", "assassin", "oberon"]', '[2,3,3,4,4]'),
+(8, '["merlin", "percival", "loyal", "loyal", "loyal", "morgana", "assassin", "minion"]', '[3,4,4,5,5]'),
+(9, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "mordred"]', '[3,4,4,5,5]'),
+(10, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "morgana", "assassin", "mordred", "oberon"]', '[3,4,4,5,5]'),
+(11, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "lancelotBlue", "morgana", "mordred", "oberon", "lancelotRed"]', '[3,4,5,6,6]'),
+(12, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "lancelotBlue", "morgana", "assassin", "mordred", "oberon", "lancelotRed"]', '[3,4,5,6,6]')
+ON DUPLICATE KEY UPDATE roles=VALUES(roles), team_sizes=VALUES(team_sizes);
 
 -- =============================================
 -- 初始化完成
