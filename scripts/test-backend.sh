@@ -91,7 +91,8 @@ if [[ "$DRY" -eq 1 ]]; then
   echo "docker compose -f $COMPOSE_FILE build test-backend"
 else
   build_start=$(date +%s)
-  docker compose -f "$COMPOSE_FILE" build test-backend || { echo "❌ 构建失败"; exit 3; }
+  build_out=$(docker compose -f "$COMPOSE_FILE" build -q test-backend 2>&1); build_rc=$?
+  if [[ "$build_rc" -ne 0 ]]; then echo "$build_out"; echo "❌ 构建失败"; exit 3; fi
   build_end=$(date +%s)
   build_seconds=$((build_end - build_start))
   echo "✅ 构建完成，耗时 ${build_seconds}s"
@@ -101,13 +102,33 @@ fi
 JEST_ARGS=(npx jest)
 if [[ "${#SUITES[@]}" -gt 0 ]]; then JEST_ARGS+=("${SUITES[@]}"); fi
 if [[ -n "$TNAME" ]]; then JEST_ARGS+=(--testNamePattern "$TNAME"); fi
-JEST_ARGS+=(--forceExit --detectOpenHandles --testTimeout "$TIMEOUT" --verbose)
+JEST_ARGS+=(--forceExit --detectOpenHandles --testTimeout "$TIMEOUT")
+if [[ "$BACKGROUND" -eq 1 ]]; then
+  # 后台：保留 verbose 全量日志（供每 60s 进度统计）
+  JEST_ARGS+=(--verbose)
+else
+  # 前台：自定义 reporter（动态进度行 + 简洁 PASS/FAIL），不使用逐用例 verbose
+  JEST_ARGS+=(--reporters=/app/__tests__/helpers/progressReporter.js)
+fi
 if [[ "${#PASSTHROUGH[@]}" -gt 0 ]]; then JEST_ARGS+=("${PASSTHROUGH[@]}"); fi
 
-RUN_ARGS=(-f "$COMPOSE_FILE" run --rm test-backend)
+RUN_ARGS=(-f "$COMPOSE_FILE" run --rm)
 for v in DB_HOST DB_PORT DB_USER DB_PASS DB_NAME DB_ROOT_USER DB_ROOT_PASS; do
   if [[ -n "${!v:-}" ]]; then RUN_ARGS+=(-e "$v=${!v}"); fi
 done
+# 预估时长/用例数（来自 baseline 各套件）传给 reporter 显示：name:sec:count
+SUITE_TIMES=""
+if [[ -f "$BASELINE_FILE" ]]; then
+  while IFS=$'\t' read -r a b c d; do
+    if [[ "$a" == "suite" && -n "$d" && "$d" != "0" ]]; then
+      SUITE_TIMES="${SUITE_TIMES}${SUITE_TIMES:+,}${b}:${d}:${c}"
+    fi
+  done < "$BASELINE_FILE"
+fi
+if [[ -n "$SUITE_TIMES" ]]; then
+  RUN_ARGS+=(-e "SUITE_TIMES=$SUITE_TIMES")
+fi
+RUN_ARGS+=(test-backend)
 
 CMD=(docker compose "${RUN_ARGS[@]}" "${JEST_ARGS[@]}")
 SUITE_KEY="$(printf '%s ' "${SUITES[@]}" | sed 's/ $//')"; [[ -z "$SUITE_KEY" ]] && SUITE_KEY="all"
@@ -131,11 +152,15 @@ write_baseline() {
     echo "⚠ baseline 跳过：日志缺少 Tests:/Time: 汇总"
     return 0
   fi
-  # 逐套件：PASS __tests__/XX.test.js (Y s)；用例数统计该块下 ✓/✕/○ 行
+  # 逐套件解析两种 PASS 行：
+  #   前台自定义 reporter: PASS 02_rooms.test.js 7.3s (predict ~7.3s) TOTAL 49
+  #   后台默认 reporter:   PASS __tests__/02_rooms.test.js (7.281 s)
   local cur=""
   local -A s_sec s_cnt
   while IFS= read -r line; do
-    if [[ "$line" =~ ^PASS[[:space:]]+__tests__/(.+)\.test\.js[[:space:]]*\(([0-9.]+)[[:space:]]*s\) ]]; then
+    if [[ "$line" =~ ^PASS[[:space:]]+([a-zA-Z0-9_]+)\.test\.js[[:space:]]+([0-9.]+)s[[:space:]]*(\(.*\))?[[:space:]]*TOTAL[[:space:]]+([0-9]+) ]]; then
+      cur="${BASH_REMATCH[1]}"; s_sec["$cur"]="${BASH_REMATCH[2]}"; s_cnt["$cur"]="${BASH_REMATCH[4]}"
+    elif [[ "$line" =~ ^PASS[[:space:]]+__tests__/(.+)\.test\.js[[:space:]]*\(([0-9.]+)[[:space:]]*s\) ]]; then
       cur="${BASH_REMATCH[1]}"; s_sec["$cur"]="${BASH_REMATCH[2]}"; s_cnt["$cur"]=0
     elif [[ "$line" =~ ^PASS[[:space:]]+__tests__/(.+)\.test\.js[[:space:]]*$ ]]; then
       cur="${BASH_REMATCH[1]}"; s_sec["$cur"]="0"; s_cnt["$cur"]=0
@@ -150,7 +175,7 @@ write_baseline() {
     if [[ "$is_all" == "1" ]]; then
       printf 'all\ttotal\t%s\t%s\n' "$total" "$time_s"
     elif [[ -f "$BASELINE_FILE" ]]; then
-      grep '^all\t' "$BASELINE_FILE" 2>/dev/null || true
+      grep $'^all\t' "$BASELINE_FILE" 2>/dev/null || true
     fi
     for s in "${!s_sec[@]}"; do
       printf 'suite\t%s\t%s\t%s\n' "$s" "${s_cnt[$s]:-0}" "${s_sec[$s]}"

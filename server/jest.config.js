@@ -11,7 +11,7 @@ module.exports = {
     '/helpers/'
   ],
   moduleFileExtensions: ['js', 'json'],
-  verbose: true,
+  verbose: false,
   forceExit: true,
   detectOpenHandles: true,
   testTimeout: 30000,
