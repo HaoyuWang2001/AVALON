@@ -890,6 +890,19 @@ progress { border-radius: 12rpx; }
   background: #f3f4f6;
   border: 1rpx solid #e5e7eb;
 }
+.tmark-role-row {
+  display: flex; align-items: center; gap: 6rpx;
+}
+.tmark-guess {
+  padding: 4rpx 10rpx;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #fff;
+  background: #9ca3af;
+}
+.tmark-guess-good { background: #2563eb; }
+.tmark-guess-evil { background: #dc2626; }
 
 /* 身份标记面板（长按卡片弹出） */
 .mark-mask {

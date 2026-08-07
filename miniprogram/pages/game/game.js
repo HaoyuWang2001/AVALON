@@ -697,7 +697,7 @@ Page({
           guideStep: (phase === 'preNominate' || phase === 'speakingOrder') && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId ? phase : '',
           showLeaderGuide: (phase === 'preNominate' || phase === 'speakingOrder') && !res.current.forcedSend && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
           requiredTeamSize: teamSize,
-          showSelectCheck: (phase === 'preNominate' || phase === 'discussion' || phase === 'teamNomination') && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
+          showSelectCheck: (phase === 'preNominate' || phase === 'teamNomination') && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
           voteCount: Object.keys(res.current.teamVotes || {}).length,
           playerTotal: (res.players || []).length,
           isMissionTeamMember: !!((res.current.nominatedTeam || []).includes(myOpenId)),
@@ -887,8 +887,7 @@ Page({
 
   nominatePlayer(e) {
     if (!this.checkIfTeamLeader()) return;
-    if (this.data.currentPhase !== 'preNominate' && this.data.currentPhase !== 'discussion'
-        && this.data.currentPhase !== 'teamNomination') return;
+    if (this.data.currentPhase !== 'preNominate' && this.data.currentPhase !== 'teamNomination') return;
     const playerId = e.currentTarget.dataset.id;
     // discussion 已满员时，未选中的禁用玩家不可再选（已选的可取消）
     const target = this.data.tablePlayers.find(p => p.openId === playerId);
@@ -994,7 +993,7 @@ Page({
   // 长桌玩家点击（按阶段分发）
   onTablePlayerTap(e) {
     const { currentPhase } = this.data;
-    if (currentPhase === 'preNominate' || currentPhase === 'discussion' || currentPhase === 'teamNomination') {
+    if (currentPhase === 'preNominate' || currentPhase === 'teamNomination') {
       this.nominatePlayer(e);
     } else if (currentPhase === 'lake') {
       // 湖仙验人：持有者点击卡片单选目标（不可选自己/老湖仙），底部按钮确认

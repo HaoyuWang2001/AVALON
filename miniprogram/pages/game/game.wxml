@@ -78,10 +78,14 @@
           <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag {{tag.cls}}">{{tag.text}}</text>
         </view>
       </view>
-      <!-- 身份标记角标（仅本人可见）：阵营 + 角色 -->
+      <!-- 身份标记角标（仅本人可见）：阵营 + 角色（带"猜"徽章标识为推测结果） -->
       <view wx:if="{{item.identityMark}}" class="tplayer-mark">
         <text wx:if="{{item.identityMark.side}}" class="tmark-side {{item.identityMark.side === 'evil' ? 'tmark-evil' : 'tmark-good'}}">{{item.identityMark.side === 'evil' ? '红' : '蓝'}}</text>
-        <text wx:if="{{item.identityMark.roleName}}" class="tmark-role">{{item.identityMark.roleName}}</text>
+        <view wx:if="{{item.identityMark.roleName}}" class="tmark-role-row">
+          <text class="tmark-guess">猜</text>
+          <text class="tmark-role">{{item.identityMark.roleName}}</text>
+        </view>
+        <text wx:elif="{{item.identityMark.side}}" class="tmark-guess {{item.identityMark.side === 'evil' ? 'tmark-guess-evil' : 'tmark-guess-good'}}">猜</text>
       </view>
       <view wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="tplayer-gameend-role">{{item.roleName}}</view>
       <view wx:if="{{showSelectCheck}}" class="table-check {{item.checked ? 'checked' : ''}} {{item.disabled ? 'disabled' : ''}}"
