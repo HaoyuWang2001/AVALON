@@ -300,7 +300,6 @@ Page({
     configSummary: null,
     showLeaderGuide: false,
     guideStep: '',
-    showGuideArrow: false,
     discussionSet: false,
     guideSortedPlayers: [],
     assassinationSuccess: false,
@@ -696,7 +695,6 @@ Page({
           isTeamLeader: !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
           guideStep: (phase === 'preNominate' || phase === 'speakingOrder') && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId ? phase : '',
           showLeaderGuide: (phase === 'preNominate' || phase === 'speakingOrder') && !res.current.forcedSend && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
-          showGuideArrow: false,
           requiredTeamSize: teamSize,
           showSelectCheck: (phase === 'preNominate' || phase === 'discussion' || phase === 'teamNomination') && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
           voteCount: Object.keys(res.current.teamVotes || {}).length,
@@ -1083,12 +1081,6 @@ Page({
       wx.hideLoading();
       wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
     });
-  },
-
-  // speakingOrder：显示上下箭头选择发言顺序
-  guideShowArrow() {
-    if (this.data.guideStep !== 'speakingOrder') return;
-    this.setData({ showGuideArrow: true });
   },
 
   // speakingOrder：选择方向（复选切换）

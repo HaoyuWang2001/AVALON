@@ -1061,5 +1061,14 @@ progress { border-radius: 12rpx; }
   display: flex; flex-direction: column; align-items: center;
 }
 .guide-arrow-on { background: rgba(167,139,250,0.35); border-color: #a78bfa; }
-.guide-arrow-img { width: 120rpx; height: 120rpx; margin-bottom: 12rpx; }
+.guide-arrow-img { width: 120rpx; height: 120rpx; }
 .guide-arrow text { font-size: 26rpx; color: #fff; }
+
+/* 座位图（speakingOrder 确认键下方，参考用；预选车成员高亮金色） */
+.guide-seats {
+  margin-top: 40rpx;
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+}
+.guide-pick-pre { background: rgba(245,158,11,0.3); border-color: #f59e0b; }

@@ -510,19 +510,27 @@
     <block wx:if="{{guideStep === 'speakingOrder'}}">
       <block wx:if="{{!discussionSet}}">
         <view class="guide-sub">请指定本轮发言顺序</view>
-        <view class="guide-arrow-row" wx:if="{{showGuideArrow}}">
+        <!-- 上下箭头：直接显示，无文字标签 -->
+        <view class="guide-arrow-row">
           <view class="guide-arrow {{guideArrow === 'desc' ? 'guide-arrow-on' : ''}}" data-order="desc" bindtap="guidePickOrder">
             <image src="/images/down-arrow.png" class="guide-arrow-img" mode="aspectFit"></image>
-            <text>先尾后首</text>
           </view>
           <view class="guide-arrow {{guideArrow === 'asc' ? 'guide-arrow-on' : ''}}" data-order="asc" bindtap="guidePickOrder">
             <image src="/images/up-arrow.png" class="guide-arrow-img" mode="aspectFit"></image>
-            <text>先首后尾</text>
           </view>
         </view>
         <view class="guide-actions">
-          <button wx:if="{{!showGuideArrow}}" size="mini" class="btn btn-primary" bindtap="guideShowArrow">指定发言顺序</button>
-          <button wx:else size="mini" class="btn btn-primary" bindtap="guideConfirmOrder">确认</button>
+          <button size="mini" class="btn btn-primary" bindtap="guideConfirmOrder">确认</button>
+        </view>
+        <!-- 座位图：确认键下方，参考用，预选车成员高亮 -->
+        <view class="guide-seats">
+          <view class="guide-pick-wrap">
+            <view wx:for="{{guideSortedPlayers}}" wx:key="openId"
+              class="guide-pick {{preNominatedTeam.includes(item.openId) ? 'guide-pick-pre' : ''}}">
+              <view class="guide-pick-badge">{{item.seatNumber}}</view>
+              <text class="guide-pick-name">{{item.nickName}}</text>
+            </view>
+          </view>
         </view>
       </block>
       <block wx:else>
