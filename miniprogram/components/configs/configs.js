@@ -278,10 +278,12 @@ Component({
     computeVisiblePages() {
       const sel = this.data.selectedRoles;
       const hasLancelot = sel.lancelotBlue || sel.lancelotRed;
+      // 动态物理索引（兰斯页 wx:if 渲染，无兰斯时物理页压缩）
       const pages = [0, 1];
-      if (hasLancelot) pages.push(2);
-      pages.push(4);
-      pages.push(5);
+      let next = 2;
+      if (hasLancelot) pages.push(next++);
+      pages.push(next++);
+      pages.push(next);
       this.setData({
         visiblePages: pages,
         pageCount: pages.length,

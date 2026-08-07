@@ -168,7 +168,7 @@
         </swiper-item>
 
         <!-- Page 2: 兰斯洛特配置 (conditional) -->
-        <swiper-item hidden="{{!selectedRoles.lancelotBlue && !selectedRoles.lancelotRed}}">
+        <swiper-item wx:if="{{selectedRoles.lancelotBlue || selectedRoles.lancelotRed}}">
           <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
             <view class="config-section">
               <view class="section-title">⚔️ 兰斯洛特配置</view>
@@ -230,10 +230,6 @@
             </view>
           </scroll-view>
         </swiper-item>
-
-        <!-- Page 3: 保留位 -->
-        <swiper-item hidden="{{true}}"></swiper-item>
-
 
         <!-- Page 4: 时间+信息+创建 -->
         <swiper-item>
