@@ -427,7 +427,7 @@
 /* 玩家揭示样式 */
 .players-reveal { display: flex; flex-direction: column; gap: 20rpx; }
 .player-reveal-item { display: flex; align-items: center; padding: 20rpx; border-radius: 12rpx; }
-.player-reveal-item.good { background-color: rgba(46, 204, 113, 0.1); border-left: 6rpx solid #2ecc71; }
+.player-reveal-item.good { background-color: rgba(59, 130, 246, 0.1); border-left: 6rpx solid #3B82F6; }
 .player-reveal-item.evil { background-color: rgba(231, 76, 60, 0.1); border-left: 6rpx solid #e74c3c; }
 .player-reveal-avatar { width: 80rpx; height: 80rpx; border-radius: 50%; margin-right: 20rpx; }
 .player-reveal-name { font-size: 28rpx; font-weight: 600; margin-bottom: 4rpx; }
@@ -495,7 +495,7 @@
 .role-tags { display: flex; gap: 16rpx; margin-bottom: 20rpx; flex-wrap: wrap; justify-content: center; }
 .role-tag { font-size: 32rpx; font-weight: 800; padding: 12rpx 32rpx; border-radius: 28rpx; }
 .role-tag-name { background: #EDE9FE; color: #6D28D9; }
-.role-tag.tag-good { background: rgba(46, 204, 113, 0.12); color: #10B981; }
+.role-tag.tag-good { background: rgba(59, 130, 246, 0.12); color: #3B82F6; }
 .role-tag.tag-evil { background: rgba(231, 76, 60, 0.12); color: #EF4444; }
 .role-card-desc { font-size: 30rpx; color: #6B7280; text-align: center; line-height: 1.6; margin-bottom: 28rpx; padding: 0 12rpx; }
 .role-card-btn { min-width: 360rpx; font-size: 30rpx; }
@@ -541,8 +541,9 @@
 .role-vision-tags { display: flex; gap: 10rpx; flex-wrap: wrap; align-items: center; }
 .role-vision-tag { font-size: 26rpx; font-weight: 700; padding: 6rpx 20rpx; border-radius: 22rpx; background: #EDE9FE; color: #6D28D9; }
 .role-vision-tag-role { background: #EDE9FE; color: #6D28D9; }
-.role-vision-tag.tag-good { background: rgba(46, 204, 113, 0.14); color: #10B981; }
+.role-vision-tag.tag-good { background: rgba(59, 130, 246, 0.14); color: #3B82F6; }
 .role-vision-tag.tag-evil { background: rgba(231, 76, 60, 0.14); color: #EF4444; }
+.role-vision-tag.tag-unknown { background: rgba(107, 114, 128, 0.14); color: #6B7280; }
 /* 开刀：行布局与上方 role-vision-item 完全一致(左右64rpx/上下14rpx，无额外margin)；左侧座位牌+浅红底红字开刀块填满剩余 */
 .role-vision-knife-row {
   display: flex;
@@ -563,7 +564,7 @@
 .role-vision-knife-progress {
   position: absolute;
   left: 0; top: 0; bottom: 0;
-  background: rgba(239, 68, 68, 0.85);
+  background: #EF4444;
   z-index: 1;
 }
 .role-vision-knife-text {
@@ -604,7 +605,7 @@
   font-size: 26rpx; color: #4B5563;
   background: #F8F9FA; border-radius: 8rpx; padding: 12rpx 16rpx; margin-bottom: 8rpx;
 }
-.txt-good { color: #10B981; font-weight: 700; }
+.txt-good { color: #3B82F6; font-weight: 700; }
 .txt-evil { color: #EF4444; font-weight: 700; }
 .txt-muted { color: #9CA3AF; }
 .info-modal-close { margin-top: 16rpx; }
