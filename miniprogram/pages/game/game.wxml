@@ -352,6 +352,7 @@
     <view class="info-modal-body">
       <view class="info-modal-title">游戏记录</view>
       <scroll-view scroll-y enable-flex class="info-modal-scroll">
+        <view wx:if="{{!recordTimeline.length}}" class="info-empty">暂无信息</view>
         <view wx:for="{{recordTimeline}}" wx:key="index" class="info-section">
           <view class="info-section-title {{item.cls}}">{{item.title}}</view>
           <!-- 发车轮次：连续发车信息+任务信息 -->
@@ -382,7 +383,6 @@
           </block>
         </view>
       </scroll-view>
-      <button class="btn btn-primary info-modal-close" bindtap="closeInfoModal">关闭</button>
     </view>
   </view>
 
@@ -567,28 +567,28 @@
       <view class="config-view-line" wx:for="{{configSummary.ruleLines}}" wx:key="*this">{{item}}</view>
       <view class="config-view-sec">时间限制</view>
       <view class="config-view-line" wx:for="{{configSummary.limitLines}}" wx:key="*this">{{item}}</view>
-      <view class="config-view-close">
-        <button size="mini" class="cv-close-btn" bindtap="closeConfigView">关闭</button>
-      </view>
     </view>
   </view>
 
-  <!-- 身份标记面板（长按卡片弹出，仅本人可见） -->
+  <!-- 身份标记面板（长按卡片弹出，仅本人可见）：先猜阵营再猜身份 -->
   <view class="mark-mask" wx:if="{{showMarkPanel}}" bindtap="closeMarkPanel">
     <view class="mark-panel" catchtap="noop">
       <view class="mark-panel-title">标记 {{markTargetName}}</view>
       <view class="mark-sec-title">阵营</view>
       <view class="mark-side-row">
-        <view class="mark-opt mark-opt-good {{identityMarks[markTargetOpenId] && identityMarks[markTargetOpenId].side === 'good' ? 'mark-on' : ''}}" data-side="good" bindtap="markSide">蓝方</view>
-        <view class="mark-opt mark-opt-evil {{identityMarks[markTargetOpenId] && identityMarks[markTargetOpenId].side === 'evil' ? 'mark-on' : ''}}" data-side="evil" bindtap="markSide">红方</view>
+        <view class="mark-opt mark-opt-unknown {{markSideSel === '' ? 'mark-on' : ''}}" data-side="" bindtap="markPickSide">未知</view>
+        <view class="mark-opt mark-opt-good {{markSideSel === 'good' ? 'mark-on' : ''}}" data-side="good" bindtap="markPickSide">蓝方</view>
+        <view class="mark-opt mark-opt-evil {{markSideSel === 'evil' ? 'mark-on' : ''}}" data-side="evil" bindtap="markPickSide">红方</view>
       </view>
-      <view class="mark-sec-title">角色（本局配置）</view>
-      <view class="mark-role-wrap">
-        <view wx:for="{{markPanelRoles}}" wx:key="key" class="mark-opt mark-opt-role {{identityMarks[markTargetOpenId] && identityMarks[markTargetOpenId].role === item.key ? 'mark-on' : ''}}" data-role="{{item.key}}" bindtap="markRole">{{item.name}}</view>
-      </view>
+      <block wx:if="{{markSideSel}}">
+        <view class="mark-sec-title">角色（{{markSideSel === 'good' ? '蓝方' : '红方'}}）</view>
+        <view class="mark-role-wrap">
+          <view wx:for="{{markRoleOptions}}" wx:key="key" class="mark-opt mark-opt-role {{markRoleSel === item.key ? 'mark-on' : ''}}" data-role="{{item.key}}" bindtap="markPickRole">{{item.name}}</view>
+        </view>
+      </block>
       <view class="mark-clear-row">
-        <button size="mini" class="mark-clear-btn" bindtap="clearPlayerMark">清除标记</button>
-        <button size="mini" class="mark-cancel-btn" bindtap="closeMarkPanel">关闭</button>
+        <button size="mini" class="mark-confirm-btn" bindtap="markConfirm">确定</button>
+        <button size="mini" class="mark-cancel-btn" bindtap="markClear">清空</button>
       </view>
     </view>
   </view>

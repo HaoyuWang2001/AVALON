@@ -5,6 +5,12 @@ const api = require('../../services/api.js');
 // 睁眼狼（刺杀阶段向所有玩家暴露身份）
 const EVIL_OPEN_EYES = ['morgana', 'assassin', 'minion', 'mordred'];
 
+// 标记面板按阵营的角色全集（兰斯洛特固定归属：蓝兰→蓝方、红兰→红方）
+const MARK_ROLES_BY_SIDE = {
+  good: ['merlin', 'percival', 'loyal', 'lancelotBlue'],
+  evil: ['morgana', 'assassin', 'minion', 'mordred', 'oberon', 'lancelotRed']
+};
+
 // 角色中文名（模块级，供富化函数使用）
 const ROLE_NAMES_LOCAL = {
   merlin: '梅林', percival: '派西维尔', loyal: '忠臣', mordred: '莫德雷德',
@@ -162,15 +168,14 @@ function enrichTablePlayer(p, ctx) {
       && (preNominatedTeam || []).includes(p.openId)) {
     tags.push({ text: '预选', cls: TAG_STYLES.orange });
   }
-  // 身份标记（仅本人可见，带"猜"标识）：阵营用底色编码（红/蓝），角色用"猜·角色名"
+  // 身份标记（仅本人可见，带"猜"标识，合并为单个标签）：有角色→"猜·角色名"，无角色→"猜"；底色按阵营(好蓝/坏红/未猜灰)
   const im = (identityMarks || {})[p.openId];
-  if (im) {
-    if (im.side) {
-      tags.push({ text: '猜', cls: im.side === 'evil' ? TAG_STYLES.red : TAG_STYLES.blue });
-    }
-    if (im.role) {
-      tags.push({ text: '猜·' + (ROLE_NAMES_LOCAL[im.role] || im.role), cls: TAG_STYLES.purple });
-    }
+  if (im && (im.side || im.role)) {
+    const text = im.role ? '猜·' + (ROLE_NAMES_LOCAL[im.role] || im.role) : '猜';
+    const cls = im.side === 'good' ? TAG_STYLES.blue
+      : im.side === 'evil' ? TAG_STYLES.red
+      : 'ptag-grey';
+    tags.push({ text, cls });
   }
 
   return {
@@ -306,7 +311,9 @@ Page({
     showMarkPanel: false,
     markTargetOpenId: '',
     markTargetName: '',
-    markPanelRoles: [],
+    markSideSel: '',
+    markRoleSel: '',
+    markRoleOptions: [],
     showConfigView: false,
     configSummary: null,
     showLeaderGuide: false,
@@ -1027,22 +1034,80 @@ Page({
     const targetOpenId = e.currentTarget.dataset.id;
     if (!targetOpenId) return;
     const target = (this.data.allPlayers || []).find(p => p.openId === targetOpenId);
-    const rc = this.data.roomConfigVal;
-    const rolePool = [];
-    if (rc && rc.roles) {
-      const pool = new Set([...(rc.roles.good || []), ...(rc.roles.evil || [])]);
-      pool.forEach(r => rolePool.push({ key: r, name: ROLE_NAMES_LOCAL[r] || r }));
-    }
+    const cur = (this.data.identityMarks || {})[targetOpenId] || {};
+    // 打开面板时按当前标记预填阵营/角色，并生成对应阵营的角色选项
+    const sideSel = cur.side || '';
     this.setData({
       showMarkPanel: true,
       markTargetOpenId: targetOpenId,
       markTargetName: target ? target.nickName : '',
-      markPanelRoles: rolePool
+      markSideSel: sideSel,
+      markRoleSel: cur.role || '',
+      markRoleOptions: this.buildMarkRoleOptions(sideSel)
     });
   },
 
   closeMarkPanel() {
     this.setData({ showMarkPanel: false, markTargetOpenId: '' });
+  },
+
+  // 按所选阵营生成角色选项（本局配置存在的角色；未知阵营无角色）
+  buildMarkRoleOptions(side) {
+    if (!side) return [];
+    const rc = this.data.roomConfigVal;
+    const inGame = new Set([...(rc && rc.roles ? rc.roles.good || [] : []), ...(rc && rc.roles ? rc.roles.evil || [] : [])]);
+    return (MARK_ROLES_BY_SIDE[side] || []).filter(r => inGame.has(r)).map(r => ({ key: r, name: ROLE_NAMES_LOCAL[r] || r }));
+  },
+
+  // 选阵营（未知/蓝方/红方）：更新角色列表，切换阵营清空角色选择
+  markPickSide(e) {
+    const side = e.currentTarget.dataset.side || '';
+    this.setData({
+      markSideSel: side,
+      markRoleSel: '',
+      markRoleOptions: this.buildMarkRoleOptions(side)
+    });
+  },
+
+  // 选角色（复选切换）
+  markPickRole(e) {
+    const role = e.currentTarget.dataset.role;
+    this.setData({ markRoleSel: this.data.markRoleSel === role ? '' : role });
+  },
+
+  // 确定：按选择提交（side+role / 仅 side / 未知=清除全部）后关闭
+  markConfirm() {
+    const { gameId, markTargetOpenId, markSideSel, markRoleSel } = this.data;
+    if (!markTargetOpenId) return;
+    const doClose = () => this.setData({ showMarkPanel: false, markTargetOpenId: '' });
+    const fail = (title) => wx.showToast({ title, icon: 'none' });
+    const call = (p) => api.setIdentityMark(gameId, markTargetOpenId, p)
+      .then(res => { if (res && res.success === false) fail(res.message || '标记失败'); else doClose(); })
+      .catch(err => fail((err && err.message) || '标记失败'));
+    if (!markSideSel) {
+      // 未知阵营：清除全部标记
+      api.clearIdentityMark(gameId, markTargetOpenId, { side: true, role: true })
+        .then(res => { if (res && res.success === false) fail(res.message || '清除失败'); else doClose(); })
+        .catch(err => fail((err && err.message) || '清除失败'));
+      return;
+    }
+    if (markRoleSel) call({ side: markSideSel, role: markRoleSel });
+    else call({ side: markSideSel });
+  },
+
+  // 清空：清除全部标记后关闭
+  markClear() {
+    const { gameId, markTargetOpenId } = this.data;
+    if (!markTargetOpenId) return;
+    api.clearIdentityMark(gameId, markTargetOpenId, { side: true, role: true }).then(res => {
+      if (res && res.success === false) {
+        wx.showToast({ title: res.message || '清除失败', icon: 'none' });
+      } else {
+        this.setData({ showMarkPanel: false, markTargetOpenId: '' });
+      }
+    }).catch(err => {
+      wx.showToast({ title: (err && err.message) || '清除失败', icon: 'none' });
+    });
   },
 
   noop() {},
@@ -1117,60 +1182,6 @@ Page({
     });
   },
 
-  // 标记阵营（good/evil），再次点击切换清除该字段
-  markSide(e) {
-    const side = e.currentTarget.dataset.side;
-    const { gameId, markTargetOpenId, identityMarks } = this.data;
-    if (!markTargetOpenId) return;
-    const cur = identityMarks[markTargetOpenId] || {};
-    if (cur.side === side) {
-      this.markIdentityClear({ side: true });
-    } else {
-      api.setIdentityMark(gameId, markTargetOpenId, { side }).then(res => {
-        if (res && res.success === false) {
-          wx.showToast({ title: res.message || '标记失败', icon: 'none' });
-        }
-      }).catch(err => {
-        wx.showToast({ title: (err && err.message) || '标记失败', icon: 'none' });
-      });
-    }
-  },
-
-  // 标记角色（本局配置角色），再次点击切换清除该字段
-  markRole(e) {
-    const role = e.currentTarget.dataset.role;
-    const { gameId, markTargetOpenId, identityMarks } = this.data;
-    if (!markTargetOpenId) return;
-    const cur = identityMarks[markTargetOpenId] || {};
-    if (cur.role === role) {
-      this.markIdentityClear({ role: true });
-    } else {
-      api.setIdentityMark(gameId, markTargetOpenId, { role }).then(res => {
-        if (res && res.success === false) {
-          wx.showToast({ title: res.message || '标记失败', icon: 'none' });
-        }
-      }).catch(err => {
-        wx.showToast({ title: (err && err.message) || '标记失败', icon: 'none' });
-      });
-    }
-  },
-
-  markIdentityClear(clear) {
-    const { gameId, markTargetOpenId } = this.data;
-    api.clearIdentityMark(gameId, markTargetOpenId, clear).then(res => {
-      if (res && res.success === false) {
-        wx.showToast({ title: res.message || '清除失败', icon: 'none' });
-      }
-    }).catch(err => {
-      wx.showToast({ title: (err && err.message) || '清除失败', icon: 'none' });
-    });
-  },
-
-  // 清除某玩家的全部标记
-  clearPlayerMark() {
-    const { markTargetOpenId } = this.data;
-    this.markIdentityClear({ side: true, role: true });
-  },
 
   // lake 阶段：底部"确认查验"按钮（需先选中目标）；结果图弹窗由 lakeConfirm 阶段驱动
   confirmLakeInspect() {

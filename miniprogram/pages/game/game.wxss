@@ -272,6 +272,7 @@
 .ptag-gold { background: #FEF3C7; color: #B45309; }
 .ptag-orange { background: #FFEDD5; color: #C2410C; }
 .ptag-red { background: #FEE2E2; color: #EF4444; }
+.ptag-grey { background: #E5E7EB; color: #6B7280; }
 /* 老湖仙：与湖仙同粉色系，略深以区分 */
 .ptag-pink-deep { background: #FBCFE8; color: #9D174D; }
 /* 游戏记录中自己的座位号：紫色加粗 */
@@ -570,6 +571,12 @@
 }
 .info-modal-title { font-size: 34rpx; font-weight: 800; color: #111827; text-align: center; margin-bottom: 16rpx; }
 .info-modal-scroll { flex: 1; min-height: 0; height: 100%; max-height: 60vh; }
+.info-empty {
+  padding: 160rpx 0;
+  text-align: center;
+  font-size: 30rpx;
+  color: #9ca3af;
+}
 .info-section { margin-bottom: 24rpx; }
 .info-section-title { font-size: 28rpx; font-weight: 700; color: #8B5CF6; margin-bottom: 12rpx; }
 .info-section-title.rec-red { color: #EF4444; }
@@ -901,6 +908,7 @@ progress { border-radius: 12rpx; }
 }
 .mark-opt-good.mark-on { background: #dbeafe; border-color: #2563eb; color: #1e40af; }
 .mark-opt-evil.mark-on { background: #fee2e2; border-color: #dc2626; color: #991b1b; }
+.mark-opt-unknown.mark-on { background: #e5e7eb; border-color: #6b7280; color: #374151; }
 .mark-role-wrap { display: flex; flex-wrap: wrap; gap: 16rpx; }
 .mark-opt-role {
   flex: 0 0 auto;
@@ -915,11 +923,11 @@ progress { border-radius: 12rpx; }
   gap: 20rpx;
   margin-top: 32rpx;
 }
-.mark-clear-btn, .mark-cancel-btn {
+.mark-confirm-btn, .mark-cancel-btn {
   flex: 1;
   font-size: 30rpx;
 }
-.mark-clear-btn { background: #fee2e2; color: #dc2626; }
+.mark-confirm-btn { background: #ede9fe; color: #6d28d9; }
 .mark-cancel-btn { background: #e5e7eb; color: #374151; }
 
 /* 只读配置缩略弹窗 */
@@ -951,8 +959,6 @@ progress { border-radius: 12rpx; }
   line-height: 1.7;
 }
 .cv-strong { font-weight: 700; color: #111827; }
-.config-view-close { margin-top: 32rpx; }
-.cv-close-btn { background: #e5e7eb; color: #374151; }
 
 /* ─── 车主全屏引导页（preNominate/speakingOrder 车长专属） ─── */
 .leader-guide {
