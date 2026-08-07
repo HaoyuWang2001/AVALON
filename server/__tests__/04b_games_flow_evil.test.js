@@ -1,5 +1,6 @@
 const {
   createRoomAndStartGame, getGameState, confirmRevealAll, confirmLancelot,
+  driveToTeamNomination, startDiscussion,
   submitNomination, castVote, castMissionVote, submitPreNomination, selectSpeakingOrder,
   assassinate, startAssassination, endGame,
   buildStandardRoomConfig, buildCustomBoard9, buildCustomBoard10, withConfigOverrides
@@ -51,14 +52,16 @@ describe('04b — Evil Win Paths', () => {
           await submitPreNomination(gameId, leader.openId, []);
           continue;
         }
-        // 车主确定发言顺序
+        // 车主确定发言顺序 → 开始讨论
         if (state.current.phase === 'speakingOrder') {
           const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
           await selectSpeakingOrder(gameId, leader.openId, 'asc');
+          await startDiscussion(gameId, leader.openId);
           continue;
         }
 
         if (state.current.phase === 'discussion') {
+          await driveToTeamNomination(gameId, players);
           const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
           const teamSize = getTeamSize(players.length, state.current.round);
           const evilP = players.filter(p => p.side === 'evil');

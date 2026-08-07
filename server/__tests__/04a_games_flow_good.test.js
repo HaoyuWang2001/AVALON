@@ -1,5 +1,6 @@
 const {
   createRoomAndStartGame, getGameState, confirmRevealAll, confirmLancelot,
+  driveToTeamNomination, startDiscussion,
   submitNomination, castVote, castMissionVote, submitPreNomination, selectSpeakingOrder,
   assassinate, endGame,
   buildStandardRoomConfig, buildCustomBoard9, buildCustomBoard10, withConfigOverrides
@@ -54,14 +55,17 @@ describe('04a — Good Win Full Game Flow', () => {
           await submitPreNomination(gameId, leader.openId, []);
           continue;
         }
-        // 车主确定发言顺序
+        // 车主确定发言顺序 → 开始讨论
         if (state.current.phase === 'speakingOrder') {
           const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
           await selectSpeakingOrder(gameId, leader.openId, 'asc');
+          await startDiscussion(gameId, leader.openId);
           continue;
         }
 
         if (state.current.phase === 'discussion') {
+          await driveToTeamNomination(gameId, players);
+          state = await getGameState(gameId);
           const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
           const teamSize = getTeamSize(players.length, state.current.round);
           const team = players.slice(0, teamSize).map(p => p.openId);

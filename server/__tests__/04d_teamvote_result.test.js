@@ -1,5 +1,5 @@
 const {
-  createRoomAndStartGame, getGameState, confirmRevealAll, driveToDiscussion,
+  createRoomAndStartGame, getGameState, confirmRevealAll, driveToDiscussion, driveToTeamNomination,
   submitNomination, castVote, buildCustomBoard10, withConfigOverrides
 } = require('./helpers/testHelper');
 
@@ -16,6 +16,7 @@ describe('04d — 队伍投票结果 teamVoteResult（后端权威票型，座�
     }
     const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
     const team = players.slice(0, 3).map(p => p.openId);
+    state = await driveToTeamNomination(gameId, players);
     const nom = await submitNomination(gameId, leader.openId, team);
     expect(nom.success).toBe(true);
 
@@ -45,6 +46,7 @@ describe('04d — 队伍投票结果 teamVoteResult（后端权威票型，座�
     }
     const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
     const team = players.slice(0, 3).map(p => p.openId);
+    state = await driveToTeamNomination(gameId, players);
     const nom = await submitNomination(gameId, leader.openId, team);
     expect(nom.success).toBe(true);
 
@@ -76,6 +78,7 @@ describe('04d — 队伍投票结果 teamVoteResult（后端权威票型，座�
     }
     const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
     const team = players.slice(0, 3).map(p => p.openId);
+    state = await driveToTeamNomination(gameId, players);
     const nom = await submitNomination(gameId, leader.openId, team);
     expect(nom.success).toBe(true);
 
@@ -106,13 +109,14 @@ describe('04d — 队伍投票结果 teamVoteResult（后端权威票型，座�
     // 第一车：组车 + 全反对 → 流车 → 强制车（maxFailed=1）
     let leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
     const team = players.slice(0, 3).map(p => p.openId);
+    state = await driveToTeamNomination(gameId, players);
     const nom = await submitNomination(gameId, leader.openId, team);
     expect(nom.success).toBe(true);
     for (const p of players) {
       await castVote(gameId, p.openId, 'reject');
     }
     state = await getGameState(gameId);
-    expect(state.current.phase).toBe('discussion');
+    expect(state.current.phase).toBe('teamNomination');
     expect(state.current.forcedSend).toBe(true);
 
     // 强制发车

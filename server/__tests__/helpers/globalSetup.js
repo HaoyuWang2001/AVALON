@@ -65,6 +65,12 @@ module.exports = async function globalSetup() {
 
   console.log('[globalSetup] DDL executed successfully.');
 
+  // 静默 server 的预期错误堆栈：错误路径测试（校验拒绝/占座/红方失败票等）会大量触发
+  // console.error 刷屏，污染实时日志。只静默 error（保留 console.log：启动进度/[globalSetup]）。
+  if (process.env.NODE_ENV === 'test') {
+    console.error = () => {};
+  }
+
   // 3. Start the test server
   process.env.DB_NAME = testDbName;
   const serverDir = path.resolve(__dirname, '../..');

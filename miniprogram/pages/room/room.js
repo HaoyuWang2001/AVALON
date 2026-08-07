@@ -13,6 +13,54 @@ const ROLE_NAMES = {
   minion: '爪牙', oberon: '奥伯伦'
 };
 
+// 生成只读配置缩略数据（人数/角色/规则/limits）
+function buildConfigSummary(cfg) {
+  const good = (cfg.roles && cfg.roles.good) || [];
+  const evil = (cfg.roles && cfg.roles.evil) || [];
+  const roleCount = {};
+  const countRoles = list => {
+    list.forEach(r => { roleCount[r] = (roleCount[r] || 0) + 1; });
+  };
+  countRoles(good);
+  countRoles(evil);
+  const roleStr = roleList => {
+    const uniq = [...new Set(roleList)];
+    return uniq.map(r => {
+      const n = roleCount[r] || 1;
+      return ROLE_NAMES[r] || r + (n > 1 ? '×' + n : '');
+    }).join('、');
+  };
+  const rules = cfg.rules || {};
+  const limits = cfg.limits || {};
+  const ruleLines = [];
+  ruleLines.push('红狼互见：' + (rules.evilKnowsEachOther ? '开' : '关'));
+  ruleLines.push('流车上限：' + (rules.maxFailedNominations != null ? rules.maxFailedNominations : 3) + ' 次');
+  ruleLines.push('投票可见性：' + (rules.voteVisibility === 'hidden' ? '隐藏' : '公开'));
+  ruleLines.push('任务失败详情：' + (rules.missionFailDetail === 'binary' ? '仅成败' : '计数'));
+  if (rules.ladyOfTheLake) {
+    ruleLines.push('湖上夫人：开（第' + (rules.ladyOfTheLakeRound || 1) + '轮起）');
+  } else {
+    ruleLines.push('湖上夫人：关');
+  }
+  if (rules.lancelotSwapRound != null && rules.lancelotSwapRound > 0) {
+    ruleLines.push('兰斯互换：第' + rules.lancelotSwapRound + '轮 · ' + (rules.lancelotSwapForce === 'switch' ? '强制互换' : '随机'));
+  }
+  const limitLines = [];
+  limitLines.push('发言：' + (limits.speech || 0) + 's');
+  limitLines.push('任务：' + (limits.round || 0) + 's');
+  limitLines.push('投票：' + (limits.vote || 0) + 's');
+  if (limits.voteRevealDuration) {
+    limitLines.push('票型展示：' + limits.voteRevealDuration + 's');
+  }
+  return {
+    playerCount: good.length + evil.length,
+    goodRoles: roleStr(good),
+    evilRoles: roleStr(evil),
+    ruleLines,
+    limitLines
+  };
+}
+
 const DEFAULT_CONFIGS = {
   5:  { good: ['merlin','percival'], evil: ['morgana','assassin'] },
   6:  { good: ['merlin','percival'], evil: ['morgana','assassin'] },
@@ -65,6 +113,8 @@ Page({
     spectatorAllowed: true,
 
     showConfig: false,
+    showConfigView: false,
+    configSummary: null,
     logicalPage: 0,
     visiblePages: [0, 1, 4, 5],
     goodCount: 2,
@@ -477,6 +527,25 @@ Page({
     if (this.roomPolling) clearInterval(this.roomPolling);
     this.setData({ showConfig: true });
   },
+
+  // 只读配置缩略（所有人可见）
+  openConfigView() {
+    const room = this.data.roomInfo;
+    if (!room || !room.roomConfig) {
+      wx.showToast({ title: '暂无配置', icon: 'none' });
+      return;
+    }
+    this.setData({
+      showConfigView: true,
+      configSummary: buildConfigSummary(room.roomConfig)
+    });
+  },
+
+  closeConfigView() {
+    this.setData({ showConfigView: false });
+  },
+
+  noop() {},
 
   closeConfig() {
     if (this._configSnapshot) this._applyConfig(this._configSnapshot);

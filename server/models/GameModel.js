@@ -364,7 +364,7 @@ class GameModel {
   }
 
   /**
-   * 车主确定发言顺序：speakingOrder → discussion。
+   * 车主确定发言顺序：speakingOrder（仍停留该阶段，由 startDiscussion 进入 discussion）。
    * 仅当前队长可调用；需处于 speakingOrder 阶段。
    * @param {string} gameId 游戏ID
    * @param {string} openId 队长openId
@@ -407,7 +407,7 @@ class GameModel {
 
         await connection.execute(
           `UPDATE games 
-           SET speaking_order = ?, discussion_set = TRUE, current_phase = 'discussion', updated_at = NOW()
+           SET speaking_order = ?, discussion_set = TRUE, updated_at = NOW()
            WHERE id = ?`,
           [speakingOrder, gameId]
         );
@@ -416,6 +416,184 @@ class GameModel {
       return await this.getState(gameId);
     } catch (error) {
       console.error('设置发言顺序失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 开始讨论：speakingOrder → discussion（纯讨论）。
+   * 仅当前队长可调用；需处于 speakingOrder 阶段。不校验预选/选序（pre_nominated_team 可为空）。
+   * @param {string} gameId 游戏ID
+   * @param {string} openId 队长openId
+   * @returns {Promise<Object>} 更新后的游戏状态
+   */
+  static async startDiscussion(gameId, openId) {
+    try {
+      await db.transaction(async (connection) => {
+        const [game] = await connection.execute(
+          `SELECT current_phase, team_leader_index
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId]
+        );
+
+        if (game.length === 0) {
+          throw new Error('游戏不存在');
+        }
+
+        if (game[0].current_phase !== 'speakingOrder') {
+          throw new Error('当前不是车主确定发言顺序阶段');
+        }
+
+        const [players] = await connection.execute(
+          `SELECT gp.open_id FROM game_players gp
+           WHERE gp.game_id = ?
+           ORDER BY COALESCE(gp.seat_number, 999999), gp.open_id`,
+          [gameId]
+        );
+        const teamLeaderIndex = game[0].team_leader_index;
+        if (teamLeaderIndex >= players.length || players[teamLeaderIndex].open_id !== openId) {
+          throw new Error('只有队长才能开始讨论');
+        }
+
+        await connection.execute(
+          `UPDATE games SET current_phase = 'discussion', updated_at = NOW() WHERE id = ?`,
+          [gameId]
+        );
+      });
+
+      return await this.getState(gameId);
+    } catch (error) {
+      console.error('开始讨论失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 结束讨论：discussion → teamNomination（车长选车提交阶段）。
+   * 仅当前队长可调用；需处于 discussion 阶段。
+   * @param {string} gameId 游戏ID
+   * @param {string} openId 队长openId
+   * @returns {Promise<Object>} 更新后的游戏状态
+   */
+  static async endDiscussion(gameId, openId) {
+    try {
+      await db.transaction(async (connection) => {
+        const [game] = await connection.execute(
+          `SELECT current_phase, team_leader_index
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId]
+        );
+
+        if (game.length === 0) {
+          throw new Error('游戏不存在');
+        }
+
+        if (game[0].current_phase !== 'discussion') {
+          throw new Error('当前不是讨论阶段');
+        }
+
+        const [players] = await connection.execute(
+          `SELECT gp.open_id FROM game_players gp
+           WHERE gp.game_id = ?
+           ORDER BY COALESCE(gp.seat_number, 999999), gp.open_id`,
+          [gameId]
+        );
+        const teamLeaderIndex = game[0].team_leader_index;
+        if (teamLeaderIndex >= players.length || players[teamLeaderIndex].open_id !== openId) {
+          throw new Error('只有队长才能结束讨论');
+        }
+
+        await connection.execute(
+          `UPDATE games SET current_phase = 'teamNomination', updated_at = NOW() WHERE id = ?`,
+          [gameId]
+        );
+      });
+
+      return await this.getState(gameId);
+    } catch (error) {
+      console.error('结束讨论失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 设置身份标记（仅本人可见，长按卡片记录推理）：upsert，side/role 可单独设置。
+   * @param {string} gameId 游戏ID
+   * @param {string} openId 标记者openId
+   * @param {string} targetOpenId 被标记玩家openId
+   * @param {Object} mark { side?, role? } 待设置字段（undefined 则保留原值，null 则清除）
+   */
+  static async setIdentityMark(gameId, openId, targetOpenId, mark = {}) {
+    try {
+      const side = mark && Object.prototype.hasOwnProperty.call(mark, 'side') ? mark.side : null;
+      const role = mark && Object.prototype.hasOwnProperty.call(mark, 'role') ? mark.role : null;
+      await db.transaction(async (connection) => {
+        const [game] = await connection.execute(
+          `SELECT id FROM games WHERE id = ?`, [gameId]
+        );
+        if (game.length === 0) throw new Error('游戏不存在');
+        // 校验标记者在局
+        const [gp] = await connection.execute(
+          'SELECT open_id FROM game_players WHERE game_id = ? AND open_id = ?', [gameId, openId]
+        );
+        if (gp.length === 0) throw new Error('你不在本局游戏中');
+        // side/role 独立设置：传入 undefined 表示保留原值
+        await connection.execute(
+          `INSERT INTO game_identity_marks (game_id, open_id, target_open_id, side, role, updated_at)
+           VALUES (?, ?, ?, ?, ?, NOW())
+           ON DUPLICATE KEY UPDATE
+             side = IF(? IS NULL, IF(? = 0, side, NULL), ?),
+             role = IF(? IS NULL, IF(? = 0, role, NULL), ?),
+             updated_at = NOW()`,
+          [
+            gameId, openId, targetOpenId,
+            side, mark.hasOwnProperty('side') ? 1 : 0, side,
+            role, mark.hasOwnProperty('role') ? 1 : 0, role
+          ]
+        );
+      });
+      return await this.getState(gameId);
+    } catch (error) {
+      console.error('设置身份标记失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 清除身份标记：清除指定字段（side/role），两者都不传则删除整条。
+   * @param {string} gameId 游戏ID
+   * @param {string} openId 标记者openId
+   * @param {string} targetOpenId 被标记玩家openId
+   * @param {Object} clear { side?, role? } 要清除的字段
+   */
+  static async clearIdentityMark(gameId, openId, targetOpenId, clear = {}) {
+    try {
+      await db.transaction(async (connection) => {
+        const clearSide = !!clear.side;
+        const clearRole = !!clear.role;
+        if (clearSide && clearRole) {
+          // 全清：删除整条
+          await connection.execute(
+            'DELETE FROM game_identity_marks WHERE game_id = ? AND open_id = ? AND target_open_id = ?',
+            [gameId, openId, targetOpenId]
+          );
+        } else if (clearSide) {
+          await connection.execute(
+            `UPDATE game_identity_marks SET side = NULL, updated_at = NOW()
+             WHERE game_id = ? AND open_id = ? AND target_open_id = ?`,
+            [gameId, openId, targetOpenId]
+          );
+        } else if (clearRole) {
+          await connection.execute(
+            `UPDATE game_identity_marks SET role = NULL, updated_at = NOW()
+             WHERE game_id = ? AND open_id = ? AND target_open_id = ?`,
+            [gameId, openId, targetOpenId]
+          );
+        }
+      });
+      return await this.getState(gameId);
+    } catch (error) {
+      console.error('清除身份标记失败:', error);
       throw error;
     }
   }
@@ -689,13 +867,27 @@ class GameModel {
           [gameId, openId]
         );
         const vision = visionRows.length ? parseJson(visionRows[0].vision) : { players: [] };
+        // 本人身份标记（仅本人可见，长按卡片记录推理）
+        const markRows = await db.query(
+          `SELECT target_open_id AS targetOpenId, side, role
+           FROM game_identity_marks WHERE game_id = ? AND open_id = ?`,
+          [gameId, openId]
+        );
+        const identityMarks = {};
+        for (const m of markRows) {
+          identityMarks[m.targetOpenId] = {
+            side: m.side || null,
+            role: m.role || null
+          };
+        }
         player = {
           role: requesterInfo ? requesterInfo.role : null,
           side: requesterInfo ? requesterInfo.side : null,
           revealConfirmed: requesterInfo ? (requesterInfo.revealConfirmed === 1 || requesterInfo.revealConfirmed === true) : false,
           lancelotConfirmed: requesterInfo ? (requesterInfo.lancelotConfirmed === 1 || requesterInfo.lancelotConfirmed === true) : false,
           lakeConfirmed: requesterInfo ? (requesterInfo.lakeConfirmed === 1 || requesterInfo.lakeConfirmed === true) : false,
-          vision
+          vision,
+          identityMarks
         };
         if (revealAll) {
           publicPlayers = fullPlayers;
@@ -705,6 +897,7 @@ class GameModel {
             if (p.openId === openId) {
               entry.role = p.role;
               entry.side = p.side;
+              entry.identityMarks = identityMarks;
             }
             return entry;
           });
@@ -804,8 +997,8 @@ class GameModel {
           throw new Error('游戏不存在');
         }
         
-        if (!['discussion', 'preNominate'].includes(game[0].current_phase)) {
-          throw new Error('当前不是发车阶段');
+        if (game[0].current_phase !== 'teamNomination') {
+          throw new Error('当前不是提交车型阶段');
         }
 
         // 读取房间配置（流车阈值）
@@ -1051,7 +1244,7 @@ class GameModel {
               const failedNominations = game[0].failed_nominations + 1;
               const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
               const forcedNext = failedNominations >= maxFailed;
-              const nextPhase = forcedNext ? 'discussion' : 'preNominate';
+              const nextPhase = forcedNext ? 'teamNomination' : 'preNominate';
               await connection.execute(
                 `UPDATE games 
                  SET current_phase = ?,

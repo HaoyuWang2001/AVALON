@@ -98,12 +98,34 @@
     <view wx:else class="empty-hint">暂无观战玩家</view>
   </view>
 
-  <!-- Host Bottom Bar (公共组件) -->
-  <bottom-bar wx:if="{{currentUser && isHost}}">
-    <text class="bar-btn" bindtap="modifyConfig">修改配置</text>
-    <text class="bar-btn bar-btn-primary {{canStartGame ? '' : 'btn-disabled'}}" bindtap="startGame">开始游戏</text>
-    <text class="bar-btn {{seatsFull ? '' : 'btn-disabled'}}" bindtap="randomShuffleSeats">随机位置</text>
+  <!-- Bottom Bar (公共组件) -->
+  <bottom-bar wx:if="{{currentUser}}">
+    <block wx:if="{{isHost}}">
+      <text class="bar-btn" bindtap="modifyConfig">修改配置</text>
+      <text class="bar-btn bar-btn-primary {{canStartGame ? '' : 'btn-disabled'}}" bindtap="startGame">开始游戏</text>
+      <text class="bar-btn {{seatsFull ? '' : 'btn-disabled'}}" bindtap="randomShuffleSeats">随机位置</text>
+    </block>
+    <block wx:else>
+      <text class="bar-btn" bindtap="openConfigView">查看配置</text>
+    </block>
   </bottom-bar>
+
+  <!-- 只读配置缩略弹窗（所有人） -->
+  <view class="config-view-overlay" wx:if="{{showConfigView}}" bindtap="closeConfigView">
+    <view class="config-view-panel" catchtap="noop">
+      <view class="config-view-title">房间配置</view>
+      <view class="config-view-line">人数：<text class="cv-strong">{{configSummary.playerCount}} 人</text></view>
+      <view class="config-view-line">蓝方：{{configSummary.goodRoles}}</view>
+      <view class="config-view-line">红方：{{configSummary.evilRoles}}</view>
+      <view class="config-view-sec">规则</view>
+      <view class="config-view-line" wx:for="{{configSummary.ruleLines}}" wx:key="*this">{{item}}</view>
+      <view class="config-view-sec">时间限制</view>
+      <view class="config-view-line" wx:for="{{configSummary.limitLines}}" wx:key="*this">{{item}}</view>
+      <view class="config-view-close">
+        <button size="mini" class="cv-close-btn" bindtap="closeConfigView">关闭</button>
+      </view>
+    </view>
+  </view>
 
   <!-- Config Overlay -->
   <view class="config-overlay" wx:if="{{showConfig}}">

@@ -480,6 +480,79 @@ function createRouter() {
     }
   });
 
+  // 开始讨论（speakingOrder → discussion，纯讨论阶段）
+  router.post('/startDiscussion', async (req, res) => {
+    try {
+      const { gameId, openId } = req.body;
+      if (!gameId || !openId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+      const result = await GameModel.startDiscussion(gameId, openId);
+      await emitGameForGame(req.body.gameId);
+      res.json(result);
+    } catch (error) {
+      console.error('开始讨论API错误:', error);
+      if (error.message.includes('游戏不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+      if (error.message.includes('当前不是车主确定发言顺序阶段') ||
+          error.message.includes('只有队长才能开始讨论')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+      res.status(500).json({ success: false, message: error.message || '开始讨论失败' });
+    }
+  });
+
+  // 结束讨论（discussion → teamNomination，车长选车提交阶段）
+  router.post('/endDiscussion', async (req, res) => {
+    try {
+      const { gameId, openId } = req.body;
+      if (!gameId || !openId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+      const result = await GameModel.endDiscussion(gameId, openId);
+      await emitGameForGame(req.body.gameId);
+      res.json(result);
+    } catch (error) {
+      console.error('结束讨论API错误:', error);
+      if (error.message.includes('游戏不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+      if (error.message.includes('当前不是讨论阶段') ||
+          error.message.includes('只有队长才能结束讨论')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+      res.status(500).json({ success: false, message: error.message || '结束讨论失败' });
+    }
+  });
+
+  // 设置/清除身份标记（仅本人可见）：body { gameId, openId, targetOpenId, side?, role?, clear?: boolean }
+  router.post('/identityMark', async (req, res) => {
+    try {
+      const { gameId, openId, targetOpenId, side, role, clear } = req.body;
+      if (!gameId || !openId || !targetOpenId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+      let result;
+      if (clear) {
+        result = await GameModel.clearIdentityMark(gameId, openId, targetOpenId, { side, role });
+      } else {
+        const mark = {};
+        if (side !== undefined) mark.side = side;
+        if (role !== undefined) mark.role = role;
+        result = await GameModel.setIdentityMark(gameId, openId, targetOpenId, mark);
+      }
+      await emitGameForGame(req.body.gameId);
+      res.json(result);
+    } catch (error) {
+      console.error('身份标记API错误:', error);
+      if (error.message.includes('游戏不存在') || error.message.includes('不在本局游戏中')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+      res.status(500).json({ success: false, message: error.message || '身份标记失败' });
+    }
+  });
+
   // 放弃游戏（仅房主，无胜负结果）
   router.post('/:gameId/abandon', async (req, res) => {
     try {

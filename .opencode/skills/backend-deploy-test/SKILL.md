@@ -1,129 +1,117 @@
 ---
 name: backend-deploy-test
-description: Deploy the AVALON backend via Docker Compose and run the Jest test suite
+description: Run the AVALON backend Jest test suite on the server and deploy the backend via Docker Compose
 ---
 
 ## When to use
 
-Use this skill whenever the server-side code has changed and needs to be deployed and verified. This
-includes changes under `server/`, `docker-compose.yml`, `mysql/DDL.sql`, or `.env.example`.
+Use this skill whenever the server-side code (`server/`, `mysql/DDL.sql`, `scripts/test-backend.sh`,
+`scripts/deploy-backend.sh`) has changed and needs to be verified and/or deployed. Also use it to
+establish a new test-run baseline or to debug a failing test run.
 
-## Deployment (Docker Compose)
+## Environment
 
-The server runs in two containers on `haoyu-wang141.top`:
+- Server: `lighthouse@haoyu-wang141.top`
+- Repo on server: `/home/lighthouse/AVALON/AVALON`
+- Tests run **in the server itself** (host only needs `docker` + `docker compose`, no node).
+- Test infra: `docker-compose.test.yml` (`test-backend` service) + `server/Dockerfile.test`
+  (node:20-alpine + `npm ci`). Container connects to `avalon-mysql` on `avalon-net`, uses a
+  dedicated test DB `avalon_db_test` (dropped/recreated every run by `globalSetup`).
 
-| Container | Image | Port |
-|-----------|-------|------|
-| `avalon-mysql` | mysql:8.0 | 3307:3306 |
-| `avalon-server` | avalon-server:prod (built from `./server/Dockerfile`) | 8082:8082 |
+## Workflow
 
-### Standard deploy
-
-```bash
-cd /home/lighthouse/AVALON
-git pull
-
-# If MySQL data dir needs migration from old named-volume setup (first time only):
-mkdir -p data/mysql
-docker compose stop avalon-mysql
-docker cp mysql-avalon:/var/lib/mysql/. ./data/mysql/
-docker rm mysql-avalon
-
-# Rebuild server image and restart both services
-docker compose up -d --build
-```
-
-### First-run: create `users` table
-
-The `DDL.sql` init script runs only on a fresh MySQL data directory. If the database already
-exists, create the `users` table manually:
+### 1. Sync code to server (if changed)
 
 ```bash
-docker exec -i avalon-mysql mysql -u avalon_user -pavalon_pass_2024 avalon_db <<'SQL'
-CREATE TABLE IF NOT EXISTS users (
-  open_id VARCHAR(64) NOT NULL,
-  wx_nick_name VARCHAR(100) DEFAULT '',
-  custom_nick_name VARCHAR(50) DEFAULT '',
-  avatar_url TEXT,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (open_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-SQL
+scp -o ConnectTimeout=15 server/models/GameModel.js lighthouse@haoyu-wang141.top:/home/lighthouse/AVALON/AVALON/server/models/
+# ... and any other changed files under server/__tests__, server/routes, scripts/, mysql/
 ```
 
-### Verify deployment
+Always `bash -n <file>` locally before scp. After scp, run `bash -n` on the server to verify.
+
+### 2. Run tests (frontground, real-time logging) — REQUIRED way
 
 ```bash
-docker ps --format "table {{.Names}}\t{{.Status}}"  # both should be Up / healthy
-docker logs avalon-server --tail 30                  # should show "HTTPS 模式已启用" + "数据库连接正常"
+ssh lighthouse@haoyu-wang141.top "cd /home/lighthouse/AVALON/AVALON && bash scripts/test-backend.sh all"
 ```
 
-## Running the test suite
+- **Always run frontground** (`no `-b``) so jest output streams in real time — do NOT background +
+  `sleep`+poll. Set the bash tool timeout to `600000` ms (force build ~1-60s + full suite ~313s).
+- **Force builds latest code every run** (there is no separate `build` subcommand anymore).
+- `test-backend.sh all` = all suites. Run a subset with e.g. `bash scripts/test-backend.sh 04d 04`.
 
-### Prerequisites
+Options: `-b` background + 60s progress (uses baseline for ETA), `-t <pattern>` test-name filter,
+`--timeout <ms>` jest testTimeout, `-d` dry-run (prints build + jest commands only).
 
-Tests run in **memory mode** by default — no MySQL or Docker needed locally. The server
-auto-detects that MySQL is unavailable and falls back to in-memory `Map` storage.
+### Test suites (394 total)
 
-Ensure dependencies are installed:
+| Suite | File | ~Cases | ~Time |
+|-------|------|--------|-------|
+| 01_health | 01_health.test.js | 3 | <1s |
+| 02_rooms | 02_rooms.test.js | 49 | 7s |
+| 03_games_start | 03_games_start.test.js | 130 | 44s |
+| 03b_lancelot_variant | 03b_lancelot_variant.test.js | 8 | 8s |
+| 04_games_flow | 04_games_flow.test.js | 38 | 103s |
+| 04a_games_flow_good | 04a_games_flow_good.test.js | 10 | 41s |
+| 04b_games_flow_evil | 04b_games_flow_evil.test.js | 51 | 67s |
+| 04c_lake_confirm | 04c_lake_confirm.test.js | 2 | 6s |
+| 04d_teamvote_result | 04d_teamvote_result.test.js | 4 | 8s |
+| 05_socket | 05_socket.test.js | 10 | <1s |
+| 06_edge_cases | 06_edge_cases.test.js | 40 | 23s |
+| 07_game_logic | 07_game_logic.test.js | 49 | <1s |
+
+(Authoritative timing/counts live in `scripts/.test-baseline` — always check it, not this table.)
+
+### 3. Interpret the output — IMPORTANT
+
+- **Expected error stack spam is now silenced.** `server/__tests__/helpers/globalSetup.js` overrides
+  `console.error = () => {}` when `NODE_ENV=test`, so the many intentional error-path tests
+  (invalid role, occupied seat, good-player-cannot-fail, etc.) no longer flood stdout. You should
+  only see jest `PASS`/`FAIL` lines, per-test `✓/✕ name (ms)`, and startup logs.
+- **Green = all passed:** end of log shows `Test Suites: X passed` + `Tests: N passed` + `Time:`.
+  Current baseline: **394 passed / 12 suites / ~313s**.
+- A failing assertion shows the API response/message inline (jest's diff), so failures remain
+  debuggable even with server errors silenced.
+
+### 4. Baseline file (`scripts/.test-baseline`) — progress estimation
+
+Written after every successful run (frontground or `-b`). TSV, one record per line:
+
+```
+build_seconds   <seconds to build test image>
+all     total   <total tests>   <total seconds>
+suite   <name>  <cases>         <seconds>
+```
+
+- `-b` mode sums the matched `suite` rows to estimate remaining tests / ETA, plus `build_seconds`.
+- Fast suites (`01_health`, `05_socket`, `07_game_logic`) may store `0` seconds (jest omits their
+  timing); totals in the `all` row are authoritative.
+- 06_rooms note: `04_games_flow` occasionally flakes with `Duplicate entry 'NNNNNN' for key
+  'rooms.PRIMARY'` (6-digit room-id collision among ~1000 rooms in one run). Re-run the suite — it
+  is not a code bug.
+
+## Deployment (production)
 
 ```bash
-cd server
-npm install  # includes jest, supertest in devDependencies
+cd /home/haoyu/AVALON && bash scripts/deploy-backend.sh
 ```
 
-### Run tests
+- tars `server/` → server repo, syncs `mysql/DDL.sql`, rebuilds `avalon-server`, verifies the
+  container's `GameModel.js` md5 matches local. Options: `--skip-sync`, `--no-verify`, `-d` dry-run.
+- **DB migrations are NOT auto-applied.** Run migration SQL manually on the server:
+  ```bash
+  ssh lighthouse@haoyu-wang141.top "docker exec -i avalon-mysql mysql -uavalon_user -pavalon_pass_2024 avalon_db < /home/lighthouse/AVALON/AVALON/mysql/<migration>.sql"
+  ```
+  Existing migrations: `migration_teamvote_reveal.sql`, `migration_lake_confirm.sql`,
+  `migration_identity_marks.sql`.
+- After deploy, check `docker logs avalon-server --tail 20` for "🚀 AVALON 游戏服务器启动成功".
 
-```bash
-npm test
-# or: npx jest --forceExit --detectOpenHandles
-# verbose: npm run test:verbose
-```
+## Troubleshooting
 
-### Tests against a remote deployed server
-
-```bash
-npm run test:remote -- TEST_SERVER_URL=https://haoyu-wang141.top:8082
-```
-
-### Test suite structure
-
-```
-server/__tests__/
-├── 01_health.test.js        # GET /hello, GET /api/health
-├── 02_rooms.test.js         # Room CRUD: create, join, leave, kick, seat, ready
-├── 03_games.test.js         # Game lifecycle: start, state, end, restart
-├── 04_messages.test.js      # Chat: send, list, latest, validation
-├── 05_edge_cases.test.js    # Full rooms, duplicate joins, bad starts, rapid cycles
-├── 06_game_logic.test.js    # Pure unit tests: GameModel static helpers (no server)
-└── helpers/
-    ├── testHelper.js        # Centralized API wrappers (createRoom, joinRoom, etc.)
-    ├── globalSetup.js       # Boots Express server once before all tests
-    ├── globalTeardown.js    # Stops server after all tests
-    ├── setupRequest.js      # Configures supertest agent
-    └── setupRemote.js       # Remote server config
-```
-
-### Known coverage gaps
-
-| Area | Status |
-|------|--------|
-| Room management (CRUD) | Covered |
-| Messaging (send/list) | Covered |
-| Edge cases & validation | Covered |
-| Game logic static helpers | Covered (unit tests) |
-| Game nomination/voting flow | **Not covered** — blocked by roleReveal phase; no API to auto-advance |
-| Game mission execution | **Not covered** |
-| Assassin shot / win condition | **Not covered** |
-| Socket.io realtime events | **Not covered** — `socket.io-client` declared but unused |
-| `/api/users/*` endpoints | **Not covered** — no tests exist yet |
-| CI/CD pipeline | **None** — tests run manually via `npm test` |
-
-### Interpreting results
-
-- `npm test` prints a coverage summary. Current baseline: ~25% statements (only touched files
-  are reported; untested source files are omitted from the report because `collectCoverageFrom`
-  is not configured).
-- All 78 tests should pass. Any failures typically indicate a regression in route handlers,
-  validation, or the `GameModel` static helpers.
-- If a test fails, re-run with `--verbose` to see which assertion failed.
+- **Lock exists** (`scripts/.test-backend.lock`): a test run is active (or crashed with lock
+  leftover). Check `pgrep -af jest`, wait or delete the lock.
+- **Residual test container:** `docker ps -a | grep test-backend-run` → `docker stop` it (contains
+  the jest process).
+- **Build always takes ~0s when no server code changed** (`COPY . .` layer cached) — expected; it
+  still copies the freshest `server/` context.
+- Frontend changes (`miniprogram/`) do NOT need this skill — use the `miniprogram-preview` skill.

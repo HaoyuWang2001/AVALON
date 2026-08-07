@@ -1,5 +1,5 @@
 const {
-  createRoomAndStartGame, getGameState, driveToDiscussion,
+  createRoomAndStartGame, getGameState, driveToDiscussion, driveToTeamNomination,
   submitNomination, castVote, castMissionVote, confirmLancelot,
   buildCustomBoard9, buildCustomBoard10, buildStandardRoomConfig, withConfigOverrides
 } = require('./helpers/testHelper');
@@ -26,9 +26,13 @@ async function driveToMissionVote(gameId, players, team) {
   let state = await getGameState(gameId);
   if (state.current.phase === 'roleReveal' || state.current.phase === 'preNominate'
       || state.current.phase === 'speakingOrder' || state.current.phase === 'discussion'
+      || state.current.phase === 'teamNomination'
       || state.current.phase === 'lancelot') {
     await driveToDiscussion(gameId, players);
     state = await getGameState(gameId);
+  }
+  if (state.current.phase === 'discussion') {
+    state = await driveToTeamNomination(gameId, players);
   }
   const leader = players[leaderIndex(state, players)];
   const n = players.length;
@@ -107,6 +111,9 @@ async function rejectRound(gameId, players) {
   if (st.current.phase === 'preNominate') {
     await driveToDiscussion(gameId, players);
     st = await getGameState(gameId);
+  }
+  if (st.current.phase === 'discussion') {
+    st = await driveToTeamNomination(gameId, players);
   }
   const leader = players[leaderIndex(st, players)];
   const n = players.length;
@@ -320,8 +327,8 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     const forced = await getGameState(gameId);
     expect(forced.current.failedNominations).toBe(3);
     expect(forced.current.forcedSend).toBe(true);
-    // 强制车：跳过 preNominate/speakingOrder，直接进入 discussion
-    expect(forced.current.phase).toBe('discussion');
+    // 强制车：跳过 preNominate/speakingOrder/discussion，直接进入 teamNomination
+    expect(forced.current.phase).toBe('teamNomination');
 
     const n = players.length;
     const leader = players[leaderIndex(forced, players)];
@@ -482,6 +489,7 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     await driveToDiscussion(gameId, players);
     const st = await getGameState(gameId);
     const gameLeader = players[leaderIndex(st, players)];
+    await driveToTeamNomination(gameId, players);
     await submitNomination(gameId, gameLeader.openId, team);
 
     const before = await getGameState(gameId, players[3].openId);

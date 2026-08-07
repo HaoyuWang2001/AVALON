@@ -53,9 +53,10 @@ describe('07 — Game Logic Unit Tests', () => {
         oberonMustFailMission: false, lancelotMustFail: false,
         voteVisibility: 'anonymous', missionFailDetail: 'count'
       };
-      expect(() => RoomModel.validateRoomConfig({ ...base, rules: { ...req, lancelotSwapRound: 0 } })).toThrow('lancelotSwapRound');
-      expect(() => RoomModel.validateRoomConfig({ ...base, rules: { ...req, lancelotSwapRound: 5 } })).toThrow('lancelotSwapRound');
-      expect(() => RoomModel.validateRoomConfig({ ...base, rules: { ...req, lancelotSwapRound: 3 } })).not.toThrow();
+      const valid = { ...base, rules: { ...req, lancelotSwapRound: 3 }, limits: { voteRevealDuration: 0 } };
+      expect(() => RoomModel.validateRoomConfig({ ...base, rules: { ...req, lancelotSwapRound: 0 }, limits: { voteRevealDuration: 0 } })).toThrow('lancelotSwapRound');
+      expect(() => RoomModel.validateRoomConfig({ ...base, rules: { ...req, lancelotSwapRound: 5 }, limits: { voteRevealDuration: 0 } })).toThrow('lancelotSwapRound');
+      expect(() => RoomModel.validateRoomConfig(valid)).not.toThrow();
     });
   });
 

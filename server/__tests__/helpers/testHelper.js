@@ -260,8 +260,8 @@ async function confirmRevealAll(gameId, players) {
   return state;
 }
 
-// 推进到 discussion 阶段：confirmRevealAll → (若 lancelot) 全员确认 → (若 preNominate) submitPreNomination → selectSpeakingOrder
-// 用于测试快速进入发车前的讨论阶段；若已处于 discussion 则不做任何事
+// 推进到 discussion 阶段：confirmRevealAll → (若 lancelot) 全员确认 → (若 preNominate) submitPreNomination → selectSpeakingOrder → startDiscussion
+// 用于测试快速进入讨论阶段；若已处于 discussion 则不做任何事
 async function driveToDiscussion(gameId, players) {
   let state = await getGameState(gameId);
   if (state.current.phase === 'roleReveal') {
@@ -280,12 +280,36 @@ async function driveToDiscussion(gameId, players) {
     const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
     const preRes = await submitPreNomination(gameId, leader.openId, []);
     if (!preRes.success) throw new Error('submitPreNomination failed: ' + JSON.stringify(preRes));
+    state = await getGameState(gameId);
+  }
+  if (state.current.phase === 'speakingOrder') {
+    const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
     const orderRes = await selectSpeakingOrder(gameId, leader.openId, 'asc');
     if (!orderRes.success) throw new Error('selectSpeakingOrder failed: ' + JSON.stringify(orderRes));
+    const startRes = await startDiscussion(gameId, leader.openId);
+    if (!startRes.success) throw new Error('startDiscussion failed: ' + JSON.stringify(startRes));
     state = await getGameState(gameId);
   }
   if (state.current.phase !== 'discussion') {
     throw new Error('driveToDiscussion: unexpected phase ' + state.current.phase);
+  }
+  return state;
+}
+
+// 推进到 teamNomination 阶段：discussion → endDiscussion → teamNomination
+async function driveToTeamNomination(gameId, players) {
+  let state = await getGameState(gameId);
+  if (state.current.phase === 'preNominate' || state.current.phase === 'speakingOrder') {
+    state = await driveToDiscussion(gameId, players);
+  }
+  if (state.current.phase === 'discussion') {
+    const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
+    const res = await endDiscussion(gameId, leader.openId);
+    if (!res.success) throw new Error('endDiscussion failed: ' + JSON.stringify(res));
+    state = await getGameState(gameId);
+  }
+  if (state.current.phase !== 'teamNomination') {
+    throw new Error('driveToTeamNomination: unexpected phase ' + state.current.phase);
   }
   return state;
 }
@@ -329,6 +353,16 @@ async function submitPreNomination(gameId, openId, preNominatedTeam) {
 
 async function selectSpeakingOrder(gameId, openId, speakingOrder) {
   const res = await apiPost('/api/games/speakingOrder', { gameId, openId, speakingOrder });
+  return res.body;
+}
+
+async function startDiscussion(gameId, openId) {
+  const res = await apiPost('/api/games/startDiscussion', { gameId, openId });
+  return res.body;
+}
+
+async function endDiscussion(gameId, openId) {
+  const res = await apiPost('/api/games/endDiscussion', { gameId, openId });
   return res.body;
 }
 
@@ -495,6 +529,9 @@ module.exports = {
   endGame,
   submitPreNomination,
   selectSpeakingOrder,
+  startDiscussion,
+  endDiscussion,
+  driveToTeamNomination,
   lakeInspect,
   confirmLake,
   confirmLancelot,

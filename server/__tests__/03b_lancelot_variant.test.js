@@ -1,5 +1,6 @@
 const {
   createLancelotGame, getGameState, confirmRevealAll,
+  driveToTeamNomination,
   submitNomination, castVote, castMissionVote,
   submitPreNomination, selectSpeakingOrder, confirmLancelot,
   assassinate, endGame
@@ -90,8 +91,9 @@ describe('03b — Lancelot Single-Role Variants (10 players)', () => {
           state = await getGameState(gameId);
         }
 
-        // 讨论阶段：正式选车
+        // 讨论阶段：正式选车（先结束讨论进 teamNomination）
         if (state.current.phase === 'discussion') {
+          state = await driveToTeamNomination(gameId, players);
           const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
           const teamSize = getTeamSize(10, state.current.round);
           const team = players.slice(0, teamSize).map(p => p.openId);

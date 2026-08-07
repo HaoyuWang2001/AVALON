@@ -1,5 +1,5 @@
 const {
-  createRoomAndStartGame, getGameState, confirmRevealAll, driveToDiscussion,
+  createRoomAndStartGame, getGameState, confirmRevealAll, driveToDiscussion, driveToTeamNomination,
   submitNomination, castVote, castMissionVote, lakeInspect, confirmLake, confirmLancelot,
   buildCustomBoard10, withConfigOverrides
 } = require('./helpers/testHelper');
@@ -36,6 +36,9 @@ async function driveToLake(gameId, players) {
       || state.current.phase === 'speakingOrder' || state.current.phase === 'discussion') {
     await driveToDiscussion(gameId, players);
     state = await getGameState(gameId);
+  }
+  if (state.current.phase === 'discussion') {
+    state = await driveToTeamNomination(gameId, players);
   }
   const n = players.length;
   const size = TEAM_SIZES[n][state.current.round - 1];

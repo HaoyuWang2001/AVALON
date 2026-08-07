@@ -2,7 +2,7 @@ const {
   makeUserId, createRoom, joinRoom, toggleReady,
   createRoomWithPlayers, createRoomAndStartGame, buildConfigWithSpectator,
   apiPost, apiGet, submitNomination, castVote, castMissionVote,
-  confirmReveal, confirmRevealAll, driveToDiscussion,
+  confirmReveal, confirmRevealAll, driveToDiscussion, driveToTeamNomination, startDiscussion,
   submitPreNomination, selectSpeakingOrder,
   assassinate, endGame, leaveRoom, disband, getRoom,
   abandonGame, getGameState
@@ -186,7 +186,8 @@ describe('06 — Edge Cases & Validation', () => {
       expect(pre.current.phase).toBe('speakingOrder');
       const order = await selectSpeakingOrder(gameId, leader.openId, 'desc');
       expect(order.success).toBe(true);
-      expect(order.current.phase).toBe('discussion');
+      // setSpeakingOrder 仍停留 speakingOrder（由 startDiscussion 进入 discussion）
+      expect(order.current.phase).toBe('speakingOrder');
       expect(order.current.speakingOrder).toBe('desc');
       await endGame(gameId);
     });
@@ -236,6 +237,7 @@ describe('06 — Edge Cases & Validation', () => {
       const st = await getGameState(gameId);
       const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
       const team = [leader.openId, ...players.map(p => p.openId).filter(id => id !== leader.openId)].slice(0, 2);
+      await driveToTeamNomination(gameId, players);
       await submitNomination(gameId, leader.openId, team);
       await Promise.all([
         castVote(gameId, players[0].openId, 'approve'),
@@ -252,6 +254,7 @@ describe('06 — Edge Cases & Validation', () => {
       const st = await getGameState(gameId);
       const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
       const team = [leader.openId, ...players.map(p => p.openId).filter(id => id !== leader.openId)].slice(0, 2);
+      await driveToTeamNomination(gameId, players);
       await submitNomination(gameId, leader.openId, team);
       // 第3名玩家不是队长也没到投票阶段后重复投
       const res = await castVote(gameId, players[3].openId, 'approve');
@@ -396,6 +399,7 @@ describe('06 — Edge Cases & Validation', () => {
         if (st.current.phase === 'speakingOrder') {
           const leader = players.find(p => p.openId === st.current.teamLeaderOpenId);
           await selectSpeakingOrder(gameId, leader.openId, 'asc');
+          await startDiscussion(gameId, leader.openId);
           continue;
         }
         if (st.current.phase === 'discussion') {
@@ -403,7 +407,8 @@ describe('06 — Edge Cases & Validation', () => {
           const size = sizes[st.current.round] || 2;
           const evils = players.filter(p => p.side === 'evil');
           const team = [...evils, ...players.filter(p => p.side === 'good')].slice(0, size).map(p => p.openId);
-          await submitNomination(gameId, leader.openId, team);
+          await driveToTeamNomination(gameId, players);
+      await submitNomination(gameId, leader.openId, team);
         }
         st = await getGameState(gameId);
         if (st.current.phase === 'teamVote') {

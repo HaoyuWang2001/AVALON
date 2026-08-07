@@ -188,9 +188,41 @@ class ApiService {
 
   async selectSpeakingOrder(gameId, speakingOrder) {
     const openId = this.openId || getApp().globalData.openId;
-    return this.request('/games/speakingOrder', {
+    return this.request(`/games/speakingOrder`, {
       method: 'POST',
       data: { gameId, openId, speakingOrder }
+    });
+  }
+
+  async startDiscussion(gameId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/games/startDiscussion`, {
+      method: 'POST',
+      data: { gameId, openId }
+    });
+  }
+
+  async endDiscussion(gameId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/games/endDiscussion`, {
+      method: 'POST',
+      data: { gameId, openId }
+    });
+  }
+
+  async setIdentityMark(gameId, targetOpenId, mark) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/games/identityMark`, {
+      method: 'POST',
+      data: { gameId, openId, targetOpenId, ...mark }
+    });
+  }
+
+  async clearIdentityMark(gameId, targetOpenId, clear) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/games/identityMark`, {
+      method: 'POST',
+      data: { gameId, openId, targetOpenId, clear }
     });
   }
 
@@ -366,7 +398,13 @@ class ApiService {
     this._socketStatusCallbacks.push(fn);
   }
 
+  // 当前 socket 连接状态：'open' | 'closed' | 'connecting' | 'idle'
+  getSocketStatus() {
+    return this._socketStatus || 'idle';
+  }
+
   _emitSocketStatus(status) {
+    this._socketStatus = status;
     (this._socketStatusCallbacks || []).forEach(fn => { try { fn(status); } catch (e) {} });
   }
 

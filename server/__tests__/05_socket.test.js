@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const { connectClients, disconnectAll, waitForEvent, createClient } = require('./helpers/socketHelper');
 const {
-  createRoomWithPlayers, startGame, getGameState, driveToDiscussion,
+  createRoomWithPlayers, startGame, getGameState, driveToDiscussion, driveToTeamNomination,
   submitNomination, castVote, buildCustomBoard10
 } = require('./helpers/testHelper');
 
@@ -119,6 +119,7 @@ describe('05 — WebSocket Real-time Communication', () => {
   it('should deliver current game state to a reconnecting player via requestState', async () => {
     const { roomId, gameId, players } = await createRoomAndStart10();
     await driveToDiscussion(gameId, players);
+    await driveToTeamNomination(gameId, players);
     const st0 = await getGameState(gameId);
     const leader = players.find(p => p.openId === st0.current.teamLeaderOpenId);
     const team = [leader.openId, ...players.map(p => p.openId).filter(id => id !== leader.openId)].slice(0, 3);

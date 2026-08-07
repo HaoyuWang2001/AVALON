@@ -7,8 +7,7 @@
 #       在服务器本机执行，仅需 host 具备 docker + docker compose，无需 host 安装 node。
 #
 # 用法:
-#   bash test-backend.sh build                          # 只构建测试镜像（含最新代码）
-#   bash test-backend.sh [options] [suite...]           # 跑测试（需镜像已构建；--build 可强制先构建）
+#   bash test-backend.sh [options] [suite...]           # 跑测试（强制先用最新代码构建测试镜像）
 #
 # 参数 suite: 测试文件名模式（jest testMatch），可多个，例如
 #       01_health 02_rooms 03_games_start 03b_lancelot_variant 04_games_flow
@@ -19,24 +18,25 @@
 #   -t <pattern>    jest --testNamePattern（按用例名过滤）
 #   -b             后台运行：nohup 写日志 + 每 60s 输出 通过/失败/跳过/已完成/剩余/预计时长
 #   --timeout <ms>  jest testTimeout（默认 60000）
-#   --verbose       jest --verbose
-#   --build         先构建测试镜像再跑测试（默认不构建，用已构建镜像）
-#   -d/--dry-run    只打印将执行的命令，不实际执行
+#   -d/--dry-run    只打印将执行的命令，不实际执行（含构建命令）
 #   --              之后所有参数原样透传给 jest
 #
 # 环境覆盖（可选）: 设置 DB_* 环境变量会以 -e 传入容器，覆盖 docker-compose.test.yml 的默认值
 #   （DB_HOST/DB_PORT/DB_USER/DB_PASS/DB_NAME/DB_ROOT_USER/DB_ROOT_PASS）
 #
-# 进度基准: 每次跑完会把 <suites>、用例总数、耗时写入 .test-baseline（本脚本同目录）。
+# 进度基准: 每次跑完（前台/后台）都会把 build 镜像耗时、每套件耗时、全量总数/总耗时写入
+#           .test-baseline（本脚本同目录，TSV 多行）：
+#             build_seconds  <构建秒数>
+#             all    total  <总用例数> <总秒数>
+#             suite  <套件名> <用例数> <秒数>
 #           后台模式下据此估算"剩余用例/预计时长"；首次无基准则显示 --，跑完自动建立。
 #
 # 示例（新 agent context 复用）:
-#   bash test-backend.sh build                          # 先构建测试镜像
-#   bash test-backend.sh 04c_lake_confirm               # 单个套件（前台，用已构建镜像）
-#   bash test-backend.sh -b 03_games_start              # 单个套件（后台 + 进度）
-#   bash test-backend.sh all                            # 全部套件
-#   bash test-backend.sh -t 'T1[12]' 03_games_start     # 按用例名过滤
-#   bash test-backend.sh -d 04c                         # dry-run 查看命令
+#   bash test-backend.sh all                            # 全部套件（前台，强制构建，实时打印，写 baseline）
+#   bash test-backend.sh 04c_lake_confirm                # 单个套件（前台）
+#   bash test-backend.sh -b 03_games_start               # 单个套件（后台 + 进度）
+#   bash test-backend.sh -t 'T1[12]' 03_games_start      # 按用例名过滤
+#   bash test-backend.sh -d 04c                          # dry-run 查看命令
 
 set -uo pipefail
 
@@ -51,19 +51,13 @@ SUITES=()
 TNAME=""
 BACKGROUND=0
 TIMEOUT=60000
-VERBOSE=0
-BUILD=0
-BUILD_ONLY=0
 DRY=0
 PASSTHROUGH=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    build) BUILD_ONLY=1; shift ;;
     -t) TNAME="${2:-}"; shift 2 ;;
     -b) BACKGROUND=1; shift ;;
     --timeout) TIMEOUT="${2:-60000}"; shift 2 ;;
-    --verbose) VERBOSE=1; shift ;;
-    --build) BUILD=1; shift ;;
     -d|--dry-run) DRY=1; shift ;;
     --) shift; PASSTHROUGH+=("$@"); break ;;
     *) SUITES+=("$1"); shift ;;
@@ -90,34 +84,24 @@ if [[ "$DRY" -eq 0 ]]; then
   fi
 fi
 
-# ---------- 构建测试镜像（含最新代码；build 子命令只构建，测试默认不构建） ----------
-if [[ "$BUILD" -eq 1 || "$BUILD_ONLY" -eq 1 ]]; then
-  echo "🔨 构建测试镜像 avalon-server:test ..."
-  if [[ "$DRY" -eq 1 ]]; then
-    echo "docker compose -f $COMPOSE_FILE build test-backend"
-  else
-    docker compose -f "$COMPOSE_FILE" build test-backend || { echo "❌ 构建失败"; exit 3; }
-  fi
-  if [[ "$BUILD_ONLY" -eq 1 ]]; then
-    echo "✅ 测试镜像构建完成"
-    exit 0
-  fi
-fi
-
-# 跑测试但不构建时：确认镜像存在
-if [[ "$BUILD" -eq 0 && "$DRY" -eq 0 ]]; then
-  if ! docker image inspect avalon-server:test >/dev/null 2>&1; then
-    echo "❌ 测试镜像不存在，请先执行: bash test-backend.sh build"
-    exit 3
-  fi
+# ---------- 构建测试镜像（强制，保证用最新代码；记录耗时写入 baseline） ----------
+echo "🔨 构建测试镜像 avalon-server:test ..."
+build_seconds=""
+if [[ "$DRY" -eq 1 ]]; then
+  echo "docker compose -f $COMPOSE_FILE build test-backend"
+else
+  build_start=$(date +%s)
+  docker compose -f "$COMPOSE_FILE" build test-backend || { echo "❌ 构建失败"; exit 3; }
+  build_end=$(date +%s)
+  build_seconds=$((build_end - build_start))
+  echo "✅ 构建完成，耗时 ${build_seconds}s"
 fi
 
 # ---------- 组装 docker compose run 命令 ----------
 JEST_ARGS=(npx jest)
 if [[ "${#SUITES[@]}" -gt 0 ]]; then JEST_ARGS+=("${SUITES[@]}"); fi
 if [[ -n "$TNAME" ]]; then JEST_ARGS+=(--testNamePattern "$TNAME"); fi
-JEST_ARGS+=(--forceExit --detectOpenHandles --testTimeout "$TIMEOUT")
-if [[ "$VERBOSE" -eq 1 || "$BACKGROUND" -eq 1 ]]; then JEST_ARGS+=(--verbose); fi
+JEST_ARGS+=(--forceExit --detectOpenHandles --testTimeout "$TIMEOUT" --verbose)
 if [[ "${#PASSTHROUGH[@]}" -gt 0 ]]; then JEST_ARGS+=("${PASSTHROUGH[@]}"); fi
 
 RUN_ARGS=(-f "$COMPOSE_FILE" run --rm test-backend)
@@ -134,30 +118,91 @@ if [[ "$DRY" -eq 1 ]]; then
   exit 0
 fi
 
-# ---------- 执行 ----------
+# ---------- 解析 jest 日志写入 baseline（前台/后台共用） ----------
+# 格式: build_seconds / all total / suite <name> <count> <sec>，TSV 多行
+write_baseline() {
+  local log="$1"
+  local build_sec="$2"
+  local total time_s
+  total=$(grep -E '^Tests:' "$log" | grep -oE '[0-9]+ total' | grep -oE '^[0-9]+' | tail -1)
+  time_s=$(grep -E '^Time:' "$log" | grep -oE '[0-9.]+ s' | grep -oE '^[0-9.]+' | tail -1)
+  if [[ -z "$total" || -z "$time_s" ]]; then
+    echo "⚠ baseline 跳过：日志缺少 Tests:/Time: 汇总"
+    return 0
+  fi
+  {
+    printf 'build_seconds\t%s\n' "${build_sec:-0}"
+    printf 'all\ttotal\t%s\t%s\n' "$total" "$time_s"
+    # 逐套件：PASS __tests__/XX.test.js (Y s)；用例数统计该块下 ✓/✕/○ 行
+    local cur=""
+    local -A s_sec s_cnt
+    while IFS= read -r line; do
+      if [[ "$line" =~ ^PASS[[:space:]]+__tests__/(.+)\.test\.js[[:space:]]*\(([0-9.]+)[[:space:]]*s\) ]]; then
+        cur="${BASH_REMATCH[1]}"; s_sec["$cur"]="${BASH_REMATCH[2]}"; s_cnt["$cur"]=0
+      elif [[ "$line" =~ ^PASS[[:space:]]+__tests__/(.+)\.test\.js[[:space:]]*$ ]]; then
+        cur="${BASH_REMATCH[1]}"; s_sec["$cur"]="0"; s_cnt["$cur"]=0
+      elif [[ -n "$cur" && "$line" =~ ^[[:space:]]*(✓|✕|○) ]]; then
+        s_cnt["$cur"]=$(( ${s_cnt["$cur"]:-0} + 1 ))
+      fi
+    done < "$log"
+    for s in "${!s_sec[@]}"; do
+      printf 'suite\t%s\t%s\t%s\n' "$s" "${s_cnt[$s]:-0}" "${s_sec[$s]}"
+    done | sort -t $'\t' -k4 -n
+  } > "$BASELINE_FILE.tmp"
+  mv "$BASELINE_FILE.tmp" "$BASELINE_FILE"
+  echo "📌 已更新基准: build=${build_sec}s all total=$total ${time_s}s"
+}
+
+# ---------- 执行（前台：tee 实时打印 + 写日志；后台：nohup + 进度） ----------
+LOG_FILE="/tmp/test-backend-$(date +%s).log"
+
 if [[ "$BACKGROUND" -eq 0 ]]; then
   touch "$LOCK_FILE"
   trap 'rm -f "$LOCK_FILE"' EXIT
-  "${CMD[@]}"
-  code=$?
+  "${CMD[@]}" 2>&1 | tee "$LOG_FILE"
+  code=${PIPESTATUS[0]}
   echo ""
   echo "⏹ 测试结束，退出码: $code"
+  if [[ "$code" -eq 0 ]]; then
+    write_baseline "$LOG_FILE" "$build_seconds"
+  fi
   exit "$code"
 fi
 
 # ---------- 后台执行 + 每 60s 进度汇报 ----------
-LOG_FILE="/tmp/test-backend-$(date +%s).log"
 echo "📄 日志: $LOG_FILE"
 nohup "${CMD[@]}" > "$LOG_FILE" 2>&1 &
 TEST_PID=$!
 
-# 读取基准
+# 读取基准（多行）：build_seconds + 命中的 suite 行求和；all 兜底
+build_hint=""
+all_total=""; all_seconds=""
+suites_count=0; suites_time=0
+if [[ -f "$BASELINE_FILE" ]]; then
+  while IFS=$'\t' read -r a b c d; do
+    case "$a" in
+      build_seconds) build_hint="$b" ;;
+      all) all_total="$c"; all_seconds="$d" ;;
+      suite)
+        for s in "${SUITES[@]}"; do
+          if [[ "$b" == *"$s"* ]]; then
+            suites_count=$((suites_count + ${c:-0}))
+            suites_time=$(awk -v t="$suites_time" -v x="${d:-0}" 'BEGIN{printf "%.2f", t+x}')
+          fi
+        done
+        ;;
+    esac
+  done < "$BASELINE_FILE"
+fi
 total_hint=""
 base_seconds=""
-if [[ -f "$BASELINE_FILE" ]]; then
-  while IFS=$'\t' read -r key t sec; do
-    if [[ "$key" == "$SUITE_KEY" ]]; then total_hint="$t"; base_seconds="$sec"; fi
-  done < "$BASELINE_FILE"
+if [[ "${#SUITES[@]}" -eq 0 ]]; then
+  total_hint="$all_total"; base_seconds="$all_seconds"
+else
+  total_hint="$suites_count"; base_seconds="$suites_time"
+fi
+if [[ -n "$build_hint" ]]; then
+  base_seconds=$(awk -v t="$base_seconds" -v b="$build_hint" 'BEGIN{printf "%.2f", t+b}')
 fi
 
 start_ts=$(date +%s)
@@ -206,17 +251,8 @@ echo "════════ 最终汇总 ════════"
 grep -E "Tests:|Test Suites:|Time:" "$LOG_FILE" | tail -20
 echo "退出码: $code"
 
-# 写入基准（从 jest 汇总解析 total 与耗时）
-if [[ "$code" -eq 0 ]] || true; then
-  total=$(grep -oE 'Tests:[[:space:]]*[0-9]+ (passed|failed|skipped)[^0-9]*' "$LOG_FILE" | grep -oE '[0-9]+ total|[0-9]+' | tail -1)
-  # 汇总形如: Tests: 110 skipped, 20 passed, 130 total
-  total=$(grep -E '^Tests:' "$LOG_FILE" | grep -oE '[0-9]+ total' | grep -oE '^[0-9]+' | tail -1)
-  time_s=$(grep -E '^Time:' "$LOG_FILE" | grep -oE '[0-9.]+ s' | grep -oE '^[0-9.]+' | tail -1)
-  if [[ -n "$total" && -n "$time_s" ]]; then
-    printf '%s\t%s\t%s\n' "$SUITE_KEY" "$total" "$time_s" > "$BASELINE_FILE.tmp"
-    mv "$BASELINE_FILE.tmp" "$BASELINE_FILE"
-    echo "📌 已更新基准: $SUITE_KEY total=$total ${time_s}s"
-  fi
+if [[ "$code" -eq 0 ]]; then
+  write_baseline "$LOG_FILE" "$build_seconds"
 fi
 
 exit "$code"

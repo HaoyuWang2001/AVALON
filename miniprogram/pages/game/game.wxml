@@ -24,6 +24,7 @@
       <view class="mission-actions">
         <text class="mini-btn" wx:if="{{playerRole}}" bindtap="openRoleModal">身份</text>
         <text class="mini-btn" bindtap="openInfoModal">历史</text>
+        <text class="mini-btn" bindtap="openConfigView">配置</text>
       </view>
     </view>
 
@@ -66,7 +67,7 @@
   <!-- 玩家列表（全宽大卡片，每玩家一行）；padding-bottom 动态对齐底部栏，避免遮挡 -->
   <view class="player-list" style="{{bottomBarHeight ? 'padding-bottom:' + bottomBarHeight + 'px' : ''}}">
     <view wx:for="{{tablePlayers}}" wx:key="openId" class="table-player {{item.cardState}}"
-      bindtap="onTablePlayerTap" data-id="{{item.openId}}">
+      bindtap="onTablePlayerTap" bindlongpress="onPlayerLongPress" data-id="{{item.openId}}">
       <text class="seat-no">{{item.seatNumber}}</text>
       <view class="tplayer-avatar-wrap">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
@@ -76,6 +77,11 @@
         <view class="tplayer-tags">
           <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag {{tag.cls}}">{{tag.text}}</text>
         </view>
+      </view>
+      <!-- 身份标记角标（仅本人可见）：阵营 + 角色 -->
+      <view wx:if="{{item.identityMark}}" class="tplayer-mark">
+        <text wx:if="{{item.identityMark.side}}" class="tmark-side {{item.identityMark.side === 'evil' ? 'tmark-evil' : 'tmark-good'}}">{{item.identityMark.side === 'evil' ? '红' : '蓝'}}</text>
+        <text wx:if="{{item.identityMark.roleName}}" class="tmark-role">{{item.identityMark.roleName}}</text>
       </view>
       <view wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="tplayer-gameend-role">{{item.roleName}}</view>
       <view wx:if="{{showSelectCheck}}" class="table-check {{item.checked ? 'checked' : ''}} {{item.disabled ? 'disabled' : ''}}"
@@ -136,22 +142,38 @@
       </block>
     </block>
 
-    <!-- discussion：车主确认发车 -->
+    <!-- discussion：纯讨论阶段（车型提交在 teamNomination） -->
     <block wx:if="{{currentPhase === 'discussion'}}">
       <!-- 预选车+方向：仅非强制车时显示 -->
       <view wx:if="{{!forcedSend}}" class="bar-info bar-preteam">预选车：{{preTeamSeats || '无'}}<image src="/images/{{speakingOrder === 'desc' ? 'down-arrow.png' : 'up-arrow.png'}}" class="dir-pill-img" mode="aspectFit"></image></view>
-      <!-- 车长：强制发车/确认发车按钮 -->
+      <!-- 车长：结束讨论按钮 -->
       <block wx:if="{{isTeamLeader}}">
         <view class="bar-row">
-          <button size="mini" class="btn btn-primary" bindtap="confirmNomination">{{forcedSend ? '强制发车' : '确认发车'}} {{localSelected.length}}/{{requiredTeamSize}}</button>
+          <button size="mini" class="btn btn-primary" bindtap="endDiscussion">结束讨论</button>
         </view>
       </block>
-      <!-- 非车长 + 强制车：等待动画 + 提示 -->
-      <block wx:if="{{!isTeamLeader && forcedSend}}">
+      <!-- 非车长：等待 -->
+      <block wx:else>
         <view class="vote-waiting">
           <view class="vote-waiting-spinner"></view>
         </view>
-        <view class="bar-info bar-waiting">等待车长发出强制车...</view>
+        <view class="bar-info bar-waiting">等待车长结束讨论...</view>
+      </block>
+    </block>
+
+    <!-- teamNomination：车长选车并提交（强制车直接进入，强制发车） -->
+    <block wx:if="{{currentPhase === 'teamNomination'}}">
+      <view wx:if="{{forcedSend}}" class="bar-info bar-waiting">本轮为强制车</view>
+      <view wx:if="{{isTeamLeader}}">
+        <view class="bar-row">
+          <button size="mini" class="btn btn-primary" bindtap="confirmNomination">{{forcedSend ? '强制发车' : '提交车型'}}（{{localSelected.length}}/{{requiredTeamSize}}）</button>
+        </view>
+      </view>
+      <block wx:else>
+        <view class="vote-waiting">
+          <view class="vote-waiting-spinner"></view>
+        </view>
+        <view class="bar-info bar-waiting">等待车长提交车型...</view>
       </block>
     </block>
 
@@ -409,15 +431,6 @@
     </view>
   </view>
 
-  <!-- 发言顺序弹窗（仅车主，不可关闭，期间阻断其他操作） -->
-  <view class="order-modal" wx:if="{{currentPhase === 'speakingOrder' && isTeamLeader}}">
-    <view class="order-mask" catchtap="noop" catchtouchmove="noop"></view>
-    <view class="order-body">
-      <image src="/images/up-arrow.png" class="order-arrow" data-order="asc" bindtap="selectSpeakingDirection" mode="aspectFit"></image>
-      <image src="/images/down-arrow.png" class="order-arrow" data-order="desc" bindtap="selectSpeakingDirection" mode="aspectFit"></image>
-    </view>
-  </view>
-
   <!-- 任务投票弹窗（仅任务队成员，不可关闭；投票前有 5s 票型倒计时） -->
   <view class="mission-modal" wx:if="{{currentPhase === 'missionVote' && isMissionTeamMember && missionVoteReady}}">
     <view class="mission-mask" catchtap="noop" catchtouchmove="noop"></view>
@@ -472,6 +485,89 @@
     <view class="mission-anim-center">
       <image src="/images/{{missionAnimSuccess ? 'avalon-blue.png' : 'avalon-red.png'}}" class="mission-anim-img" mode="aspectFit"/>
       <text class="mission-anim-text">{{missionAnimSuccess ? '任务成功' : '任务失败'}}</text>
+    </view>
+  </view>
+
+  <!-- 车主全屏引导页（preNominate/speakingOrder 车长专属；强制车直接进 teamNomination 不显示） -->
+  <view class="leader-guide" wx:if="{{showLeaderGuide}}">
+    <view class="guide-title">您是尊贵的车主</view>
+    <!-- preNominate：预点车（可选），全屏内选车 -->
+    <block wx:if="{{guideStep === 'preNominate'}}">
+      <view class="guide-sub">请预点车（可选，0~{{requiredTeamSize}} 人）</view>
+      <view class="guide-pick-wrap">
+        <view wx:for="{{tablePlayers}}" wx:key="openId" class="guide-pick {{item.checked ? 'guide-pick-on' : ''}} {{item.disabled ? 'guide-pick-dis' : ''}}"
+          bindtap="onTablePlayerTap" data-id="{{item.openId}}">
+          <text class="guide-pick-name">{{item.nickName}}</text>
+          <text class="guide-pick-no">{{item.seatNumber}}号</text>
+        </view>
+      </view>
+      <view class="guide-actions">
+        <button size="mini" class="btn btn-primary" bindtap="guideSubmitPreNomination">完成预选（{{localSelected.length}}/{{requiredTeamSize}}）</button>
+        <button size="mini" class="guide-skip-btn" bindtap="guideSkipPreNomination">跳过预选</button>
+      </view>
+    </block>
+    <!-- speakingOrder：指定发言顺序（箭头）→ 开始讨论 -->
+    <block wx:if="{{guideStep === 'speakingOrder'}}">
+      <block wx:if="{{!discussionSet}}">
+        <view class="guide-sub">请指定本轮发言顺序</view>
+        <view class="guide-arrow-row" wx:if="{{showGuideArrow}}">
+          <view class="guide-arrow {{guideArrow === 'desc' ? 'guide-arrow-on' : ''}}" data-order="desc" bindtap="guidePickOrder">
+            <image src="/images/down-arrow.png" class="guide-arrow-img" mode="aspectFit"></image>
+            <text>先尾后首</text>
+          </view>
+          <view class="guide-arrow {{guideArrow === 'asc' ? 'guide-arrow-on' : ''}}" data-order="asc" bindtap="guidePickOrder">
+            <image src="/images/up-arrow.png" class="guide-arrow-img" mode="aspectFit"></image>
+            <text>先首后尾</text>
+          </view>
+        </view>
+        <view class="guide-actions">
+          <button wx:if="{{!showGuideArrow}}" size="mini" class="btn btn-primary" bindtap="guideShowArrow">指定发言顺序</button>
+          <button wx:else size="mini" class="btn btn-primary" bindtap="guideConfirmOrder">确认</button>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="guide-sub">发言顺序已确定：{{speakingOrder === 'desc' ? '先尾后首' : '先首后尾'}}</view>
+        <view class="guide-actions">
+          <button size="mini" class="btn btn-primary" bindtap="startDiscussion">开始讨论</button>
+        </view>
+      </block>
+    </block>
+  </view>
+
+  <!-- 只读配置缩略弹窗（右上角"配置"） -->
+  <view class="config-view-overlay" wx:if="{{showConfigView}}" bindtap="closeConfigView">
+    <view class="config-view-panel" catchtap="noop">
+      <view class="config-view-title">房间配置</view>
+      <view class="config-view-line">人数：<text class="cv-strong">{{configSummary.playerCount}} 人</text></view>
+      <view class="config-view-line">蓝方：{{configSummary.goodRoles}}</view>
+      <view class="config-view-line">红方：{{configSummary.evilRoles}}</view>
+      <view class="config-view-sec">规则</view>
+      <view class="config-view-line" wx:for="{{configSummary.ruleLines}}" wx:key="*this">{{item}}</view>
+      <view class="config-view-sec">时间限制</view>
+      <view class="config-view-line" wx:for="{{configSummary.limitLines}}" wx:key="*this">{{item}}</view>
+      <view class="config-view-close">
+        <button size="mini" class="cv-close-btn" bindtap="closeConfigView">关闭</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 身份标记面板（长按卡片弹出，仅本人可见） -->
+  <view class="mark-mask" wx:if="{{showMarkPanel}}" bindtap="closeMarkPanel">
+    <view class="mark-panel" catchtap="noop">
+      <view class="mark-panel-title">标记 {{markTargetName}}</view>
+      <view class="mark-sec-title">阵营</view>
+      <view class="mark-side-row">
+        <view class="mark-opt mark-opt-good {{identityMarks[markTargetOpenId] && identityMarks[markTargetOpenId].side === 'good' ? 'mark-on' : ''}}" data-side="good" bindtap="markSide">蓝方</view>
+        <view class="mark-opt mark-opt-evil {{identityMarks[markTargetOpenId] && identityMarks[markTargetOpenId].side === 'evil' ? 'mark-on' : ''}}" data-side="evil" bindtap="markSide">红方</view>
+      </view>
+      <view class="mark-sec-title">角色（本局配置）</view>
+      <view class="mark-role-wrap">
+        <view wx:for="{{markPanelRoles}}" wx:key="key" class="mark-opt mark-opt-role {{identityMarks[markTargetOpenId] && identityMarks[markTargetOpenId].role === item.key ? 'mark-on' : ''}}" data-role="{{item.key}}" bindtap="markRole">{{item.name}}</view>
+      </view>
+      <view class="mark-clear-row">
+        <button size="mini" class="mark-clear-btn" bindtap="clearPlayerMark">清除标记</button>
+        <button size="mini" class="mark-cancel-btn" bindtap="closeMarkPanel">关闭</button>
+      </view>
     </view>
   </view>
 </view>
