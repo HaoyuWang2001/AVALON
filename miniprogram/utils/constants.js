@@ -112,6 +112,49 @@ function getRoleDescription(role) {
   return ROLE_DESCRIPTIONS[role] || '角色信息错误';
 }
 
+// ── 配置弹窗共享常量（index 创建房间 / room 配置房间 / configs 组件 共用） ──
+const CONFIG_GOOD_ROLES = ['merlin', 'percival', 'lancelotBlue'];
+const CONFIG_EVIL_ROLES = ['morgana', 'assassin', 'mordred', 'minion', 'oberon', 'lancelotRed'];
+const CONFIG_FORCED_ROLES = ['merlin', 'percival', 'morgana'];
+
+// 配置弹窗角色短名（派西/蓝兰/红兰）
+const ROLE_NAMES_SHORT = {
+  merlin: '梅林', percival: '派西', loyal: '忠臣',
+  lancelotBlue: '蓝兰', lancelotRed: '红兰',
+  morgana: '莫甘娜', assassin: '刺客', mordred: '莫德雷德',
+  minion: '爪牙', oberon: '奥伯伦'
+};
+
+const DEFAULT_CONFIGS = {
+  5:  { good: ['merlin', 'percival'], evil: ['morgana', 'assassin'] },
+  6:  { good: ['merlin', 'percival'], evil: ['morgana', 'assassin'] },
+  7:  { good: ['merlin', 'percival'], evil: ['morgana', 'assassin', 'oberon'] },
+  8:  { good: ['merlin', 'percival'], evil: ['morgana', 'assassin', 'minion'] },
+  9:  { good: ['merlin', 'percival'], evil: ['morgana', 'assassin', 'mordred'] },
+  10: { good: ['merlin', 'percival'], evil: ['morgana', 'assassin', 'mordred', 'oberon'] },
+  11: { good: ['merlin', 'percival'], evil: ['morgana', 'mordred', 'oberon', 'lancelotBlue', 'lancelotRed'] },
+  12: { good: ['merlin', 'percival'], evil: ['morgana', 'assassin', 'mordred', 'oberon', 'lancelotBlue', 'lancelotRed'] }
+};
+
+const SPEECH_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒', '150秒', '180秒'];
+const ROUND_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒'];
+const VOTE_OPTIONS = ['不限', '15秒', '30秒', '45秒', '60秒'];
+const VOTE_REVEAL_OPTIONS = ['3秒', '5秒', '8秒', '10秒'];
+
+const DEFAULT_AVATAR = '/images/default-avatar.png';
+
+// 默认规则（含兰斯洛特卡组：转换卡/不转换卡）
+function buildDefaultRule() {
+  return {
+    evilKnowsEachOther: true, lancelotsKnowEachOther: false, lancelotSwapRound: 2,
+    ladyOfTheLake: false, ladyOfTheLakeRound: 2, maxFailedNominations: 3,
+    oberonMustFailMission: false, lancelotMustFail: false,
+    voteVisibility: 'public', missionFailDetail: 'count',
+    evilsKnowRedLancelot: true, oberonKnowsRedLancelot: true, merlinKnowsLancelotSide: true,
+    lancelotSwitchCards: 2, lancelotKeepCards: 5
+  };
+}
+
 module.exports = {
   PLAYER_COUNTS,
   SEAT_NUMBER_RANGE,
@@ -124,5 +167,16 @@ module.exports = {
   ROLE_DESCRIPTIONS,
   getRoleSide,
   getRoleName,
-  getRoleDescription
+  getRoleDescription,
+  CONFIG_GOOD_ROLES,
+  CONFIG_EVIL_ROLES,
+  CONFIG_FORCED_ROLES,
+  ROLE_NAMES_SHORT,
+  DEFAULT_CONFIGS,
+  SPEECH_OPTIONS,
+  ROUND_OPTIONS,
+  VOTE_OPTIONS,
+  VOTE_REVEAL_OPTIONS,
+  DEFAULT_AVATAR,
+  buildDefaultRule
 };

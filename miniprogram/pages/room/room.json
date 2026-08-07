@@ -3,6 +3,7 @@
   "enablePullDownRefresh": false,
   "usingComponents": {
     "top-bar": "/components/top-bar/top-bar",
-    "bottom-bar": "/components/bottom-bar/bottom-bar"
+    "bottom-bar": "/components/bottom-bar/bottom-bar",
+    "configs": "/components/configs/configs"
   }
 }

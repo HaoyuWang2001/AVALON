@@ -1,5 +1,7 @@
 {
   "navigationBarTitleText": "AVALON",
   "enablePullDownRefresh": true,
-  "usingComponents": {}
+  "usingComponents": {
+    "configs": "/components/configs/configs"
+  }
 }

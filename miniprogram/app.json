@@ -17,7 +17,9 @@
   "useExtendedLib": {
     "weui": true
   },
-  "usingComponents": {},
+  "usingComponents": {
+    "configs": "/components/configs/configs"
+  },
   "permission": {},
   "requiredPrivateInfos": [],
   "cloud": true
