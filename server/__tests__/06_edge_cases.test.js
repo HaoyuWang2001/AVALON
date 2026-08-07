@@ -460,9 +460,27 @@ describe('06 — Edge Cases & Validation', () => {
       expect(res.success).toBe(true);
     });
 
-    it('游戏进行中：房主可解散房间', async () => {
+    it('游戏进行中：房主解散房间被拒（需先放弃游戏）', async () => {
       const { roomId, gameId, players } = await createRoomAndStartGame(5);
       await confirmRevealAll(gameId, players);
+      const res = await disband(roomId, players[0].openId);
+      expect(res.success).toBe(false);
+      expect(res.message).toContain('游戏进行中');
+    });
+
+    it('游戏进行中：非房主玩家退出房间被拒', async () => {
+      const { roomId, gameId, players } = await createRoomAndStartGame(5);
+      await confirmRevealAll(gameId, players);
+      const res = await leaveRoom(roomId, players[1].openId);
+      expect(res.success).toBe(false);
+      expect(res.message).toContain('游戏进行中');
+    });
+
+    it('放弃游戏后：game_started 重置，房主可解散房间', async () => {
+      const { roomId, gameId, players } = await createRoomAndStartGame(5);
+      await confirmRevealAll(gameId, players);
+      const abandonRes = await abandonGame(gameId, players[0].openId);
+      expect(abandonRes.success).toBe(true);
       const res = await disband(roomId, players[0].openId);
       expect(res.success).toBe(true);
     });

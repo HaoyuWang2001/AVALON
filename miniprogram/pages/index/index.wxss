@@ -102,3 +102,9 @@
 .info-modal-body .info-title { font-size: 34rpx; font-weight: 800; margin-bottom: 24rpx; text-align: center; }
 .info-modal-body .info-item { font-size: 28rpx; color: var(--gray-600); line-height: 1.9; margin-bottom: 12rpx; align-self: flex-start; }
 .info-modal-body .btn { margin-top: 24rpx; width: 100%; }
+
+/* 按钮禁用态：游戏中退出/解散置灰不可点 */
+.btn-disabled {
+  background: #d1d5db !important;
+  color: #9ca3af !important;
+}

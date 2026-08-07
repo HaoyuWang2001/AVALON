@@ -286,6 +286,10 @@ Page({
   exitCurrentRoom() {
     const room = this.data.currentRoom;
     if (!room) return;
+    if (room.gameStarted) {
+      wx.showToast({ title: '游戏进行中，无法退出房间', icon: 'none' });
+      return;
+    }
     wx.showModal({
       title: '退出房间',
       content: `确定退出房间 ${room.roomId} 吗？`,
@@ -304,6 +308,10 @@ Page({
   disbandCurrentRoom() {
     const room = this.data.currentRoom;
     if (!room) return;
+    if (room.gameStarted) {
+      wx.showToast({ title: '游戏进行中，无法解散房间', icon: 'none' });
+      return;
+    }
     wx.showModal({
       title: '解散房间',
       content: `确定解散房间 ${room.roomId} 吗？此操作不可恢复。`,

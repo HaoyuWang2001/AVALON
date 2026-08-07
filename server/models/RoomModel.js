@@ -350,11 +350,14 @@ class RoomModel {
     try {
       await db.transaction(async (connection) => {
         const [roomRows] = await connection.execute(
-          'SELECT owner_id FROM rooms WHERE id = ? FOR UPDATE',
+          'SELECT owner_id, game_started FROM rooms WHERE id = ? FOR UPDATE',
           [roomId]
         );
         if (roomRows.length === 0) {
           throw new Error('房间不存在');
+        }
+        if (roomRows[0].game_started) {
+          throw new Error('游戏进行中，无法退出房间');
         }
         if (roomRows[0].owner_id === openId) {
           throw new Error('房主不能离开房间，请转让房主或解散房间');
@@ -529,6 +532,7 @@ class RoomModel {
     const room = await this.getById(roomId);
     if (!room) throw new Error('房间不存在');
     if (room.ownerId !== openId) throw new Error('仅房主可解散房间');
+    if (room.gameStarted) throw new Error('游戏进行中，无法解散房间');
     await db.query('UPDATE users SET current_room_id = NULL WHERE current_room_id = ?', [roomId]);
     await db.query('DELETE FROM room_players WHERE room_id = ?', [roomId]);
     await db.query('DELETE FROM rooms WHERE id = ?', [roomId]);
