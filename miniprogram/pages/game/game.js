@@ -146,11 +146,11 @@ function enrichTablePlayer(p, ctx) {
   // 游戏结束：全员身份名（右侧徽标）
   const roleName = currentPhase === 'gameEnd' ? getRoleNameLocal(p.role) : '';
 
-  // 标签数组：车主(金) / 我(紫) / 房主(蓝) / 湖仙(粉) / 预选(橙)，可叠加
+  // 标签数组：我(紫) / 房主(蓝) / 车主(金) / 湖仙(粉) / 老湖仙(灰) / 预选(橙) / 身份标记(猜)，可叠加
   const tags = [];
-  if (p.openId === leaderOpenId) tags.push({ text: '车主', cls: TAG_STYLES.gold });
   if (p.openId === myOpenId) tags.push({ text: '我', cls: TAG_STYLES.purple });
   if (p.openId === hostOpenId) tags.push({ text: '房主', cls: TAG_STYLES.blue });
+  if (p.openId === leaderOpenId) tags.push({ text: '车主', cls: TAG_STYLES.gold });
   if (p.openId === lakeHolderOpenId) tags.push({ text: '湖仙', cls: TAG_STYLES.pink });
   // 老湖仙：已被查验过（曾持有湖仙令牌）的玩家，非当前持有者；整局持续，且不可再被查验
   const isOldLake = !!(oldLakeOpenIds && oldLakeOpenIds.has(p.openId));
@@ -161,6 +161,16 @@ function enrichTablePlayer(p, ctx) {
   if ((currentPhase === 'speakingOrder' || currentPhase === 'discussion')
       && (preNominatedTeam || []).includes(p.openId)) {
     tags.push({ text: '预选', cls: TAG_STYLES.orange });
+  }
+  // 身份标记（仅本人可见，带"猜"标识）：阵营用底色编码（红/蓝），角色用"猜·角色名"
+  const im = (identityMarks || {})[p.openId];
+  if (im) {
+    if (im.side) {
+      tags.push({ text: '猜', cls: im.side === 'evil' ? TAG_STYLES.red : TAG_STYLES.blue });
+    }
+    if (im.role) {
+      tags.push({ text: '猜·' + (ROLE_NAMES_LOCAL[im.role] || im.role), cls: TAG_STYLES.purple });
+    }
   }
 
   return {
