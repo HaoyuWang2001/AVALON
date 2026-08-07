@@ -329,7 +329,7 @@
             </view>
 
             <view class="create-section">
-              <button class="create-btn" bindtap="submit" disabled="{{roleWarning !== ''}}">{{confirmText}}</button>
+              <button class="create-btn {{roleWarning ? 'create-btn-disabled' : ''}}" bindtap="submit" disabled="{{roleWarning !== ''}}">{{confirmText}}</button>
             </view>
             <view style="height:60rpx"></view>
           </scroll-view>

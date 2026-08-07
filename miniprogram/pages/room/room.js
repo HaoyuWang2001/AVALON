@@ -1,95 +1,13 @@
 // pages/room/room.js
 const app = getApp();
 const api = require('../../services/api.js');
+const { buildConfigSummary } = require('../../utils/configSummary.js');
 
 const {
   CONFIG_GOOD_ROLES, CONFIG_EVIL_ROLES, CONFIG_FORCED_ROLES, ROLE_NAMES_SHORT,
   DEFAULT_CONFIGS, SPEECH_OPTIONS, ROUND_OPTIONS, VOTE_OPTIONS, VOTE_REVEAL_OPTIONS,
   TEAM_SIZES, buildDefaultRule
 } = require('../../utils/constants.js');
-
-function buildConfigSummary(cfg) {
-  const good = (cfg.roles && cfg.roles.good) || [];
-  const evil = (cfg.roles && cfg.roles.evil) || [];
-  const roleCount = {};
-  const countRoles = list => {
-    list.forEach(r => { roleCount[r] = (roleCount[r] || 0) + 1; });
-  };
-  countRoles(good);
-  countRoles(evil);
-  const roleStr = roleList => {
-    const uniq = [...new Set(roleList)];
-    return uniq.map(r => {
-      const n = roleCount[r] || 1;
-      return ROLE_NAMES_SHORT[r] || r + (n > 1 ? '×' + n : '');
-    }).join('、');
-  };
-  const all = [...good, ...evil];
-  const hasOberon = all.includes('oberon');
-  const hasLancelot = all.includes('lancelotBlue') || all.includes('lancelotRed');
-  const hasLancelotRed = all.includes('lancelotRed');
-  const hasBothLancelots = all.includes('lancelotBlue') && all.includes('lancelotRed');
-  const rules = cfg.rules || {};
-  const limits = cfg.limits || {};
-
-  const groups = [];
-  // 基础规则
-  groups.push({
-    title: '基础规则',
-    lines: [
-      '红狼互见：' + (rules.evilKnowsEachOther ? '开' : '关'),
-      '流车上限：' + (rules.maxFailedNominations != null ? rules.maxFailedNominations : 3) + ' 次',
-      '投票可见性：' + (rules.voteVisibility === 'hidden' ? '隐藏' : '公开'),
-      '任务失败详情：' + (rules.missionFailDetail === 'binary' ? '仅成败' : '计数')
-    ]
-  });
-  // 湖上夫人
-  if (rules.ladyOfTheLake) {
-    groups.push({ title: '湖上夫人', lines: ['启用：开（第' + (rules.ladyOfTheLakeRound || 1) + '轮起）'] });
-  }
-  // 红方强制失败（含奥伯伦或兰斯时）
-  const failLines = [];
-  if (hasOberon) failLines.push('奥伯伦必须任务失败：' + (rules.oberonMustFailMission ? '开' : '关'));
-  if (hasLancelot) failLines.push('兰斯洛特必须任务失败：' + (rules.lancelotMustFail ? '开' : '关'));
-  if (failLines.length) groups.push({ title: '红方强制失败', lines: failLines });
-  // 兰斯洛特（含任意兰斯时）
-  if (hasLancelot) {
-    const lancLines = [];
-    if (hasBothLancelots) lancLines.push('兰斯互认身份：' + (rules.lancelotsKnowEachOther ? '开' : '关'));
-    if (rules.lancelotSwapRound != null && rules.lancelotSwapRound > 0) {
-      let line = '换身轮次：第' + rules.lancelotSwapRound + '轮 · ';
-      if (rules.lancelotSwapForce === 'switch') line += '强制互换';
-      else if (rules.lancelotSwapForce === 'keep') line += '保持';
-      else line += '随机(转' + (rules.lancelotSwitchCards != null ? rules.lancelotSwitchCards : 2)
-        + '/不转' + (rules.lancelotKeepCards != null ? rules.lancelotKeepCards : 5) + ')';
-      lancLines.push(line);
-    }
-    if (hasLancelotRed) lancLines.push('睁眼狼知红兰：' + (rules.evilsKnowRedLancelot ? '开' : '关'));
-    if (hasOberon && hasLancelotRed) lancLines.push('奥伯伦知红兰：' + (rules.oberonKnowsRedLancelot ? '开' : '关'));
-    if (hasBothLancelots) lancLines.push('梅林辨兰阵营：' + (rules.merlinKnowsLancelotSide ? '开' : '关'));
-    groups.push({ title: '兰斯洛特', lines: lancLines });
-  }
-  // 观战
-  const spec = cfg.spectator || {};
-  groups.push({
-    title: '观战',
-    lines: [
-      '允许观战：' + (spec.allow !== false ? '开' : '关'),
-      '观战上限：' + (spec.max > 0 ? spec.max : '无限制')
-    ]
-  });
-  // 时间限制（0/null → 无限制）
-  const f = v => v ? v + 's' : '无限制';
-  const limitLines = ['发言：' + f(limits.speechTimeout), '任务：' + f(limits.roundTimeout), '投票：' + f(limits.voteTimeout)];
-  if (limits.voteRevealDuration) limitLines.push('票型展示：' + limits.voteRevealDuration + 's');
-  return {
-    playerCount: good.length + evil.length,
-    goodRoles: roleStr(good),
-    evilRoles: roleStr(evil),
-    groups,
-    limitLines
-  };
-}
 
 Page({
   data: {
@@ -107,6 +25,8 @@ Page({
     startHint: '',
     seatsFull: false,
     currentUserReady: false,
+    startGameCharging: false,
+    startGameProgress: 0,
     spectatorMax: 0,
     spectatorAllowed: true,
 
@@ -129,6 +49,7 @@ Page({
 
   onUnload() {
     if (this.roomPolling) clearInterval(this.roomPolling);
+    if (this._startGameTimer) clearInterval(this._startGameTimer);
     if (this.leaving) this.leaveRoom();
   },
 
@@ -152,8 +73,7 @@ Page({
 
   fetchRoomInfo() {
     api.getRoom(this.data.roomId).then(res => {
-      if (res.success && res.room) {
-        const room = res.room;
+      if (res.success && res.room) {        const room = res.room;
         const players = room.players || [];
         const readyPlayers = room.readyPlayers || [];
         const currentUser = players.find(p => p.openId === app.globalData.openId);
@@ -228,10 +148,23 @@ Page({
           wx.redirectTo({ url: `/pages/game/game?gameId=${room.activeGameId}&roomId=${this.data.roomId}` });
         }
       } else {
-        wx.showToast({ title: '会议已解散', icon: 'error' });
-        setTimeout(() => { wx.navigateBack(); }, 1500);
+        const msg = (res && res.message) || '';
+        if (msg.includes('房间不存在')) {
+          // 房间不存在：停止轮询 + 回首页
+          this.handleRoomGone();
+        } else {
+          wx.showToast({ title: '会议已解散', icon: 'error' });
+          setTimeout(() => { wx.navigateBack(); }, 1500);
+        }
       }
     }).catch(() => {});
+  },
+
+  // 房间不存在：停止轮询 + 提示 + 回首页
+  handleRoomGone() {
+    if (this.roomPolling) { clearInterval(this.roomPolling); this.roomPolling = null; }
+    wx.showToast({ title: '房间不存在', icon: 'none' });
+    setTimeout(() => { wx.reLaunch({ url: '/pages/index/index' }); }, 1200);
   },
 
   // ─── Seat actions ───
@@ -292,24 +225,44 @@ Page({
     if (!this._guard()) return;
     const { roomId, canStartGame } = this.data;
     if (!canStartGame) return;
-    wx.showModal({
-      title: '开始游戏',
-      content: '确定开始游戏吗？开始后不能再加入。',
-      success: (res) => {
-        if (res.confirm) {
-          wx.showLoading({ title: '准备中...' });
-          api.startGame(roomId).then(result => {
-            wx.hideLoading();
-            if (result.success) {
-              this.navigatingToGame = true;
-              wx.redirectTo({ url: `/pages/game/game?gameId=${result.gameId}&roomId=${roomId}` });
-            }
-          }).catch(() => {
-            wx.hideLoading(); wx.showToast({ title: '开始失败', icon: 'error' });
-          });
-        }
+    wx.showLoading({ title: '准备中...' });
+    api.startGame(roomId).then(result => {
+      wx.hideLoading();
+      if (result.success) {
+        this.navigatingToGame = true;
+        wx.redirectTo({ url: `/pages/game/game?gameId=${result.gameId}&roomId=${roomId}` });
       }
+    }).catch(() => {
+      wx.hideLoading(); wx.showToast({ title: '开始失败', icon: 'error' });
     });
+  },
+
+  // 长按开始游戏：按下开始读条（1.5s 从0→100，30ms×50），满格直接开局（无确认弹窗）
+  onStartGameTouchStart() {
+    if (!this.data.canStartGame) return;
+    if (this._startGameTimer) return;
+    this.setData({ startGameCharging: true, startGameProgress: 0 });
+    let p = 0;
+    this._startGameTimer = setInterval(() => {
+      p += 2;
+      if (p >= 100) {
+        clearInterval(this._startGameTimer);
+        this._startGameTimer = null;
+        this.setData({ startGameCharging: false, startGameProgress: 0 });
+        this.startGame();
+      } else {
+        this.setData({ startGameProgress: p });
+      }
+    }, 30);
+  },
+
+  onStartGameTouchEnd() {
+    if (this._startGameTimer) { clearInterval(this._startGameTimer); this._startGameTimer = null; }
+    this.setData({ startGameCharging: false, startGameProgress: 0 });
+  },
+
+  onStartGameTouchCancel() {
+    this.onStartGameTouchEnd();
   },
 
   disbandRoom() {
@@ -342,11 +295,10 @@ Page({
 
   onSeatRowTap(e) {
     const { id, seat } = e.currentTarget.dataset;
+    // 空座位：点击入座；已坐玩家（有 id）：点击不触发操作，长按才弹操作面板
     if (!id && seat && this.data.currentUser && (this.data.currentUser.seatNumber < 1 || !this.data.currentUserReady)) {
       this.takeSeat({ currentTarget: { dataset: { seat } } });
-      return;
     }
-    this.onPlayerAction(e);
   },
 
   onPlayerAction(e) {
