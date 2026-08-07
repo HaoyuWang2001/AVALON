@@ -307,6 +307,7 @@ Page({
     isEvilEyesUser: false,
     gameAssassination: null,
     showAssassinationAnim: false,
+    knifeProgress: 0,
     identityMarks: {},
     showMarkPanel: false,
     markTargetOpenId: '',
@@ -376,6 +377,7 @@ Page({
 
   onHide() {
     if (this._gamePollingTimer) { clearInterval(this._gamePollingTimer); this._gamePollingTimer = null; }
+    this.onKnifeTouchEnd();
   },
 
   onUnload() {
@@ -385,6 +387,7 @@ Page({
     if (this._assnAnimTimer) clearTimeout(this._assnAnimTimer);
     if (this._assnAnimTimer2) clearTimeout(this._assnAnimTimer2);
     if (this._missionAnimTimer) clearTimeout(this._missionAnimTimer);
+    this.onKnifeTouchEnd();
     api.disconnectSocket();
   },
 
@@ -1457,12 +1460,12 @@ Page({
     return ['assassin', 'morgana'].includes(this.data.playerRole);
   },
 
-  // 任意阶段：刺客/莫甘娜开始刺杀（进入刺杀阶段）
+  // 任意阶段：刺客/莫甘娜开始刺杀（进入刺杀阶段）——长按2s读条激活后弹确认框（无内容文字）
   startAssassination() {
     const { gameId } = this.data;
     wx.showModal({
       title: '确定开刀',
-      content: '确定开刀？',
+      content: '',
       success: (res) => {
         if (res.confirm) {
           wx.showLoading({ title: '进入刺杀...', mask: true });
@@ -1477,6 +1480,33 @@ Page({
         }
       }
     });
+  },
+
+  // 长按开刀：按下开始读条（2s 从0→100），每次长按均从0开始
+  onKnifeTouchStart() {
+    if (this._knifeTimer) return;
+    let p = 0;
+    this._knifeTimer = setInterval(() => {
+      p += 1;
+      if (p >= 100) {
+        clearInterval(this._knifeTimer);
+        this._knifeTimer = null;
+        this.setData({ knifeProgress: 0 });
+        this.startAssassination();
+      } else {
+        this.setData({ knifeProgress: p });
+      }
+    }, 20);
+  },
+
+  // 松手/取消：未满2s则取消，进度归零（下次长按从0开始）
+  onKnifeTouchEnd() {
+    if (this._knifeTimer) { clearInterval(this._knifeTimer); this._knifeTimer = null; }
+    this.setData({ knifeProgress: 0 });
+  },
+
+  onKnifeTouchCancel() {
+    this.onKnifeTouchEnd();
   },
 
   assassinate(e) {

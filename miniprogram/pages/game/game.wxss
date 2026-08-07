@@ -548,12 +548,21 @@
 }
 .role-vision-knife {
   flex: 1;
+  position: relative;
+  overflow: hidden;
   padding: 12rpx 0;
   border-radius: 22rpx;
   background: rgba(231, 76, 60, 0.14);
   display: flex; align-items: center; justify-content: center;
 }
+.role-vision-knife-progress {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: rgba(239, 68, 68, 0.85);
+  z-index: 1;
+}
 .role-vision-knife-text {
+  position: relative; z-index: 2;
   color: #EF4444; font-size: 28rpx; font-weight: 700; letter-spacing: 6rpx;
 }
 
