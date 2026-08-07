@@ -935,9 +935,12 @@ progress { border-radius: 12rpx; }
   margin-top: 32rpx;
 }
 .mark-confirm-btn {
+  background: #7c3aed;
+  color: #fff;
   font-size: 30rpx;
   width: 100%;
   max-width: 360rpx;
+  border-radius: 12rpx;
 }
 
 /* 只读配置缩略弹窗 */

@@ -155,7 +155,7 @@ function enrichTablePlayer(p, ctx) {
   // 标签数组：我(紫) / 房主(蓝) / 车主(金) / 湖仙(粉) / 老湖仙(灰) / 预选(橙) / 身份标记(猜)，可叠加
   const tags = [];
   if (p.openId === myOpenId) tags.push({ text: '我', cls: TAG_STYLES.purple });
-  if (p.openId === hostOpenId) tags.push({ text: '房主', cls: TAG_STYLES.blue });
+  if (p.openId === hostOpenId) tags.push({ text: '房主', cls: TAG_STYLES.purple });
   if (p.openId === leaderOpenId) tags.push({ text: '车主', cls: TAG_STYLES.gold });
   if (p.openId === lakeHolderOpenId) tags.push({ text: '湖仙', cls: TAG_STYLES.pink });
   // 老湖仙：已被查验过（曾持有湖仙令牌）的玩家，非当前持有者；整局持续，且不可再被查验
@@ -1087,12 +1087,12 @@ Page({
     const doClose = () => this.setData({ showMarkPanel: false, markTargetOpenId: '' });
     const fail = (title) => wx.showToast({ title, icon: 'none' });
     const call = (p) => api.setIdentityMark(gameId, markTargetOpenId, p)
-      .then(res => { if (res && res.success === false) fail(res.message || '标记失败'); else doClose(); })
+      .then(res => { if (res && res.success === false) fail(res.message || '标记失败'); else { doClose(); this.fetchGameState(); } })
       .catch(err => fail((err && err.message) || '标记失败'));
     if (!markSideSel) {
       // 未知阵营：清除全部标记
       api.clearIdentityMark(gameId, markTargetOpenId, { side: true, role: true })
-        .then(res => { if (res && res.success === false) fail(res.message || '清除失败'); else doClose(); })
+        .then(res => { if (res && res.success === false) fail(res.message || '清除失败'); else { doClose(); this.fetchGameState(); } })
         .catch(err => fail((err && err.message) || '清除失败'));
       return;
     }
