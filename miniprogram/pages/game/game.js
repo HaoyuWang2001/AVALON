@@ -536,7 +536,7 @@ Page({
           teamVoteStatus: res.current.teamVoteStatus || null,
           requiredTeamSize: teamSize,
           evilOpenEyes: res.current.evilOpenEyes || [],
-          identityMarks: this.data.identityMarks,
+          identityMarks: res.player && res.player.identityMarks ? res.player.identityMarks : {},
           currentPhase: phase
         }));
 
