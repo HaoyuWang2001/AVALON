@@ -1,9 +1,14 @@
 <!--pages/room/room.wxml-->
 <view class="room-page">
-  <!-- Top Bar (公共组件：左=暂回首页 右=破坏性操作) -->
+  <!-- Top Bar (公共组件：左=✕解散/退出 + −暂回首页，右=非房主配置图标) -->
   <top-bar>
-    <text slot="left" class="btn-round btn-purple" bindtap="backToLobby">暂回首页</text>
-    <text slot="right" class="btn-round {{isHost ? 'btn-disband' : 'btn-exit'}}" bindtap="{{isHost ? 'disbandRoom' : 'exitRoom'}}">{{isHost ? '解散房间' : '退出房间'}}</text>
+    <view slot="left" class="top-icons">
+      <text class="top-icon top-icon-danger" bindtap="{{isHost ? 'disbandRoom' : 'exitRoom'}}">✕</text>
+      <text class="top-icon top-icon-home" bindtap="backToLobby">−</text>
+    </view>
+    <view slot="right" class="top-icons">
+      <image wx:if="{{!isHost}}" class="top-mini-icon" src="/images/profile.png" mode="aspectFit" bindtap="openConfigView"></image>
+    </view>
   </top-bar>
 
   <view class="container">
@@ -98,16 +103,11 @@
     <view wx:else class="empty-hint">暂无观战玩家</view>
   </view>
 
-  <!-- Bottom Bar (公共组件) -->
-  <bottom-bar wx:if="{{currentUser}}">
-    <block wx:if="{{isHost}}">
-      <text class="bar-btn" bindtap="modifyConfig">修改配置</text>
-      <text class="bar-btn bar-btn-primary {{canStartGame ? '' : 'btn-disabled'}}" bindtap="startGame">开始游戏</text>
-      <text class="bar-btn {{seatsFull ? '' : 'btn-disabled'}}" bindtap="randomShuffleSeats">随机位置</text>
-    </block>
-    <block wx:else>
-      <text class="bar-btn" bindtap="openConfigView">查看配置</text>
-    </block>
+  <!-- Bottom Bar (公共组件，仅房主；非房主的查看配置已移至顶栏右上角) -->
+  <bottom-bar wx:if="{{currentUser && isHost}}">
+    <text class="bar-btn" bindtap="modifyConfig">修改配置</text>
+    <text class="bar-btn bar-btn-primary {{canStartGame ? '' : 'btn-disabled'}}" bindtap="startGame">开始游戏</text>
+    <text class="bar-btn {{seatsFull ? '' : 'btn-disabled'}}" bindtap="randomShuffleSeats">随机位置</text>
   </bottom-bar>
 
   <!-- 只读配置缩略弹窗（所有人） -->
@@ -278,7 +278,7 @@
               </view>
             </view>
 
-            <view class="config-section" hidden="{{!selectedRoles.oberon && !selectedRoles.lancelotRed}}">
+            <view class="config-section" hidden="{{!selectedRoles.oberon && !selectedRoles.lancelotRed && !selectedRoles.lancelotBlue}}">
               <view class="section-title">💣 红方强制任务失败</view>
               <view class="rule-row" hidden="{{!selectedRoles.oberon}}">
                 <view class="rule-col">
