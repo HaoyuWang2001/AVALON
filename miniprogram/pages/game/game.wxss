@@ -246,10 +246,10 @@
 }
 .tplayer-crown {
   position: absolute;
-  top: -18rpx;
+  top: -20rpx;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 40rpx;
+  font-size: 56rpx;
   z-index: 3;
 }
 .tplayer-info {
