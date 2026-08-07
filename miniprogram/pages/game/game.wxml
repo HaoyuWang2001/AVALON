@@ -495,10 +495,10 @@
     <block wx:if="{{guideStep === 'preNominate'}}">
       <view class="guide-sub">请预点车（可选，0~{{requiredTeamSize}} 人）</view>
       <view class="guide-pick-wrap">
-        <view wx:for="{{tablePlayers}}" wx:key="openId" class="guide-pick {{item.checked ? 'guide-pick-on' : ''}} {{item.disabled ? 'guide-pick-dis' : ''}}"
+        <view wx:for="{{guideSortedPlayers}}" wx:key="openId" class="guide-pick {{item.checked ? 'guide-pick-on' : ''}} {{item.disabled ? 'guide-pick-dis' : ''}}"
           bindtap="onTablePlayerTap" data-id="{{item.openId}}">
+          <view class="guide-pick-badge">{{item.seatNumber}}</view>
           <text class="guide-pick-name">{{item.nickName}}</text>
-          <text class="guide-pick-no">{{item.seatNumber}}号</text>
         </view>
       </view>
       <view class="guide-actions">

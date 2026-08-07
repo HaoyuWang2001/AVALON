@@ -302,6 +302,7 @@ Page({
     guideStep: '',
     showGuideArrow: false,
     discussionSet: false,
+    guideSortedPlayers: [],
     assassinationSuccess: false,
     assassinationPhase: '',
     missionVoteReady: false,
@@ -670,6 +671,7 @@ Page({
           visionList: visionList,
           allPlayers: res.players || [],
           tablePlayers: tablePlayers,
+          guideSortedPlayers: tablePlayers.slice().sort((a, b) => a.seatNumber - b.seatNumber),
           teamVoteStatus: res.current.teamVoteStatus || null,
           missionVoteStatus: res.current.missionVoteStatus || null,
           roomConfigVal: res.basic && res.basic.roomConfig ? res.basic.roomConfig : null,
@@ -904,7 +906,11 @@ Page({
       const disabled = atLimit && !checked;
       return { ...p, checked, disabled };
     });
-    this.setData({ localSelected: sel, tablePlayers });
+    this.setData({
+      localSelected: sel,
+      tablePlayers,
+      guideSortedPlayers: tablePlayers.slice().sort((a, b) => a.seatNumber - b.seatNumber)
+    });
   },
 
   // preNominate 阶段：车主提交预选车型（发送 localSelected → 后端切到 speakingOrder）
