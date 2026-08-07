@@ -526,7 +526,7 @@
         <view class="guide-seats">
           <view class="guide-pick-wrap">
             <view wx:for="{{guideSortedPlayers}}" wx:key="openId"
-              class="guide-pick {{preNominatedTeam.includes(item.openId) ? 'guide-pick-pre' : ''}}">
+              class="guide-pick {{item.isPreTeam ? 'guide-pick-pre' : ''}}">
               <view class="guide-pick-badge">{{item.seatNumber}}</view>
               <text class="guide-pick-name">{{item.nickName}}</text>
             </view>

@@ -171,6 +171,7 @@ function enrichTablePlayer(p, ctx) {
     isLeader: p.openId === leaderOpenId,
     isOldLake,
     roleName,
+    isPreTeam: !!(preNominatedTeam || []).includes(p.openId),
     identityMark: (() => {
       const m = (identityMarks || {})[p.openId];
       if (!m) return null;
