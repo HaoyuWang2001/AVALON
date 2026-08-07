@@ -538,11 +538,14 @@ class GameModel {
           `SELECT id FROM games WHERE id = ?`, [gameId]
         );
         if (game.length === 0) throw new Error('游戏不存在');
-        // 校验标记者在局
-        const [gp] = await connection.execute(
-          'SELECT open_id FROM game_players WHERE game_id = ? AND open_id = ?', [gameId, openId]
+        // 校验标记者为房间成员（游戏内玩家 或 观众 seat -1）
+        const [member] = await connection.execute(
+          `SELECT rp.open_id FROM room_players rp
+           JOIN games g ON rp.room_id = g.room_id
+           WHERE g.id = ? AND rp.open_id = ?`,
+          [gameId, openId]
         );
-        if (gp.length === 0) throw new Error('你不在本局游戏中');
+        if (member.length === 0) throw new Error('你不在本房间中');
         // side/role 独立设置：传入 undefined 表示保留原值
         await connection.execute(
           `INSERT INTO game_identity_marks (game_id, open_id, target_open_id, side, role, updated_at)

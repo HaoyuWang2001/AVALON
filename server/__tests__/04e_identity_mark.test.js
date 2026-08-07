@@ -1,5 +1,5 @@
 const {
-  createRoomAndStartGame, getGameState, confirmRevealAll,
+  createRoomAndStartGame, getGameState, confirmRevealAll, joinRoom,
   setIdentityMark, clearIdentityMark,
   buildCustomBoard10
 } = require('./helpers/testHelper');
@@ -59,11 +59,28 @@ describe('04e — 身份标记（长按卡片记录阵营/角色，仅本人可�
     expect(otherSt.player.identityMarks).toEqual({});
   });
 
-  it('非游戏内玩家标记被拒（你不在本局游戏中）', async () => {
+  it('观众（seat -1，房间成员）也可标记身份', async () => {
+    const n = 10;
+    const { roomId, gameId, players } = await createRoomAndStartGame(n, buildCustomBoard10());
+    // 加入观众
+    const spectator = 'spectator_test_mark';
+    const joinRes = await joinRoom(roomId, spectator, -1, '观众');
+    expect(joinRes.success).toBe(true);
+    await confirmRevealAll(gameId, players);
+    // 观众标记某玩家
+    const target = players[1];
+    const res = await setIdentityMark(gameId, spectator, target.openId, { side: 'evil' });
+    expect(res.success).not.toBe(false);
+    // 观众视角能拿到 identityMarks
+    const st = await getGameState(gameId, spectator);
+    expect(st.player.identityMarks[target.openId].side).toBe('evil');
+  });
+
+  it('非房间成员标记被拒（你不在本房间中）', async () => {
     const { gameId, players } = await setupStartedGame();
-    const outsider = 'outsider_test_not_in_game';
+    const outsider = 'outsider_test_not_in_room';
     const res = await setIdentityMark(gameId, outsider, players[1].openId, { side: 'evil' });
     expect(res.success).toBe(false);
-    expect(res.message).toContain('你不在本局游戏中');
+    expect(res.message).toContain('你不在本房间中');
   });
 });

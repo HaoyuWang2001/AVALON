@@ -1061,7 +1061,7 @@ Page({
 
   // 长按卡片 → 打开身份标记面板（仅本局玩家，可记录阵营/角色推理，仅本人可见）
   onPlayerLongPress(e) {
-    if (!this.data.isInGame) return;
+    if (!this.data.gameId && !this.data.roomId) return;
     const targetOpenId = e.currentTarget.dataset.id;
     if (!targetOpenId) return;
     const target = (this.data.allPlayers || []).find(p => p.openId === targetOpenId);
