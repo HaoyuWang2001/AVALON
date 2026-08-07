@@ -246,7 +246,7 @@
 }
 .tplayer-crown {
   position: absolute;
-  top: -20rpx;
+  top: -28rpx;
   left: 50%;
   transform: translateX(-50%);
   font-size: 56rpx;
