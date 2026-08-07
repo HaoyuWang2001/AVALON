@@ -127,7 +127,7 @@ Page({
     roleStats: []
   },
 
-  onLoad() {
+  onLoad(options) {
     const savedNickName = wx.getStorageSync('customNickName');
     if (savedNickName) { this.setData({ customNickName: savedNickName }); }
     const app = getApp();
@@ -146,20 +146,93 @@ Page({
     this.applyDefaultConfig(this.data.playerCount);
     this.computeAll();
 
+    // 分享链接进入：携带 roomId → 等 openId 就绪后自动加入房间
+    const shareRoomId = options && options.roomId;
+
     if (app.globalData.openId) {
       this.loadUserProfile();
       this.loadHistoryAndStats();
+      if (shareRoomId) this.doShareJoin(shareRoomId);
     } else {
       app.openIdReadyCallback = () => {
         this.loadUserProfile();
         this.checkCurrentRoom();
         this.loadHistoryAndStats();
+        if (shareRoomId) this.doShareJoin(shareRoomId);
       };
     }
 
     if (app.globalData.openId) {
       this.checkCurrentRoom();
     }
+  },
+
+  // 分享链接加入房间：已在分享房间→直接进入(座位不变)；在其他房间未开始→询问退出后加入；游戏中→不可退出；游戏已开始→自动观战
+  doShareJoin(roomId) {
+    const app = getApp();
+    if (!app.globalData.openId) return;
+    wx.showLoading({ title: '加入房间...', mask: true });
+    api.joinRoom(roomId, 0).then(res => {
+      wx.hideLoading();
+      if (res.success) {
+        app.globalData.roomId = roomId;
+        wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}` });
+        return;
+      }
+      const msg = (res && res.message) || '';
+      if (msg.includes('已在其他房间')) {
+        this.confirmLeaveAndJoin(roomId);
+      } else {
+        wx.showToast({ title: msg || '加入失败', icon: 'none' });
+      }
+    }).catch(err => {
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '加入失败', icon: 'none' });
+    });
+  },
+
+  // 在其他房间：若旧房间游戏中则不可退出；否则询问后退出并加入新房间
+  confirmLeaveAndJoin(roomId) {
+    const app = getApp();
+    api.getCurrentRoom(app.globalData.openId).then(res => {
+      const cur = res && res.room;
+      if (cur && cur.gameStarted) {
+        wx.showToast({ title: '游戏进行中，无法退出当前房间', icon: 'none' });
+        return;
+      }
+      wx.showModal({
+        title: '已在其他房间',
+        content: '退出当前房间并加入新房间？',
+        confirmText: '退出并加入',
+        success: (r) => {
+          if (r.confirm) {
+            if (cur && cur.roomId) {
+              api.leaveRoom(cur.roomId).then(leaveRes => {
+                if (leaveRes.success) {
+                  wx.showLoading({ title: '加入房间...', mask: true });
+                  api.joinRoom(roomId, 0).then(res2 => {
+                    wx.hideLoading();
+                    if (res2.success) {
+                      app.globalData.roomId = roomId;
+                      wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}` });
+                    } else {
+                      wx.showToast({ title: (res2 && res2.message) || '加入失败', icon: 'none' });
+                    }
+                  }).catch(() => wx.hideLoading());
+                } else {
+                  wx.showToast({ title: (leaveRes && leaveRes.message) || '退出房间失败', icon: 'none' });
+                }
+              });
+            } else {
+              // 无旧房间信息，直接重新加入
+              this.doShareJoin(roomId);
+            }
+          }
+        }
+      });
+    }).catch(() => {
+      wx.showToast({ title: '加入失败', icon: 'none' });
+    });
   },
 
   onShow() {

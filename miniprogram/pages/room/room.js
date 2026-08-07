@@ -219,7 +219,7 @@ Page({
   onShareAppMessage() {
     return {
       title: '加入我的阿瓦隆房间',
-      path: `/pages/room/room?roomId=${this.data.roomId}`
+      path: `/pages/index/index?roomId=${this.data.roomId}`
     };
   },
 
