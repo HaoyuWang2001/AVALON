@@ -13,7 +13,7 @@ const ROLE_NAMES = {
   minion: '爪牙', oberon: '奥伯伦'
 };
 
-// 生成只读配置缩略数据（人数/角色/规则/limits）
+// 生成只读配置缩略数据（分组 + 按角色条件性显示；人数/角色/规则/limits）
 function buildConfigSummary(cfg) {
   const good = (cfg.roles && cfg.roles.good) || [];
   const evil = (cfg.roles && cfg.roles.evil) || [];
@@ -30,42 +30,69 @@ function buildConfigSummary(cfg) {
       return ROLE_NAMES[r] || r + (n > 1 ? '×' + n : '');
     }).join('、');
   };
+  const all = [...good, ...evil];
+  const hasOberon = all.includes('oberon');
+  const hasLancelot = all.includes('lancelotBlue') || all.includes('lancelotRed');
+  const hasLancelotRed = all.includes('lancelotRed');
+  const hasBothLancelots = all.includes('lancelotBlue') && all.includes('lancelotRed');
   const rules = cfg.rules || {};
   const limits = cfg.limits || {};
-  const ruleLines = [];
-  ruleLines.push('红狼互见：' + (rules.evilKnowsEachOther ? '开' : '关'));
-  ruleLines.push('流车上限：' + (rules.maxFailedNominations != null ? rules.maxFailedNominations : 3) + ' 次');
-  ruleLines.push('投票可见性：' + (rules.voteVisibility === 'hidden' ? '隐藏' : '公开'));
-  ruleLines.push('任务失败详情：' + (rules.missionFailDetail === 'binary' ? '仅成败' : '计数'));
+
+  const groups = [];
+  // 基础规则
+  groups.push({
+    title: '基础规则',
+    lines: [
+      '红狼互见：' + (rules.evilKnowsEachOther ? '开' : '关'),
+      '流车上限：' + (rules.maxFailedNominations != null ? rules.maxFailedNominations : 3) + ' 次',
+      '投票可见性：' + (rules.voteVisibility === 'hidden' ? '隐藏' : '公开'),
+      '任务失败详情：' + (rules.missionFailDetail === 'binary' ? '仅成败' : '计数')
+    ]
+  });
+  // 湖上夫人
   if (rules.ladyOfTheLake) {
-    ruleLines.push('湖上夫人：开（第' + (rules.ladyOfTheLakeRound || 1) + '轮起）');
-  } else {
-    ruleLines.push('湖上夫人：关');
+    groups.push({ title: '湖上夫人', lines: ['启用：开（第' + (rules.ladyOfTheLakeRound || 1) + '轮起）'] });
   }
-  if (rules.lancelotSwapRound != null && rules.lancelotSwapRound > 0) {
-    let line = '兰斯互换：第' + rules.lancelotSwapRound + '轮 · ';
-    if (rules.lancelotSwapForce === 'switch') {
-      line += '强制互换';
-    } else if (rules.lancelotSwapForce === 'keep') {
-      line += '保持';
-    } else {
-      line += '随机(转' + (rules.lancelotSwitchCards != null ? rules.lancelotSwitchCards : 2)
+  // 红方强制失败（含奥伯伦或兰斯时）
+  const failLines = [];
+  if (hasOberon) failLines.push('奥伯伦必须任务失败：' + (rules.oberonMustFailMission ? '开' : '关'));
+  if (hasLancelot) failLines.push('兰斯洛特必须任务失败：' + (rules.lancelotMustFail ? '开' : '关'));
+  if (failLines.length) groups.push({ title: '红方强制失败', lines: failLines });
+  // 兰斯洛特（含任意兰斯时）
+  if (hasLancelot) {
+    const lancLines = [];
+    if (hasBothLancelots) lancLines.push('兰斯互认身份：' + (rules.lancelotsKnowEachOther ? '开' : '关'));
+    if (rules.lancelotSwapRound != null && rules.lancelotSwapRound > 0) {
+      let line = '换身轮次：第' + rules.lancelotSwapRound + '轮 · ';
+      if (rules.lancelotSwapForce === 'switch') line += '强制互换';
+      else if (rules.lancelotSwapForce === 'keep') line += '保持';
+      else line += '随机(转' + (rules.lancelotSwitchCards != null ? rules.lancelotSwitchCards : 2)
         + '/不转' + (rules.lancelotKeepCards != null ? rules.lancelotKeepCards : 5) + ')';
+      lancLines.push(line);
     }
-    ruleLines.push(line);
+    if (hasLancelotRed) lancLines.push('睁眼狼知红兰：' + (rules.evilsKnowRedLancelot ? '开' : '关'));
+    if (hasOberon && hasLancelotRed) lancLines.push('奥伯伦知红兰：' + (rules.oberonKnowsRedLancelot ? '开' : '关'));
+    if (hasBothLancelots) lancLines.push('梅林辨兰阵营：' + (rules.merlinKnowsLancelotSide ? '开' : '关'));
+    groups.push({ title: '兰斯洛特', lines: lancLines });
   }
-  const limitLines = [];
-  limitLines.push('发言：' + (limits.speech || 0) + 's');
-  limitLines.push('任务：' + (limits.round || 0) + 's');
-  limitLines.push('投票：' + (limits.vote || 0) + 's');
-  if (limits.voteRevealDuration) {
-    limitLines.push('票型展示：' + limits.voteRevealDuration + 's');
-  }
+  // 观战
+  const spec = cfg.spectator || {};
+  groups.push({
+    title: '观战',
+    lines: [
+      '允许观战：' + (spec.allow !== false ? '开' : '关'),
+      '观战上限：' + (spec.max > 0 ? spec.max : '无限制')
+    ]
+  });
+  // 时间限制（0/null → 无限制）
+  const f = v => v ? v + 's' : '无限制';
+  const limitLines = ['发言：' + f(limits.speech), '任务：' + f(limits.round), '投票：' + f(limits.vote)];
+  if (limits.voteRevealDuration) limitLines.push('票型展示：' + limits.voteRevealDuration + 's');
   return {
     playerCount: good.length + evil.length,
     goodRoles: roleStr(good),
     evilRoles: roleStr(evil),
-    ruleLines,
+    groups,
     limitLines
   };
 }

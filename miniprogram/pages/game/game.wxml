@@ -561,14 +561,16 @@
   <!-- 只读配置缩略弹窗（右上角"配置"） -->
   <view class="config-view-overlay" wx:if="{{showConfigView}}" bindtap="closeConfigView">
     <view class="config-view-panel" catchtap="noop">
-      <view class="config-view-title">房间配置</view>
+      <view class="config-view-title">版型</view>
       <view class="config-view-line">人数：<text class="cv-strong">{{configSummary.playerCount}} 人</text></view>
       <view class="config-view-line">蓝方：{{configSummary.goodRoles}}</view>
       <view class="config-view-line">红方：{{configSummary.evilRoles}}</view>
-      <view class="config-view-sec">规则</view>
-      <view class="config-view-line" wx:for="{{configSummary.ruleLines}}" wx:key="*this">{{item}}</view>
+      <view wx:for="{{configSummary.groups}}" wx:for-item="grp" wx:key="title">
+        <view class="config-view-sec">{{grp.title}}</view>
+        <view wx:for="{{grp.lines}}" wx:for-item="ln" wx:key="*this" class="config-view-line">{{ln}}</view>
+      </view>
       <view class="config-view-sec">时间限制</view>
-      <view class="config-view-line" wx:for="{{configSummary.limitLines}}" wx:key="*this">{{item}}</view>
+      <view wx:for="{{configSummary.limitLines}}" wx:key="*this" class="config-view-line">{{item}}</view>
     </view>
   </view>
 
