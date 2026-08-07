@@ -91,7 +91,7 @@ function buildConfigSummary(cfg) {
   });
   // 时间限制（0/null → 无限制）
   const f = v => v ? v + 's' : '无限制';
-  const limitLines = ['发言：' + f(limits.speech), '任务：' + f(limits.round), '投票：' + f(limits.vote)];
+  const limitLines = ['发言：' + f(limits.speechTimeout), '任务：' + f(limits.roundTimeout), '投票：' + f(limits.voteTimeout)];
   if (limits.voteRevealDuration) limitLines.push('票型展示：' + limits.voteRevealDuration + 's');
   return {
     playerCount: good.length + evil.length,
