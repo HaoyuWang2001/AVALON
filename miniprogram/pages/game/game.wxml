@@ -534,7 +534,26 @@
         </view>
       </block>
       <block wx:else>
-        <view class="guide-sub">发言顺序已确定：{{speakingOrder === 'desc' ? '先尾后首' : '先首后尾'}}</view>
+        <!-- 已选方向箭头（高亮框） -->
+        <view class="guide-arrow-row">
+          <view class="guide-arrow {{speakingOrder === 'desc' ? 'guide-arrow-on' : ''}}">
+            <image src="/images/down-arrow.png" class="guide-arrow-img" mode="aspectFit"></image>
+          </view>
+          <view class="guide-arrow {{speakingOrder === 'asc' ? 'guide-arrow-on' : ''}}">
+            <image src="/images/up-arrow.png" class="guide-arrow-img" mode="aspectFit"></image>
+          </view>
+        </view>
+        <!-- 座位图：预选车成员高亮 -->
+        <view class="guide-seats">
+          <view class="guide-pick-wrap">
+            <view wx:for="{{guideSortedPlayers}}" wx:key="openId"
+              class="guide-pick {{item.isPreTeam ? 'guide-pick-pre' : ''}}">
+              <view class="guide-pick-badge">{{item.seatNumber}}</view>
+              <text class="guide-pick-name">{{item.nickName}}</text>
+            </view>
+          </view>
+        </view>
+        <!-- 开始讨论按钮在最下方 -->
         <view class="guide-actions">
           <button size="mini" class="btn btn-primary" bindtap="startDiscussion">开始讨论</button>
         </view>
