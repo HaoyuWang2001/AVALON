@@ -247,7 +247,7 @@
             </view>
           </view>
 
-          <view class="config-section" hidden="{{!selectedRoles.oberon && !selectedRoles.lancelotRed}}">
+          <view class="config-section" hidden="{{!selectedRoles.oberon && !selectedRoles.lancelotRed && !selectedRoles.lancelotBlue}}">
             <view class="section-title">💣 红方强制任务失败</view>
             <view class="rule-row" hidden="{{!selectedRoles.oberon}}">
               <view class="rule-col">
