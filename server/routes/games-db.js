@@ -535,7 +535,7 @@ function createRouter() {
       }
       let result;
       if (clear) {
-        result = await GameModel.clearIdentityMark(gameId, openId, targetOpenId, { side, role });
+        result = await GameModel.clearIdentityMark(gameId, openId, targetOpenId, clear);
       } else {
         const mark = {};
         if (side !== undefined) mark.side = side;

@@ -366,6 +366,16 @@ async function endDiscussion(gameId, openId) {
   return res.body;
 }
 
+async function setIdentityMark(gameId, openId, targetOpenId, mark) {
+  const res = await apiPost('/api/games/identityMark', { gameId, openId, targetOpenId, ...mark });
+  return res.body;
+}
+
+async function clearIdentityMark(gameId, openId, targetOpenId, clear) {
+  const res = await apiPost('/api/games/identityMark', { gameId, openId, targetOpenId, clear });
+  return res.body;
+}
+
 async function lakeInspect(gameId, openId, targetOpenId) {
   const res = await apiPost(`/api/games/${gameId}/lakeInspect`, { openId, targetOpenId });
   return res.body;
@@ -531,6 +541,8 @@ module.exports = {
   selectSpeakingOrder,
   startDiscussion,
   endDiscussion,
+  setIdentityMark,
+  clearIdentityMark,
   driveToTeamNomination,
   lakeInspect,
   confirmLake,

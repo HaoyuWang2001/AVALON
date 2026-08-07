@@ -553,6 +553,7 @@ class GameModel {
              updated_at = NOW()`,
           [
             gameId, openId, targetOpenId,
+            side, role,
             side, mark.hasOwnProperty('side') ? 1 : 0, side,
             role, mark.hasOwnProperty('role') ? 1 : 0, role
           ]
