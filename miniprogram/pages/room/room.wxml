@@ -10,12 +10,16 @@
       <block wx:if="{{isHost}}">
         <image class="top-mini-icon" src="/images/profile.png" mode="aspectFit" bindtap="modifyConfig"></image>
         <image class="top-mini-icon" src="/images/random.png" mode="aspectFit" bindtap="randomShuffleSeats"></image>
+        <image class="top-mini-icon" src="/images/eye.png" mode="aspectFit" bindtap="openLaunchAnimModal"></image>
       </block>
-      <image wx:else class="top-mini-icon" src="/images/profile.png" mode="aspectFit" bindtap="openConfigView"></image>
+      <block wx:else>
+        <image class="top-mini-icon" src="/images/profile.png" mode="aspectFit" bindtap="openConfigView"></image>
+        <image class="top-mini-icon" src="/images/eye.png" mode="aspectFit" bindtap="openLaunchAnimModal"></image>
+      </block>
     </view>
   </top-bar>
 
-  <view class="container">
+  <view class="container {{currentUser && isHost ? 'with-start-bar' : ''}}">
 
   <!-- Card 1: Room Info -->
   <view class="card room-info-card">
@@ -47,7 +51,7 @@
       <text wx:if="{{currentUser && currentUser.seatNumber < 1}}" class="btn-round btn-purple btn-random-seat" bindtap="randomTakeSeat">随机入座</text>
     </view>
     <view class="seats-section" wx:if="{{seatedSeats && seatedSeats.length > 0}}">
-      <view wx:for="{{seatedSeats}}" wx:key="number" class="seat-row {{item.occupied ? 'seat-filled' : 'seat-empty'}} {{item.isSelf ? 'seat-self' : ''}}" bindtap="onSeatRowTap" data-id="{{item.player ? item.player.openId : ''}}" data-seat="{{item.number}}">
+      <view wx:for="{{seatedSeats}}" wx:key="number" class="seat-row {{item.occupied ? 'seat-filled' : 'seat-empty'}} {{item.isSelf ? 'seat-self' : ''}}" bindtap="onSeatRowTap" bindlongpress="onPlayerAction" data-id="{{item.player ? item.player.openId : ''}}" data-seat="{{item.number}}">
         <view class="seat-num">{{item.number}}</view>
         <image wx:if="{{item.occupied}}" src="{{item.player.avatarUrl || '/images/default-avatar.png'}}" class="seat-avatar"></image>
         <view wx:else class="seat-avatar seat-avatar-empty"></view>
@@ -81,7 +85,7 @@
     </view>
     <scroll-view scroll-x class="waiting-scroll" wx:if="{{unseatedPlayers.length > 0}}">
       <view class="waiting-list">
-      <view wx:for="{{unseatedPlayers}}" wx:key="openId" class="waiting-item" bindtap="onPlayerAction" data-id="{{item.openId}}">
+      <view wx:for="{{unseatedPlayers}}" wx:key="openId" class="waiting-item" bindlongpress="onPlayerAction" data-id="{{item.openId}}">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="waiting-avatar"></image>
         <text class="waiting-name">{{item.nickName || item.wxNickName || '玩家'}}</text>
       </view>
@@ -98,7 +102,7 @@
     </view>
     <scroll-view scroll-x class="waiting-scroll" wx:if="{{spectatorPlayers.length > 0}}">
       <view class="waiting-list">
-        <view wx:for="{{spectatorPlayers}}" wx:key="openId" class="waiting-item" bindtap="onPlayerAction" data-id="{{item.openId}}">
+        <view wx:for="{{spectatorPlayers}}" wx:key="openId" class="waiting-item" bindlongpress="onPlayerAction" data-id="{{item.openId}}">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="waiting-avatar"></image>
         <text class="waiting-name">{{item.nickName || '玩家'}}</text>
       </view>
@@ -107,25 +111,81 @@
     <view wx:else class="empty-hint">暂无观战玩家</view>
   </view>
 
-  <!-- Bottom Bar (公共组件，仅房主；修改配置/随机位置已移至顶栏右上角) -->
-  <bottom-bar wx:if="{{currentUser && isHost}}">
-    <text class="bar-btn bar-btn-primary {{canStartGame ? '' : 'btn-disabled'}}" bindtap="startGame">开始游戏</text>
-  </bottom-bar>
+  <!-- 开始游戏：长按读条，满格按住呼吸，松手播放所选启动动画后开局（仅房主；不可点时灰色） -->
+  <view class="start-game-bar" wx:if="{{currentUser && isHost}}">
+    <view class="start-game-btn {{startGameCharging ? 'charging' : ''}} {{startGameCharged ? 'charged' : ''}} {{dissolving ? 'dissolving' : ''}} {{canStartGame ? '' : 'start-game-disabled'}}"
+      bindtouchstart="onStartGameTouchStart" bindtouchend="onStartGameTouchEnd" bindtouchcancel="onStartGameTouchCancel">
+      <view class="start-game-progress" style="width: {{startGameProgress}}%"></view>
+      <view class="start-game-content">
+        <text wx:if="{{startGameCharging}}" class="start-game-arrow">>>></text>
+        <text class="start-game-text">开始游戏</text>
+        <text wx:if="{{startGameCharging}}" class="start-game-arrow">>>></text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 启动全屏动画（5s，按所选动画渲染） -->
+  <view class="start-launch" wx:if="{{startGameLaunching}}">
+    <block wx:if="{{launchAnim === 'A'}}">
+      <view class="launch-e-ring"></view>
+      <view class="launch-e-ring launch-e-ring-2"></view>
+      <view class="launch-e-title">AVALON</view>
+    </block>
+    <block wx:elif="{{launchAnim === 'B'}}">
+      <view class="launch-b-blue"></view>
+      <view class="launch-b-red"></view>
+      <view class="launch-b-emblem">AVALON</view>
+    </block>
+    <block wx:elif="{{launchAnim === 'C'}}">
+      <view class="launch-c-top"></view>
+      <view class="launch-c-bottom"></view>
+      <view class="launch-c-iris"></view>
+      <view class="launch-c-text">天黑请闭眼</view>
+    </block>
+    <block wx:elif="{{launchAnim === 'D'}}">
+      <view class="launch-d-card launch-d-c1"></view>
+      <view class="launch-d-card launch-d-c2"></view>
+      <view class="launch-d-card launch-d-c3"></view>
+      <view class="launch-d-card launch-d-c4"></view>
+      <view class="launch-d-card launch-d-c5"></view>
+      <view class="launch-d-card launch-d-c6"></view>
+      <view class="launch-title">开赛</view>
+    </block>
+    <block wx:else>
+      <view class="launch-a-orb"></view>
+      <view class="launch-a-ring"></view>
+      <view class="launch-a-ring launch-a-ring-2"></view>
+      <view class="launch-a-ring launch-a-ring-3"></view>
+      <view class="launch-title">AVALON</view>
+    </block>
+  </view>
+
+  <!-- 启动动画选择弹窗（房主） -->
+  <view class="launch-modal" wx:if="{{showLaunchAnimModal}}">
+    <view class="launch-modal-mask" bindtap="closeLaunchAnimModal"></view>
+    <view class="launch-modal-panel">
+      <view class="launch-modal-title">这是一个神秘的选项...</view>
+      <view class="launch-modal-options">
+        <view wx:for="{{launchAnimOptions}}" wx:key="*this"
+          class="launch-modal-opt {{launchAnimIndex === index ? 'opt-active' : ''}}"
+          data-index="{{index}}" bindtap="onLaunchAnimPick">{{item}}</view>
+      </view>
+      <view class="launch-modal-confirm" bindtap="confirmLaunchAnim">确认</view>
+    </view>
+  </view>
 
   <!-- 只读配置缩略弹窗（所有人） -->
   <view class="config-view-overlay" wx:if="{{showConfigView}}" bindtap="closeConfigView">
     <view class="config-view-panel" catchtap="noop">
       <view class="config-view-title">版型</view>
       <scroll-view scroll-y class="config-view-scroll">
-        <view class="config-view-line">人数：<text class="cv-strong">{{configSummary.playerCount}} 人</text></view>
+        <view class="config-view-line">玩家数：<text class="cv-strong">{{configSummary.playerCount}} 人</text></view>
         <view class="config-view-line">蓝方：{{configSummary.goodRoles}}</view>
         <view class="config-view-line">红方：{{configSummary.evilRoles}}</view>
         <view wx:for="{{configSummary.groups}}" wx:for-item="grp" wx:key="title">
           <view class="config-view-sec">{{grp.title}}</view>
           <view wx:for="{{grp.lines}}" wx:for-item="ln" wx:key="*this" class="config-view-line">{{ln}}</view>
         </view>
-        <view class="config-view-sec">时间限制</view>
-        <view wx:for="{{configSummary.limitLines}}" wx:key="*this" class="config-view-line">{{item}}</view>
       </scroll-view>
     </view>
   </view>

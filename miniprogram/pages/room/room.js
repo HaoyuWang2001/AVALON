@@ -27,18 +27,29 @@ Page({
     currentUserReady: false,
     startGameCharging: false,
     startGameProgress: 0,
+    startGameCharged: false,
+    startGameLaunching: false,
+    dissolving: false,
     spectatorMax: 0,
     spectatorAllowed: true,
 
     showConfigView: false,
     configSummary: null,
-    summaryLady: ''
+    summaryLady: '',
+
+    showLaunchAnimModal: false,
+    launchAnim: 'A',
+    launchAnimIndex: 0,
+    launchAnimOptions: ['A', 'B', 'C', 'D', 'E']
   },
 
   onLoad(options) {
     const { roomId } = options;
+    const launchAnim = wx.getStorageSync('avalon_launch_anim') || 'A';
     this.setData({
-      roomId: roomId || ''
+      roomId: roomId || '',
+      launchAnim: launchAnim,
+      launchAnimIndex: this.data.launchAnimOptions.indexOf(launchAnim) >= 0 ? this.data.launchAnimOptions.indexOf(launchAnim) : 0
     });
     this.initRoomPolling();
   },
@@ -50,6 +61,7 @@ Page({
   onUnload() {
     if (this.roomPolling) clearInterval(this.roomPolling);
     if (this._startGameTimer) clearInterval(this._startGameTimer);
+    if (this._launchTimer) clearTimeout(this._launchTimer);
     if (this.leaving) this.leaveRoom();
   },
 
@@ -144,8 +156,13 @@ Page({
         this.setData({ canStartGame: canStart, startHint: hint });
 
         if (room.gameStarted && !wasGameStarted) {
-          this.navigatingToGame = true;
-          wx.redirectTo({ url: `/pages/game/game?gameId=${room.activeGameId}&roomId=${this.data.roomId}` });
+          // 开局信号：全员播放各自所选入场动画（5s），结束后进入游戏页
+          this.setData({ startGameLaunching: true, dissolving: false, startGameProgress: 0 });
+          this._launchGameId = room.activeGameId;
+          if (this._launchTimer) clearTimeout(this._launchTimer);
+          this._launchTimer = setTimeout(() => {
+            wx.redirectTo({ url: `/pages/game/game?gameId=${this._launchGameId}&roomId=${this.data.roomId}` });
+          }, 5000);
         }
       } else {
         const msg = (res && res.message) || '';
@@ -229,40 +246,73 @@ Page({
     api.startGame(roomId).then(result => {
       wx.hideLoading();
       if (result.success) {
-        this.navigatingToGame = true;
-        wx.redirectTo({ url: `/pages/game/game?gameId=${result.gameId}&roomId=${roomId}` });
+        // 开局请求成功：由 fetchRoomInfo 检测 gameStarted 跃迁，触发全员入场动画并跳转
       }
     }).catch(() => {
       wx.hideLoading(); wx.showToast({ title: '开始失败', icon: 'error' });
+      this.setData({ dissolving: false, startGameProgress: 0 });
     });
   },
 
-  // 长按开始游戏：按下开始读条（1.5s 从0→100，30ms×50），满格直接开局（无确认弹窗）
+  // 长按开始游戏：按下读条（2s），满格后按住保持呼吸；松手立即提交开局，按钮溶解作为反馈，
+  // 全员在轮询检测到 gameStarted 跃迁时播放各自所选 5s 入场动画后跳转
   onStartGameTouchStart() {
     if (!this.data.canStartGame) return;
-    if (this._startGameTimer) return;
-    this.setData({ startGameCharging: true, startGameProgress: 0 });
+    if (this._startGameTimer || this.data.startGameCharged || this.data.startGameLaunching || this.data.dissolving) return;
+    this.setData({ startGameCharging: true, startGameCharged: false, startGameProgress: 0 });
     let p = 0;
     this._startGameTimer = setInterval(() => {
-      p += 2;
+      p += 1;
       if (p >= 100) {
         clearInterval(this._startGameTimer);
         this._startGameTimer = null;
-        this.setData({ startGameCharging: false, startGameProgress: 0 });
-        this.startGame();
+        // 满格：仍按住 → 按钮进入呼吸动画，等待松手
+        this.setData({ startGameProgress: 100, startGameCharged: true });
       } else {
         this.setData({ startGameProgress: p });
       }
-    }, 30);
+    }, 20);
   },
 
   onStartGameTouchEnd() {
+    if (this.data.startGameLaunching) return;
     if (this._startGameTimer) { clearInterval(this._startGameTimer); this._startGameTimer = null; }
-    this.setData({ startGameCharging: false, startGameProgress: 0 });
+    if (this.data.startGameCharged) {
+      // 已满格松手：立即提交开局，按钮扭曲淡出作为提交反馈（保持到入场动画覆盖）
+      this.setData({ startGameCharging: false, startGameCharged: false, startGameProgress: 100, dissolving: true });
+      this.startGame();
+    } else {
+      this.setData({ startGameCharging: false, startGameCharged: false, startGameProgress: 0 });
+    }
   },
 
   onStartGameTouchCancel() {
-    this.onStartGameTouchEnd();
+    if (this.data.startGameLaunching) return;
+    if (this._startGameTimer) { clearInterval(this._startGameTimer); this._startGameTimer = null; }
+    this.setData({ startGameCharging: false, startGameCharged: false, startGameProgress: 0, dissolving: false });
+  },
+
+  // ─── 启动动画选择（房主） ───
+  openLaunchAnimModal() {
+    this.setData({ showLaunchAnimModal: true });
+  },
+
+  closeLaunchAnimModal() {
+    this.setData({ showLaunchAnimModal: false });
+  },
+
+  onLaunchAnimPick(e) {
+    const index = parseInt(e.currentTarget.dataset.index, 10);
+    if (index >= 0 && index < this.data.launchAnimOptions.length) {
+      this.setData({ launchAnimIndex: index });
+    }
+  },
+
+  confirmLaunchAnim() {
+    const key = this.data.launchAnimOptions[this.data.launchAnimIndex];
+    wx.setStorageSync('avalon_launch_anim', key);
+    this.setData({ launchAnim: key, showLaunchAnimModal: false });
+    wx.showToast({ title: '已选择 ' + key, icon: 'none' });
   },
 
   disbandRoom() {

@@ -300,7 +300,7 @@
           <text class="role-vision-name">{{item.name}}</text>
           <view class="role-vision-tags">
             <text wx:if="{{item.roleText}}" class="role-vision-tag role-vision-tag-role">{{item.roleText}}</text>
-            <text wx:if="{{item.campText}}" class="role-vision-tag {{item.side === 'evil' ? 'tag-evil' : 'tag-good'}}">{{item.campText}}</text>
+            <text class="role-vision-tag {{item.campClass}}">{{item.campText}}</text>
           </view>
         </view>
       </view>
@@ -334,7 +334,7 @@
           <view class="role-vision-spacer"></view>
           <view class="role-vision-tags">
             <text wx:if="{{item.roleText}}" class="role-vision-tag role-vision-tag-role">{{item.roleText}}</text>
-            <text wx:if="{{item.campText}}" class="role-vision-tag {{item.side === 'evil' ? 'tag-evil' : 'tag-good'}}">{{item.campText}}</text>
+            <text class="role-vision-tag {{item.campClass}}">{{item.campText}}</text>
           </view>
         </view>
         <!-- 开刀条目：左侧紫色座位牌 + 红色开刀块填满剩余行，长按2s读条激活刺杀；刺杀/gameEnd阶段隐藏 -->
@@ -566,15 +566,13 @@
     <view class="config-view-panel" catchtap="noop">
       <view class="config-view-title">版型</view>
       <scroll-view scroll-y class="config-view-scroll">
-        <view class="config-view-line">人数：<text class="cv-strong">{{configSummary.playerCount}} 人</text></view>
+        <view class="config-view-line">玩家数：<text class="cv-strong">{{configSummary.playerCount}} 人</text></view>
         <view class="config-view-line">蓝方：{{configSummary.goodRoles}}</view>
         <view class="config-view-line">红方：{{configSummary.evilRoles}}</view>
         <view wx:for="{{configSummary.groups}}" wx:for-item="grp" wx:key="title">
           <view class="config-view-sec">{{grp.title}}</view>
           <view wx:for="{{grp.lines}}" wx:for-item="ln" wx:key="*this" class="config-view-line">{{ln}}</view>
         </view>
-        <view class="config-view-sec">时间限制</view>
-        <view wx:for="{{configSummary.limitLines}}" wx:key="*this" class="config-view-line">{{item}}</view>
       </scroll-view>
     </view>
   </view>
