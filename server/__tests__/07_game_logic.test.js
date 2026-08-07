@@ -58,6 +58,26 @@ describe('07 — Game Logic Unit Tests', () => {
       expect(() => RoomModel.validateRoomConfig({ ...base, rules: { ...req, lancelotSwapRound: 5 }, limits: { voteRevealDuration: 0 } })).toThrow('lancelotSwapRound');
       expect(() => RoomModel.validateRoomConfig(valid)).not.toThrow();
     });
+
+    it('should validate lancelot card counts (switch/keep)', () => {
+      const base = { roles: { good: ['merlin'], evil: ['morgana'] } };
+      const req = {
+        evilKnowsEachOther: true, lancelotsKnowEachOther: true, lancelotSwapRound: 2,
+        ladyOfTheLake: false, ladyOfTheLakeRound: 2, maxFailedNominations: 3,
+        oberonMustFailMission: false, lancelotMustFail: false,
+        voteVisibility: 'anonymous', missionFailDetail: 'count'
+      };
+      const withLimits = rules => ({ ...base, rules: { ...req, ...rules }, limits: { voteRevealDuration: 0 } });
+      // 缺省（未配置）通过；合法 2/5 通过
+      expect(() => RoomModel.validateRoomConfig(withLimits({}))).not.toThrow();
+      expect(() => RoomModel.validateRoomConfig(withLimits({ lancelotSwitchCards: 2, lancelotKeepCards: 5 }))).not.toThrow();
+      // 负数拒绝
+      expect(() => RoomModel.validateRoomConfig(withLimits({ lancelotSwitchCards: -1 }))).toThrow('lancelotSwitchCards');
+      // 非整数拒绝
+      expect(() => RoomModel.validateRoomConfig(withLimits({ lancelotKeepCards: 1.5 }))).toThrow('lancelotKeepCards');
+      // 0+0（和<1）拒绝
+      expect(() => RoomModel.validateRoomConfig(withLimits({ lancelotSwitchCards: 0, lancelotKeepCards: 0 }))).toThrow('之和至少为 1');
+    });
   });
 
   describe('buildVision', () => {

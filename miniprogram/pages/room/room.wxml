@@ -318,6 +318,24 @@
                   <text>第 {{rules.lancelotSwapRound}} 轮</text>
                 </picker>
               </view>
+              <view class="rule-row">
+                <view class="rule-col">
+                  <text class="rule-label">转换卡数量</text>
+                  <text class="rule-desc">卡组中"身份转换"卡张数（抽中则蓝红兰互换阵营）</text>
+                </view>
+                <picker class="rule-picker" mode="selector" range="{{[1,2,3,4,5]}}" value="{{rules.lancelotSwitchCards - 1}}" data-field="lancelotSwitchCards" data-range="{{[1,2,3,4,5]}}" bindchange="onRulePicker">
+                  <text>{{rules.lancelotSwitchCards}} 张</text>
+                </picker>
+              </view>
+              <view class="rule-row">
+                <view class="rule-col">
+                  <text class="rule-label">不转换卡数量</text>
+                  <text class="rule-desc">卡组中"身份保持"卡张数（抽中则不转换）</text>
+                </view>
+                <picker class="rule-picker" mode="selector" range="{{[1,2,3,4,5]}}" value="{{rules.lancelotKeepCards - 1}}" data-field="lancelotKeepCards" data-range="{{[1,2,3,4,5]}}" bindchange="onRulePicker">
+                  <text>{{rules.lancelotKeepCards}} 张</text>
+                </picker>
+              </view>
               <view class="rule-row" wx:if="{{selectedRoles.lancelotRed}}">
                 <view class="rule-col">
                   <text class="rule-label">睁眼狼知红兰</text>

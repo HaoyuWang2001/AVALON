@@ -362,6 +362,22 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
     }
   });
 
+  it('04-17 卡组配置生效：switch=1/keep=0 必转换，switch=0/keep=1 必不转', async () => {
+    // 转换卡 1 张、不转卡 0 张 → 必转换
+    const c1 = withConfigOverrides(buildCustomBoard9(), { rules: { lancelotSwapRound: 1, lancelotSwitchCards: 1, lancelotKeepCards: 0 } });
+    const g1 = await setupGame(c1);
+    const prev1 = lancelotSide(await getGameState(g1.gameId), 'lancelotBlue');
+    const after1 = await playRound(g1.gameId, g1.players, 0);
+    expect(lancelotSide(after1, 'lancelotBlue')).not.toBe(prev1);
+
+    // 转换卡 0 张、不转卡 1 张 → 必不转
+    const c2 = withConfigOverrides(buildCustomBoard9(), { rules: { lancelotSwapRound: 1, lancelotSwitchCards: 0, lancelotKeepCards: 1 } });
+    const g2 = await setupGame(c2);
+    const prev2 = lancelotSide(await getGameState(g2.gameId), 'lancelotBlue');
+    const after2 = await playRound(g2.gameId, g2.players, 0);
+    expect(lancelotSide(after2, 'lancelotBlue')).toBe(prev2);
+  });
+
   it('04-18 流车（round 不变）不触发转换', async () => {
     const config = withConfigOverrides(buildCustomBoard9(), { rules: { lancelotSwapRound: 1, lancelotSwapForce: 'switch' } });
     const { gameId, players } = await setupGame(config);

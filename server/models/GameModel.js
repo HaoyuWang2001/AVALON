@@ -23,8 +23,9 @@ const LANCELOT_BLUE = 'lancelotBlue';
 
 /**
  * 兰斯洛特身份转换抽卡：完成轮次 ∈ [lancelotSwapRound, 4] 时触发。
- * 默认卡组 2 张转换 / 5 张不转（Math.random < 2/7 视为抽中转换）。
- * 测试/确定性控制：rules.lancelotSwapForce = 'switch' | 'keep'（缺省走随机）。
+ * 卡组可配置：rules.lancelotSwitchCards（转换卡，默认2）/ rules.lancelotKeepCards（不转换卡，默认5），
+ * 抽中转换概率 = switchCards / (switchCards + keepCards)。
+ * 测试/确定性控制：rules.lancelotSwapForce = 'switch' | 'keep'（优先级最高，缺省走随机卡组）。
  * 单兰翻转；双兰（初始异侧）同时互换。
  * 每次触发都会写入 lancelot_swap_history（无论是否抽中转换）。
  */
@@ -41,7 +42,12 @@ async function maybeLancelotSwap(connection, gameId, completedRound, rules) {
   let switched;
   if (rules.lancelotSwapForce === 'switch') switched = true;
   else if (rules.lancelotSwapForce === 'keep') switched = false;
-  else switched = Math.random() < (2 / 7);
+  else {
+    const switchCards = typeof rules.lancelotSwitchCards === 'number' ? rules.lancelotSwitchCards : 2;
+    const keepCards = typeof rules.lancelotKeepCards === 'number' ? rules.lancelotKeepCards : 5;
+    const total = switchCards + keepCards;
+    switched = total <= 0 ? false : Math.random() < (switchCards / total);
+  }
 
   await connection.execute(
     'INSERT INTO lancelot_swap_history (game_id, round, switched, created_at) VALUES (?, ?, ?, NOW())',

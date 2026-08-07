@@ -88,6 +88,21 @@ class RoomModel {
       throw new Error('lancelotSwapForce 必须是 switch 或 keep');
     }
 
+    // 兰斯洛特抽卡卡组（可选）：转换卡 / 不转换卡，非负整数且至少一张，避免概率无效
+    for (const key of ['lancelotSwitchCards', 'lancelotKeepCards']) {
+      if (key in roomConfig.rules) {
+        const v = roomConfig.rules[key];
+        if (typeof v !== 'number' || !Number.isInteger(v) || v < 0) {
+          throw new Error(`${key} 必须是非负整数`);
+        }
+      }
+    }
+    const sc = roomConfig.rules.lancelotSwitchCards;
+    const kc = roomConfig.rules.lancelotKeepCards;
+    if (typeof sc === 'number' && typeof kc === 'number' && sc + kc < 1) {
+      throw new Error('lancelotSwitchCards 与 lancelotKeepCards 之和至少为 1');
+    }
+
     // 队伍投票票型展示时长（limits.voteRevealDuration）：必须存在，允许 {0,3,5,8,10}（0 供测试立即推进）
     const limits = roomConfig.limits || {};
     if (![0, 3, 5, 8, 10].includes(limits.voteRevealDuration)) {

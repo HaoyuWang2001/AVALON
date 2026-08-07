@@ -43,7 +43,16 @@ function buildConfigSummary(cfg) {
     ruleLines.push('湖上夫人：关');
   }
   if (rules.lancelotSwapRound != null && rules.lancelotSwapRound > 0) {
-    ruleLines.push('兰斯互换：第' + rules.lancelotSwapRound + '轮 · ' + (rules.lancelotSwapForce === 'switch' ? '强制互换' : '随机'));
+    let line = '兰斯互换：第' + rules.lancelotSwapRound + '轮 · ';
+    if (rules.lancelotSwapForce === 'switch') {
+      line += '强制互换';
+    } else if (rules.lancelotSwapForce === 'keep') {
+      line += '保持';
+    } else {
+      line += '随机(转' + (rules.lancelotSwitchCards != null ? rules.lancelotSwitchCards : 2)
+        + '/不转' + (rules.lancelotKeepCards != null ? rules.lancelotKeepCards : 5) + ')';
+    }
+    ruleLines.push(line);
   }
   const limitLines = [];
   limitLines.push('发言：' + (limits.speech || 0) + 's');
@@ -89,7 +98,8 @@ function buildDefaultRule() {
     ladyOfTheLake: false, ladyOfTheLakeRound: 2, maxFailedNominations: 3,
     oberonMustFailMission: false, lancelotMustFail: false,
     voteVisibility: 'public', missionFailDetail: 'count',
-    evilsKnowRedLancelot: true, oberonKnowsRedLancelot: true, merlinKnowsLancelotSide: true
+    evilsKnowRedLancelot: true, oberonKnowsRedLancelot: true, merlinKnowsLancelotSide: true,
+    lancelotSwitchCards: 2, lancelotKeepCards: 5
   };
 }
 

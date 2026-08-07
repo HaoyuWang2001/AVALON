@@ -123,6 +123,7 @@ fi
 write_baseline() {
   local log="$1"
   local build_sec="$2"
+  local is_all="$3"
   local total time_s
   total=$(grep -E '^Tests:' "$log" | grep -oE '[0-9]+ total' | grep -oE '^[0-9]+' | tail -1)
   time_s=$(grep -E '^Time:' "$log" | grep -oE '[0-9.]+ s' | grep -oE '^[0-9.]+' | tail -1)
@@ -130,26 +131,40 @@ write_baseline() {
     echo "⚠ baseline 跳过：日志缺少 Tests:/Time: 汇总"
     return 0
   fi
+  # 逐套件：PASS __tests__/XX.test.js (Y s)；用例数统计该块下 ✓/✕/○ 行
+  local cur=""
+  local -A s_sec s_cnt
+  while IFS= read -r line; do
+    if [[ "$line" =~ ^PASS[[:space:]]+__tests__/(.+)\.test\.js[[:space:]]*\(([0-9.]+)[[:space:]]*s\) ]]; then
+      cur="${BASH_REMATCH[1]}"; s_sec["$cur"]="${BASH_REMATCH[2]}"; s_cnt["$cur"]=0
+    elif [[ "$line" =~ ^PASS[[:space:]]+__tests__/(.+)\.test\.js[[:space:]]*$ ]]; then
+      cur="${BASH_REMATCH[1]}"; s_sec["$cur"]="0"; s_cnt["$cur"]=0
+    elif [[ -n "$cur" && "$line" =~ ^[[:space:]]*(✓|✕|○) ]]; then
+      s_cnt["$cur"]=$(( ${s_cnt["$cur"]:-0} + 1 ))
+    fi
+  done < "$log"
+  local TMP="$BASELINE_FILE.tmp.$$"
   {
     printf 'build_seconds\t%s\n' "${build_sec:-0}"
-    printf 'all\ttotal\t%s\t%s\n' "$total" "$time_s"
-    # 逐套件：PASS __tests__/XX.test.js (Y s)；用例数统计该块下 ✓/✕/○ 行
-    local cur=""
-    local -A s_sec s_cnt
-    while IFS= read -r line; do
-      if [[ "$line" =~ ^PASS[[:space:]]+__tests__/(.+)\.test\.js[[:space:]]*\(([0-9.]+)[[:space:]]*s\) ]]; then
-        cur="${BASH_REMATCH[1]}"; s_sec["$cur"]="${BASH_REMATCH[2]}"; s_cnt["$cur"]=0
-      elif [[ "$line" =~ ^PASS[[:space:]]+__tests__/(.+)\.test\.js[[:space:]]*$ ]]; then
-        cur="${BASH_REMATCH[1]}"; s_sec["$cur"]="0"; s_cnt["$cur"]=0
-      elif [[ -n "$cur" && "$line" =~ ^[[:space:]]*(✓|✕|○) ]]; then
-        s_cnt["$cur"]=$(( ${s_cnt["$cur"]:-0} + 1 ))
-      fi
-    done < "$log"
+    # 仅全量运行时更新 all 行；部分套件保留旧 all（全量基准）
+    if [[ "$is_all" == "1" ]]; then
+      printf 'all\ttotal\t%s\t%s\n' "$total" "$time_s"
+    elif [[ -f "$BASELINE_FILE" ]]; then
+      grep '^all\t' "$BASELINE_FILE" 2>/dev/null || true
+    fi
     for s in "${!s_sec[@]}"; do
       printf 'suite\t%s\t%s\t%s\n' "$s" "${s_cnt[$s]:-0}" "${s_sec[$s]}"
     done | sort -t $'\t' -k4 -n
-  } > "$BASELINE_FILE.tmp"
-  mv "$BASELINE_FILE.tmp" "$BASELINE_FILE"
+    # 保留旧文件中本次未运行的 suite 行（合并式，避免部分运行清空其他套件时长）
+    if [[ -f "$BASELINE_FILE" ]]; then
+      while IFS=$'\t' read -r a b c d; do
+        if [[ "$a" == "suite" && -z "${s_sec[$b]:-}" ]]; then
+          printf 'suite\t%s\t%s\t%s\n' "$b" "$c" "$d"
+        fi
+      done < "$BASELINE_FILE"
+    fi
+  } > "$TMP"
+  mv "$TMP" "$BASELINE_FILE"
   echo "📌 已更新基准: build=${build_sec}s all total=$total ${time_s}s"
 }
 
@@ -164,7 +179,7 @@ if [[ "$BACKGROUND" -eq 0 ]]; then
   echo ""
   echo "⏹ 测试结束，退出码: $code"
   if [[ "$code" -eq 0 ]]; then
-    write_baseline "$LOG_FILE" "$build_seconds"
+    write_baseline "$LOG_FILE" "$build_seconds" "$([ "$SUITE_KEY" = "all" ] && echo 1 || echo 0)"
   fi
   exit "$code"
 fi
@@ -252,7 +267,7 @@ grep -E "Tests:|Test Suites:|Time:" "$LOG_FILE" | tail -20
 echo "退出码: $code"
 
 if [[ "$code" -eq 0 ]]; then
-  write_baseline "$LOG_FILE" "$build_seconds"
+  write_baseline "$LOG_FILE" "$build_seconds" "$([ "$SUITE_KEY" = "all" ] && echo 1 || echo 0)"
 fi
 
 exit "$code"
