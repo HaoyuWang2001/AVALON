@@ -14,10 +14,11 @@
           <button class="avatar-tap" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" binderror="onAvatarError"/>
         </view>
         <view class="user-details">
-          <view class="wx-nick-wrap">
+          <label class="wx-nick-wrap" for="wxNickInput">
             <view class="user-name-text {{userInfo.nickName ? '' : 'name-placeholder'}}">{{userInfo.nickName || '点击改名'}}</view>
-            <input type="nickname" class="wx-nick-input-overlay" value="{{userInfo.nickName}}" bindinput="onWxNickInput" bindblur="onWxNickBlur"/>
-          </view>
+          </label>
+          <input id="wxNickInput" type="nickname" class="wx-nick-input-hidden"
+            value="{{userInfo.nickName}}" bindinput="onWxNickInput" bindblur="onWxNickBlur"/>
           <view class="user-status {{userStatusClass}}">{{userStatusText}}</view>
         </view>
       </view>
