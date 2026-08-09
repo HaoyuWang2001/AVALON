@@ -6,7 +6,7 @@ button { margin: 0; padding: 0; width: auto; }
 button::after { border: none; }
 
 .container { padding: 24rpx; }
-.container.with-start-bar { padding-bottom: 200rpx; }
+.container.with-start-bar { padding-bottom: calc(152rpx + env(safe-area-inset-bottom)); }
 
 /* ─── 开始游戏（长按读条） ─── */
 .start-game-bar {

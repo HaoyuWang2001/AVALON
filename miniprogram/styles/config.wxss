@@ -90,8 +90,10 @@
 .rule-row {
   display: flex; align-items: center; justify-content: space-between;
   padding: 20rpx 0; border-bottom: 1rpx solid var(--gray-100);
+  position: relative;
 }
 .rule-row:last-child { border-bottom: none; }
+.rule-picker-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0; }
 .rule-col { flex: 1; margin-right: 20rpx; }
 .rule-label { font-size: 28rpx; font-weight: 600; color: var(--gray-800); }
 .rule-desc { font-size: 22rpx; color: var(--gray-400); margin-top: 4rpx; display: block; }

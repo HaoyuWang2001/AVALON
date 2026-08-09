@@ -14,18 +14,12 @@
           <button class="avatar-tap" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" binderror="onAvatarError"/>
         </view>
         <view class="user-details">
-          <label class="wx-nick-wrap" for="wxNickInput">
-            <view class="user-name-text {{userInfo.nickName ? '' : 'name-placeholder'}}">{{userInfo.nickName || '点击改名'}}</view>
-          </label>
-          <input id="wxNickInput" type="nickname" class="wx-nick-input-hidden"
-            value="{{userInfo.nickName}}" bindinput="onWxNickInput" bindblur="onWxNickBlur"/>
+          <view class="user-name-text {{customNickName ? '' : 'name-placeholder'}}" bindtap="showNickNameModal">
+            {{customNickName || '改名撒！'}}<text class="user-edit-emoji">✏️</text>
+          </view>
           <view class="user-status {{userStatusClass}}">{{userStatusText}}</view>
         </view>
-      </view>
-      <view class="user-divider"></view>
-      <view class="user-game-nick-row">
-        <view class="user-game-nick">游戏内昵称：{{customNickName || '未设置'}}</view>
-        <view class="edit-nick-btn btn-round" bindtap="showNickNameModal">更改昵称</view>
+        <view class="user-emoji-btn" bindtap="showInfoModal">ℹ️</view>
       </view>
     </view>
   </view>
@@ -65,8 +59,8 @@
     <view class="history-item" wx:for="{{historyList}}" wx:key="gameId"
           bindtap="openHistoryGame" data-gameid="{{item.gameId}}">
       <text class="history-role">{{item.roleName}}</text>
-      <text class="history-result {{item.isWin ? 'win' : 'lose'}}">{{item.isWin ? '胜' : '负'}}</text>
       <text class="history-duration">{{item.durationText}}</text>
+      <text class="history-result {{item.isWin ? 'win' : 'lose'}}">{{item.isWin ? '胜' : '负'}}</text>
     </view>
   </view>
 
@@ -80,22 +74,21 @@
     </view>
   </view>
 
-  <view class="card gameinfo-btn" bindtap="showInfoModal">
-    <text class="btn-icon">📖</text>游戏说明
-  </view>
   <view class="footer"><view class="footer-version">AVALON v1.0.0</view></view>
 </view>
 
-<!-- 说明弹窗 -->
-<view class="info-modal" wx:if="{{showInfo}}">
-  <view class="modal-mask" bindtap="closeInfo"></view>
-  <view class="info-modal-body">
-    <view class="info-title">游戏说明</view>
+<!-- 游戏说明：全屏覆盖页 -->
+<view class="rules-page" wx:if="{{showInfo}}">
+  <view class="rules-page-header">
+    <text class="rules-page-title">游戏说明</text>
+    <view class="rules-page-close" bindtap="closeInfo">✕</view>
+  </view>
+  <scroll-view scroll-y class="rules-page-body">
     <view class="info-item">• 5-12 人，支持标准板与自定义板子</view>
     <view class="info-item">• 支持多样村规，可扩展性拉满</view>
     <view class="info-item">• 支持线上发牌与线下发牌+小程序发车两种模式</view>
-    <button class="btn btn-primary" bindtap="closeInfo">关闭</button>
-  </view>
+    <view class="info-item">• 支持查看历史对局和胜率统计</view>
+  </scroll-view>
 </view>
 
 <!-- ─────────── Config Modal ─────────── -->

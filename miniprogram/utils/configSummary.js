@@ -28,11 +28,12 @@ function buildConfigSummary(cfg) {
   const groups = [];
   // 湖中仙女（向导 page 0，置于最前）
   if (rules.ladyOfTheLake) {
+    const lakeRound = rules.ladyOfTheLakeRound || 1;
     groups.push({
       title: '湖中仙女',
       lines: [
         '启用湖中仙女：开',
-        '生效轮次：第' + (rules.ladyOfTheLakeRound || 1) + '轮发车成功后可用'
+        '生效轮次：第' + lakeRound + '轮发车成功、第' + (lakeRound + 1) + '轮开始时'
       ]
     });
   }
@@ -56,7 +57,7 @@ function buildConfigSummary(cfg) {
     const lancLines = [];
     if (hasBothLancelots) lancLines.push('兰斯互认身份：' + (rules.lancelotsKnowEachOther ? '开' : '关'));
     if (rules.lancelotSwapRound != null && rules.lancelotSwapRound > 0) {
-      lancLines.push('兰斯换身轮次：第' + rules.lancelotSwapRound + '轮');
+      lancLines.push('兰斯换身轮次：第' + rules.lancelotSwapRound + '轮发车成功、第' + (rules.lancelotSwapRound + 1) + '轮开始时');
     }
     lancLines.push('转换卡数量：' + (rules.lancelotSwitchCards != null ? rules.lancelotSwitchCards : 2) + ' 张');
     lancLines.push('不转换卡数量：' + (rules.lancelotKeepCards != null ? rules.lancelotKeepCards : 5) + ' 张');

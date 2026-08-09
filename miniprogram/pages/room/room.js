@@ -195,22 +195,6 @@ Page({
     }).finally(() => wx.hideLoading());
   },
 
-  randomTakeSeat() {
-    if (!this._guard()) return;
-    if (!this.data.currentUser || this.data.currentUser.seatNumber >= 1) return;
-    const occupiedSeats = new Set(this.data.seatedPlayers.map(p => p.seatNumber));
-    const emptySeats = [];
-    for (let i = 1; i <= this.data.playerCount; i++) {
-      if (!occupiedSeats.has(i)) emptySeats.push(i);
-    }
-    if (emptySeats.length === 0) return;
-    const seat = emptySeats[Math.floor(Math.random() * emptySeats.length)];
-    wx.showLoading({ title: '入座中...', mask: true });
-    api.updateSeatNumber(this.data.roomId, seat).then(() => {
-      this.fetchRoomInfo();
-    }).finally(() => wx.hideLoading());
-  },
-
   leaveSeat() {
     if (!this._guard()) return;
     wx.showLoading({ title: '请稍候...', mask: true });

@@ -51,7 +51,7 @@ async function maybeLancelotSwap(connection, gameId, completedRound, rules) {
 
   await connection.execute(
     'INSERT INTO lancelot_swap_history (game_id, round, switched, created_at) VALUES (?, ?, ?, NOW())',
-    [gameId, completedRound, switched]
+    [gameId, completedRound + 1, switched]
   );
   if (switched) {
     for (const l of lancelots) {
@@ -1507,15 +1507,22 @@ class GameModel {
             const lakeAllExhausted = parseInt(lakeInspectorRows[0].cnt, 10) >= playerCount;
 
             if (lakeRemaining && !lakeAllExhausted) {
-              // 进入湖仙验人阶段（保持当前轮次，验人者=当前持有者，等待 lakeInspect）
+              // 进入湖仙验人阶段（发生在下一轮开始时：轮次/队长已推进，验人者=当前持有者，等待 lakeInspect）
               await connection.execute(
                 `UPDATE games 
                  SET current_phase = 'lake',
+                     current_round = ?,
+                     team_leader_index = ?,
                      nominated_team = NULL,
+                     failed_nominations = 0,
+                     pre_nominated_team = NULL,
+                     speaking_order = 'asc',
+                     discussion_set = FALSE,
+                     lancelot_result = NULL,
                      forced_car = FALSE,
                      updated_at = NOW()
                  WHERE id = ?`,
-                [gameId]
+                [newRound, newTeamLeaderIndex, gameId]
               );
             } else if (lancelotEnabled && hasLancelot) {
               // 进入兰斯抽卡阶段：抽卡结果写 lancelot_result，等待全员确认
@@ -1534,7 +1541,7 @@ class GameModel {
                      forced_car = FALSE,
                      updated_at = NOW()
                  WHERE id = ?`,
-                [newRound, newTeamLeaderIndex, JSON.stringify({ switched: !!switched, round: game[0].current_round }), gameId]
+                [newRound, newTeamLeaderIndex, JSON.stringify({ switched: !!switched, round: game[0].current_round + 1 }), gameId]
               );
             } else {
               // 无湖仙/兰斯 → 直接进入下一轮 preNominate
@@ -1702,27 +1709,25 @@ class GameModel {
         const total = parseInt(counts[0].total, 10);
         const confirmed = parseInt(counts[0].confirmed, 10);
 
-        // 全员确认后：判定兰斯是否触发，进入 lancelot 或下一轮 preNominate
+        // 全员确认后：判定兰斯是否触发，进入 lancelot 或直接进入当前轮 preNominate
         if (total > 0 && confirmed >= total) {
-          // 读取房间规则，判定兰斯是否触发（current_round 仍是刚完成的轮次）
+          // 读取房间规则，判定兰斯是否触发（current_round 已在进入 lake 时推进为新轮次，
+          // 刚完成轮次 = current_round - 1，兰斯触发基准与湖仙一致用完成轮）
           const roomRows = await connection.execute('SELECT room_config FROM rooms WHERE id = ?', [game[0].room_id]);
           const roomConfig = roomRows[0].length ? parseJson(roomRows[0][0].room_config) : null;
           const rules = (roomConfig && roomConfig.rules) || {};
+          const completedRound = game[0].current_round - 1;
           const swapRound = rules.lancelotSwapRound;
           const lancelotEnabled = typeof swapRound === 'number'
-            && game[0].current_round >= swapRound && game[0].current_round <= 4;
+            && completedRound >= swapRound && completedRound <= 4;
           const [lancelotPlayers] = await connection.execute(
             `SELECT COUNT(*) as cnt FROM game_players WHERE game_id = ? AND role IN ('lancelotBlue','lancelotRed')`,
             [gameId]
           );
           const hasLancelot = parseInt(lancelotPlayers[0].cnt, 10) > 0;
 
-          const playerCount = parseInt(game[0].player_count, 10);
-          const newRound = game[0].current_round + 1;
-          const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
-
           if (lancelotEnabled && hasLancelot) {
-            const switched = await maybeLancelotSwap(connection, gameId, game[0].current_round, rules);
+            const switched = await maybeLancelotSwap(connection, gameId, completedRound, rules);
             await connection.execute(
               `UPDATE games 
                SET current_phase = 'lancelot',
@@ -1736,7 +1741,7 @@ class GameModel {
                    lancelot_result = ?,
                    updated_at = NOW()
                WHERE id = ?`,
-              [newRound, newTeamLeaderIndex, JSON.stringify({ switched: !!switched, round: game[0].current_round }), gameId]
+              [game[0].current_round, game[0].team_leader_index, JSON.stringify({ switched: !!switched, round: completedRound + 1 }), gameId]
             );
           } else {
             await connection.execute(
@@ -1752,7 +1757,7 @@ class GameModel {
                    lancelot_result = NULL,
                    updated_at = NOW()
                WHERE id = ?`,
-              [newRound, newTeamLeaderIndex, gameId]
+              [game[0].current_round, game[0].team_leader_index, gameId]
             );
           }
           await connection.execute(

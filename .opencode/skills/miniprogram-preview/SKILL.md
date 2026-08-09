@@ -17,21 +17,28 @@ Formal release (上传体验版/正式版) is done manually by the user and is o
   static server **must** run on the **production server** (`114.132.51.227`, which `haoyu-wang141.top`
   resolves to). Serving it from the dev box is NOT externally reachable.
 - Production has no `node`; it serves the QR via `python3 -m http.server 8099`.
+- The preview tooling lives in the repo-root **`preview/`** directory, not `miniprogram/`:
+  - `preview/miniprogram-preview.js` — bundles the project at `../miniprogram` and writes the QR to
+    `../.preview/mp-preview.png` (upload key read from `../.keys/private.key`).
+  - `preview/preview-push.js` — scp's the QR to the production server.
+  - `preview/qr-server.js` — local dev-only static server.
 
 ## Prerequisites
 
 - Upload key present at `.keys/private.key` (chmod 600, gitignored). Missing → set `MP_PRIVATE_KEY` env.
-- `miniprogram-ci` installed in `miniprogram/` (devDependency).
+- `miniprogram-ci` installed in `preview/` (devDependency). If `preview/node_modules` is missing, run
+  `cd preview && npm install`.
 - Production static server running on port 8099 and firewall allows inbound 8099.
 - Miniprogram AppID `wxb021f21838eb4ced` and its upload key must match the WeChat MP account; the server's
   outbound IP must be in the MP "IP 白名单" for CI (see Troubleshooting).
 
 ## Workflow
 
-Run from the repo root / `miniprogram`:
+Run from the repo-root `preview/` directory:
 
 ```bash
-cd miniprogram
+cd preview
+npm install             # 0) only if preview/node_modules is missing (miniprogram-ci lives here)
 npm run preview         # 1) compile + generate preview QR -> .preview/mp-preview.png (~25 min valid)
 npm run preview:push    # 2) scp the QR to production (lighthouse@114.132.51.227:/home/lighthouse/preview-qr/)
 ```
@@ -64,8 +71,9 @@ directory index; otherwise users see a directory listing).
 | Symptom | Cause / Fix |
 |---|---|
 | `-10008 invalid ip: <IP>` | Server outbound IP not in WeChat MP CI IP 白名单. In 微信公众平台 → 开发 → 开发设置 → 小程序代码上传/预览 → IP 白名单, add the IP WeChat reports (it can change; re-check `curl ifconfig.me`). |
-| `-80057 ... invalid file: scripts/miniprogram-preview.js ... #!/usr/bin/env node` | The `scripts/` dir is inside the miniprogram project and gets bundled. Keep `scripts/**/*` in the `ignores` list of `ci.Project`. |
+| `-80057 ... invalid file: ... #!/usr/bin/env node` | A shebang'd script got bundled into the mini-program project (see the `ignores` list in `ci.Project`). The preview tooling now lives outside `miniprogram/` (repo-root `preview/`) and is not bundled. |
 | `project.preview is not a function` | miniprogram-ci v2 API: use `ci.preview({ project, ... })`, not the instance method. |
+| `npm error Missing script: "preview"` | You are in the wrong dir — the scripts live in the repo-root `preview/` (run `cd preview`), not in `miniprogram/`. |
 | Browser shows directory listing | Rename the HTML file to `index.html` in the production serving dir. |
 | Phone can't open / page unreachable | Confirm 8099 is open in the production firewall, the static server is running, and you are opening `http://haoyu-wang141.top:8099/` (not the dev box). |
 
@@ -73,4 +81,4 @@ directory index; otherwise users see a directory listing).
 
 - The upload private key (`.keys/private.key`) must never be committed or logged; `.gitignore` covers
   `.keys/`, `*.key`, and `.preview/`.
-- `scripts/preview-push.js` only copies the generated PNG — it never transmits the key.
+- `preview/preview-push.js` only copies the generated PNG — it never transmits the key.

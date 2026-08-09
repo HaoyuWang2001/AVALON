@@ -452,6 +452,29 @@ class ApiService {
     return this.request(`/users/${openId}`);
   }
 
+  async uploadAvatar(openId, filePath) {
+    return new Promise((resolve, reject) => {
+      wx.uploadFile({
+        url: `${BASE_URL}/users/${openId}/avatar`,
+        filePath,
+        name: 'avatar',
+        success: (res) => {
+          try {
+            const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+            if (res.statusCode >= 400 || !data.success) {
+              reject(new Error((data && data.message) || `HTTP ${res.statusCode}`));
+            } else {
+              resolve(data);
+            }
+          } catch (e) {
+            reject(new Error('上传头像响应解析失败'));
+          }
+        },
+        fail: (err) => reject(new Error(err.errMsg || '头像上传失败'))
+      });
+    });
+  }
+
   async updateUserProfile(openId, data) {
     return this.request(`/users/${openId}/profile`, {
       method: 'POST',

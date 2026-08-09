@@ -408,6 +408,10 @@ Page({
         }
 
         const maxFailed = (res.basic && res.basic.roomConfig && res.basic.roomConfig.rules && res.basic.roomConfig.rules.maxFailedNominations) || 3;
+        const missionFailDetail = (res.basic && res.basic.roomConfig && res.basic.roomConfig.rules && res.basic.roomConfig.rules.missionFailDetail) || 'count';
+        const showFailDetail = missionFailDetail === 'count';
+        const lastMission = missions.length ? missions[missions.length - 1] : null;
+        const lastMissionFailCount = (lastMission && lastMission.missionFailCount != null && lastMission.missionFailCount >= 0) ? lastMission.missionFailCount : 0;
         const total = maxFailed + 1;
         const forcedSend = !!res.current.forcedSend;
         const flowCars = [];
@@ -439,11 +443,15 @@ Page({
         });
 
         const myRole = res.player ? res.player.role : null;
-        // 预选车成员座位号（底部框信息行，基于后端 preNominatedTeam 展示，空格分隔）
-        const preTeamSeats = (res.current.preNominatedTeam || []).map(id => {
-          const p = (res.players || []).find(x => x.openId === id);
-          return p ? String(p.seatNumber) : '?';
-        }).join(' ');
+        // 预选车成员座位号（底部框信息行，按座位号正序，空格分隔）
+        const preTeamSeats = (res.current.preNominatedTeam || [])
+          .map(id => {
+            const p = (res.players || []).find(x => x.openId === id);
+            return { seat: p ? p.seatNumber : null, id };
+          })
+          .sort((a, b) => (Number(a.seat) || 999) - (Number(b.seat) || 999))
+          .map(x => x.seat != null ? String(x.seat) : '?')
+          .join(' ');
         // 队伍投票结果（missionVote 及之后公开）：赞成/反对座位号（按座位号正序）
         const tv = res.current.teamVotes || {};
         const seatOf = id => {
@@ -509,6 +517,13 @@ Page({
         const buildCar = (car) => {
           const tv = car.teamVotes || {};
           const bySeat = (a, b) => (Number(a.seat) || 999) - (Number(b.seat) || 999);
+          let outcomeText = car.outcome === 'reject' ? '流车'
+            : (car.missionSuccess == null ? '未进行任务'
+            : (car.missionSuccess ? '任务成功' : '任务失败'));
+          if (car.outcome === 'send' && car.missionSuccess === false && showFailDetail) {
+            const failN = car.missionVotes ? Object.values(car.missionVotes).filter(v => v === 'fail').length : 0;
+            outcomeText += '·' + failN + '票反对';
+          }
           return {
             ...car,
             forced: car.index === maxFailed + 1,
@@ -516,9 +531,7 @@ Page({
             sendSeats: (car.nominatedTeam || []).map(seatInfo).sort(bySeat),
             approveSeats: Object.keys(tv).filter(id => tv[id] === 'approve').map(seatInfo).sort(bySeat),
             rejectSeats: Object.keys(tv).filter(id => tv[id] === 'reject').map(seatInfo).sort(bySeat),
-            outcomeText: car.outcome === 'reject' ? '流车'
-              : (car.missionSuccess == null ? '未进行任务'
-              : (car.missionSuccess ? '任务成功' : '任务失败'))
+            outcomeText
           };
         };
         const carsHistory = (res.history ? res.history.cars || [] : []).map(r => ({ ...r, details: (r.details || []).map(buildCar) }));
@@ -574,11 +587,6 @@ Page({
           carGroup = null;
         };
         for (let r = 1; r <= 5; r++) {
-          const cars = carsHistory.find(c => c.round === r);
-          if (cars && cars.details.length) {
-            if (!carGroup) carGroup = { type: 'car', title: '发车轮次', cls: 'rec-purple', details: [] };
-            carGroup.details.push(...cars.details);
-          }
           if (lakeByRound[r]) {
             flushCarGroup();
             const e = lakeByRound[r];
@@ -588,10 +596,16 @@ Page({
             });
           }
           if (lancelotByRound[r]) {
+            flushCarGroup();
             recordTimeline.push({
               type: 'lancelot', title: '兰斯洛特转换判定', cls: 'rec-purple', round: r,
               switched: !!lancelotByRound[r].switched
             });
+          }
+          const cars = carsHistory.find(c => c.round === r);
+          if (cars && cars.details.length) {
+            if (!carGroup) carGroup = { type: 'car', title: '发车轮次', cls: 'rec-purple', details: [] };
+            cars.details.forEach(d => carGroup.details.push({ ...d, round: r }));
           }
         }
         flushCarGroup();
@@ -654,6 +668,8 @@ Page({
           lakeHistory: lakeHistory,
           lancelotSwaps: res.history ? res.history.lancelotSwaps || [] : [],
           recordTimeline: recordTimeline,
+          showFailDetail: showFailDetail,
+          lastMissionFailCount: lastMissionFailCount,
           speakingOrder: res.current.speakingOrder || 'asc',
           discussionSet: !!res.current.discussionSet,
           speakingOrderIndex: (res.current.speakingOrder || 'asc') === 'desc' ? 1 : 0,

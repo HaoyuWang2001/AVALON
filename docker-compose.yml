@@ -55,6 +55,7 @@ services:
       WX_SECRET: ${WX_SECRET}
     volumes:
       - ../ssl:/app/ssl:ro
+      - ../uploads:/app/uploads
     depends_on:
       mysql:
         condition: service_healthy

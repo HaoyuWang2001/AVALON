@@ -111,7 +111,10 @@
     <block wx:if="{{currentPhase !== 'teamVoteReveal'}}">
     <!-- roleReveal：确认进度 -->
     <block wx:if="{{currentPhase === 'roleReveal'}}">
-      <view class="bar-info">已确认 {{revealConfirmedCount}}/{{revealTotalCount}}</view>
+      <view class="vote-waiting">
+        <view class="vote-waiting-spinner"></view>
+      </view>
+      <view class="bar-info bar-waiting">等待玩家确认身份...{{revealConfirmedCount}}/{{revealTotalCount}}</view>
     </block>
 
     <!-- preNominate：车主预选车型（提交预选） -->
@@ -149,13 +152,6 @@
         <view class="bar-row">
           <button size="mini" class="btn btn-primary" bindtap="endDiscussion">结束讨论</button>
         </view>
-      </block>
-      <!-- 非车长：等待 -->
-      <block wx:else>
-        <view class="vote-waiting">
-          <view class="vote-waiting-spinner"></view>
-        </view>
-        <view class="bar-info bar-waiting">等待车长结束讨论...</view>
       </block>
     </block>
 
@@ -363,7 +359,7 @@
           <!-- 发车轮次：连续发车信息+任务信息 -->
           <block wx:if="{{item.type === 'car'}}">
             <view wx:for="{{item.details}}" wx:for-item="car" wx:key="index" class="info-car">
-              <view class="info-car-line">{{car.forced ? '【强制车】' : ''}}第{{car.index}}车 · 车主<text class="{{car.leaderSeat.isMe ? 'seat-me' : ''}}"> {{car.leaderSeat.seat}}</text>号</view>
+              <view class="info-car-line">{{car.forced ? '【强制车】' : ''}}第{{car.round}}轮 · 第{{car.index}}车 · 车主<text class="{{car.leaderSeat.isMe ? 'seat-me' : ''}}"> {{car.leaderSeat.seat}}</text>号</view>
               <view class="info-car-line">发车：<text wx:for="{{car.sendSeats}}" wx:key="seat" wx:for-item="s" wx:for-index="si" class="{{s.isMe ? 'seat-me' : ''}}">{{si > 0 ? ' ' : ''}}{{s.seat}}</text></view>
               <view class="info-car-line" wx:if="{{car.approveSeats.length}}">同意：<text wx:for="{{car.approveSeats}}" wx:key="seat" wx:for-item="s" wx:for-index="si" class="{{s.isMe ? 'seat-me' : ''}}">{{si > 0 ? ' ' : ''}}{{s.seat}}</text></view>
               <view class="info-car-line" wx:if="{{car.rejectSeats.length}}">反对：<text wx:for="{{car.rejectSeats}}" wx:key="seat" wx:for-item="s" wx:for-index="si" class="{{s.isMe ? 'seat-me' : ''}}">{{si > 0 ? ' ' : ''}}{{s.seat}}</text></view>
@@ -485,6 +481,7 @@
     <view class="mission-anim-center">
       <image src="/images/{{missionAnimSuccess ? 'avalon-blue.png' : 'avalon-red.png'}}" class="mission-anim-img" mode="aspectFit"/>
       <text class="mission-anim-text">{{missionAnimSuccess ? '任务成功' : '任务失败'}}</text>
+      <text wx:if="{{!missionAnimSuccess && showFailDetail}}" class="mission-anim-failcount">失败票数：{{lastMissionFailCount}}</text>
     </view>
   </view>
 

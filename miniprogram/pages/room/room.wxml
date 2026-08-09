@@ -48,7 +48,6 @@
   <view class="card seating-card">
     <view class="card-header">
       <text class="card-title">上座区</text>
-      <text wx:if="{{currentUser && currentUser.seatNumber < 1}}" class="btn-round btn-purple btn-random-seat" bindtap="randomTakeSeat">随机入座</text>
     </view>
     <view class="seats-section" wx:if="{{seatedSeats && seatedSeats.length > 0}}">
       <view wx:for="{{seatedSeats}}" wx:key="number" class="seat-row {{item.occupied ? 'seat-filled' : 'seat-empty'}} {{item.isSelf ? 'seat-self' : ''}}" bindtap="onSeatRowTap" bindlongpress="onPlayerAction" data-id="{{item.player ? item.player.openId : ''}}" data-seat="{{item.number}}">

@@ -1,0 +1,42 @@
+{
+  "roles": {
+    "bot_d1": "loyal",
+    "bot_d2": "merlin",
+    "bot_d3": "loyal",
+    "bot_d4": "loyal",
+    "bot_d5": "lancelotRed",
+    "bot_d6": "assassin",
+    "bot_d7": "mordred",
+    "bot_d8": "lancelotBlue",
+    "bot_d9": "loyal",
+    "bot_d10": "percival",
+    "bot_d11": "oberon",
+    "bot_d12": "morgana"
+  },
+  "assassinate": { "killer": "bot_d6", "target": "bot_d1" },
+  "rounds": {
+    "1": {
+      "team": ["bot_d1", "bot_d2", "bot_d3"],
+      "teamVotes": { "bot_d6": "reject" },
+      "lake": "bot_d12"
+    },
+    "2": {
+      "team": ["bot_d1", "bot_d2", "bot_d3", "bot_d12"],
+      "mission": { "bot_d12": "fail" },
+      "lake": "bot_d1"
+    },
+    "3": {
+      "flowReject": true,
+      "forcedTeam": ["bot_d1", "bot_d2", "bot_d4", "bot_d9", "bot_d10"],
+      "lake": "bot_d2"
+    },
+    "4": {
+      "team": ["bot_d1", "bot_d2", "bot_d3", "bot_d4", "bot_d12", "bot_d6"],
+      "mission": { "bot_d12": "fail", "bot_d6": "fail" },
+      "lake": "bot_d9"
+    },
+    "5": {
+      "team": ["bot_d1", "bot_d2", "bot_d3", "bot_d4", "bot_d9", "bot_d10"]
+    }
+  }
+}

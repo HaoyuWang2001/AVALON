@@ -1,7 +1,7 @@
 // pages/index/index.js
 const api = require('../../services/api.js');
 
-const { DEFAULT_AVATAR } = require('../../utils/constants.js');
+const { DEFAULT_AVATAR, ROLE_NAMES } = require('../../utils/constants.js');
 
 function formatDuration(seconds) {
   const sec = parseInt(seconds, 10) || 0;
@@ -322,38 +322,35 @@ Page({
     this.setData({ 'userInfo.avatarUrl': tempPath });
     app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: tempPath };
 
-    const fs = wx.getFileSystemManager();
-    const savedPath = wx.env.USER_DATA_PATH + '/avatar_' + openId + '.jpg';
-    fs.saveFile({
-      tempFilePath: tempPath,
-      filePath: savedPath,
-      success: () => {
-        wx.setStorageSync('avatarUrl', savedPath);
-        this.setData({ 'userInfo.avatarUrl': savedPath });
-        app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: savedPath };
-        if (openId) {
-          api.updateUserProfile(openId, { avatarUrl: savedPath }).catch(() => {});
-        }
-      },
-      fail: () => {
-        wx.setStorageSync('avatarUrl', tempPath);
+    // 上传至服务器，链接存入数据库（跨设备可见）；失败回退本地保存
+    api.uploadAvatar(openId, tempPath).then((res) => {
+      const url = res.avatarUrl || '';
+      if (url) {
+        wx.setStorageSync('avatarUrl', url);
+        this.setData({ 'userInfo.avatarUrl': url });
+        app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: url };
       }
+    }).catch(() => {
+      wx.showToast({ title: '头像上传失败', icon: 'none' });
+      const fs = wx.getFileSystemManager();
+      const savedPath = wx.env.USER_DATA_PATH + '/avatar_' + openId + '.jpg';
+      fs.saveFile({
+        tempFilePath: tempPath,
+        filePath: savedPath,
+        success: () => {
+          wx.setStorageSync('avatarUrl', savedPath);
+          this.setData({ 'userInfo.avatarUrl': savedPath });
+          app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: savedPath };
+          if (openId) {
+            api.updateUserProfile(openId, { avatarUrl: savedPath }).catch(() => {});
+          }
+        },
+        fail: () => {
+          wx.setStorageSync('avatarUrl', tempPath);
+        }
+      });
     });
   },
-
-  onWxNickInput(e) {
-    const nickName = e.detail.value;
-    if (!nickName) return;
-    this.setData({ 'userInfo.nickName': nickName });
-    const app = getApp();
-    app.globalData.userInfo = { ...app.globalData.userInfo, nickName };
-    const openId = app.globalData.openId;
-    if (openId) {
-      api.updateUserProfile(openId, { wxNickName: nickName }).catch(() => {});
-    }
-  },
-
-  onWxNickBlur() {},
 
   showNickNameModal() {
     const savedNickName = wx.getStorageSync('customNickName') || '';

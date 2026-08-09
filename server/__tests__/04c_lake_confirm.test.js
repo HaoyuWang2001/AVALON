@@ -95,7 +95,7 @@ describe('04c — 湖仙验人两阶段（lake → lakeConfirm → 全员确认 
     const inspectRes = await lakeInspect(gameId, inspectorOpenId, inspectedOpenId);
     expect(inspectRes.success).toBe(true);
     expect(inspectRes.current.phase).toBe('lakeConfirm');
-    expect(inspectRes.current.round).toBe(1);
+    expect(inspectRes.current.round).toBe(2);
     expect(inspectRes.current.lakeHolderOpenId).toBe(inspectedOpenId);
     expect(inspectRes.current.lakeConfirmedCount).toBe(0);
 

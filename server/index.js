@@ -82,6 +82,11 @@ const timerCache = new Map();
 app.use(cors());
 app.use(express.json());
 
+// 上传文件静态服务（头像等）：/uploads/* → 服务器存储目录
+const { UPLOAD_DIR, AVATAR_DIR } = require('./config/uploads');
+fs.mkdirSync(AVATAR_DIR, { recursive: true });
+app.use('/uploads', express.static(UPLOAD_DIR));
+
 // 初始化数据库连接池
 let dbInitialized = false;
 
