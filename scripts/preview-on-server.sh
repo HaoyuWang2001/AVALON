@@ -22,11 +22,15 @@ if [ ! -d "$PREVIEW" ]; then echo "❌ 缺少 $PREVIEW（先 scp preview/）"; e
 if [ ! -f "$KEYS/private.key" ]; then echo "❌ 缺少 $KEYS/private.key（先 scp 上传密钥）"; exit 1; fi
 
 # 容器内跑 miniprogram-ci preview（编译 + 上传微信，固定 IP）
+# miniprogram-preview.js 内部路径基于 __dirname(/preview) 的上层：../miniprogram=/,/miniprogram、
+# ../.keys=/./.keys、../.preview=/./.preview —— 故 .keys 与 .preview 挂载到容器根目录对齐
+mkdir -p "$PREVIEW/.preview"
 echo "🔨 容器内编译并上传微信..."
 docker run --rm \
   -v "$REPO/miniprogram":/miniprogram \
   -v "$PREVIEW":/preview \
-  -v "$KEYS":/keys:ro \
+  -v "$KEYS":/.keys:ro \
+  -v "$PREVIEW/.preview":/.preview \
   -w /preview \
   avalon-server:prod \
   node miniprogram-preview.js
