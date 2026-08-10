@@ -12,6 +12,13 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: 同步仓库
-        run: cd /home/lighthouse/AVALON/AVALON && git fetch --all && git reset --hard origin/main
+        run: |
+          cd /home/lighthouse/AVALON/AVALON
+          for i in 1 2 3 4 5; do
+            git fetch --all --prune && break
+            echo "git fetch 失败(TLS中断)，重试 $i/5"
+            sleep 8
+          done
+          git reset --hard origin/main
       - name: 前端预览
         run: cd /home/lighthouse/AVALON/AVALON && bash scripts/preview-on-server.sh
