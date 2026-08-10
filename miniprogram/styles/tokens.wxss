@@ -58,4 +58,3 @@ page {
   color: var(--text-body);
   line-height: 1.5;
 }
-/* CI 触发验证 */
