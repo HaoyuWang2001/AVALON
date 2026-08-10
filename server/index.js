@@ -410,5 +410,3 @@ module.exports = {
   db,
   dbInitialized
 };
-
-// CI/CD 触发验证：backend workflow
