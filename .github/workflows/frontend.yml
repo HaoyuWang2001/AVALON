@@ -1,0 +1,17 @@
+name: frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'miniprogram/**'
+      - 'scripts/preview-on-server.sh'
+
+jobs:
+  preview:
+    runs-on: self-hosted
+    steps:
+      - name: 同步仓库
+        run: cd /home/lighthouse/AVALON/AVALON && git fetch --all && git reset --hard origin/main
+      - name: 前端预览
+        run: cd /home/lighthouse/AVALON/AVALON && bash scripts/preview-on-server.sh

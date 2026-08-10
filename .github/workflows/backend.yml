@@ -1,0 +1,29 @@
+name: backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'mysql/**'
+      - 'docker-compose.yml'
+      - 'scripts/test-backend.sh'
+      - 'scripts/deploy-backend.sh'
+
+jobs:
+  test:
+    runs-on: self-hosted
+    steps:
+      - name: 同步仓库
+        run: cd /home/lighthouse/AVALON/AVALON && git fetch --all && git reset --hard origin/main
+      - name: 后端测试
+        run: cd /home/lighthouse/AVALON/AVALON && bash scripts/test-backend.sh all
+
+  deploy:
+    needs: test
+    runs-on: self-hosted
+    steps:
+      - name: 同步仓库
+        run: cd /home/lighthouse/AVALON/AVALON && git fetch --all && git reset --hard origin/main
+      - name: 部署后端
+        run: cd /home/lighthouse/AVALON/AVALON && docker compose up -d --build avalon-server
