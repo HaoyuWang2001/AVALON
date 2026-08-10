@@ -26,8 +26,10 @@
     <view class="info-top-row">
       <text class="info-label">会议ID：</text>
       <view class="info-btns">
-        <text class="btn-round btn-copy" bindtap="copyRoomId">复制</text>
-        <button class="btn-round btn-share" style="width: fit-content; min-width: auto;" open-type="share">分享</button>
+        <image class="btn-icon" src="/images/copy.png" mode="aspectFit" bindtap="copyRoomId"></image>
+        <button class="btn-icon-share" open-type="share">
+          <image class="btn-icon" src="/images/share.png" mode="aspectFit"/>
+        </button>
       </view>
     </view>
     <text class="room-id-display">{{roomId}}</text>

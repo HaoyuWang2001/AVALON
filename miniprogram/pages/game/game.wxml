@@ -10,6 +10,9 @@
       <image wx:if="{{playerRole}}" class="top-mini-icon" src="/images/my-role.png" mode="aspectFit" bindtap="openRoleModal"></image>
       <image class="top-mini-icon" src="/images/history.png" mode="aspectFit" bindtap="openInfoModal"></image>
       <image class="top-mini-icon" src="/images/profile.png" mode="aspectFit" bindtap="openConfigView"></image>
+      <button class="top-mini-icon top-mini-share" open-type="share">
+        <image src="/images/share.png" class="top-mini-share-img" mode="aspectFit"/>
+      </button>
     </view>
   </top-bar>
 

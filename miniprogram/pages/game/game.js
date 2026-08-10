@@ -309,6 +309,16 @@ Page({
     api.onSocketStatus(status => { this.onSocketStatusChange(status); });
   },
 
+  onShareAppMessage() {
+    const { gameId, roomId, currentPhase } = this.data;
+    if (currentPhase === 'gameEnd') {
+      // 已结束：分享游戏，任何人可直接查看结果（不加房间）
+      return { title: '鉴赏坏坏们的操作', path: `/pages/game/game?gameId=${gameId}&fromHistory=1` };
+    }
+    // 进行中：分享房间+游戏，访问者自动加入观战并进入对局
+    return { title: '欣赏会议中的牛马', path: `/pages/index/index?roomId=${roomId}&gameId=${gameId}` };
+  },
+
   onShow() {
     this.fetchGameState();
     // 轮询兜底：仅当 socket 未连接（closed/connecting/idle）时启动，避免与实时推送重复

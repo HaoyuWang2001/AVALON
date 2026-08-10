@@ -3,6 +3,8 @@ const api = require('../../services/api.js');
 
 const { DEFAULT_AVATAR, ROLE_NAMES } = require('../../utils/constants.js');
 
+const DEFAULT_SEAT_NUMBER = 0;
+
 function formatDuration(seconds) {
   const sec = parseInt(seconds, 10) || 0;
   if (sec <= 0) return '';
@@ -48,19 +50,20 @@ Page({
       app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: savedAvatar || DEFAULT_AVATAR };
     }
 
-    // 分享链接进入：携带 roomId → 等 openId 就绪后自动加入房间
+    // 分享链接进入：room分享(index?roomId) → doShareJoinFromRoom；game分享(index?roomId&gameId) → doShareJoinFromGame
     const shareRoomId = options && options.roomId;
+    const shareGameId = options && options.gameId;
 
     if (app.globalData.openId) {
       this.loadUserProfile();
       this.loadHistoryAndStats();
-      if (shareRoomId) this.doShareJoin(shareRoomId);
+      this.dispatchShareJoin(shareRoomId, shareGameId);
     } else {
       app.openIdReadyCallback = () => {
         this.loadUserProfile();
         this.checkCurrentRoom();
         this.loadHistoryAndStats();
-        if (shareRoomId) this.doShareJoin(shareRoomId);
+        this.dispatchShareJoin(shareRoomId, shareGameId);
       };
     }
 
@@ -69,32 +72,100 @@ Page({
     }
   },
 
-  // 分享链接加入房间：已在分享房间→直接进入(座位不变)；在其他房间未开始→询问退出后加入；游戏中→不可退出；游戏已开始→自动观战
-  doShareJoin(roomId) {
+  dispatchShareJoin(roomId, gameId) {
+    if (roomId && gameId) this.doShareJoinFromGame(roomId, gameId);
+    else if (roomId) this.doShareJoinFromRoom(roomId);
+  },
+
+  // 来自 room 分享(index?roomId)：行为与 doJoinRoom 一致——room未游戏→room页；room游戏中→game页
+  doShareJoinFromRoom(roomId) {
     const app = getApp();
     if (!app.globalData.openId) return;
     wx.showLoading({ title: '加入房间...', mask: true });
-    api.joinRoom(roomId, 0).then(res => {
+    api.joinRoom(roomId, DEFAULT_SEAT_NUMBER).then(res => {
       wx.hideLoading();
       if (res.success) {
         app.globalData.roomId = roomId;
-        wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}` });
+        const room = res.room || {};
+        if (room.gameStarted && room.activeGameId) {
+          wx.navigateTo({ url: `/pages/game/game?gameId=${room.activeGameId}&roomId=${roomId}` });
+        } else {
+          wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}` });
+        }
         return;
       }
       const msg = (res && res.message) || '';
-      if (msg.includes('已在其他房间')) {
-        this.confirmLeaveAndJoin(roomId);
+      if (msg.includes('已在其他房间') || msg.includes('已在房间中')) {
+        this.confirmLeaveAndJoin(roomId, null);
       } else {
-        wx.showToast({ title: msg || '加入失败', icon: 'none' });
+        wx.showModal({
+          title: '加入失败', content: msg || '加入失败', showCancel: false,
+          success: () => wx.reLaunch({ url: '/pages/index/index' })
+        });
       }
     }).catch(err => {
       wx.hideLoading();
-      wx.showToast({ title: (err && err.message) || '加入失败', icon: 'none' });
+      wx.showModal({
+        title: '加入失败', content: (err && err.message) || '加入失败', showCancel: false,
+        success: () => wx.reLaunch({ url: '/pages/index/index' })
+      });
     });
   },
 
-  // 在其他房间：若旧房间游戏中则不可退出；否则询问后退出并加入新房间
-  confirmLeaveAndJoin(roomId) {
+  // 来自 game 分享(index?roomId&gameId)：进行中→加入观战并进game；已结束→直接进game查看结果
+  doShareJoinFromGame(roomId, gameId) {
+    const app = getApp();
+    if (!app.globalData.openId) return;
+    wx.showLoading({ title: '查看对局...', mask: true });
+    api.getGameState(gameId).then(state => {
+      wx.hideLoading();
+      const status = state && state.basic && state.basic.status;
+      if (status === 'ended') {
+        wx.navigateTo({ url: `/pages/game/game?gameId=${gameId}&fromHistory=1` });
+        return;
+      }
+      if (status !== 'active') {
+        wx.showModal({
+          title: '对局不可用', content: '该对局已失效', showCancel: false,
+          success: () => wx.reLaunch({ url: '/pages/index/index' })
+        });
+        return;
+      }
+      wx.showLoading({ title: '加入观战...', mask: true });
+      api.joinRoom(roomId, DEFAULT_SEAT_NUMBER).then(res => {
+        wx.hideLoading();
+        if (res.success) {
+          app.globalData.roomId = roomId;
+          wx.navigateTo({ url: `/pages/game/game?gameId=${gameId}&roomId=${roomId}` });
+          return;
+        }
+        const msg = (res && res.message) || '';
+        if (msg.includes('已在其他房间') || msg.includes('已在房间中')) {
+          this.confirmLeaveAndJoin(roomId, gameId);
+        } else {
+          wx.showModal({
+            title: '无法观战', content: msg || '观战区已满或不可加入', showCancel: false,
+            success: () => wx.reLaunch({ url: '/pages/index/index' })
+          });
+        }
+      }).catch(err => {
+        wx.hideLoading();
+        wx.showModal({
+          title: '加入失败', content: (err && err.message) || '加入失败', showCancel: false,
+          success: () => wx.reLaunch({ url: '/pages/index/index' })
+        });
+      });
+    }).catch(err => {
+      wx.hideLoading();
+      wx.showModal({
+        title: '对局不可用', content: (err && err.message) || '获取对局失败', showCancel: false,
+        success: () => wx.reLaunch({ url: '/pages/index/index' })
+      });
+    });
+  },
+
+  // 在其他房间：若旧房间游戏中则不可退出；否则询问后退出并加入新房间（gameId 有则跳 game，无则跳 room）
+  confirmLeaveAndJoin(roomId, gameId) {
     const app = getApp();
     api.getCurrentRoom(app.globalData.openId).then(res => {
       const cur = res && res.room;
@@ -112,11 +183,15 @@ Page({
               api.leaveRoom(cur.roomId).then(leaveRes => {
                 if (leaveRes.success) {
                   wx.showLoading({ title: '加入房间...', mask: true });
-                  api.joinRoom(roomId, 0).then(res2 => {
+                  api.joinRoom(roomId, DEFAULT_SEAT_NUMBER).then(res2 => {
                     wx.hideLoading();
                     if (res2.success) {
                       app.globalData.roomId = roomId;
-                      wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}` });
+                      if (gameId) {
+                        wx.navigateTo({ url: `/pages/game/game?gameId=${gameId}&roomId=${roomId}` });
+                      } else {
+                        wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}` });
+                      }
                     } else {
                       wx.showToast({ title: (res2 && res2.message) || '加入失败', icon: 'none' });
                     }
@@ -127,7 +202,7 @@ Page({
               });
             } else {
               // 无旧房间信息，直接重新加入
-              this.doShareJoin(roomId);
+              this.dispatchShareJoin(roomId, gameId);
             }
           }
         }
@@ -398,21 +473,27 @@ Page({
         if (res.confirm && res.content) {
           const roomId = res.content.trim();
           if (roomId.length === 6) {
-            this.doJoinRoom(roomId, 0);
+            this.doJoinRoom(roomId);
           }
         }
       }
     });
   },
 
-  doJoinRoom(roomId, seatNumber) {
+  // 主页"加入会议"入口：固定未入座(seat=0)；room未游戏→room页；room游戏中→game页
+  doJoinRoom(roomId) {
     wx.showLoading({ title: '加入会议中...' });
-    api.joinRoom(roomId, seatNumber).then(res => {
+    api.joinRoom(roomId, DEFAULT_SEAT_NUMBER).then(res => {
       wx.hideLoading();
       if (res.success) {
         const app = getApp();
         app.globalData.roomId = roomId;
-        wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}&isHost=false` });
+        const room = res.room || {};
+        if (room.gameStarted && room.activeGameId) {
+          wx.navigateTo({ url: `/pages/game/game?gameId=${room.activeGameId}&roomId=${roomId}` });
+        } else {
+          wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}&isHost=false` });
+        }
       }
     });
   }

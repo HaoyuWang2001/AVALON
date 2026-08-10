@@ -217,7 +217,12 @@ button::after { border: none; }
 .room-info-card { background: #fff; }
 .info-top-row { display: flex; align-items: center; justify-content: space-between; }
 .info-label { font-size: 26rpx; color: var(--gray-500); margin-left: 4rpx; }
-.info-btns { display: flex; gap: 12rpx; }
+.info-btns { display: flex; gap: 12rpx; align-items: center; }
+
+/* 复制/分享图标按钮 */
+.btn-icon { width: 48rpx; height: 48rpx; display: block; }
+.btn-icon-share { padding: 0; margin: 0; background: transparent; line-height: normal; }
+.btn-icon-share::after { border: none; }
 .room-id-display {
   display: block; text-align: center; font-size: 56rpx; font-weight: 800;
   color: var(--primary); letter-spacing: 8rpx; margin: 20rpx 0;
