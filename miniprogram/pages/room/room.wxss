@@ -219,9 +219,18 @@ button::after { border: none; }
 .info-label { font-size: 26rpx; color: var(--gray-500); margin-left: 4rpx; }
 .info-btns { display: flex; gap: 12rpx; align-items: center; }
 
-/* 复制/分享图标按钮 */
-.btn-icon { width: 48rpx; height: 48rpx; display: block; }
-.btn-icon-share { padding: 0; margin: 0; background: transparent; line-height: normal; }
+/* 复制/分享图标按钮（白图标 + 紫色底） */
+.btn-icon {
+  width: 60rpx; height: 60rpx; display: block;
+  border-radius: 12rpx;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  padding: 10rpx; box-sizing: border-box;
+}
+.btn-icon-share {
+  width: 60rpx; height: 60rpx; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 !important; margin: 0 !important; background: transparent; line-height: normal;
+}
 .btn-icon-share::after { border: none; }
 .room-id-display {
   display: block; text-align: center; font-size: 56rpx; font-weight: 800;
@@ -324,5 +333,3 @@ button::after { border: none; }
   line-height: 1.7;
 }
 .cv-strong { font-weight: 700; color: #111827; }
-.config-view-close { margin-top: 32rpx; }
-.cv-close-btn { background: #e5e7eb; color: #374151; }

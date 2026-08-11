@@ -27,7 +27,7 @@
       <text class="info-label">会议ID：</text>
       <view class="info-btns">
         <image class="btn-icon" src="/images/copy.png" mode="aspectFit" bindtap="copyRoomId"></image>
-        <button class="btn-icon-share" open-type="share">
+        <button size="mini" class="btn-icon-share" open-type="share">
           <image class="btn-icon" src="/images/share.png" mode="aspectFit"/>
         </button>
       </view>

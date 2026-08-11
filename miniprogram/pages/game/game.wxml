@@ -2,17 +2,19 @@
 <view class="game-page">
   <!-- 顶部操作栏（公共组件）：始终显示；gameEnd 时隐藏左侧 ×/− 图标，保留身份/历史/配置 -->
   <top-bar>
-    <view slot="left" class="top-icons" wx:if="{{currentPhase !== 'gameEnd'}}">
-      <text class="top-icon top-icon-danger" bindtap="abandonGame" wx:if="{{isHost}}">✕</text>
-      <text class="top-icon top-icon-home" bindtap="backToHome">−</text>
+    <view slot="left" class="top-icons">
+      <block wx:if="{{currentPhase !== 'gameEnd'}}">
+        <text class="top-icon top-icon-danger" bindtap="abandonGame" wx:if="{{isHost}}">✕</text>
+        <text class="top-icon top-icon-home" bindtap="backToHome">−</text>
+      </block>
+      <button size="mini" class="top-mini-share" open-type="share">
+        <image class="top-mini-icon" src="/images/share.png" mode="aspectFit"/>
+      </button>
     </view>
     <view slot="right" class="top-mini-actions">
       <image wx:if="{{playerRole}}" class="top-mini-icon" src="/images/my-role.png" mode="aspectFit" bindtap="openRoleModal"></image>
       <image class="top-mini-icon" src="/images/history.png" mode="aspectFit" bindtap="openInfoModal"></image>
       <image class="top-mini-icon" src="/images/profile.png" mode="aspectFit" bindtap="openConfigView"></image>
-      <button class="top-mini-icon top-mini-share" open-type="share">
-        <image src="/images/share.png" class="top-mini-share-img" mode="aspectFit"/>
-      </button>
     </view>
   </top-bar>
 
