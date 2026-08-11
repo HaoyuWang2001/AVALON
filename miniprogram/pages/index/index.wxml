@@ -44,10 +44,10 @@
   <view class="card action-card" wx:if="{{!currentRoom}}">
     <view class="action-title">开始游戏</view>
     <button class="action-btn action-btn-primary" bindtap="openConfigs">
-      <text class="btn-icon">🎮</text>召开会议
+      召开会议
     </button>
     <button class="action-btn action-btn-primary" bindtap="joinRoom">
-      <text class="btn-icon">🚪</text>加入会议
+      加入会议
     </button>
   </view>
 
