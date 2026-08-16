@@ -82,7 +82,7 @@ Page({
     const app = getApp();
     if (!app.globalData.openId) return;
     wx.showLoading({ title: '加入房间...', mask: true });
-    api.joinRoom(roomId, DEFAULT_SEAT_NUMBER).then(res => {
+    api.joinRoom(roomId, DEFAULT_SEAT_NUMBER, this.data.userInfo || {}).then(res => {
       wx.hideLoading();
       if (res.success) {
         app.globalData.roomId = roomId;
@@ -132,7 +132,7 @@ Page({
         return;
       }
       wx.showLoading({ title: '加入观战...', mask: true });
-      api.joinRoom(roomId, DEFAULT_SEAT_NUMBER).then(res => {
+      api.joinRoom(roomId, DEFAULT_SEAT_NUMBER, this.data.userInfo || {}).then(res => {
         wx.hideLoading();
         if (res.success) {
           app.globalData.roomId = roomId;
@@ -483,7 +483,7 @@ Page({
   // 主页"加入会议"入口：固定未入座(seat=0)；room未游戏→room页；room游戏中→game页
   doJoinRoom(roomId) {
     wx.showLoading({ title: '加入会议中...' });
-    api.joinRoom(roomId, DEFAULT_SEAT_NUMBER).then(res => {
+    api.joinRoom(roomId, DEFAULT_SEAT_NUMBER, this.data.userInfo || {}).then(res => {
       wx.hideLoading();
       if (res.success) {
         const app = getApp();

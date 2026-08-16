@@ -290,6 +290,16 @@ class RoomModel {
         const roomOwnerId = rooms[0].owner_id;
         const isRoomOwner = openId === roomOwnerId;
         
+        // 用户已存资料兜底：请求未携带头像/昵称时回查 users 表（头像上传后存于 users.avatar_url）
+        const [userRows] = await connection.execute(
+          'SELECT avatar_url, custom_nick_name, wx_nick_name FROM users WHERE open_id = ?',
+          [openId]
+        );
+        const dbUser = userRows[0] || {};
+        const finalNickName = customNickName || userInfo.nickName || dbUser.custom_nick_name || dbUser.wx_nick_name || '匿名玩家';
+        const finalWxNickName = userInfo.wxNickName || dbUser.wx_nick_name || '';
+        const finalAvatarUrl = userInfo.avatarUrl || dbUser.avatar_url || '';
+        
         // 游戏进行中：仅允许以观战者身份加入（自动落座 -1）
         let effectiveSeat = seat;
         if (gameStarted) {
@@ -324,7 +334,7 @@ class RoomModel {
         
         await connection.execute(
           'INSERT INTO room_players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_ready, created_at) VALUES (?, ?, ?, ?, ?, ?, FALSE, NOW())',
-          [roomId, openId, nickName, wxNickName, userInfo.avatarUrl || '', effectiveSeat]
+          [roomId, openId, finalNickName, finalWxNickName, finalAvatarUrl, effectiveSeat]
         );
         await connection.execute(
           'INSERT INTO users (open_id, current_room_id, updated_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE current_room_id = VALUES(current_room_id), updated_at = NOW()',

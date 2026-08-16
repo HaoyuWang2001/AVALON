@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const db = require('../config/db');
 const UserModel = require('../models/UserModel');
 const { AVATAR_DIR } = require('../config/uploads');
 
@@ -111,6 +112,9 @@ function createRouter() {
         }
 
         const user = await UserModel.updateProfile(openId, { avatarUrl });
+
+        // 已入座房间即时刷新：同步更新该玩家在房间内的头像（房间页轮询自动获取）
+        await db.query('UPDATE room_players SET avatar_url = ? WHERE open_id = ?', [avatarUrl, openId]);
 
         res.json({
           success: true,

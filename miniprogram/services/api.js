@@ -70,18 +70,20 @@ class ApiService {
 
   async joinRoom(roomId, seatNumber, userInfo = {}) {
     const openId = this.openId || getApp().globalData.openId;
+    const storedAvatar = wx.getStorageSync('avatarUrl') || '';
+    const storedNick = wx.getStorageSync('customNickName') || '';
     return this.request('/rooms/join', {
       method: 'POST',
       data: {
         roomId,
         userInfo: {
           openId,
-          nickName: userInfo.nickName || this.nickName || wx.getStorageSync('customNickName') || '玩家',
+          nickName: userInfo.nickName || this.nickName || storedNick || '玩家',
           wxNickName: userInfo.nickName || '',
-          avatarUrl: userInfo.avatarUrl || ''
+          avatarUrl: userInfo.avatarUrl || storedAvatar || ''
         },
         seatNumber,
-        customNickName: wx.getStorageSync('customNickName') || ''
+        customNickName: storedNick || ''
       }
     });
   }
