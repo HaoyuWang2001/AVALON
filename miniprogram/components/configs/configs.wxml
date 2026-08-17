@@ -96,7 +96,9 @@
               <view class="rule-row" wx:if="{{ladyOfTheLake}}">
                 <text class="rule-label">生效轮次</text>
                 <picker class="rule-picker-overlay" mode="selector" range="{{[1,2,3,4]}}" value="{{ladyOfTheLakeRound - 1}}" bindchange="onLadyRoundChange">
-                  <text class="rule-picker">第 {{ladyOfTheLakeRound}} 轮发车成功后可用</text>
+                  <view class="rule-picker-fill">
+                    <text class="rule-picker">第 {{ladyOfTheLakeRound}} 轮发车成功后可用</text>
+                  </view>
                 </picker>
               </view>
             </view>
@@ -115,7 +117,9 @@
                   <text class="rule-desc">每轮最多流车 {{rules.maxFailedNominations}} 次，第 {{rules.maxFailedNominations + 1}} 辆车直接发出</text>
                 </view>
                 <picker class="rule-picker-overlay" mode="selector" range="{{[1,2,3,4,5]}}" value="{{rules.maxFailedNominations - 1}}" data-field="maxFailedNominations" data-range="{{[1,2,3,4,5]}}" bindchange="onRulePicker">
-                  <text class="rule-picker">{{rules.maxFailedNominations}} 次</text>
+                  <view class="rule-picker-fill">
+                    <text class="rule-picker">{{rules.maxFailedNominations}} 次</text>
+                  </view>
                 </picker>
               </view>
               <view class="rule-row">
@@ -185,7 +189,9 @@
                   <text class="rule-desc">第几轮结束、下一轮开始时抽取身份转换卡（1-4）</text>
                 </view>
                 <picker class="rule-picker-overlay" mode="selector" range="{{[1,2,3,4]}}" value="{{rules.lancelotSwapRound - 1}}" data-field="lancelotSwapRound" data-range="{{[1,2,3,4]}}" bindchange="onRulePicker">
-                  <text class="rule-picker">第 {{rules.lancelotSwapRound}} 轮</text>
+                  <view class="rule-picker-fill">
+                    <text class="rule-picker">第 {{rules.lancelotSwapRound}} 轮</text>
+                  </view>
                 </picker>
               </view>
               <view class="rule-row">
@@ -194,7 +200,9 @@
                   <text class="rule-desc">卡组中"身份转换"卡张数（抽中则蓝红兰互换阵营）</text>
                 </view>
                 <picker class="rule-picker-overlay" mode="selector" range="{{[1,2,3,4,5]}}" value="{{rules.lancelotSwitchCards - 1}}" data-field="lancelotSwitchCards" data-range="{{[1,2,3,4,5]}}" bindchange="onRulePicker">
-                  <text class="rule-picker">{{rules.lancelotSwitchCards}} 张</text>
+                  <view class="rule-picker-fill">
+                    <text class="rule-picker">{{rules.lancelotSwitchCards}} 张</text>
+                  </view>
                 </picker>
               </view>
               <view class="rule-row">
@@ -203,7 +211,9 @@
                   <text class="rule-desc">卡组中"身份保持"卡张数（抽中则不转换）</text>
                 </view>
                 <picker class="rule-picker-overlay" mode="selector" range="{{[1,2,3,4,5]}}" value="{{rules.lancelotKeepCards - 1}}" data-field="lancelotKeepCards" data-range="{{[1,2,3,4,5]}}" bindchange="onRulePicker">
-                  <text class="rule-picker">{{rules.lancelotKeepCards}} 张</text>
+                  <view class="rule-picker-fill">
+                    <text class="rule-picker">{{rules.lancelotKeepCards}} 张</text>
+                  </view>
                 </picker>
               </view>
               <view class="rule-row" wx:if="{{selectedRoles.lancelotRed}}">
@@ -239,7 +249,9 @@
               <view class="rule-row">
                 <text class="rule-label">发言限时</text>
                 <picker class="rule-picker-overlay" mode="selector" range="{{speechOptions}}" value="{{speechTimeoutIndex}}" data-field="speechTimeoutIndex" bindchange="onLimitChange">
-                  <text class="rule-picker">{{speechOptions[speechTimeoutIndex]}}</text>
+                  <view class="rule-picker-fill">
+                    <text class="rule-picker">{{speechOptions[speechTimeoutIndex]}}</text>
+                  </view>
                 </picker>
               </view>
               <view class="rule-row">
@@ -257,7 +269,9 @@
               <view class="rule-row">
                 <text class="rule-label">票型展示时长</text>
                 <picker class="rule-picker-overlay" mode="selector" range="{{voteRevealOptions}}" value="{{voteRevealDurationIndex}}" data-field="voteRevealDurationIndex" bindchange="onLimitChange">
-                  <text class="rule-picker">{{voteRevealOptions[voteRevealDurationIndex]}}</text>
+                  <view class="rule-picker-fill">
+                    <text class="rule-picker">{{voteRevealOptions[voteRevealDurationIndex]}}</text>
+                  </view>
                 </picker>
               </view>
               <view class="rule-hint">

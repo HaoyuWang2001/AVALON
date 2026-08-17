@@ -278,8 +278,6 @@ class RoomModel {
    */
   static async join(roomId, userInfo, seatNumber, customNickName = '') {
     const openId = userInfo.openId;
-    const nickName = customNickName || userInfo.nickName || '匿名玩家';
-    const wxNickName = userInfo.wxNickName || '';
     const seat = (seatNumber == null) ? 0 : seatNumber;
     
     try {
@@ -291,14 +289,16 @@ class RoomModel {
         const isRoomOwner = openId === roomOwnerId;
         
         // 用户已存资料兜底：请求未携带头像/昵称时回查 users 表（头像上传后存于 users.avatar_url）
+        // 仅接受 http(s) 头像链接，本机路径(/images、wxfile、USER_DATA_PATH)一律视为无头像
         const [userRows] = await connection.execute(
           'SELECT avatar_url, custom_nick_name, wx_nick_name FROM users WHERE open_id = ?',
           [openId]
         );
         const dbUser = userRows[0] || {};
+        const httpUrl = u => /^https?:\/\//i.test(u || '') ? u : '';
         const finalNickName = customNickName || userInfo.nickName || dbUser.custom_nick_name || dbUser.wx_nick_name || '匿名玩家';
         const finalWxNickName = userInfo.wxNickName || dbUser.wx_nick_name || '';
-        const finalAvatarUrl = userInfo.avatarUrl || dbUser.avatar_url || '';
+        const finalAvatarUrl = httpUrl(userInfo.avatarUrl) || httpUrl(dbUser.avatar_url) || '';
         
         // 游戏进行中：仅允许以观战者身份加入（自动落座 -1）
         let effectiveSeat = seat;

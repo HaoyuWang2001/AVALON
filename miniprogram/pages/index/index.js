@@ -326,7 +326,7 @@ Page({
           updates.customNickName = u.customNickName;
           wx.setStorageSync('customNickName', u.customNickName);
         }
-        if (u.avatarUrl) {
+        if (u.avatarUrl && /^https?:\/\//i.test(u.avatarUrl)) {
           updates['userInfo.avatarUrl'] = u.avatarUrl;
           wx.setStorageSync('avatarUrl', u.avatarUrl);
         }
@@ -416,9 +416,6 @@ Page({
           wx.setStorageSync('avatarUrl', savedPath);
           this.setData({ 'userInfo.avatarUrl': savedPath });
           app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: savedPath };
-          if (openId) {
-            api.updateUserProfile(openId, { avatarUrl: savedPath }).catch(() => {});
-          }
         },
         fail: () => {
           wx.setStorageSync('avatarUrl', tempPath);

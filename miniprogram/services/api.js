@@ -70,8 +70,10 @@ class ApiService {
 
   async joinRoom(roomId, seatNumber, userInfo = {}) {
     const openId = this.openId || getApp().globalData.openId;
-    const storedAvatar = wx.getStorageSync('avatarUrl') || '';
     const storedNick = wx.getStorageSync('customNickName') || '';
+    // 仅发送服务端可访问的 http(s) 头像链接；本地路径(/images、wxfile、USER_DATA_PATH)发空串交由服务端回查 users 表
+    const httpUrl = u => /^https?:\/\//i.test(u || '') ? u : '';
+    const avatarUrl = httpUrl(userInfo.avatarUrl) || httpUrl(wx.getStorageSync('avatarUrl')) || '';
     return this.request('/rooms/join', {
       method: 'POST',
       data: {
@@ -80,7 +82,7 @@ class ApiService {
           openId,
           nickName: userInfo.nickName || this.nickName || storedNick || '玩家',
           wxNickName: userInfo.nickName || '',
-          avatarUrl: userInfo.avatarUrl || storedAvatar || ''
+          avatarUrl
         },
         seatNumber,
         customNickName: storedNick || ''

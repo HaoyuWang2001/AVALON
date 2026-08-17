@@ -65,7 +65,8 @@ function createRouter() {
       const data = {};
       if (wxNickName !== undefined) data.wxNickName = wxNickName;
       if (customNickName !== undefined) data.customNickName = customNickName;
-      if (avatarUrl !== undefined) data.avatarUrl = avatarUrl;
+      // 仅接受 http(s) 头像链接；本机路径(/images、wxfile、USER_DATA_PATH)直接忽略，避免污染跨设备头像
+      if (avatarUrl !== undefined && /^https?:\/\//i.test(avatarUrl || '')) data.avatarUrl = avatarUrl;
 
       if (Object.keys(data).length === 0) {
         return res.status(400).json({ success: false, message: '没有要更新的字段' });
