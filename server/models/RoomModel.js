@@ -561,7 +561,11 @@ class RoomModel {
     }
     if (seated.length !== playerCount) throw new Error('上座区未坐满');
 
-    const shuffled = [...seated].sort(() => Math.random() - 0.5);
+    const shuffled = [...seated];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     const seatNumbers = seated.map(p => p.seatNumber).sort((a, b) => a - b);
 
     await db.transaction(async (connection) => {

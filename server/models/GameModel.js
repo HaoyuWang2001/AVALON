@@ -1,6 +1,7 @@
 // 游戏数据模型
 const db = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
+const { randomInt } = require('node:crypto');
 
 // mysql2 默认会把 JSON 列解析为 JS 对象，因此读取时需兼容 string 与 object
 function parseJson(value) {
@@ -204,8 +205,8 @@ class GameModel {
         }
         const shuffledRoles = this.shuffleArray(roles);
         
-        // 4. 创建游戏记录（首位车长 = 当前时钟分钟 % 玩家人数；湖仙初始持有者 = 首车主 seat-1 取模，仅湖仙启用时）
-        const firstLeaderIndex = playerCount > 0 ? (new Date().getMinutes() % playerCount) : 0;
+        // 4. 创建游戏记录（首位车长 = 均匀随机；湖仙初始持有者 = 首车主 seat-1 取模，仅湖仙启用时）
+        const firstLeaderIndex = playerCount > 0 ? randomInt(playerCount) : 0;
         const firstLakeHolderIndex = (firstLeaderIndex - 1 + playerCount) % playerCount;
         const lakeEnabled = !!(roomConfig && roomConfig.rules && roomConfig.rules.ladyOfTheLake);
         const firstLakeHolderOpenId = lakeEnabled && players[firstLakeHolderIndex] ? players[firstLakeHolderIndex].openId : null;

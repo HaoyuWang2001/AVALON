@@ -30,7 +30,6 @@ const DUAL_LANCELOT = BOARDS.filter(b => {
 async function startBoard(config) {
   const n = config.roles.good.length + config.roles.evil.length;
   const { roomId, hostId } = await createRoomWithPlayers(n, config);
-  const m = new Date().getMinutes();
   const start = await startGame(roomId, hostId);
   if (!start.success) throw new Error(`start failed: ${JSON.stringify(start)}`);
   const gameId = start.gameId;
@@ -38,7 +37,7 @@ async function startBoard(config) {
   const fullPlayers = state.players.map(p => ({
     openId: p.openId, role: p.role, side: p.side, seatNumber: p.seatNumber
   }));
-  return { gameId, roomId, hostId, players: fullPlayers, m, leaderIndex: fullPlayers.findIndex(p => p.openId === state.current.teamLeaderOpenId) };
+  return { gameId, roomId, hostId, players: fullPlayers, leaderIndex: fullPlayers.findIndex(p => p.openId === state.current.teamLeaderOpenId) };
 }
 
 async function visionOf(gameId, openId) {
@@ -83,14 +82,12 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
   describe.each(BOARDS)('B $name', ({ config }) => {
     let gameId;
     let players;
-    let m;
     let leaderIndex;
 
     beforeAll(async () => {
       const r = await startBoard(config());
       gameId = r.gameId;
       players = r.players;
-      m = r.m;
       leaderIndex = r.leaderIndex;
     });
 
@@ -115,9 +112,10 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
       expect(seats.every(s => s >= 1 && s <= N)).toBe(true);
     });
 
-    it('T6 首位车长 = 当前分钟 % N（±1）', () => {
+    it('T6 首位车长在合法范围内（均匀随机）', () => {
       const N = players.length;
-      expect([m % N, (m + 1) % N]).toContain(leaderIndex);
+      expect(leaderIndex).toBeGreaterThanOrEqual(0);
+      expect(leaderIndex).toBeLessThan(N);
     });
 
     it('T7 每玩家有合法 role', () => {
