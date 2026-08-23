@@ -1,5 +1,5 @@
 <!--pages/index/index.wxml-->
-<view class="page">
+<view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
   <view class="logo-section">
     <view class="logo-icon"><text>🏰</text></view>
     <view class="logo-title">AVALON</view>
@@ -18,7 +18,8 @@
           </view>
           <view class="user-status {{userStatusClass}}">{{userStatusText}}</view>
         </view>
-        <view class="user-emoji-btn" bindtap="showInfoModal">ℹ️</view>
+        <view class="user-emoji-btn" hover-class="user-emoji-hover" hover-stay-time="60" bindtap="showInfoModal">ℹ️</view>
+        <theme-toggle bind:change="onThemeChange" />
       </view>
     </view>
   </view>
@@ -49,7 +50,6 @@
       <view class="gacha-main-info">
         <text class="gacha-main-title">召开会议</text>
       </view>
-      <view class="rarity-badge rarity-legend">开瓦</view>
     </view>
 
     <!-- 副卡行：加入会议（安排） + 牛马朋友（彩蛋） -->
@@ -59,7 +59,6 @@
         <view class="gacha-sub-info">
           <text class="gacha-sub-title">加入会议</text>
         </view>
-        <view class="rarity-badge rarity-legend">安排</view>
       </view>
 
       <view class="gacha-card gacha-sub gacha-egg" hover-class="card-hover" hover-stay-time="80" bindtap="goToFriends">
@@ -67,7 +66,7 @@
         <view class="gacha-sub-info">
           <text class="gacha-sub-title">牛马朋友</text>
         </view>
-        <view class="rarity-badge rarity-legend">彩蛋</view>
+        <view class="rarity-badge rarity-rainbow">彩蛋</view>
       </view>
     </view>
   </view>
@@ -96,7 +95,7 @@
   <view class="card history-card" wx:if="{{historyList.length > 0}}">
     <view class="history-title">历史对局</view>
     <view class="history-stats" wx:if="{{totalWinRate}}">
-      总胜率 {{totalWinRate}} · 蓝方 {{goodWinRate}} · 红方 {{evilWinRate}}
+      {{totalRecord}} · 总胜率 {{totalWinRate}} · 蓝方 {{goodWinRate}} · 红方 {{evilWinRate}}
     </view>
     <scroll-view scroll-y class="history-scroll" show-scrollbar="{{false}}">
       <view class="history-item" wx:for="{{historyList}}" wx:key="gameId"
@@ -109,20 +108,20 @@
   </view>
 
   <view class="footer"><view class="footer-version">AVALON v1.0.0</view></view>
-</view>
 
-<!-- 游戏说明：全屏覆盖页 -->
-<view class="rules-page" wx:if="{{showInfo}}">
-  <view class="rules-page-header">
-    <text class="rules-page-title">游戏说明</text>
-    <view class="rules-page-close" bindtap="closeInfo">✕</view>
+  <!-- 游戏说明：全屏覆盖页（置于 .page 内以继承主题变量） -->
+  <view class="rules-page" wx:if="{{showInfo}}">
+    <view class="rules-page-header">
+      <text class="rules-page-title">游戏说明</text>
+      <view class="rules-page-close" bindtap="closeInfo">✕</view>
+    </view>
+    <scroll-view scroll-y class="rules-page-body">
+      <view class="info-item">• 5-12 人，支持标准板与自定义板子</view>
+      <view class="info-item">• 支持多样村规，可扩展性拉满</view>
+      <view class="info-item">• 支持线上发牌与线下发牌+小程序发车两种模式</view>
+      <view class="info-item">• 支持查看历史对局和胜率统计</view>
+    </scroll-view>
   </view>
-  <scroll-view scroll-y class="rules-page-body">
-    <view class="info-item">• 5-12 人，支持标准板与自定义板子</view>
-    <view class="info-item">• 支持多样村规，可扩展性拉满</view>
-    <view class="info-item">• 支持线上发牌与线下发牌+小程序发车两种模式</view>
-    <view class="info-item">• 支持查看历史对局和胜率统计</view>
-  </scroll-view>
 </view>
 
 <!-- ─────────── Config Modal ─────────── -->

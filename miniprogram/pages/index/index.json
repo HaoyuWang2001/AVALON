@@ -2,6 +2,7 @@
   "navigationBarTitleText": "AVALON",
   "enablePullDownRefresh": true,
   "usingComponents": {
-    "configs": "/components/configs/configs"
+    "configs": "/components/configs/configs",
+    "theme-toggle": "/components/theme-toggle/theme-toggle"
   }
 }

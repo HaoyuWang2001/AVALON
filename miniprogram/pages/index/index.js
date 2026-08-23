@@ -1,5 +1,6 @@
 // pages/index/index.js
 const api = require('../../services/api.js');
+const { getThemeClass, getThemeBg } = require('../../utils/theme.js');
 
 const { DEFAULT_AVATAR, ROLE_NAMES, ROLE_EMOJIS, CONFIG_EVIL_ROLES } = require('../../utils/constants.js');
 
@@ -26,7 +27,9 @@ Page({
     userStatusClass: 'status-online',
 
     showInfo: false,
+    themeClass: '',
     historyList: [],
+    totalRecord: '',
     totalWinRate: '',
     goodWinRate: '',
     evilWinRate: '',
@@ -70,6 +73,16 @@ Page({
     if (app.globalData.openId) {
       this.checkCurrentRoom();
     }
+
+    // 主题初始化
+    const tc = getThemeClass();
+    this.setData({ themeClass: tc });
+    wx.setBackgroundColor({ backgroundColor: getThemeBg(tc) });
+  },
+
+  // 主题切换（theme-toggle 组件触发）
+  onThemeChange(e) {
+    this.setData({ themeClass: e.detail.themeClass });
   },
 
   dispatchShareJoin(roomId, gameId) {
@@ -217,6 +230,13 @@ Page({
       this.checkCurrentRoom();
       this.loadHistoryAndStats();
     }
+    // 返回本页时重新应用主题背景（离开时已复位，保证其他亮色页面不串色）
+    wx.setBackgroundColor({ backgroundColor: getThemeBg(this.data.themeClass) });
+  },
+
+  onHide() {
+    // 离开本页：窗口背景复位为默认亮色，避免暗色泄漏到 room/game 等亮色页面
+    wx.setBackgroundColor({ backgroundColor: '#F5F5F5' });
   },
 
   onPullDownRefresh() {
@@ -365,6 +385,7 @@ Page({
           winRate: r.winRate + '%'
         }));
         this.setData({
+          totalRecord: s.totalGames > 0 ? s.totalWins + '/' + s.totalGames : '',
           totalWinRate: s.totalGames > 0 ? s.totalWinRate + '%' : '',
           goodWinRate: s.goodGames > 0 ? s.goodWinRate + '%' : '',
           evilWinRate: s.evilGames > 0 ? s.evilWinRate + '%' : '',

@@ -15,24 +15,24 @@
 .logo-icon { width: 120rpx; height: 120rpx; margin: 0 auto 24rpx; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); border-radius: 32rpx; display: flex; align-items: center; justify-content: center; box-shadow: 0 12rpx 32rpx rgba(124,58,237,0.25); }
 .logo-icon text { font-size: 60rpx; }
 .logo-title { font-size: 48rpx; font-weight: 800; background: linear-gradient(135deg, var(--primary-deep), var(--primary-deeper)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 6rpx; }
-.logo-subtitle { font-size: 26rpx; color: var(--gray-400); margin-top: 8rpx; letter-spacing: 4rpx; }
+.logo-subtitle { font-size: 26rpx; color: var(--text-muted); margin-top: 8rpx; letter-spacing: 4rpx; }
 
-.user-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); display: flex; align-items: center; flex-shrink: 0; }
+.user-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); display: flex; align-items: center; flex-shrink: 0; }
 .user-info-section { width: 100%; }
 .user-left { display: flex; align-items: center; width: 100%; }
-.avatar-btn { position: relative; width: 100rpx !important; height: 100rpx !important; border: 6rpx solid #C4B5FD; background: #FFFFFF; border-radius: 50%; overflow: hidden; padding: 0 !important; margin: 0 !important; flex-shrink: 0; box-sizing: border-box; display: flex !important; align-items: center; justify-content: center; line-height: normal; }
+.avatar-btn { position: relative; width: 100rpx !important; height: 100rpx !important; border: 6rpx solid #C4B5FD; background: var(--bg-card); border-radius: 50%; overflow: hidden; padding: 0 !important; margin: 0 !important; flex-shrink: 0; box-sizing: border-box; display: flex !important; align-items: center; justify-content: center; line-height: normal; }
 .avatar-btn::after { border: none; display: none; }
 .avatar-img { width: 88rpx; height: 88rpx; border-radius: 50%; display: block; }
 .user-details { margin-left: 24rpx; flex: 1; min-width: 0; }
-.user-name-text { font-size: 34rpx; font-weight: 700; color: #000; height: 50rpx; line-height: 50rpx; }
-.name-placeholder { color: var(--gray-400); font-weight: 400; }
+.user-name-text { font-size: 34rpx; font-weight: 700; color: var(--text-title); height: 50rpx; line-height: 50rpx; }
+.name-placeholder { color: var(--text-muted); font-weight: 400; }
 .user-edit-emoji { margin-left: 8rpx; font-size: 30rpx; }
 .user-status { font-size: 28rpx; color: var(--success); margin-top: 4rpx; display: flex; align-items: center; }
 .user-status::before { content: ''; width: 12rpx; height: 12rpx; background: var(--success); border-radius: 50%; margin-right: 10rpx; }
 .user-status.status-ingame { color: var(--danger); }
 .user-status.status-ingame::before { background: var(--danger); }
-.user-status.status-inroom { color: #3B82F6; }
-.user-status.status-inroom::before { background: #3B82F6; }
+.user-status.status-inroom { color: var(--status-inroom, #3B82F6); }
+.user-status.status-inroom::before { background: var(--status-inroom, #3B82F6); }
 
 .login-btn { width: 100%; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; border-radius: 16rpx; font-size: 32rpx; font-weight: 600; padding: 24rpx; box-shadow: 0 6rpx 20rpx rgba(124,58,237,0.3); }
 
@@ -48,7 +48,7 @@
 .current-room-btns { display: flex; gap: 20rpx; }
 .room-btn { font-size: 30rpx !important; padding: 20rpx 16rpx !important; }
 
-.action-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+.action-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
 .action-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 24rpx; display: flex; align-items: center; }
 .action-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
 /* ─────── 卡牌大厅按钮（1+2 布局） ─────── */
@@ -67,13 +67,13 @@
 /* 主卡：召开会议（开瓦·金） */
 .gacha-main {
   display: flex; align-items: center; height: 200rpx; padding: 0 30rpx; margin-bottom: 20rpx;
-  background: linear-gradient(135deg, #F59E0B 0%, #D97706 45%, #92400E 100%);
-  border: 2rpx solid rgba(255,251,235,0.8);
-  box-shadow: 0 12rpx 32rpx rgba(245,158,11,0.4), inset 0 1rpx 0 rgba(255,255,255,0.3);
+  background: linear-gradient(135deg, #6D28D9 0%, #5B21B6 45%, #3B0764 100%);
+  border: 2rpx solid rgba(167,139,250,0.45);
+  box-shadow: 0 12rpx 32rpx rgba(91,33,182,0.32), inset 0 1rpx 0 rgba(255,255,255,0.25);
 }
 .gacha-main-icon {
   width: 120rpx; height: 120rpx; border-radius: 26rpx; flex-shrink: 0; margin-right: 24rpx;
-  background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.14); display: flex; align-items: center; justify-content: center;
   box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.2);
 }
 .gacha-main-info { flex: 1; min-width: 0; }
@@ -96,12 +96,12 @@
   background: linear-gradient(120deg, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);
   background-size: 400% 400%;
   animation: rainbow-flow 6s linear infinite;
-  box-shadow: 0 8rpx 20rpx rgba(245,158,11,0.25);
+  box-shadow: 0 14rpx 40rpx rgba(245,158,11,0.32);
 }
 .gacha-egg::after { display: none; }
 .gacha-egg::before {
-  content: ''; position: absolute; top: 4rpx; left: 4rpx; right: 4rpx; bottom: 4rpx;
-  border-radius: 18rpx; background: #1F2937;
+  content: ''; position: absolute; top: 7rpx; left: 7rpx; right: 7rpx; bottom: 7rpx;
+  border-radius: 15rpx; background: #1F2937;
   animation: egg-breathe 2.6s ease-in-out infinite;
 }
 .gacha-egg .gacha-sub-icon, .gacha-egg .gacha-sub-info { position: relative; z-index: 1; }
@@ -114,7 +114,7 @@
 .gacha-sub-info { flex: 1; min-width: 0; }
 .gacha-sub-title { display: block; font-size: 30rpx; font-weight: 800; }
 
-/* 稀有度角标（统一紫色系 + 随机抖动） */
+/* 稀有度角标（彩蛋·彩虹渐变 + 随机抖动） */
 .rarity-badge {
   position: absolute; top: 12rpx; right: 14rpx; z-index: 2;
   font-size: 26rpx; font-weight: 800; letter-spacing: 2rpx;
@@ -123,9 +123,12 @@
   text-shadow: 0 1rpx 4rpx rgba(0,0,0,0.4);
   animation: badge-shake 1.4s ease-in-out infinite;
 }
-.gacha-main .rarity-badge { animation-delay: 0s; }
-.gacha-sub-row .gacha-sub:nth-child(1) .rarity-badge { animation-delay: 0.45s; }
-.gacha-sub-row .gacha-sub:nth-child(2) .rarity-badge { animation-delay: 0.9s; }
+/* 彩蛋角标：彩虹渐变（流动），与牛马朋友彩虹描边呼应 */
+.rarity-rainbow {
+  background: linear-gradient(120deg, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);
+  background-size: 300% 300%;
+  animation: badge-shake 1.4s ease-in-out infinite, rainbow-flow 6s linear infinite;
+}
 
 /* icon 图片尺寸（白/浅色 glyph 适配深色卡面） */
 .gacha-icon-img-lg { width: 100rpx; height: 100rpx; }
@@ -145,13 +148,13 @@
   84% { transform: rotate(-5deg) translate(-3rpx, 1rpx); }
 }
 
-.info-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+.info-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
 .info-title { font-size: 28rpx; font-weight: 600; color: var(--gray-900); margin-bottom: 16rpx; }
 .info-item { font-size: 26rpx; color: var(--gray-500); line-height: 1.8; }
-.footer { text-align: center; padding: 16rpx 0; color: var(--gray-300); font-size: 22rpx; flex-shrink: 0; }
+.footer { text-align: center; padding: 16rpx 0; color: var(--text-muted); font-size: 22rpx; flex-shrink: 0; }
 
 /* ─────── 历史对局 ─────── */
-.history-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+.history-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
 .history-scroll { max-height: 760rpx; }
 .history-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 12rpx; display: flex; align-items: center; }
 .history-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
@@ -166,7 +169,7 @@
 .history-duration { font-size: 24rpx; color: var(--gray-600); flex-shrink: 0; }
 
 /* ─────── 角色胜率 ─────── */
-.role-stats { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+.role-stats { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
 .role-stats-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 16rpx; display: flex; align-items: center; }
 .role-stats-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
 
@@ -190,10 +193,21 @@
 .stat-role-rate { font-size: 36rpx; font-weight: 800; color: #A78BFA; }
 
 /* ─────── 用户卡 emoji 按钮（游戏说明，仅 emoji） ─────── */
-.user-emoji-btn { margin-left: auto; flex-shrink: 0; font-size: 36rpx; padding: 8rpx; }
+.user-emoji-btn {
+  margin-left: auto; flex-shrink: 0;
+  margin-right: 20rpx;
+  width: 60rpx; height: 60rpx; border-radius: 16rpx;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32rpx;
+  background: var(--gray-100, #F3F4F6);
+  border: 2rpx solid var(--border-color, #E5E7EB);
+  transition: transform 0.12s ease;
+}
+.user-emoji-hover { transform: scale(0.9); opacity: 0.8; }
+.theme-toggle { margin-left: 24rpx; }
 
 /* ─────── 游戏说明：全屏覆盖页 ─────── */
-.rules-page { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1100; background: #fff; display: flex; flex-direction: column; }
+.rules-page { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1100; background: var(--bg-card); display: flex; flex-direction: column; }
 .rules-page-header { height: 100rpx; display: flex; align-items: center; justify-content: space-between; padding: 0 32rpx; border-bottom: 1rpx solid var(--gray-100); flex-shrink: 0; }
 .rules-page-title { font-size: 34rpx; font-weight: 800; color: var(--gray-900); }
 .rules-page-close { width: 56rpx; height: 56rpx; border-radius: 12rpx; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 32rpx; color: var(--gray-600); }
