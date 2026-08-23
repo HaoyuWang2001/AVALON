@@ -48,7 +48,7 @@
     "ignoreUploadUnusedFiles": true
   },
   "compileType": "miniprogram",
-  "libVersion": "2.19.4",
+  "libVersion": "3.7.12",
   "appid": "wxb021f21838eb4ced",
   "projectname": "AVALON",
   "cloudfunctionRoot": "cloudfunctions/",
