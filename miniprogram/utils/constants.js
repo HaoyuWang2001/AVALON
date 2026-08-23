@@ -77,8 +77,21 @@ const ROLE_NAMES = {
   [ROLES.ASSASSIN]: '刺客',
   [ROLES.MINION]: '爪牙',
   [ROLES.OBERON]: '奥伯伦',
-  [ROLES.LANCELOT_BLUE]: '蓝兰斯洛特',
-  [ROLES.LANCELOT_RED]: '红兰斯洛特'
+  [ROLES.LANCELOT_BLUE]: '蓝兰斯洛特',  [ROLES.LANCELOT_RED]: '红兰斯洛特'
+};
+
+// 角色 emoji（迷你角色卡展示用，与 game 身份卡一致）
+const ROLE_EMOJIS = {
+  [ROLES.MERLIN]: '🔮',
+  [ROLES.PERCIVAL]: '🛡️',
+  [ROLES.LOYAL]: '🧑‍🌾',
+  [ROLES.MORDRED]: '🌑',
+  [ROLES.MORGANA]: '🌙',
+  [ROLES.ASSASSIN]: '🗡️',
+  [ROLES.MINION]: '🐺',
+  [ROLES.OBERON]: '👤',
+  [ROLES.LANCELOT_BLUE]: '🎭',
+  [ROLES.LANCELOT_RED]: '🎭'
 };
 
 // 角色描述
@@ -164,6 +177,7 @@ module.exports = {
   ROLE_CONFIGS,
   TEAM_SIZES,
   ROLE_NAMES,
+  ROLE_EMOJIS,
   ROLE_DESCRIPTIONS,
   getRoleSide,
   getRoleName,

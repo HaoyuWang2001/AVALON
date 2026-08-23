@@ -42,25 +42,55 @@
 
   <view class="card action-card" wx:if="{{!currentRoom}}">
     <view class="action-title">开始游戏</view>
-    <button class="action-btn action-btn-primary" bindtap="openConfigs">
-      召开会议
-    </button>
-    <button class="action-btn action-btn-primary" bindtap="joinRoom">
-      加入会议
-    </button>
-    <button class="action-btn action-btn-secondary" bindtap="goToFriends">
-      牛马朋友
-    </button>
+
+    <!-- 主卡：召开会议（开瓦） -->
+    <view class="gacha-card gacha-main" hover-class="card-hover" hover-stay-time="80" bindtap="openConfigs">
+      <view class="gacha-main-icon"><image src="/images/sword.png" class="gacha-icon-img-lg" mode="aspectFit"/></view>
+      <view class="gacha-main-info">
+        <text class="gacha-main-title">召开会议</text>
+      </view>
+      <view class="rarity-badge rarity-legend">开瓦</view>
+    </view>
+
+    <!-- 副卡行：加入会议（安排） + 牛马朋友（彩蛋） -->
+    <view class="gacha-sub-row">
+      <view class="gacha-card gacha-sub gacha-epic" hover-class="card-hover" hover-stay-time="80" bindtap="joinRoom">
+        <view class="gacha-sub-icon"><image src="/images/door.png" class="gacha-icon-img" mode="aspectFit"/></view>
+        <view class="gacha-sub-info">
+          <text class="gacha-sub-title">加入会议</text>
+        </view>
+        <view class="rarity-badge rarity-legend">安排</view>
+      </view>
+
+      <view class="gacha-card gacha-sub gacha-egg" hover-class="card-hover" hover-stay-time="80" bindtap="goToFriends">
+        <view class="gacha-sub-icon"><image src="/images/fossa.png" class="gacha-icon-img" mode="aspectFit"/></view>
+        <view class="gacha-sub-info">
+          <text class="gacha-sub-title">牛马朋友</text>
+        </view>
+        <view class="rarity-badge rarity-legend">彩蛋</view>
+      </view>
+    </view>
   </view>
 
   <view class="role-stats" wx:if="{{roleStats.length > 0}}">
     <view class="role-stats-title">角色胜率</view>
-    <view class="role-stats-list">
-      <view class="role-stat-item" wx:for="{{roleStats}}" wx:key="role">
-        <text class="role-stat-name">{{item.roleName}}</text>
-        <text class="role-stat-value">{{item.wins}}/{{item.games}} ({{item.winRate}})</text>
-      </view>
-    </view>
+    <swiper class="role-stats-swiper"
+            indicator-dots="{{roleStats.length > 1}}"
+            indicator-color="rgba(139,92,246,0.25)"
+            indicator-active-color="#8B5CF6"
+            duration="300">
+      <swiper-item wx:for="{{roleStats}}" wx:key="role">
+        <view class="stat-role-item">
+          <view class="stat-role-card">
+            <text class="stat-role-emoji">{{item.emoji}}</text>
+            <view class="stat-role-name {{item.side === 'evil' ? 'stat-name-evil' : 'stat-name-good'}}">{{item.roleName}}</view>
+            <view class="stat-role-meta">
+              <text class="stat-role-rate">{{item.wins}}/{{item.games}} ({{item.winRate}})</text>
+            </view>
+          </view>
+        </view>
+      </swiper-item>
+    </swiper>
   </view>
 
   <view class="card history-card" wx:if="{{historyList.length > 0}}">
@@ -68,12 +98,14 @@
     <view class="history-stats" wx:if="{{totalWinRate}}">
       总胜率 {{totalWinRate}} · 蓝方 {{goodWinRate}} · 红方 {{evilWinRate}}
     </view>
-    <view class="history-item" wx:for="{{historyList}}" wx:key="gameId"
-          bindtap="openHistoryGame" data-gameid="{{item.gameId}}">
-      <text class="history-role">{{item.roleName}}</text>
-      <text class="history-duration">{{item.durationText}}</text>
-      <text class="history-result {{item.isWin ? 'win' : 'lose'}}">{{item.isWin ? '胜' : '负'}}</text>
-    </view>
+    <scroll-view scroll-y class="history-scroll" show-scrollbar="{{false}}">
+      <view class="history-item" wx:for="{{historyList}}" wx:key="gameId"
+            bindtap="openHistoryGame" data-gameid="{{item.gameId}}">
+        <text class="history-role">{{item.roleName}}</text>
+        <text class="history-duration">{{item.durationText}}</text>
+        <text class="history-result {{item.isWin ? 'win' : 'lose'}}">{{item.isWin ? '胜' : '负'}}</text>
+      </view>
+    </scroll-view>
   </view>
 
   <view class="footer"><view class="footer-version">AVALON v1.0.0</view></view>

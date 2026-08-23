@@ -486,7 +486,7 @@ class ApiService {
     });
   }
 
-  async getUserHistory(openId, limit = 10) {
+  async getUserHistory(openId, limit = 0) {
     return this.request(`/games/history/user?openId=${openId}&limit=${limit}`);
   }
 

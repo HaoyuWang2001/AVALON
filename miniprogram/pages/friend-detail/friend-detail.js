@@ -81,7 +81,7 @@ Page({
 
   loadHistory() {
     if (!this.data.friendOpenId) return;
-    api.getUserHistory(this.data.friendOpenId, 50).then(res => {
+    api.getUserHistory(this.data.friendOpenId, 0).then(res => {
       if (res && res.success && Array.isArray(res.history)) {
         this.setData({
           historyList: res.history.map(item => ({

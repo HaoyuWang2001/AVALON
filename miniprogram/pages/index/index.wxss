@@ -51,13 +51,99 @@
 .action-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
 .action-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 24rpx; display: flex; align-items: center; }
 .action-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
-.action-btn { width: 100%; padding: 22rpx; border-radius: 16rpx; font-size: 32rpx; font-weight: 600; margin-bottom: 28rpx; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.action-btn:last-child { margin-bottom: 0; }
-.action-btn-primary { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; box-shadow: 0 6rpx 20rpx rgba(124,58,237,0.3); }
-.action-btn-primary::after { border: none; }
-.action-btn-secondary { background: var(--gray-50); color: var(--gray-700); border: 2rpx solid var(--gray-200); }
-.action-btn-secondary::after { border: none; }
-.btn-icon { font-size: 36rpx; margin-right: 14rpx; }
+/* ─────── 卡牌大厅按钮（1+2 布局） ─────── */
+.gacha-card { position: relative; overflow: hidden; border-radius: 22rpx; color: #fff; box-sizing: border-box; transition: transform 0.15s ease, opacity 0.15s ease; }
+.card-hover { transform: scale(0.96); opacity: 0.92; }
+
+/* 高光斜扫（传说/史诗卡） */
+.gacha-card::after {
+  content: ''; position: absolute; top: -20%; left: -160%; height: 140%; width: 45%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,0.32), transparent);
+  transform: skewX(-20deg);
+  animation: card-shimmer 3.4s ease-in-out infinite;
+  pointer-events: none; z-index: 1;
+}
+
+/* 主卡：召开会议（开瓦·金） */
+.gacha-main {
+  display: flex; align-items: center; height: 200rpx; padding: 0 30rpx; margin-bottom: 20rpx;
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 45%, #92400E 100%);
+  border: 2rpx solid rgba(255,251,235,0.8);
+  box-shadow: 0 12rpx 32rpx rgba(245,158,11,0.4), inset 0 1rpx 0 rgba(255,255,255,0.3);
+}
+.gacha-main-icon {
+  width: 120rpx; height: 120rpx; border-radius: 26rpx; flex-shrink: 0; margin-right: 24rpx;
+  background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.2);
+}
+.gacha-main-info { flex: 1; min-width: 0; }
+.gacha-main-title { display: block; font-size: 38rpx; font-weight: 800; text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.3); }
+
+/* 副卡行：两卡等宽共同占满一行 */
+.gacha-sub-row { display: flex; gap: 20rpx; }
+.gacha-sub { flex: 1 1 0; min-width: 0; padding: 20rpx 22rpx; min-height: 176rpx; display: flex; flex-direction: row; align-items: center; }
+
+/* 副卡：加入会议（安排·深银） */
+.gacha-epic {
+  background: linear-gradient(135deg, #94A3B8, #475569);
+  border: 2rpx solid rgba(226,232,240,0.6);
+  box-shadow: 0 8rpx 20rpx rgba(100,116,139,0.35);
+}
+.gacha-epic::after { animation-delay: 1.1s; }
+
+/* 副卡：牛马朋友（彩蛋·动态彩虹描边+金色呼吸）——与史诗卡同一结构，彩虹由卡片自身+::before实现 */
+.gacha-egg {
+  background: linear-gradient(120deg, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);
+  background-size: 400% 400%;
+  animation: rainbow-flow 6s linear infinite;
+  box-shadow: 0 8rpx 20rpx rgba(245,158,11,0.25);
+}
+.gacha-egg::after { display: none; }
+.gacha-egg::before {
+  content: ''; position: absolute; top: 4rpx; left: 4rpx; right: 4rpx; bottom: 4rpx;
+  border-radius: 18rpx; background: #1F2937;
+  animation: egg-breathe 2.6s ease-in-out infinite;
+}
+.gacha-egg .gacha-sub-icon, .gacha-egg .gacha-sub-info { position: relative; z-index: 1; }
+
+.gacha-sub-icon {
+  width: 76rpx; height: 76rpx; border-radius: 16rpx; flex-shrink: 0;
+  background: rgba(255,255,255,0.16); display: flex; align-items: center; justify-content: center;
+  font-size: 38rpx; margin-right: 16rpx; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.18);
+}
+.gacha-sub-info { flex: 1; min-width: 0; }
+.gacha-sub-title { display: block; font-size: 30rpx; font-weight: 800; }
+
+/* 稀有度角标（统一紫色系 + 随机抖动） */
+.rarity-badge {
+  position: absolute; top: 12rpx; right: 14rpx; z-index: 2;
+  font-size: 26rpx; font-weight: 800; letter-spacing: 2rpx;
+  padding: 6rpx 18rpx; border-radius: 10rpx; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.25);
+  background: linear-gradient(135deg, #A78BFA, #6D28D9); color: #fff;
+  text-shadow: 0 1rpx 4rpx rgba(0,0,0,0.4);
+  animation: badge-shake 1.4s ease-in-out infinite;
+}
+.gacha-main .rarity-badge { animation-delay: 0s; }
+.gacha-sub-row .gacha-sub:nth-child(1) .rarity-badge { animation-delay: 0.45s; }
+.gacha-sub-row .gacha-sub:nth-child(2) .rarity-badge { animation-delay: 0.9s; }
+
+/* icon 图片尺寸（白/浅色 glyph 适配深色卡面） */
+.gacha-icon-img-lg { width: 100rpx; height: 100rpx; }
+.gacha-icon-img { width: 60rpx; height: 60rpx; }
+
+@keyframes card-shimmer { 0% { left: -160%; } 60%, 100% { left: 160%; } }
+@keyframes rainbow-flow { 0% { background-position: 0% 50%; } 100% { background-position: 400% 50%; } }
+@keyframes egg-breathe { 0%, 100% { box-shadow: 0 0 10rpx rgba(245,158,11,0.5); } 50% { box-shadow: 0 0 26rpx rgba(245,158,11,0.9); } }
+@keyframes badge-shake {
+  0%, 100% { transform: rotate(-8deg) translate(0, 0); }
+  12% { transform: rotate(-5deg) translate(-2rpx, 1rpx); }
+  24% { transform: rotate(-10deg) translate(2rpx, -2rpx); }
+  36% { transform: rotate(-4deg) translate(-1rpx, 2rpx); }
+  48% { transform: rotate(-9deg) translate(3rpx, -1rpx); }
+  60% { transform: rotate(-6deg) translate(-2rpx, 1rpx); }
+  72% { transform: rotate(-11deg) translate(1rpx, -2rpx); }
+  84% { transform: rotate(-5deg) translate(-3rpx, 1rpx); }
+}
 
 .info-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
 .info-title { font-size: 28rpx; font-weight: 600; color: var(--gray-900); margin-bottom: 16rpx; }
@@ -66,6 +152,7 @@
 
 /* ─────── 历史对局 ─────── */
 .history-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+.history-scroll { max-height: 760rpx; }
 .history-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 12rpx; display: flex; align-items: center; }
 .history-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
 .history-stats { font-size: 24rpx; color: var(--gray-600); margin-bottom: 16rpx; }
@@ -82,10 +169,25 @@
 .role-stats { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
 .role-stats-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 16rpx; display: flex; align-items: center; }
 .role-stats-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
-.role-stats-list { display: flex; flex-wrap: wrap; gap: 12rpx; }
-.role-stat-item { display: flex; align-items: center; background: var(--gray-50); border-radius: 12rpx; padding: 12rpx 18rpx; }
-.role-stat-name { font-size: 26rpx; font-weight: 600; color: var(--gray-800); margin-right: 12rpx; }
-.role-stat-value { font-size: 24rpx; color: var(--gray-500); }
+
+/* 角色胜率单卡轮播（复刻 game 身份卡视觉，一次一张、滑动居中） */
+.role-stats-swiper { width: 100%; height: 660rpx; }
+.stat-role-item { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.stat-role-card {
+  width: 400rpx; height: 500rpx; border-radius: 32rpx;
+  background: linear-gradient(160deg, #1E1B4B, #312E81);
+  box-shadow: 0 16rpx 40rpx rgba(49, 46, 129, 0.35);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-sizing: border-box; padding: 40rpx;
+}
+.stat-role-emoji { font-size: 180rpx; line-height: 1.2; }
+.stat-role-name {
+  font-size: 28rpx; font-weight: 700; padding: 8rpx 28rpx; border-radius: 28rpx; margin-top: 24rpx;
+}
+.stat-name-good { background: rgba(59, 130, 246, 0.16); color: #93C5FD; }
+.stat-name-evil { background: rgba(239, 68, 68, 0.16); color: #FCA5A5; }
+.stat-role-meta { margin-top: 32rpx; }
+.stat-role-rate { font-size: 36rpx; font-weight: 800; color: #A78BFA; }
 
 /* ─────── 用户卡 emoji 按钮（游戏说明，仅 emoji） ─────── */
 .user-emoji-btn { margin-left: auto; flex-shrink: 0; font-size: 36rpx; padding: 8rpx; }

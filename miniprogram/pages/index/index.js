@@ -1,7 +1,7 @@
 // pages/index/index.js
 const api = require('../../services/api.js');
 
-const { DEFAULT_AVATAR, ROLE_NAMES } = require('../../utils/constants.js');
+const { DEFAULT_AVATAR, ROLE_NAMES, ROLE_EMOJIS, CONFIG_EVIL_ROLES } = require('../../utils/constants.js');
 
 const DEFAULT_SEAT_NUMBER = 0;
 
@@ -340,7 +340,7 @@ Page({
   loadHistoryAndStats() {
     const openId = getApp().globalData.openId || wx.getStorageSync('openId');
     if (!openId) return;
-    api.getUserHistory(openId, 10).then(res => {
+    api.getUserHistory(openId, 0).then(res => {
       if (res && res.success && Array.isArray(res.history)) {
         const historyList = res.history.map(item => ({
           gameId: item.gameId,
@@ -358,6 +358,8 @@ Page({
         const roleStats = (s.roles || []).filter(r => r.games > 0).map(r => ({
           role: r.role,
           roleName: ROLE_NAMES[r.role] || r.role,
+          emoji: ROLE_EMOJIS[r.role] || '🎴',
+          side: CONFIG_EVIL_ROLES.includes(r.role) ? 'evil' : 'good',
           games: r.games,
           wins: r.wins,
           winRate: r.winRate + '%'
