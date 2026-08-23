@@ -66,6 +66,28 @@ class UserModel {
     return UserModel.getByOpenId(openId);
   }
 
+  // 设置/修改 unique_id：uniqueId 合法性与唯一性由调用方处理（UNIQUE 索引兜底捕获 ER_DUP_ENTRY）
+  static async setUniqueId(openId, uniqueId) {
+    await db.query(
+      `UPDATE users SET unique_id = ?, unique_id_updated_at = NOW(), updated_at = NOW() WHERE open_id = ?`,
+      [uniqueId, openId]
+    );
+    return UserModel.getByOpenId(openId);
+  }
+
+  // 刷新 last_seen_at（活跃时间，混合判定在线用）
+  static async touchLastSeen(openId) {
+    if (!openId) return;
+    try {
+      await db.query(
+        'UPDATE users SET last_seen_at = NOW(), updated_at = NOW() WHERE open_id = ?',
+        [openId]
+      );
+    } catch (e) {
+      // 忽略活跃时间刷新失败（非关键路径）
+    }
+  }
+
   static async getStats() {
     try {
       const rows = await db.query('SELECT COUNT(*) as count FROM users');

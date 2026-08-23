@@ -34,6 +34,8 @@ const upload = multer({
   }
 });
 
+const UNIQUE_ID_RE = /^[\w\u4e00-\u9fa5-]{1,16}$/;
+
 function createRouter() {
   const router = express.Router();
 
@@ -48,11 +50,64 @@ function createRouter() {
           openId: user.open_id,
           wxNickName: user.wx_nick_name || '',
           customNickName: user.custom_nick_name || '',
-          avatarUrl: user.avatar_url || ''
+          avatarUrl: user.avatar_url || '',
+          uniqueId: user.unique_id || '',
+          lastSeenAt: user.last_seen_at || null
         }
       });
     } catch (error) {
       console.error('获取用户资料错误:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // 设置/修改 unique_id：1-16位 中文/英文/数字/-/_；唯一（UNIQUE 索引兜底）；每日一次（自然日）
+  router.post('/:openId/uniqueId', async (req, res) => {
+    try {
+      const { openId } = req.params;
+      const { uniqueId } = req.body || {};
+
+      if (!uniqueId || typeof uniqueId !== 'string' || !UNIQUE_ID_RE.test(uniqueId)) {
+        return res.status(400).json({ success: false, message: 'ID需为1-16位，仅支持中文、字母、数字、- 和 _' });
+      }
+
+      const user = await UserModel.getByOpenId(openId);
+      if (!user) return res.status(404).json({ success: false, message: '用户不存在' });
+
+      // 每日一次（自然日）：首次设置也占当天名额；当天已设置/修改过则拒绝
+      if (user.unique_id_updated_at) {
+        const today = new Date();
+        const lastDay = new Date(user.unique_id_updated_at);
+        const sameDay = today.getFullYear() === lastDay.getFullYear() &&
+          today.getMonth() === lastDay.getMonth() &&
+          today.getDate() === lastDay.getDate();
+        if (sameDay) {
+          return res.status(400).json({ success: false, message: 'ID每天仅可设置/修改一次' });
+        }
+      }
+
+      try {
+        const updated = await UserModel.setUniqueId(openId, uniqueId);
+        res.json({
+          success: true,
+          user: {
+            openId: updated.open_id,
+            wxNickName: updated.wx_nick_name || '',
+            customNickName: updated.custom_nick_name || '',
+            avatarUrl: updated.avatar_url || '',
+            uniqueId: updated.unique_id || '',
+            lastSeenAt: updated.last_seen_at || null
+          }
+        });
+      } catch (e) {
+        // 唯一冲突
+        if (e && (e.code === 'ER_DUP_ENTRY' || /ER_DUP_ENTRY/.test(e.message || ''))) {
+          return res.status(400).json({ success: false, message: '该ID已被占用' });
+        }
+        throw e;
+      }
+    } catch (error) {
+      console.error('设置unique_id错误:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   });

@@ -82,6 +82,27 @@ const timerCache = new Map();
 app.use(cors());
 app.use(express.json());
 
+// 活跃时间（last_seen_at）节流刷新：从 param/query/body 提取 openId，每 openId 60s 最多写一次
+const lastSeenThrottle = new Map();
+app.use('/api', (req, res, next) => {
+  const openId = (req.params && req.params.openId) ||
+    (req.query && req.query.openId) ||
+    (req.body && req.body.openId) ||
+    (req.body && req.body.hostOpenId) ||
+    (req.body && req.body.userInfo && req.body.userInfo.openId);
+  if (openId) {
+    const now = Date.now();
+    const last = lastSeenThrottle.get(openId) || 0;
+    if (now - last > 60000) {
+      lastSeenThrottle.set(openId, now);
+      const UserModel = require('./models/UserModel');
+      UserModel.touchLastSeen(openId);
+    }
+    if (lastSeenThrottle.size > 5000) lastSeenThrottle.clear();
+  }
+  next();
+});
+
 // 上传文件静态服务（头像等）：/uploads/* → 服务器存储目录
 const { UPLOAD_DIR, AVATAR_DIR } = require('./config/uploads');
 fs.mkdirSync(AVATAR_DIR, { recursive: true });
@@ -123,6 +144,7 @@ function setupRoutes() {
   const userRoutes = require('./routes/users-db')();
   const authRoutes = require('./routes/auth-db')();
   const playerRoutes = require('./routes/players-db')();
+  const friendRoutes = require('./routes/friends-db')();
 
   modelManager.setDbInitialized(true);
 
@@ -131,6 +153,7 @@ function setupRoutes() {
   app.use('/api/users', userRoutes);
   app.use('/api/auth', authRoutes);
   app.use('/api/players', playerRoutes);
+  app.use('/api/friends', friendRoutes);
 }
 
 // 健康检查端点（包含数据库状态）
@@ -263,6 +286,10 @@ wss.on('connection', (ws) => {
         const { roomId, playerId } = msg;
         ws.roomId = roomId;
         ws.playerId = playerId;
+        if (playerId) {
+          const UserModel = require('./models/UserModel');
+          UserModel.touchLastSeen(playerId);
+        }
         socket.broadcastToRoom(roomId, { type: 'playerJoined', playerId });
         pushCurrentGameState(roomId, playerId);
         break;

@@ -14,10 +14,14 @@ CREATE TABLE users (
     open_id VARCHAR(64) PRIMARY KEY COMMENT '微信openId',
     wx_nick_name VARCHAR(100) DEFAULT '' COMMENT '微信昵称',
     custom_nick_name VARCHAR(50) DEFAULT '' COMMENT '游戏内昵称',
+    unique_id VARCHAR(32) NULL COMMENT '用户自选唯一ID(1-16位,中文/英文/数字/-/_)',
+    unique_id_updated_at DATETIME NULL COMMENT 'unique_id最近设置/修改时间(每日一次)',
+    last_seen_at DATETIME NULL COMMENT '最近活跃时间(混合判定在线用)',
     avatar_url TEXT COMMENT '头像路径',
     current_room_id VARCHAR(6) NULL COMMENT '当前所在房间号，NULL=不在任何房间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_current_room (current_room_id)
+    INDEX idx_current_room (current_room_id),
+    UNIQUE KEY uniq_unique_id (unique_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
 -- =============================================
@@ -251,6 +255,29 @@ INSERT INTO role_configurations (player_count, roles, team_sizes) VALUES
 (11, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "lancelotBlue", "morgana", "mordred", "oberon", "lancelotRed"]', '[3,4,5,6,6]'),
 (12, '["merlin", "percival", "loyal", "loyal", "loyal", "loyal", "lancelotBlue", "morgana", "assassin", "mordred", "oberon", "lancelotRed"]', '[3,4,5,6,6]')
 ON DUPLICATE KEY UPDATE roles=VALUES(roles), team_sizes=VALUES(team_sizes);
+
+-- =============================================
+-- 10. friendships表：好友关系（双向两行）
+-- =============================================
+CREATE TABLE friendships (
+    user_open_id VARCHAR(64) NOT NULL COMMENT '用户openId',
+    friend_open_id VARCHAR(64) NOT NULL COMMENT '好友openId',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '成为好友时间',
+    PRIMARY KEY (user_open_id, friend_open_id),
+    INDEX idx_friend (friend_open_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='好友关系表(双向两行)';
+
+-- =============================================
+-- 11. friend_requests表：好友申请（仅存pending，同意/拒绝即删）
+-- =============================================
+CREATE TABLE friend_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    from_open_id VARCHAR(64) NOT NULL COMMENT '申请方openId',
+    to_open_id VARCHAR(64) NOT NULL COMMENT '被申请方openId',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
+    UNIQUE KEY uniq_pending (from_open_id, to_open_id),
+    INDEX idx_to (to_open_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='好友申请表(仅pending)';
 
 -- =============================================
 -- 初始化完成
