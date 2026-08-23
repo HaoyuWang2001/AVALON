@@ -28,6 +28,9 @@ const outputDest = path.resolve(__dirname, '../.preview/mp-preview.png');
   });
 
   console.log('[preview] 开始编译并生成真机预览码...');
+  // doing/done 高频回调：只在状态变化时打印一次，doing 循环每 10 次打一个心跳，避免刷屏
+  let lastStatus = '';
+  let tickCount = 0;
   await ci.preview({
     project,
     desc: '自动预览',
@@ -41,7 +44,15 @@ const outputDest = path.resolve(__dirname, '../.preview/mp-preview.png');
     qrcodeFormat: 'image',
     qrcodeOutputDest: outputDest,
     onProgressUpdate: (info) => {
-      if (info && info.status) console.log(`[preview] ${info.status}`);
+      if (!info || !info.status) return;
+      if (info.status !== lastStatus) {
+        console.log(`[preview] ${info.status}`);
+        lastStatus = info.status;
+        tickCount = 0;
+      } else if (info.status === 'doing') {
+        tickCount++;
+        if (tickCount % 10 === 0) console.log(`[preview] doing... (${tickCount})`);
+      }
     }
   });
 
