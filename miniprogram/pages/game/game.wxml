@@ -1,6 +1,6 @@
 <!--pages/game/game.wxml-->
-<!-- 顶部操作栏模板（正常页 + 车主全屏引导页共用，单一来源防漂移） -->
-<template name="gameTopBar">
+<view class="game-page">
+  <!-- 顶部操作栏（内联①，与引导页②重复——template is 动态绑定失效故手抄两份，改动需同步两处） -->
   <top-bar>
     <view slot="left" class="top-icons">
       <block wx:if="{{currentPhase !== 'gameEnd'}}">
@@ -12,16 +12,11 @@
       </button>
     </view>
     <view slot="right" class="top-mini-actions">
-      <image wx:if="{{playerRole}}" class="top-mini-icon" src="/images/my-role.png" mode="aspectFit" bindtap="openRoleModal"></image>
+      <image class="top-mini-icon {{playerRole ? '' : 'top-mini-icon-hidden'}}" src="/images/my-role.png" mode="aspectFit" bindtap="openRoleModal"></image>
       <image class="top-mini-icon" src="/images/history.png" mode="aspectFit" bindtap="openInfoModal"></image>
       <image class="top-mini-icon" src="/images/profile.png" mode="aspectFit" bindtap="openConfigView"></image>
     </view>
   </top-bar>
-</template>
-
-<view class="game-page">
-  <!-- 顶部操作栏（公共组件）：始终显示；gameEnd 时隐藏左侧 ×/− 图标，保留身份/历史/配置 -->
-  <template is="gameTopBar"/>
 
   <view class="container">
   <!-- 角色揭示提示蒙版（一次性） -->
@@ -497,8 +492,23 @@
 
   <!-- 车主全屏引导页（preNominate/speakingOrder 车长专属；强制车直接进 teamNomination 不显示） -->
   <view class="leader-guide" wx:if="{{showLeaderGuide}}">
-    <!-- 顶部操作栏并入全屏页：身份/历史/配置/分享等信息在引导阶段也可用 -->
-    <template is="gameTopBar"/>
+    <!-- 顶部操作栏（内联②，与正常页①重复，见正常页注释——引导页全屏覆盖层需自带顶栏） -->
+    <top-bar>
+      <view slot="left" class="top-icons">
+        <block wx:if="{{currentPhase !== 'gameEnd'}}">
+          <text class="top-icon top-icon-danger" bindtap="abandonGame" wx:if="{{isHost}}">✕</text>
+          <text class="top-icon top-icon-home" bindtap="backToHome">−</text>
+        </block>
+        <button size="mini" class="top-mini-share" open-type="share">
+          <image class="top-mini-icon" src="/images/share.png" mode="aspectFit"/>
+        </button>
+      </view>
+      <view slot="right" class="top-mini-actions">
+        <image class="top-mini-icon {{playerRole ? '' : 'top-mini-icon-hidden'}}" src="/images/my-role.png" mode="aspectFit" bindtap="openRoleModal"></image>
+        <image class="top-mini-icon" src="/images/history.png" mode="aspectFit" bindtap="openInfoModal"></image>
+        <image class="top-mini-icon" src="/images/profile.png" mode="aspectFit" bindtap="openConfigView"></image>
+      </view>
+    </top-bar>
     <view class="guide-title">您是尊贵的车主</view>
     <!-- preNominate：预点车（可选），全屏内选车 -->
     <block wx:if="{{guideStep === 'preNominate'}}">

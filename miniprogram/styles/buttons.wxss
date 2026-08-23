@@ -73,3 +73,5 @@
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
   padding: 10rpx; box-sizing: border-box;
 }
+/* 顶栏图标隐藏（class 切换替代 wx:if，规避模板内 wx:if 重渲染问题） */
+.top-mini-icon-hidden { display: none; }
