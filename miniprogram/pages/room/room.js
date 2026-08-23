@@ -52,6 +52,16 @@ Page({
       launchAnimIndex: this.data.launchAnimOptions.indexOf(launchAnim) >= 0 ? this.data.launchAnimOptions.indexOf(launchAnim) : 0
     });
     this.initRoomPolling();
+    this._loadFriendSet();
+  },
+
+  // 缓存好友 openId 集合（长按申请好友判断用）
+  _loadFriendSet() {
+    const openId = app.globalData.openId;
+    if (!openId) { this._friendSet = new Set(); return; }
+    api.getFriends(openId).then(res => {
+      this._friendSet = new Set((res && res.friends || []).map(f => f.openId));
+    }).catch(() => { this._friendSet = new Set(); });
   },
 
   onShow() {
@@ -336,32 +346,50 @@ Page({
   },
 
   onPlayerAction(e) {
-    if (!this.data.isHost) return;
     const playerId = e.currentTarget.dataset.id;
     if (!playerId) return;
     const player = this.data.players.find(p => p.openId === playerId);
     if (!player) return;
-    if (player.openId === app.globalData.openId) return;
+    const myOpenId = app.globalData.openId;
+    if (player.openId === myOpenId) return;
     const name = player.nickName || player.wxNickName || '玩家';
-    const isBanned = player.bannedFromSeating;
     const roomId = this.data.roomId;
+    const isHost = this.data.isHost;
+    const isBanned = player.bannedFromSeating;
+
+    // 申请好友入口：非自己、非好友、未申请过
+    const canAddFriend = !(this._friendSet && this._friendSet.has(playerId));
+
+    const items = [];
+    const actions = [];
+    if (isHost) {
+      items.push('踢出房间', isBanned ? '允许上座' : '禁止上座', '转让房主');
+      actions.push('kick', 'ban', 'transfer');
+      if (canAddFriend) { items.push('申请好友'); actions.push('friend'); }
+    } else if (canAddFriend) {
+      items.push('申请好友');
+      actions.push('friend');
+    }
+
+    if (items.length === 0) return;
 
     wx.showActionSheet({
-      itemList: ['踢出房间', isBanned ? '允许上座' : '禁止上座', '转让房主'],
+      itemList: items,
       success: (res) => {
-        if (res.tapIndex === 0) {
+        const act = actions[res.tapIndex];
+        if (act === 'kick') {
           wx.showModal({
             title: '踢出房间',
             content: `确定将 ${name} 踢出房间吗？`,
             success: (r) => { if (r.confirm) api.kickPlayer(roomId, playerId, 'room').catch(() => {}); }
           });
-        } else if (res.tapIndex === 1) {
+        } else if (act === 'ban') {
           wx.showModal({
             title: isBanned ? '允许上座' : '禁止上座',
             content: `确定${isBanned ? '允许' : '禁止'} ${name} 上座吗？`,
             success: (r) => { if (r.confirm) api.banFromSeating(roomId, playerId, !isBanned).catch(() => {}); }
           });
-        } else if (res.tapIndex === 2) {
+        } else if (act === 'transfer') {
           wx.showModal({
             title: '转让房主',
             content: `确定将房主转让给 ${name} 吗？转让后你将变为普通玩家。`,
@@ -372,6 +400,15 @@ Page({
                 }).catch(() => {});
               }
             }
+          });
+        } else if (act === 'friend') {
+          api.sendFriendRequest(myOpenId, playerId).then(r2 => {
+            if (r2 && r2.success) {
+              wx.showToast({ title: '申请已发送', icon: 'success' });
+              if (this._friendSet) this._friendSet.add(playerId);
+            }
+          }).catch(err => {
+            wx.showToast({ title: (err && err.message) || '申请失败', icon: 'none' });
           });
         }
       }

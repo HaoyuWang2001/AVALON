@@ -493,6 +493,40 @@ class ApiService {
   async getUserStats(openId) {
     return this.request(`/games/stats?openId=${openId}`);
   }
+
+  // ─────── 好友系统 ───────
+
+  async setUniqueId(openId, uniqueId) {
+    return this.request(`/users/${openId}/uniqueId`, { method: 'POST', data: { uniqueId } });
+  }
+
+  async searchUser(openId, uniqueId) {
+    return this.request(`/friends/search?openId=${openId}&uniqueId=${encodeURIComponent(uniqueId)}`);
+  }
+
+  async getFriends(openId) {
+    return this.request(`/friends?openId=${openId}`);
+  }
+
+  async getFriendRequests(openId) {
+    return this.request(`/friends/requests?openId=${openId}`);
+  }
+
+  async sendFriendRequest(fromOpenId, toOpenId) {
+    return this.request('/friends/request', { method: 'POST', data: { fromOpenId, toOpenId } });
+  }
+
+  async respondFriendRequest(requestId, openId, accept) {
+    return this.request('/friends/respond', { method: 'POST', data: { requestId, openId, accept } });
+  }
+
+  async deleteFriend(openId, friendOpenId) {
+    return this.request(`/friends?openId=${openId}&friendOpenId=${friendOpenId}`, { method: 'DELETE' });
+  }
+
+  async getFriendDetail(openId, friendOpenId) {
+    return this.request(`/friends/${friendOpenId}/detail?openId=${openId}`);
+  }
 }
 
 const apiService = new ApiService();

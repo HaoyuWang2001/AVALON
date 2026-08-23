@@ -1,0 +1,42 @@
+/* pages/friend-detail/friend-detail.wxss */
+.page { padding: 24rpx 32rpx 0; box-sizing: border-box; position: relative; }
+.page-loading { text-align: center; color: var(--gray-400); padding: 80rpx 0; }
+
+.more-btn {
+  position: absolute; top: 8rpx; right: 32rpx; z-index: 10;
+  font-size: 40rpx; font-weight: 800; color: var(--gray-500);
+  padding: 8rpx 16rpx;
+}
+
+/* 基本信息 */
+.head-card { display: flex; align-items: center; padding: 32rpx 28rpx; }
+.hd-avatar { width: 128rpx; height: 128rpx; border-radius: 50%; flex-shrink: 0; background: var(--gray-100); }
+.hd-info { margin-left: 24rpx; min-width: 0; }
+.hd-name { font-size: 40rpx; font-weight: 800; color: var(--gray-900); display: block; }
+.hd-id { font-size: 26rpx; color: var(--gray-400); display: block; margin-top: 8rpx; }
+.hd-status { font-size: 26rpx; color: var(--gray-400); margin-top: 10rpx; display: flex; align-items: center; }
+.hd-status.st-on { color: var(--success); }
+.dot { display: inline-block; width: 16rpx; height: 16rpx; border-radius: 50%; background: var(--gray-300); margin-right: 8rpx; }
+.dot-on { background: #22C55E; }
+
+/* 状态卡 */
+.status-card { display: flex; align-items: center; justify-content: space-between; padding: 28rpx; }
+.status-empty { font-size: 30rpx; color: var(--gray-500); }
+.status-text { font-size: 30rpx; font-weight: 600; color: var(--gray-800); }
+.status-btn { flex-shrink: 0; }
+
+/* 统计与历史 */
+.card-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 16rpx; }
+.stats-summary { font-size: 24rpx; color: var(--gray-600); margin-bottom: 16rpx; }
+.role-stats-list { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.role-stat-item { background: var(--gray-50); border-radius: 12rpx; padding: 10rpx 18rpx; display: flex; flex-direction: column; align-items: center; }
+.role-stat-name { font-size: 24rpx; font-weight: 600; color: var(--gray-800); }
+.role-stat-value { font-size: 22rpx; color: var(--gray-500); margin-top: 4rpx; }
+.list-empty { text-align: center; color: var(--gray-400); font-size: 26rpx; padding: 40rpx 0; }
+.hist-item { display: flex; align-items: center; padding: 18rpx 0; border-bottom: 1rpx solid var(--gray-100); }
+.hist-item:last-child { border-bottom: none; }
+.hist-role { font-size: 28rpx; font-weight: 600; color: var(--gray-800); flex: 1; }
+.hist-duration { font-size: 24rpx; color: var(--gray-400); margin-right: 16rpx; }
+.hist-result { font-size: 26rpx; font-weight: 700; }
+.hist-result.win { color: var(--success); }
+.hist-result.lose { color: var(--danger); }

@@ -1,0 +1,67 @@
+<!--pages/friend-detail/friend-detail.wxml-->
+<view class="page">
+
+  <!-- 顶部操作：删除好友 -->
+  <view class="more-btn" bindtap="moreActions">···</view>
+
+  <view wx:if="{{loading}}" class="page-loading">加载中...</view>
+
+  <block wx:if="{{friend}}">
+    <!-- 基本信息 -->
+    <view class="card head-card">
+      <image src="{{friend.avatarUrl || '/images/default-avatar.png'}}" class="hd-avatar"></image>
+      <view class="hd-info">
+        <text class="hd-name">{{friend.nickName}}</text>
+        <text class="hd-id">{{friend.uniqueId}}</text>
+        <text class="hd-status {{friend.online ? 'st-on' : ''}}">
+          <text class="dot {{friend.online ? 'dot-on' : ''}}"></text>
+          {{friend.online ? '在线' : '离线'}}
+        </text>
+      </view>
+    </view>
+
+    <!-- 状态卡：空闲 / 房间等待中(进房间) / 对局中(观战) -->
+    <view class="card status-card">
+      <block wx:if="{{!friend.room}}">
+        <view class="status-empty">当前空闲</view>
+      </block>
+      <block wx:elif="{{friend.room.gameStarted}}">
+        <view class="status-text">正在对局中</view>
+        <button size="mini" class="btn btn-primary status-btn" bindtap="spectate">观战</button>
+      </block>
+      <block wx:else>
+        <view class="status-text">在房间等待中</view>
+        <button size="mini" class="btn btn-primary status-btn" bindtap="enterRoom">进入TA的房间</button>
+      </block>
+    </view>
+
+    <!-- 角色胜率 -->
+    <view class="card stats-card">
+      <view class="card-title">角色胜率</view>
+      <view class="stats-summary" wx:if="{{totalWinRate}}">
+        总胜率 {{totalWinRate}} · 蓝方 {{goodWinRate}} · 红方 {{evilWinRate}}
+      </view>
+      <view wx:if="{{roleStats.length === 0}}" class="list-empty">暂无对局数据</view>
+      <view class="role-stats-list">
+        <view wx:for="{{roleStats}}" wx:key="role" class="role-stat-item">
+          <text class="role-stat-name">{{item.roleName}}</text>
+          <text class="role-stat-value">{{item.wins}}/{{item.games}} ({{item.winRate}})</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 历史对局 -->
+    <view class="card hist-card">
+      <view class="card-title">历史对局</view>
+      <view wx:if="{{historyList.length === 0}}" class="list-empty">暂无对局记录</view>
+      <view wx:for="{{historyList}}" wx:key="gameId" class="hist-item"
+            bindtap="openHistoryGame" data-gameid="{{item.gameId}}">
+        <text class="hist-role">{{item.roleName}}</text>
+        <text class="hist-duration">{{item.durationText}}</text>
+        <text class="hist-result {{item.isWin ? 'win' : 'lose'}}">{{item.isWin ? '胜' : '负'}}</text>
+      </view>
+    </view>
+
+    <view style="height: 40rpx"></view>
+  </block>
+</view>

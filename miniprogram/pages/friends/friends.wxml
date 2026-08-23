@@ -1,0 +1,85 @@
+<!--pages/friends/friends.wxml-->
+<view class="page">
+
+  <!-- 首次设置ID遮罩：未设置前好友功能不可用 -->
+  <view class="setup-mask" wx:if="{{needSetupId}}">
+    <view class="setup-box">
+      <view class="setup-title">设置你的ID</view>
+      <view class="setup-sub">好友通过ID找到你 · 1-16位，支持中文/字母/数字/-/_，不区分大小写 · 每天仅可设置/修改一次</view>
+      <input class="setup-input" type="text" maxlength="16" placeholder="例如：瓦协牛马" value="{{setupIdValue}}" bindinput="onSetupIdInput"/>
+      <button size="mini" class="btn btn-primary setup-btn" bindtap="submitSetupId" disabled="{{setupBusy}}">确定</button>
+      <view class="setup-tip" bindtap="closeSetupId">不设置ID将无法使用好友功能</view>
+    </view>
+  </view>
+
+  <!-- 我的ID条 -->
+  <view class="my-id-bar">
+    <image src="{{me.avatarUrl}}" class="my-avatar"></image>
+    <view class="my-info">
+      <text class="my-nick">{{me.nickName}}</text>
+      <text class="my-id" bindtap="copyMyId">{{me.uniqueId ? ('ID: ' + me.uniqueId + ' (点击复制)') : '未设置ID'}}</text>
+    </view>
+  </view>
+
+  <!-- 搜索 -->
+  <view class="card search-card">
+    <view class="search-row">
+      <input class="search-input" type="text" confirm-type="search" placeholder="输入对方ID精确搜索" value="{{searchKeyword}}" bindinput="onSearchInput" bindconfirm="doSearch"/>
+      <button size="mini" class="search-btn" bindtap="doSearch" disabled="{{searching}}">搜索</button>
+    </view>
+    <view class="search-error" wx:if="{{searchError}}">{{searchError}}</view>
+    <view class="search-result" wx:if="{{searchResult}}">
+      <image src="{{searchResult.avatarUrl || '/images/default-avatar.png'}}" class="sr-avatar"></image>
+      <view class="sr-info">
+        <text class="sr-name">{{searchResult.nickName}}</text>
+        <text class="sr-id">{{searchResult.uniqueId}}</text>
+      </view>
+      <button wx:if="{{!searchResult.isFriend && !searchResult.hasPending}}" size="mini" class="sr-btn" bindtap="sendRequestFromSearch">+ 申请</button>
+      <text wx:elif="{{searchResult.hasPending}}" class="sr-state">已申请</text>
+      <text wx:else class="sr-state sr-state-ok">已是好友</text>
+    </view>
+  </view>
+
+  <!-- Tab -->
+  <view class="tabs">
+    <view class="tab-item {{tab === 'friends' ? 'tab-on' : ''}}" data-tab="friends" bindtap="switchTab">
+      好友<text wx:if="{{friends.length > 0}}" class="tab-count">{{friends.length}}</text>
+    </view>
+    <view class="tab-item {{tab === 'requests' ? 'tab-on' : ''}}" data-tab="requests" bindtap="switchTab">
+      申请<text wx:if="{{requestCount > 0}}" class="tab-count tab-count-red">{{requestCount}}</text>
+    </view>
+  </view>
+
+  <!-- 好友列表 -->
+  <view class="card list-card" wx:if="{{tab === 'friends'}}">
+    <view wx:if="{{friends.length === 0}}" class="list-empty">{{loadingFriends ? '加载中...' : '还没有好友，去搜索添加吧'}}</view>
+    <view wx:for="{{friends}}" wx:key="openId" class="friend-item" bindtap="goFriendDetail" data-id="{{item.openId}}">
+      <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="f-avatar"></image>
+      <view class="f-info">
+        <text class="f-name">{{item.nickName}}</text>
+        <text class="f-sub">
+          <text class="dot {{item.online ? 'dot-on' : ''}}"></text>
+          {{item.online ? '在线' : '离线'}}
+          <text wx:if="{{item.room}}"> · {{item.room.gameStarted ? '对局中' : '房间等待中'}}</text>
+        </text>
+      </view>
+      <text class="f-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 申请列表 -->
+  <view class="card list-card" wx:if="{{tab === 'requests'}}">
+    <view wx:if="{{requests.length === 0}}" class="list-empty">暂无待处理申请</view>
+    <view wx:for="{{requests}}" wx:key="id" class="req-item">
+      <image src="{{item.fromAvatarUrl || '/images/default-avatar.png'}}" class="f-avatar"></image>
+      <view class="f-info">
+        <text class="f-name">{{item.fromNickName}}</text>
+        <text class="f-sub">{{item.fromUniqueId}}</text>
+      </view>
+      <button size="mini" class="req-btn req-ok" data-id="{{item.id}}" data-accept="true" bindtap="respond">同意</button>
+      <button size="mini" class="req-btn req-no" data-id="{{item.id}}" data-accept="false" bindtap="respond">拒绝</button>
+    </view>
+  </view>
+
+  <view style="height: 40rpx"></view>
+</view>

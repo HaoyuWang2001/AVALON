@@ -2,7 +2,9 @@
   "pages": [
     "pages/index/index",
     "pages/room/room",
-    "pages/game/game"
+    "pages/game/game",
+    "pages/friends/friends",
+    "pages/friend-detail/friend-detail"
   ],
   "window": {
     "backgroundTextStyle": "light",

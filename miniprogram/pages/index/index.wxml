@@ -48,6 +48,9 @@
     <button class="action-btn action-btn-primary" bindtap="joinRoom">
       加入会议
     </button>
+    <button class="action-btn action-btn-secondary" bindtap="goToFriends">
+      牛马朋友
+    </button>
   </view>
 
   <view class="role-stats" wx:if="{{roleStats.length > 0}}">
