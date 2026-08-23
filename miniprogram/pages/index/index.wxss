@@ -20,10 +20,9 @@
 .user-card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); display: flex; align-items: center; flex-shrink: 0; }
 .user-info-section { width: 100%; }
 .user-left { display: flex; align-items: center; width: 100%; }
-.avatar-wrap { position: relative; width: 100rpx; height: 100rpx; border-radius: 50%; border: 6rpx solid #C4B5FD; background: #FFFFFF; flex-shrink: 0; overflow: hidden; }
-.avatar-img { position: absolute; top: -6rpx; left: -6rpx; right: -6rpx; bottom: -6rpx; border-radius: 50%; width: auto; height: auto; }
-.avatar-tap { position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0; padding: 0; margin: 0; background: transparent; }
-.avatar-tap::after { border: none; display: none; }
+.avatar-btn { position: relative; width: 100rpx !important; height: 100rpx !important; border: 6rpx solid #C4B5FD; background: #FFFFFF; border-radius: 50%; overflow: hidden; padding: 0 !important; margin: 0 !important; flex-shrink: 0; box-sizing: border-box; display: flex !important; align-items: center; justify-content: center; line-height: normal; }
+.avatar-btn::after { border: none; display: none; }
+.avatar-img { width: 88rpx; height: 88rpx; border-radius: 50%; display: block; }
 .user-details { margin-left: 24rpx; flex: 1; min-width: 0; }
 .user-name-text { font-size: 34rpx; font-weight: 700; color: #000; height: 50rpx; line-height: 50rpx; }
 .name-placeholder { color: var(--gray-400); font-weight: 400; }

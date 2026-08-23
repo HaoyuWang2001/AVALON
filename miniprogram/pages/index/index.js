@@ -388,6 +388,13 @@ Page({
 
   onAvatarError() {},
 
+  // chooseAvatar 能力要求基础库 ≥ 2.21.2：不支持时给出明确提示（否则点击静默无反应）
+  onAvatarTap() {
+    if (!wx.canIUse('button.open-type.chooseAvatar')) {
+      wx.showToast({ title: '当前微信版本过低，请升级微信后再换头像', icon: 'none' });
+    }
+  },
+
   onChooseAvatar(e) {
     if (!e.detail || !e.detail.avatarUrl) return;
     const tempPath = e.detail.avatarUrl;

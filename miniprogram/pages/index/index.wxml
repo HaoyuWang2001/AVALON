@@ -9,10 +9,9 @@
   <view class="card user-card">
     <view class="user-info-section">
       <view class="user-left">
-        <view class="avatar-wrap">
+        <button size="mini" class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" binderror="onAvatarError" bindtap="onAvatarTap">
           <image src="{{userInfo.avatarUrl}}" class="avatar-img"/>
-          <button class="avatar-tap" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" binderror="onAvatarError"/>
-        </view>
+        </button>
         <view class="user-details">
           <view class="user-name-text {{customNickName ? '' : 'name-placeholder'}}" bindtap="showNickNameModal">
             {{customNickName || '改名撒！'}}<text class="user-edit-emoji">✏️</text>
