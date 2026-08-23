@@ -1002,9 +1002,16 @@ progress { border-radius: 12rpx; }
   box-sizing: border-box;
   overflow-y: auto;
 }
-/* 引导页并入的顶部操作栏：白底吸顶、撑满宽度 */
+/* 引导页并入的顶部操作栏：淡紫底吸顶、撑满整行（align-self stretch + 负margin抵消容器40rpx左右padding） */
 .leader-guide top-bar {
-  display: block; width: 100%; flex-shrink: 0;
+  display: block; flex-shrink: 0;
+  align-self: stretch;
+  margin-left: -40rpx; margin-right: -40rpx;
+}
+/* 淡紫色背景（addGlobalClass 使页面样式可达组件内部 .top-bar） */
+.leader-guide .top-bar {
+  background: #2e1065;
+  border-bottom-color: #a78bfa;
 }
 .leader-guide .guide-title {
   margin-top: 48rpx;
