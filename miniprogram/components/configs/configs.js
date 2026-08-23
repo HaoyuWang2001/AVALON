@@ -2,6 +2,7 @@
 // 配置弹窗公共组件（index 创建房间 / room 配置房间 共用）
 // 无状态：每次 open() 从 properties 重新初始化（默认值或传入 roomConfig 覆盖），不保留上次修改
 const api = require('../../services/api.js');
+const { getThemeClass } = require('../../utils/theme.js');
 const {
   CONFIG_GOOD_ROLES, CONFIG_EVIL_ROLES, CONFIG_FORCED_ROLES,
   DEFAULT_CONFIGS, SPEECH_OPTIONS, ROUND_OPTIONS, VOTE_OPTIONS, VOTE_REVEAL_OPTIONS,
@@ -19,6 +20,7 @@ Component({
   },
   data: {
     showConfig: false,
+    themeClass: '',
     selectedRoles: {},
     rules: {},
     loyalCount: 0,
@@ -57,7 +59,7 @@ Component({
     // 打开弹窗：无状态——每次从 properties 重新初始化
     open() {
       // 永远进入第一个配置页
-      this.setData({ logicalPage: 0, swiperPage: 0 });
+      this.setData({ logicalPage: 0, swiperPage: 0, themeClass: getThemeClass() });
       if (this.data.mode === 'update') {
         try {
           this._applyConfig(this.data.roomConfig);

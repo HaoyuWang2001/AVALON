@@ -7,7 +7,7 @@
 }
 .config-panel { display: flex; flex-direction: column; height: 100%; }
 .config-top-bar {
-  height: 100rpx; background: #FFFFFF;
+  height: 100rpx; background: var(--bg-card);
   display: flex; align-items: center; padding: 0 24rpx;
   flex-shrink: 0; border-bottom: 1rpx solid var(--gray-100);
 }
@@ -19,7 +19,7 @@
 .config-swiper { flex: 1; overflow: hidden; }
 .config-scroll { height: 100%; padding: 24rpx 32rpx 0; box-sizing: border-box; overflow-x: hidden; }
 .config-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
-.config-section { background: #FFFFFF; border-radius: 24rpx; padding: 28rpx; margin-bottom: 20rpx; box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04); }
+.config-section { background: var(--bg-card); border-radius: 24rpx; padding: 28rpx; margin-bottom: 20rpx; box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04); }
 .section-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 20rpx; display: flex; align-items: center; }
 .section-title::before { content: ''; width: 6rpx; height: 24rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 12rpx; }
 
@@ -94,14 +94,14 @@
 }
 .rule-row:last-child { border-bottom: none; }
 .rule-picker-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
-.rule-picker-fill { width: 100%; height: 100%; display: flex; align-items: center; justify-content: flex-end; }
+.rule-picker-fill { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: flex-end; }
 .rule-col { flex: 1; margin-right: 20rpx; }
 .rule-label { font-size: 28rpx; font-weight: 600; color: var(--gray-800); }
 .rule-desc { font-size: 22rpx; color: var(--gray-400); margin-top: 4rpx; display: block; }
 .rule-picker { font-size: 28rpx; color: var(--primary); font-weight: 600; }
 .rule-hint {
-  margin-top: 20rpx; padding: 20rpx; background: #FFFBEB; border-radius: 16rpx;
-  font-size: 24rpx; color: #92400E; line-height: 1.6;
+  margin-top: 20rpx; padding: 20rpx; background: rgba(245, 158, 11, 0.12); border-radius: 16rpx;
+  font-size: 24rpx; color: var(--warning, #B45309); line-height: 1.6;
 }
 
 /* ─────── Segment control ─────── */
@@ -146,7 +146,7 @@
 
 /* ─────── Nav bar ─────── */
 .nav-bar {
-  height: 100rpx; background: #FFFFFF; border-top: 1rpx solid var(--gray-100);
+  height: 100rpx; background: var(--bg-card); border-top: 1rpx solid var(--gray-100);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 32rpx; flex-shrink: 0;
 }

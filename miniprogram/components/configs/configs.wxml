@@ -1,4 +1,4 @@
-<view class="config-overlay" wx:if="{{showConfig}}">
+<view class="config-overlay {{themeClass ? 'theme-' + themeClass : ''}}" wx:if="{{showConfig}}">
     <view class="config-panel">
 
       <!-- Top bar -->
