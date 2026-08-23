@@ -40,14 +40,16 @@ function createRouter() {
   router.get('/history/user', async (req, res) => {
     try {
       const { openId } = req.query;
-      const limit = parseInt(req.query.limit) || 10;
 
       if (!openId) {
         return res.status(400).json({ success: false, message: '缺少必要参数' });
       }
 
       const db = require('../config/db');
-      const safeLimit = Math.min(Math.max(parseInt(req.query.limit) || 10, 1), 100);
+      // limit=0 表示全量（去掉 LIMIT）；其余保持 1-100 夹取，缺省 10
+      const rawLimit = parseInt(req.query.limit, 10);
+      const wantsAll = req.query.limit === '0' || rawLimit === 0;
+      const limitClause = wantsAll ? '' : `LIMIT ${Math.min(Math.max(rawLimit || 10, 1), 100)}`;
       const history = await db.query(
         `SELECT g.id as gameId, g.room_id as roomId, g.game_result as gameResult,
                 gp.role, gp.side,
@@ -58,7 +60,7 @@ function createRouter() {
          JOIN game_players gp ON gp.game_id = g.id AND gp.open_id = ?
          WHERE g.status = 'ended'
          ORDER BY g.created_at DESC
-         LIMIT ${safeLimit}`,
+         ${limitClause}`,
         [openId]
       );
 
