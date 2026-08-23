@@ -50,6 +50,16 @@
     </button>
   </view>
 
+  <view class="role-stats" wx:if="{{roleStats.length > 0}}">
+    <view class="role-stats-title">角色胜率</view>
+    <view class="role-stats-list">
+      <view class="role-stat-item" wx:for="{{roleStats}}" wx:key="role">
+        <text class="role-stat-name">{{item.roleName}}</text>
+        <text class="role-stat-value">{{item.wins}}/{{item.games}} ({{item.winRate}})</text>
+      </view>
+    </view>
+  </view>
+
   <view class="card history-card" wx:if="{{historyList.length > 0}}">
     <view class="history-title">历史对局</view>
     <view class="history-stats" wx:if="{{totalWinRate}}">
@@ -60,16 +70,6 @@
       <text class="history-role">{{item.roleName}}</text>
       <text class="history-duration">{{item.durationText}}</text>
       <text class="history-result {{item.isWin ? 'win' : 'lose'}}">{{item.isWin ? '胜' : '负'}}</text>
-    </view>
-  </view>
-
-  <view class="role-stats" wx:if="{{roleStats.length > 0}}">
-    <view class="role-stats-title">角色胜率</view>
-    <view class="role-stats-list">
-      <view class="role-stat-item" wx:for="{{roleStats}}" wx:key="role">
-        <text class="role-stat-name">{{item.roleName}}</text>
-        <text class="role-stat-value">{{item.wins}}/{{item.games}} ({{item.winRate}})</text>
-      </view>
     </view>
   </view>
 
