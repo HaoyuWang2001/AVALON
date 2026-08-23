@@ -1,6 +1,6 @@
 <!--pages/game/game.wxml-->
-<view class="game-page">
-  <!-- 顶部操作栏（公共组件）：始终显示；gameEnd 时隐藏左侧 ×/− 图标，保留身份/历史/配置 -->
+<!-- 顶部操作栏模板（正常页 + 车主全屏引导页共用，单一来源防漂移） -->
+<template name="gameTopBar">
   <top-bar>
     <view slot="left" class="top-icons">
       <block wx:if="{{currentPhase !== 'gameEnd'}}">
@@ -17,6 +17,11 @@
       <image class="top-mini-icon" src="/images/profile.png" mode="aspectFit" bindtap="openConfigView"></image>
     </view>
   </top-bar>
+</template>
+
+<view class="game-page">
+  <!-- 顶部操作栏（公共组件）：始终显示；gameEnd 时隐藏左侧 ×/− 图标，保留身份/历史/配置 -->
+  <template is="gameTopBar"/>
 
   <view class="container">
   <!-- 角色揭示提示蒙版（一次性） -->
@@ -492,6 +497,8 @@
 
   <!-- 车主全屏引导页（preNominate/speakingOrder 车长专属；强制车直接进 teamNomination 不显示） -->
   <view class="leader-guide" wx:if="{{showLeaderGuide}}">
+    <!-- 顶部操作栏并入全屏页：身份/历史/配置/分享等信息在引导阶段也可用 -->
+    <template is="gameTopBar"/>
     <view class="guide-title">您是尊贵的车主</view>
     <!-- preNominate：预点车（可选），全屏内选车 -->
     <block wx:if="{{guideStep === 'preNominate'}}">
