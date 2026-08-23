@@ -1,0 +1,157 @@
+/* styles/themes.wxss — 主题配色（可插拔）：把任意页面根 <view class="page {{themeClass}}"> 加上主题类即可整体换肤
+ * 复用方式：
+ *   1) 本文件已在 app.wxss 全局 @import
+ *   2) 目标页面根 view 加 {{themeClass}}（页面 js 里用 utils/theme.js 初始化/切换）
+ *   3) 主题类覆盖全部 token（灰阶反转 + bg/text/border/shadow），组件用 var(--xxx) 自动适配
+ * 默认（无主题类）= 亮色，沿用 tokens.wxss。
+ */
+
+/* 根容器：铺满视口并承载页面背景（theme 类覆盖 --bg-page 后此处自动换色） */
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  background-color: var(--bg-page);
+}
+
+/* ─────────── 主题 1：烛光殿堂（暖炭墨 + 纹章金 + 羊皮纸） ─────────── */
+.theme-torch {
+  --bg-page: #14110E;
+  --bg-card: #1E1A15;
+  --primary-bg: #2A241C;
+  --gold: #D4A052;
+
+  --text-title: #F7F1E8;
+  --text-body: #E0D5C7;
+  --text-muted: #9C8F80;
+  --link: #60A5FA;
+  --status-inroom: #7C8FB8;
+
+  --gray-50: #1E1A15;
+  --gray-100: #282319;
+  --gray-200: #362F24;
+  --gray-300: #4B4134;
+  --gray-400: #6D6254;
+  --gray-500: #8F8475;
+  --gray-600: #B8AC9C;
+  --gray-700: #D9CEC0;
+  --gray-800: #EAE2D6;
+  --gray-900: #F7F1E8;
+
+  --border-color: rgba(212, 160, 82, 0.12);
+  --danger-soft-bg: rgba(239, 68, 68, 0.12);
+  --danger-soft-text: #F87171;
+
+  --shadow-sm: 0 8rpx 24rpx rgba(0, 0, 0, 0.3), inset 0 1rpx 0 rgba(212, 160, 82, 0.06);
+  --shadow-md: 0 12rpx 32rpx rgba(0, 0, 0, 0.35), inset 0 1rpx 0 rgba(212, 160, 82, 0.08);
+  --shadow-lg: 0 20rpx 48rpx rgba(0, 0, 0, 0.4);
+  --shadow-primary: 0 8rpx 24rpx rgba(124, 58, 237, 0.3);
+}
+/* 签名：火炬光晕从顶部照亮 */
+.page.theme-torch::before {
+  content: ''; position: fixed; top: 0; left: 0; right: 0; height: 640rpx;
+  background: radial-gradient(ellipse at 50% 0%, rgba(212, 160, 82, 0.06), transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ─────────── 主题 2：暗夜圆桌（冷靛蓝 + 彩玻璃 + 秘银紫） ─────────── */
+.theme-aurora {
+  --bg-page: #0F0B1A;
+  --bg-card: #1A1528;
+  --primary-bg: #241E36;
+  --gold: #A78BFA;
+
+  --text-title: #ECE9F5;
+  --text-body: #D6D2E2;
+  --text-muted: #757083;
+  --link: #93C5FD;
+  --status-inroom: #7C8FB8;
+
+  --gray-50: #16121F;
+  --gray-100: #1E1930;
+  --gray-200: #2A2440;
+  --gray-300: #3A3352;
+  --gray-400: #565069;
+  --gray-500: #757083;
+  --gray-600: #9A95A8;
+  --gray-700: #BDB8C9;
+  --gray-800: #D6D2E2;
+  --gray-900: #ECE9F5;
+
+  --border-color: rgba(167, 139, 250, 0.14);
+  --danger-soft-bg: rgba(239, 68, 68, 0.14);
+  --danger-soft-text: #F87171;
+
+  --shadow-sm: 0 8rpx 24rpx rgba(0, 0, 0, 0.35), inset 0 1rpx 0 rgba(167, 139, 250, 0.08);
+  --shadow-md: 0 12rpx 32rpx rgba(0, 0, 0, 0.4), inset 0 1rpx 0 rgba(167, 139, 250, 0.10);
+  --shadow-lg: 0 20rpx 48rpx rgba(0, 0, 0, 0.45);
+  --shadow-primary: 0 8rpx 24rpx rgba(139, 92, 246, 0.35);
+}
+/* 签名：彩玻璃光晕（靛蓝+紫） */
+.page.theme-aurora::before {
+  content: ''; position: fixed; top: 0; left: 0; right: 0; height: 640rpx;
+  background: radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.07), transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ─────────── 主题 3：锻造钢铁（冷枪铁 + 金属拉丝 + 银） ─────────── */
+.theme-steel {
+  --bg-page: #171A1F;
+  --bg-card: linear-gradient(160deg, #272D35, #1E2329);
+  --primary-bg: #262B32;
+  --gold: #D4A052;
+
+  --text-title: #F2F5F7;
+  --text-body: #DDE3E8;
+  --text-muted: #7C848C;
+  --link: #93C5FD;
+  --status-inroom: #7C8FB8;
+
+  --gray-50: #1A1E24;
+  --gray-100: #23282F;
+  --gray-200: #2F353D;
+  --gray-300: #41484F;
+  --gray-400: #5C646B;
+  --gray-500: #7C848C;
+  --gray-600: #A1A8AF;
+  --gray-700: #C4CBD1;
+  --gray-800: #DDE3E8;
+  --gray-900: #F2F5F7;
+
+  --border-color: rgba(226, 232, 240, 0.08);
+  --danger-soft-bg: rgba(239, 68, 68, 0.12);
+  --danger-soft-text: #F87171;
+
+  --shadow-sm: 0 8rpx 24rpx rgba(0, 0, 0, 0.35), inset 0 1rpx 0 rgba(255, 255, 255, 0.04);
+  --shadow-md: 0 12rpx 32rpx rgba(0, 0, 0, 0.4), inset 0 1rpx 0 rgba(255, 255, 255, 0.05);
+  --shadow-lg: 0 20rpx 48rpx rgba(0, 0, 0, 0.45);
+  --shadow-primary: 0 8rpx 24rpx rgba(124, 58, 237, 0.3);
+}
+/* 签名：冷光从顶部投下 */
+.page.theme-steel::before {
+  content: ''; position: fixed; top: 0; left: 0; right: 0; height: 560rpx;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+/* ─────────── 页面根背景（.page 前缀确保高于页面本地 .page 背景规则） ─────────── */
+.page.theme-torch { background-color: #14110E; }
+.page.theme-aurora { background-color: #0F0B1A; }
+.page.theme-steel { background-color: #171A1F; }
+
+/* ─────────── configs 阵营角色卡暗色适配（浅蓝/浅红 → 深色调） ─────────── */
+.theme-torch .role-good, .theme-torch .role-loyal { background: rgba(59,130,246,0.16); border-color: rgba(59,130,246,0.4); }
+.theme-torch .role-evil { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.4); }
+.theme-torch .role-img-placeholder { background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(109,40,217,0.16)); }
+.theme-torch .role-loyal .role-img-placeholder, .theme-torch .role-good .role-img-placeholder { background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(37,99,235,0.16)); }
+.theme-torch .role-evil .role-img-placeholder { background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.14)); }
+
+.theme-aurora .role-good, .theme-aurora .role-loyal { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.38); }
+.theme-aurora .role-evil { background: rgba(239,68,68,0.13); border-color: rgba(239,68,68,0.38); }
+.theme-aurora .role-img-placeholder { background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(109,40,217,0.16)); }
+.theme-aurora .role-loyal .role-img-placeholder, .theme-aurora .role-good .role-img-placeholder { background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(37,99,235,0.16)); }
+.theme-aurora .role-evil .role-img-placeholder { background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.14)); }
+
+.theme-steel .role-good, .theme-steel .role-loyal { background: rgba(59,130,246,0.16); border-color: rgba(59,130,246,0.4); }
+.theme-steel .role-evil { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.4); }
+.theme-steel .role-img-placeholder { background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(109,40,217,0.16)); }
+.theme-steel .role-loyal .role-img-placeholder, .theme-steel .role-good .role-img-placeholder { background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(37,99,235,0.16)); }
+.theme-steel .role-evil .role-img-placeholder { background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.14)); }

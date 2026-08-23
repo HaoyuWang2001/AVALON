@@ -1,0 +1,2 @@
+<!-- components/theme-toggle/theme-toggle.wxml -->
+<view class="theme-toggle" hover-class="theme-toggle-hover" hover-stay-time="60" bindtap="onTap">🎨</view>

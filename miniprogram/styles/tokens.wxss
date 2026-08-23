@@ -19,6 +19,7 @@ page {
   --warning: #F59E0B;
   --info: #17A2B8;
   --link: #2563EB;
+  --status-inroom: #3B82F6;
 
   /* 中性灰阶 */
   --gray-50: #F9FAFB;
