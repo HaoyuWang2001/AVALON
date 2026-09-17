@@ -29,12 +29,12 @@
   --link: #60A5FA;
   --status-inroom: #7C8FB8;
   --btn-emoji-bg: #40382D;
-  --state-team: #5A481F;
-  --state-voted: #43336B;
-  --state-approve: #1D4A37;
-  --state-reject: #5A2424;
-  --state-good: #1D3A6B;
-  --state-evil: #5A2424;
+  --state-team: #5C4A1E;
+  --state-voted: #4A2E52;
+  --state-approve: #2C4A28;
+  --state-reject: #5E2A1E;
+  --state-good: #2A3A5C;
+  --state-evil: #5E2A1E;
 
   --gray-50: #2E281F;
   --gray-100: #3A332A;
@@ -77,12 +77,12 @@
   --link: #93C5FD;
   --status-inroom: #7C8FB8;
   --btn-emoji-bg: #2E2745;
-  --state-team: #5A481F;
-  --state-voted: #43336B;
-  --state-approve: #1D4A37;
-  --state-reject: #5A2424;
-  --state-good: #1D3A6B;
-  --state-evil: #5A2424;
+  --state-team: #56492A;
+  --state-voted: #3E2E6E;
+  --state-approve: #1B4A44;
+  --state-reject: #55243E;
+  --state-good: #26325E;
+  --state-evil: #55243E;
 
   --gray-50: #29223E;
   --gray-100: #322A4B;
