@@ -304,8 +304,8 @@ class GameModel {
   }
 
   /**
-   * 车主提交预选队伍：preNominate → speakingOrder。
-   * 仅当前队长可调用；需处于 preNominate 阶段。预选任意人数，仅校验成员都在本局。
+   * 车主预选队伍（discussion 阶段可选操作）：仅设置 pre_nominated_team，不切换阶段。
+   * 仅当前队长可调用；需处于 discussion 阶段。预选任意人数（可为空=确认空预选），仅校验成员都在本局。
    * @param {string} gameId 游戏ID
    * @param {string} openId 队长openId
    * @param {Array<string>} preNominatedTeam 预提名队伍（可选）
@@ -324,8 +324,8 @@ class GameModel {
           throw new Error('游戏不存在');
         }
 
-        if (game[0].current_phase !== 'preNominate') {
-          throw new Error('当前不是车主预选车型阶段');
+        if (game[0].current_phase !== 'discussion') {
+          throw new Error('当前不是讨论阶段');
         }
 
         // 队长校验（与 startGame 分配队长时使用相同的座位号排序）
@@ -338,7 +338,7 @@ class GameModel {
 
         const teamLeaderIndex = game[0].team_leader_index;
         if (teamLeaderIndex >= players.length || players[teamLeaderIndex].open_id !== openId) {
-          throw new Error('只有队长才能提交预选');
+          throw new Error('只有队长才能预选车型');
         }
 
         // 预提名队伍校验（若提供）：任意人数，仅校验成员都在本局
@@ -349,15 +349,14 @@ class GameModel {
             throw new Error('预提名队伍包含不在本局的玩家');
           }
           preTeamJson = JSON.stringify(preNominatedTeam);
+        } else {
+          // 确认空预选：写 '[]' 表示「已决定」（区别于 NULL=未决定）
+          preTeamJson = JSON.stringify([]);
         }
 
         await connection.execute(
           `UPDATE games 
-           SET pre_nominated_team = ?, speaking_order = 'asc',
-               discussion_set = FALSE,
-               lancelot_result = NULL,
-               current_phase = 'speakingOrder',
-               updated_at = NOW()
+           SET pre_nominated_team = ?, updated_at = NOW()
            WHERE id = ?`,
           [preTeamJson, gameId]
         );
@@ -366,111 +365,6 @@ class GameModel {
       return await this.getState(gameId);
     } catch (error) {
       console.error('提交预选失败:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * 车主确定发言顺序：speakingOrder（仍停留该阶段，由 startDiscussion 进入 discussion）。
-   * 仅当前队长可调用；需处于 speakingOrder 阶段。
-   * @param {string} gameId 游戏ID
-   * @param {string} openId 队长openId
-   * @param {string} speakingOrder 发言顺序 'asc' | 'desc'
-   * @returns {Promise<Object>} 更新后的游戏状态
-   */
-  static async setSpeakingOrder(gameId, openId, speakingOrder) {
-    try {
-      await db.transaction(async (connection) => {
-        const [game] = await connection.execute(
-          `SELECT current_phase, team_leader_index, room_id
-           FROM games WHERE id = ? FOR UPDATE`,
-          [gameId]
-        );
-
-        if (game.length === 0) {
-          throw new Error('游戏不存在');
-        }
-
-        if (game[0].current_phase !== 'speakingOrder') {
-          throw new Error('当前不是车主确定发言顺序阶段');
-        }
-
-        // 队长校验
-        const [players] = await connection.execute(
-          `SELECT gp.open_id FROM game_players gp
-           WHERE gp.game_id = ?
-           ORDER BY COALESCE(gp.seat_number, 999999), gp.open_id`,
-          [gameId]
-        );
-
-        const teamLeaderIndex = game[0].team_leader_index;
-        if (teamLeaderIndex >= players.length || players[teamLeaderIndex].open_id !== openId) {
-          throw new Error('只有队长才能设置发言顺序');
-        }
-
-        if (!['asc', 'desc'].includes(speakingOrder)) {
-          throw new Error('speakingOrder 必须是 asc 或 desc');
-        }
-
-        await connection.execute(
-          `UPDATE games 
-           SET speaking_order = ?, discussion_set = TRUE, updated_at = NOW()
-           WHERE id = ?`,
-          [speakingOrder, gameId]
-        );
-      });
-
-      return await this.getState(gameId);
-    } catch (error) {
-      console.error('设置发言顺序失败:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * 开始讨论：speakingOrder → discussion（纯讨论）。
-   * 仅当前队长可调用；需处于 speakingOrder 阶段。不校验预选/选序（pre_nominated_team 可为空）。
-   * @param {string} gameId 游戏ID
-   * @param {string} openId 队长openId
-   * @returns {Promise<Object>} 更新后的游戏状态
-   */
-  static async startDiscussion(gameId, openId) {
-    try {
-      await db.transaction(async (connection) => {
-        const [game] = await connection.execute(
-          `SELECT current_phase, team_leader_index
-           FROM games WHERE id = ? FOR UPDATE`,
-          [gameId]
-        );
-
-        if (game.length === 0) {
-          throw new Error('游戏不存在');
-        }
-
-        if (game[0].current_phase !== 'speakingOrder') {
-          throw new Error('当前不是车主确定发言顺序阶段');
-        }
-
-        const [players] = await connection.execute(
-          `SELECT gp.open_id FROM game_players gp
-           WHERE gp.game_id = ?
-           ORDER BY COALESCE(gp.seat_number, 999999), gp.open_id`,
-          [gameId]
-        );
-        const teamLeaderIndex = game[0].team_leader_index;
-        if (teamLeaderIndex >= players.length || players[teamLeaderIndex].open_id !== openId) {
-          throw new Error('只有队长才能开始讨论');
-        }
-
-        await connection.execute(
-          `UPDATE games SET current_phase = 'discussion', updated_at = NOW() WHERE id = ?`,
-          [gameId]
-        );
-      });
-
-      return await this.getState(gameId);
-    } catch (error) {
-      console.error('开始讨论失败:', error);
       throw error;
     }
   }
@@ -961,6 +855,7 @@ class GameModel {
         failedNominations: game.failedNominations,
         forcedSend: game.failedNominations >= (rules.maxFailedNominations || 3),
         preNominatedTeam: game.preNominatedTeam || null,
+        preNominateDecided: game.preNominatedTeam !== null,
         nominatedTeam: game.nominatedTeam || null,
         teamVotes: gatedTeamVotes,
         missionVotes: gatedMissionVotes,
@@ -971,8 +866,6 @@ class GameModel {
         crownHolderOpenId,
         voteRevealEndAt: game.voteRevealEndAt ? new Date(game.voteRevealEndAt).getTime() : null,
         isForcedCar: game.forcedCar === 1 || game.forcedCar === true,
-        speakingOrder: game.speakingOrder || 'asc',
-        discussionSet: !!(game.discussionSet === 1 || game.discussionSet === true),
         lancelotResult: game.lancelotResult || null,
         lancelotConfirmedCount,
         lancelotTotalCount: playerCount,
@@ -987,11 +880,26 @@ class GameModel {
           : []
       };
 
+      // 观众席：room_players seat=-1（观战者），供游戏页展示
+      const spectatorRows = await db.query(
+        `SELECT open_id as openId, nick_name as nickName, avatar_url as avatarUrl
+         FROM room_players
+         WHERE room_id = ? AND seat_number = -1
+         ORDER BY created_at`,
+        [game.roomId]
+      );
+      const spectators = spectatorRows.map(s => ({
+        openId: s.openId,
+        nickName: s.nickName || '玩家',
+        avatarUrl: s.avatarUrl || ''
+      }));
+
       return {
         success: true,
         player,
         basic,
         players: publicPlayers,
+        spectators,
         current,
         history: { cars, missions, lake, lancelotSwaps }
       };
@@ -1271,7 +1179,7 @@ class GameModel {
               const failedNominations = game[0].failed_nominations + 1;
               const newTeamLeaderIndex = (game[0].team_leader_index + 1) % playerCount;
               const forcedNext = failedNominations >= maxFailed;
-              const nextPhase = forcedNext ? 'teamNomination' : 'preNominate';
+              const nextPhase = forcedNext ? 'teamNomination' : 'discussion';
               await connection.execute(
                 `UPDATE games 
                  SET current_phase = ?,
@@ -1279,8 +1187,6 @@ class GameModel {
                      failed_nominations = ?,
                      nominated_team = NULL,
                      pre_nominated_team = NULL,
-                     speaking_order = 'asc',
-                     discussion_set = FALSE,
                      lancelot_result = NULL,
                      forced_car = FALSE,
                      vote_reveal_end_at = NULL,
@@ -1517,8 +1423,6 @@ class GameModel {
                      nominated_team = NULL,
                      failed_nominations = 0,
                      pre_nominated_team = NULL,
-                     speaking_order = 'asc',
-                     discussion_set = FALSE,
                      lancelot_result = NULL,
                      forced_car = FALSE,
                      updated_at = NOW()
@@ -1536,8 +1440,6 @@ class GameModel {
                      nominated_team = NULL,
                      failed_nominations = 0,
                      pre_nominated_team = NULL,
-                     speaking_order = 'asc',
-                     discussion_set = FALSE,
                      lancelot_result = ?,
                      forced_car = FALSE,
                      updated_at = NOW()
@@ -1548,14 +1450,12 @@ class GameModel {
               // 无湖仙/兰斯 → 直接进入下一轮 preNominate
               await connection.execute(
                 `UPDATE games 
-                 SET current_phase = 'preNominate',
+                 SET current_phase = 'discussion',
                      current_round = ?,
                      team_leader_index = ?,
                      nominated_team = NULL,
                      failed_nominations = 0,
                      pre_nominated_team = NULL,
-                     speaking_order = 'asc',
-                     discussion_set = FALSE,
                      lancelot_result = NULL,
                      forced_car = FALSE,
                      updated_at = NOW()
@@ -1737,8 +1637,6 @@ class GameModel {
                    nominated_team = NULL,
                    failed_nominations = 0,
                    pre_nominated_team = NULL,
-                   speaking_order = 'asc',
-                   discussion_set = FALSE,
                    lancelot_result = ?,
                    updated_at = NOW()
                WHERE id = ?`,
@@ -1747,14 +1645,12 @@ class GameModel {
           } else {
             await connection.execute(
               `UPDATE games 
-               SET current_phase = 'preNominate',
+               SET current_phase = 'discussion',
                    current_round = ?,
                    team_leader_index = ?,
                    nominated_team = NULL,
                    failed_nominations = 0,
                    pre_nominated_team = NULL,
-                   speaking_order = 'asc',
-                   discussion_set = FALSE,
                    lancelot_result = NULL,
                    updated_at = NOW()
                WHERE id = ?`,
@@ -1827,10 +1723,8 @@ class GameModel {
         if (total > 0 && confirmed >= total) {
           await connection.execute(
             `UPDATE games 
-             SET current_phase = 'preNominate',
+             SET current_phase = 'discussion',
                  pre_nominated_team = NULL,
-                 speaking_order = 'asc',
-                 discussion_set = FALSE,
                  lancelot_result = NULL,
                  updated_at = NOW()
              WHERE id = ?`,
@@ -1952,10 +1846,8 @@ class GameModel {
         if (total > 0 && confirmed >= total) {
           await connection.execute(
             `UPDATE games 
-             SET current_phase = 'preNominate',
+             SET current_phase = 'discussion',
                  pre_nominated_team = NULL,
-                 speaking_order = 'asc',
-                 discussion_set = FALSE,
                  lancelot_result = NULL,
                  updated_at = NOW()
              WHERE id = ?`,

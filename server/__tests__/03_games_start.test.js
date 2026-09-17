@@ -62,17 +62,17 @@ describe('03 — Game Start, Role Assignment & Vision', () => {
       expect(res.success).toBe(false);
     });
 
-    it('T3 confirmReveal：roleReveal→preNominate，全员确认后进入', async () => {
+    it('T3 confirmReveal：roleReveal→discussion，全员确认后进入', async () => {
       const { gameId, players } = await startBoard(buildCustomBoard10());
       // 未全员确认时停留 roleReveal
       const partial = await confirmReveal(gameId, players[0].openId);
       expect(partial.success).toBe(true);
       expect(partial.current.phase).toBe('roleReveal');
-      // 全员确认后进入 preNominate
+      // 全员确认后进入 discussion
       const state = await confirmRevealAll(gameId, players);
       expect(state.success).toBe(true);
-      expect(state.current.phase).toBe('preNominate');
-      // 幂等：已进入 preNominate 后再次确认被拒
+      expect(state.current.phase).toBe('discussion');
+      // 幂等：已进入 discussion 后再次确认被拒
       const again = await confirmReveal(gameId, players[0].openId);
       expect(again.success).toBe(false);
     });

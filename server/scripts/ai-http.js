@@ -133,12 +133,6 @@ async function main() {
       });
       console.log(JSON.stringify(res.body));
       break;
-    case 'order':
-      res = await request('POST', '/games/speakingOrder', {
-        gameId: arg('game'), openId: arg('openId'), speakingOrder: arg('order', 'asc')
-      });
-      console.log(JSON.stringify(res.body));
-      break;
     case 'lake':
       res = await request('POST', `/games/${arg('game')}/lakeInspect`, {
         openId: arg('openId'), targetOpenId: arg('target')

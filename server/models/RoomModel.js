@@ -366,11 +366,22 @@ class RoomModel {
         if (roomRows.length === 0) {
           throw new Error('房间不存在');
         }
-        if (roomRows[0].game_started) {
-          throw new Error('游戏进行中，无法退出房间');
-        }
         if (roomRows[0].owner_id === openId) {
           throw new Error('房主不能离开房间，请转让房主或解散房间');
+        }
+        // 游戏进行中：仅非入座玩家（等待区0/观战-1）可退出；入座玩家参与对局不可退出
+        if (roomRows[0].game_started) {
+          const [seatRows] = await connection.execute(
+            'SELECT seat_number FROM room_players WHERE room_id = ? AND open_id = ?',
+            [roomId, openId]
+          );
+          if (seatRows.length === 0) {
+            throw new Error('你不在该房间中');
+          }
+          const seat = seatRows[0].seat_number;
+          if (seat >= 1) {
+            throw new Error('游戏进行中，无法退出房间');
+          }
         }
         await connection.execute('DELETE FROM room_players WHERE room_id = ? AND open_id = ?', [roomId, openId]);
         await connection.execute('UPDATE users SET current_room_id = NULL WHERE open_id = ?', [openId]);

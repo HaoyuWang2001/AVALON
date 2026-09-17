@@ -448,63 +448,6 @@ function createRouter() {
     }
   });
 
-  // 车主确定发言顺序（speakingOrder → discussion）
-  router.post('/speakingOrder', async (req, res) => {
-    try {
-      const { gameId, openId, speakingOrder } = req.body;
-
-      if (!gameId || !openId) {
-        return res.status(400).json({ success: false, message: '缺少必要参数' });
-      }
-      if (!['asc', 'desc'].includes(speakingOrder)) {
-        return res.status(400).json({ success: false, message: 'speakingOrder 必须是 asc 或 desc' });
-      }
-
-      const result = await GameModel.setSpeakingOrder(gameId, openId, speakingOrder);
-
-      await emitGameForGame(req.body.gameId);
-
-      res.json(result);
-    } catch (error) {
-      console.error('设置发言顺序API错误:', error);
-
-      if (error.message.includes('游戏不存在')) {
-        return res.status(404).json({ success: false, message: error.message });
-      }
-
-      if (error.message.includes('当前不是车主确定发言顺序阶段') ||
-          error.message.includes('只有队长才能设置发言顺序') ||
-          error.message.includes('speakingOrder')) {
-        return res.status(400).json({ success: false, message: error.message });
-      }
-
-      res.status(500).json({ success: false, message: error.message || '设置发言顺序失败' });
-    }
-  });
-
-  // 开始讨论（speakingOrder → discussion，纯讨论阶段）
-  router.post('/startDiscussion', async (req, res) => {
-    try {
-      const { gameId, openId } = req.body;
-      if (!gameId || !openId) {
-        return res.status(400).json({ success: false, message: '缺少必要参数' });
-      }
-      const result = await GameModel.startDiscussion(gameId, openId);
-      await emitGameForGame(req.body.gameId);
-      res.json(result);
-    } catch (error) {
-      console.error('开始讨论API错误:', error);
-      if (error.message.includes('游戏不存在')) {
-        return res.status(404).json({ success: false, message: error.message });
-      }
-      if (error.message.includes('当前不是车主确定发言顺序阶段') ||
-          error.message.includes('只有队长才能开始讨论')) {
-        return res.status(400).json({ success: false, message: error.message });
-      }
-      res.status(500).json({ success: false, message: error.message || '开始讨论失败' });
-    }
-  });
-
   // 结束讨论（discussion → teamNomination，车长选车提交阶段）
   router.post('/endDiscussion', async (req, res) => {
     try {

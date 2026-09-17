@@ -24,8 +24,7 @@ async function setupGame(config) {
 
 async function driveToMissionVote(gameId, players, team) {
   let state = await getGameState(gameId);
-  if (state.current.phase === 'roleReveal' || state.current.phase === 'preNominate'
-      || state.current.phase === 'speakingOrder' || state.current.phase === 'discussion'
+  if (state.current.phase === 'roleReveal' || state.current.phase === 'discussion'
       || state.current.phase === 'teamNomination'
       || state.current.phase === 'lancelot') {
     await driveToDiscussion(gameId, players);
@@ -85,7 +84,7 @@ async function playRound(gameId, players, failCount) {
     if (!r.success) throw new Error('vote failed: ' + JSON.stringify(r));
   }
   let s = await getGameState(gameId);
-  // 任务完成后可能进入 lake/lancelot 阶段；确认推进到下一轮 preNominate
+  // 任务完成后可能进入 lake/lancelot 阶段；确认推进到下一轮 discussion
   if (s.current.phase === 'lancelot') {
     for (const p of players) {
       await confirmLancelot(gameId, p.openId);
@@ -108,7 +107,7 @@ async function advanceToRound4(gameId, players) {
 // 流车一轮（reject 多数）
 async function rejectRound(gameId, players) {
   let st = await getGameState(gameId);
-  if (st.current.phase === 'preNominate') {
+  if (st.current.phase !== 'discussion' && st.current.phase !== 'teamNomination') {
     await driveToDiscussion(gameId, players);
     st = await getGameState(gameId);
   }
@@ -290,13 +289,13 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
   });
 
   // ─────────── 流车/发车状态机 ───────────
-  it('04-13 流车：leader+1、round 不变、流车数+1、回 preNominate', async () => {
+  it('04-13 流车：leader+1、round 不变、流车数+1、回 discussion', async () => {
     const { gameId, players } = await setupGame(buildCustomBoard10());
     await driveToDiscussion(gameId, players);
     const before = await getGameState(gameId);
     const n = players.length;
     const after = await rejectRound(gameId, players);
-    expect(after.current.phase).toBe('preNominate');
+    expect(after.current.phase).toBe('discussion');
     expect(after.current.round).toBe(1);
     expect(leaderIndex(after, players)).toBe((leaderIndex(before, players) + 1) % n);
     expect(after.current.failedNominations).toBe(1);
@@ -320,14 +319,14 @@ describe('04 — 通用游戏机制（与胜负路径无关）', () => {
   });
 
   // ─────────── 强制发车 ───────────
-  it('04-15 强制发车：达阈值→跳过preNominate/speakingOrder直接进discussion→forcedCar=true→missionVote→下一轮、流车数0', async () => {
+  it('04-15 强制发车：达阈值→直接进 teamNomination→forcedCar=true→missionVote→下一轮、流车数0', async () => {
     const { gameId, players } = await setupGame(buildCustomBoard10());
     await driveToDiscussion(gameId, players);
     for (let k = 0; k < 3; k++) await rejectRound(gameId, players);
     const forced = await getGameState(gameId);
     expect(forced.current.failedNominations).toBe(3);
     expect(forced.current.forcedSend).toBe(true);
-    // 强制车：跳过 preNominate/speakingOrder/discussion，直接进入 teamNomination
+    // 强制车：跳过 discussion，直接进入 teamNomination
     expect(forced.current.phase).toBe('teamNomination');
 
     const n = players.length;

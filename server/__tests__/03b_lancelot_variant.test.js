@@ -2,7 +2,7 @@ const {
   createLancelotGame, getGameState, confirmRevealAll,
   driveToTeamNomination,
   submitNomination, castVote, castMissionVote,
-  submitPreNomination, selectSpeakingOrder, confirmLancelot,
+  confirmLancelot,
   assassinate, endGame
 } = require('./helpers/testHelper');
 
@@ -75,20 +75,6 @@ describe('03b — Lancelot Single-Role Variants (10 players)', () => {
         // 湖仙验人：10 人变体未启用湖仙，理论上不进入；若进入则跳过（无持有者逻辑则跳过）
         if (state.current.phase === 'lake') {
           break;
-        }
-
-        // 车主预选车型：提交空预选
-        if (state.current.phase === 'preNominate') {
-          const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
-          await submitPreNomination(gameId, leader.openId, []);
-          state = await getGameState(gameId);
-        }
-
-        // 车主确定发言顺序：选 asc
-        if (state.current.phase === 'speakingOrder') {
-          const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
-          await selectSpeakingOrder(gameId, leader.openId, 'asc');
-          state = await getGameState(gameId);
         }
 
         // 讨论阶段：正式选车（先结束讨论进 teamNomination）

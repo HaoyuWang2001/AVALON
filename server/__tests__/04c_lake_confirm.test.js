@@ -32,8 +32,7 @@ function lakeLancelotConfig() {
 // 从任务投票推进：驱动第 1 轮任务完成并进入 lake 阶段
 async function driveToLake(gameId, players) {
   let state = await getGameState(gameId);
-  if (state.current.phase === 'roleReveal' || state.current.phase === 'preNominate'
-      || state.current.phase === 'speakingOrder' || state.current.phase === 'discussion') {
+  if (state.current.phase === 'roleReveal' || state.current.phase === 'discussion') {
     await driveToDiscussion(gameId, players);
     state = await getGameState(gameId);
   }
@@ -128,14 +127,14 @@ describe('04c — 湖仙验人两阶段（lake → lakeConfirm → 全员确认 
     expect(unconfirmedPub.lakeConfirmed).toBe(false);
     expect(state.player.lakeConfirmed).toBe(true);
 
-    // 其余玩家确认 → 全员确认后推进到下一轮 preNominate，计数与标记归零
+    // 其余玩家确认 → 全员确认后推进到下一轮 discussion，计数与标记归零
     const rest = players.slice(Math.floor(n / 2));
     for (const p of rest) {
       const r = await confirmLake(gameId, p.openId);
       expect(r.success).toBe(true);
     }
     state = await getGameState(gameId, players[0].openId);
-    expect(state.current.phase).toBe('preNominate');
+    expect(state.current.phase).toBe('discussion');
     expect(state.current.round).toBe(2);
     expect(state.current.lakeConfirmedCount).toBe(0);
     expect(state.player.lakeConfirmed).toBe(false);
@@ -164,7 +163,7 @@ describe('04c — 湖仙验人两阶段（lake → lakeConfirm → 全员确认 
     expect(state.current.lakeConfirmedCount).toBe(0);
 
     state = await confirmAll(gameId, players, confirmLancelot);
-    expect(state.current.phase).toBe('preNominate');
+    expect(state.current.phase).toBe('discussion');
     expect(state.current.round).toBe(2);
   });
 });

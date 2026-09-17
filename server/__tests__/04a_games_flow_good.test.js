@@ -1,7 +1,7 @@
 const {
   createRoomAndStartGame, getGameState, confirmRevealAll, confirmLancelot,
-  driveToTeamNomination, startDiscussion,
-  submitNomination, castVote, castMissionVote, submitPreNomination, selectSpeakingOrder,
+  driveToTeamNomination,
+  submitNomination, castVote, castMissionVote,
   assassinate, endGame,
   buildStandardRoomConfig, buildCustomBoard9, buildCustomBoard10, withConfigOverrides
 } = require('./helpers/testHelper');
@@ -49,20 +49,6 @@ describe('04a — Good Win Full Game Flow', () => {
         // 湖仙验人：标准板未启用，理论上不进入
         if (state.current.phase === 'lake') break;
 
-        // 车主预选车型
-        if (state.current.phase === 'preNominate') {
-          const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
-          await submitPreNomination(gameId, leader.openId, []);
-          continue;
-        }
-        // 车主确定发言顺序 → 开始讨论
-        if (state.current.phase === 'speakingOrder') {
-          const leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
-          await selectSpeakingOrder(gameId, leader.openId, 'asc');
-          await startDiscussion(gameId, leader.openId);
-          continue;
-        }
-
         if (state.current.phase === 'discussion') {
           await driveToTeamNomination(gameId, players);
           state = await getGameState(gameId);
@@ -81,7 +67,7 @@ describe('04a — Good Win Full Game Flow', () => {
         }
 
         state = await getGameState(gameId);
-        if (state.current.phase === 'preNominate' || state.current.phase === 'discussion') continue;
+        if (state.current.phase === 'discussion') continue;
         if (state.current.phase === 'gameEnd') break;
         if (state.current.phase === 'assassination') { goodMissionCount = 3; break; }
 

@@ -4,7 +4,7 @@ const {
   joinRoom, getRoom, toggleReady, leaveRoom, updateSeatNumber,
   kickPlayer, banSeat, updateRoomConfig, transferOwner, disband,
   randomSeats, roomStats, cleanupRooms, startGame, apiGet, apiPost,
-  createRoomWithPlayers
+  createRoomWithPlayers, createRoomAndStartGame
 } = require('./helpers/testHelper');
 
 const SPECTATOR_1 = { allow: true, max: 1 };
@@ -254,6 +254,26 @@ describe('02 — Room Management', () => {
       expect(room.success).toBe(true);
       expect(room.room.ownerId).toBe(hostId);
       expect(room.room.players.find(p => p.openId === uid)).toBeUndefined();
+    });
+
+    it('02.17a 游戏进行中：入座玩家不可退出（400）', async () => {
+      const { roomId, players } = await createRoomAndStartGame(5);
+      const uid = players[1].openId; // 非房主入座玩家
+      const res = await apiPost('/api/rooms/leave', { roomId, openId: uid });
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/游戏进行中/);
+    });
+
+    it('02.17b 游戏进行中：观战者可退出（200）', async () => {
+      const { roomId } = await createRoomAndStartGame(5);
+      // 游戏开始后加入 → 自动观战(seat=-1)
+      const specId = makeUserId();
+      const join = await joinRoom(roomId, specId, 0, 'Spec');
+      expect(join.success).toBe(true);
+      const leave = await leaveRoom(roomId, specId);
+      expect(leave.success).toBe(true);
+      const room = await getRoom(roomId);
+      expect(room.room.players.find(p => p.openId === specId)).toBeUndefined();
     });
   });
 
