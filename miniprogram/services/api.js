@@ -190,22 +190,6 @@ class ApiService {
     });
   }
 
-  async selectSpeakingOrder(gameId, speakingOrder) {
-    const openId = this.openId || getApp().globalData.openId;
-    return this.request(`/games/speakingOrder`, {
-      method: 'POST',
-      data: { gameId, openId, speakingOrder }
-    });
-  }
-
-  async startDiscussion(gameId) {
-    const openId = this.openId || getApp().globalData.openId;
-    return this.request(`/games/startDiscussion`, {
-      method: 'POST',
-      data: { gameId, openId }
-    });
-  }
-
   async endDiscussion(gameId) {
     const openId = this.openId || getApp().globalData.openId;
     return this.request(`/games/endDiscussion`, {

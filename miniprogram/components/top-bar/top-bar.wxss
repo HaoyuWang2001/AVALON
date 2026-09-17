@@ -3,7 +3,7 @@
   height: 100rpx; box-sizing: border-box;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 32rpx;
-  background: #FFFFFF;
+  background: var(--bg-card);
   border-bottom: 1rpx solid var(--border-color);
 }
 .top-bar-side {

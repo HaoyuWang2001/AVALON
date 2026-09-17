@@ -22,6 +22,7 @@ Page({
     customNickName: '',
     configsUserInfo: null,
     currentRoom: null,
+    currentSeat: null,
     isCurrentRoomHost: false,
     userStatusText: '在线',
     userStatusClass: 'status-online',
@@ -255,6 +256,7 @@ Page({
       if (res && res.success && res.room) {
         this.setData({
           currentRoom: res.room,
+          currentSeat: res.room.seatNumber !== undefined ? res.room.seatNumber : null,
           isCurrentRoomHost: !!(res.room.ownerId && res.room.ownerId === openId)
         });
         // 状态：游戏中(红) / 房间中(蓝)
@@ -283,7 +285,8 @@ Page({
   exitCurrentRoom() {
     const room = this.data.currentRoom;
     if (!room) return;
-    if (room.gameStarted) {
+    // 游戏中仅入座玩家（seat>=1）不可退出；观战/等待可退出
+    if (room.gameStarted && this.data.currentSeat >= 1) {
       wx.showToast({ title: '游戏进行中，无法退出房间', icon: 'none' });
       return;
     }
@@ -293,7 +296,7 @@ Page({
       success: (res) => {
         if (res.confirm) {
           api.leaveRoom(room.roomId).then(() => {
-            this.setData({ currentRoom: null, isCurrentRoomHost: false, userStatusText: '在线', userStatusClass: 'status-online' });
+            this.setData({ currentRoom: null, currentSeat: null, isCurrentRoomHost: false, userStatusText: '在线', userStatusClass: 'status-online' });
             getApp().globalData.roomId = null;
             wx.showToast({ title: '已退出', icon: 'success' });
           }).catch(() => {});

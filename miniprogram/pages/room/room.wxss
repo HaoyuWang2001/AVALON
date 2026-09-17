@@ -12,7 +12,7 @@ button::after { border: none; }
 .start-game-bar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
   padding: 20rpx 40rpx calc(20rpx + env(safe-area-inset-bottom));
-  background: #FFFFFF; border-top: 1rpx solid var(--border-color);
+  background: var(--bg-card); border-top: 1rpx solid var(--border-color);
   box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
 }
 .start-game-btn {
@@ -194,7 +194,7 @@ button::after { border: none; }
 }
 .launch-modal-panel {
   position: relative; width: 560rpx; border-radius: 24rpx;
-  background: #fff; padding: 40rpx 32rpx 28rpx;
+  background: var(--bg-card); padding: 40rpx 32rpx 28rpx;
   display: flex; flex-direction: column; align-items: center;
 }
 .launch-modal-title { font-size: 30rpx; font-weight: 700; color: var(--gray-800); margin-bottom: 28rpx; text-align: center; }
@@ -214,7 +214,7 @@ button::after { border: none; }
 }
 
 /* ─── Card 1: Room Info ─── */
-.room-info-card { background: #fff; }
+.room-info-card { background: var(--bg-card); }
 .info-top-row { display: flex; align-items: center; justify-content: space-between; }
 .info-label { font-size: 26rpx; color: var(--gray-500); margin-left: 4rpx; }
 .info-btns { display: flex; gap: 12rpx; align-items: center; }
@@ -259,7 +259,7 @@ button::after { border: none; }
 .seat-filled { background: var(--gray-50); }
 .seat-self { padding: 24rpx 16rpx; margin: 0 -4rpx; box-shadow: 0 2rpx 12rpx rgba(139, 92, 246, 0.1); border-radius: 12rpx; background: var(--primary-bg); }
 .seat-self .seat-action { gap: 16rpx; }
-.seat-empty { background: #FAFAFA; border: 2rpx dashed var(--gray-200); }
+.seat-empty { background: var(--gray-50); border: 2rpx dashed var(--gray-200); }
 
 .seat-num {
   width: 52rpx; height: 52rpx; border-radius: 12rpx;
@@ -311,7 +311,7 @@ button::after { border: none; }
 .config-view-panel {
   width: 640rpx;
   max-height: 82vh;
-  background: #ffffff;
+  background: var(--bg-card);
   border-radius: 24rpx;
   padding: 36rpx 40rpx;
   box-sizing: border-box;
@@ -321,7 +321,7 @@ button::after { border: none; }
   flex: 1; min-height: 0; max-height: 60vh;
 }
 .config-view-title {
-  font-size: 36rpx; font-weight: 800; color: #111827;
+  font-size: 36rpx; font-weight: 800; color: var(--text-title);
   text-align: center; margin-bottom: 24rpx;
 }
 .config-view-sec {
@@ -329,7 +329,7 @@ button::after { border: none; }
   margin: 24rpx 0 12rpx;
 }
 .config-view-line {
-  font-size: 28rpx; color: #374151;
+  font-size: 28rpx; color: var(--text-body);
   line-height: 1.7;
 }
-.cv-strong { font-weight: 700; color: #111827; }
+.cv-strong { font-weight: 700; color: var(--text-title); }

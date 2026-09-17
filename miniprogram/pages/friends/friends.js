@@ -1,5 +1,6 @@
 // pages/friends/friends.js
 const api = require('../../services/api.js');
+const { getThemeClass, getThemeBg } = require('../../utils/theme.js');
 const { DEFAULT_AVATAR, ROLE_NAMES } = require('../../utils/constants.js');
 
 function formatDuration(seconds) {
@@ -14,6 +15,7 @@ function formatDuration(seconds) {
 
 Page({
   data: {
+    themeClass: '',
     me: { openId: '', uniqueId: '', avatarUrl: DEFAULT_AVATAR, nickName: '' },
     needSetupId: false,
     setupIdValue: '',
@@ -34,12 +36,15 @@ Page({
 
   onLoad() {
     this._openId = getApp().globalData.openId || wx.getStorageSync('openId') || '';
+    const tc = getThemeClass();
+    this.setData({ themeClass: tc });
   },
 
   onShow() {
     this.loadMe();
     this.loadFriends();
     this.loadRequests();
+    wx.setBackgroundColor({ backgroundColor: getThemeBg(this.data.themeClass) });
   },
 
   onPullDownRefresh() {

@@ -1,5 +1,6 @@
 // pages/friend-detail/friend-detail.js
 const api = require('../../services/api.js');
+const { getThemeClass, getThemeBg } = require('../../utils/theme.js');
 const { DEFAULT_AVATAR, ROLE_NAMES } = require('../../utils/constants.js');
 
 function formatDuration(seconds) {
@@ -14,6 +15,7 @@ function formatDuration(seconds) {
 
 Page({
   data: {
+    themeClass: '',
     friendOpenId: '',
     friend: null,           // {openId, nickName, avatarUrl, uniqueId, online, room}
     roleStats: [],
@@ -26,6 +28,8 @@ Page({
 
   onLoad(options) {
     this._openId = getApp().globalData.openId || wx.getStorageSync('openId') || '';
+    const tc = getThemeClass();
+    this.setData({ themeClass: tc });
     this.setData({ friendOpenId: options.openId || '' });
   },
 
@@ -33,6 +37,7 @@ Page({
     this.loadDetail();
     this.loadStats();
     this.loadHistory();
+    wx.setBackgroundColor({ backgroundColor: getThemeBg(this.data.themeClass) });
   },
 
   loadDetail() {

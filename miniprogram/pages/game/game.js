@@ -1,6 +1,7 @@
 // pages/game/game.js
 const app = getApp();
 const api = require('../../services/api.js');
+const { getThemeClass, getThemeBg } = require('../../utils/theme.js');
 const { buildConfigSummary } = require('../../utils/configSummary.js');
 
 // 睁眼狼（刺杀阶段向所有玩家暴露身份）
@@ -110,8 +111,8 @@ function enrichTablePlayer(p, ctx) {
   if (isOldLake && p.openId !== lakeHolderOpenId) {
     tags.push({ text: '老湖仙', cls: TAG_STYLES.grey });
   }
-  // 车主确认预选后（speakingOrder/discussion 阶段）展示预选队伍成员
-  if ((currentPhase === 'speakingOrder' || currentPhase === 'discussion')
+  // 车主预选后（discussion 阶段）展示预选队伍成员
+  if (currentPhase === 'discussion'
       && (preNominatedTeam || []).includes(p.openId)) {
     tags.push({ text: '预选', cls: TAG_STYLES.orange });
   }
@@ -160,10 +161,12 @@ function getTeamSizeByRound(playerCount, round) {
 
 Page({
   data: {
+    themeClass: '',
     roomId: '',
     gameId: '',
     gameState: null,
     playerRole: null,
+    spectators: [],
     playerSide: null,
     roleName: '',
     roleEmoji: '',
@@ -202,13 +205,9 @@ Page({
     gameResult: null,
     playerId: '',
     isHost: false,
-    speakingOrder: 'asc',
-    speakingOrderIndex: 0,
-    speakingOrderConfirmed: false,
     lancelotResult: null,
     lancelotConfirmedCount: 0,
     lancelotTotalCount: 0,
-    speakingOrderOptions: [{ label: '按座位号从1号开始', value: 'asc' }, { label: '从队长开始逆序', value: 'desc' }],
     showRoleModal: false,
     showRolePage: false,
     showRoleMask: false,
@@ -267,10 +266,9 @@ Page({
     markRoleOptions: [],
     showConfigView: false,
     configSummary: null,
-    showLeaderGuide: false,
-    guideStep: '',
-    discussionSet: false,
     guideSortedPlayers: [],
+    showPreteamPicker: false,
+    preNominateDecided: false,
     assassinationSuccess: false,
     assassinationPhase: '',
     missionVoteReady: false,
@@ -297,6 +295,7 @@ Page({
       return;
     }
     this.setData({
+      themeClass: getThemeClass(),
       roomId: roomId || '',
       gameId: gameId || '',
       playerId: app.globalData.openId || '',
@@ -333,6 +332,7 @@ Page({
     this.fetchGameState();
     // 轮询兜底：仅当 socket 未连接（closed/connecting/idle）时启动，避免与实时推送重复
     this.syncGamePolling();
+    wx.setBackgroundColor({ backgroundColor: getThemeBg(this.data.themeClass) });
   },
 
   // 轮询开关：socket open 时停止（靠实时推送），非 open 时启动（每 5s HTTP 兜底）
@@ -638,6 +638,7 @@ Page({
 
         this.setData({
           gameState: res.current,
+          spectators: res.spectators || [],
           isInGame,
           playerLakeConfirmed,
           playerLancelotConfirmed,
@@ -690,10 +691,6 @@ Page({
           recordTimeline: recordTimeline,
           showFailDetail: showFailDetail,
           lastMissionFailCount: lastMissionFailCount,
-          speakingOrder: res.current.speakingOrder || 'asc',
-          discussionSet: !!res.current.discussionSet,
-          speakingOrderIndex: (res.current.speakingOrder || 'asc') === 'desc' ? 1 : 0,
-          speakingOrderConfirmed: !!res.current.discussionSet,
           lancelotResult: res.current.lancelotResult || null,
           lancelotConfirmedCount: res.current.lancelotConfirmedCount || 0,
           lancelotTotalCount: res.current.lancelotTotalCount || 0,
@@ -703,10 +700,10 @@ Page({
           phaseText: this.getPhaseText(phase),
           lastMissionResult: !!(missions.length > 0 && missions[missions.length - 1].success),
           isTeamLeader: !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
-          guideStep: (phase === 'preNominate' || phase === 'speakingOrder') && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId ? phase : '',
-          showLeaderGuide: (phase === 'preNominate' || phase === 'speakingOrder') && !res.current.forcedSend && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
+          preNominateDecided: !!res.current.preNominateDecided,
+          showPreteamPicker: (phase === 'discussion' && !res.current.preNominateDecided) ? this.data.showPreteamPicker : false,
           requiredTeamSize: teamSize,
-          showSelectCheck: (phase === 'preNominate' || phase === 'teamNomination') && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
+          showSelectCheck: (phase === 'teamNomination' || (phase === 'discussion' && this.data.showPreteamPicker)) && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
           voteCount: Object.keys(res.current.teamVotes || {}).length,
           playerTotal: (res.players || []).length,
           isMissionTeamMember: !!((res.current.nominatedTeam || []).includes(myOpenId)),
@@ -896,16 +893,17 @@ Page({
 
   nominatePlayer(e) {
     if (!this.checkIfTeamLeader()) return;
-    if (this.data.currentPhase !== 'preNominate' && this.data.currentPhase !== 'teamNomination') return;
+    const phase = this.data.currentPhase;
+    if (phase !== 'teamNomination' && !(phase === 'discussion' && this.data.showPreteamPicker)) return;
     const playerId = e.currentTarget.dataset.id;
-    // discussion 已满员时，未选中的禁用玩家不可再选（已选的可取消）
+    // 已满员时，未选中的禁用玩家不可再选（已选的可取消）
     const target = this.data.tablePlayers.find(p => p.openId === playerId);
     if (target && target.disabled && !target.checked) return;
     // 本地临时选中：点选/取消
     const sel = this.data.localSelected.slice();
     const i = sel.indexOf(playerId);
     if (i === -1) sel.push(playerId); else sel.splice(i, 1);
-    // 重算所有玩家的 checked/disabled（基于新 localSelected，保证达到上限后立即禁用；preNominate 允许 0~车人数）
+    // 重算所有玩家的 checked/disabled（基于新 localSelected，保证达到上限后立即禁用；预选允许 0~车人数）
     const requiredSize = this.data.requiredTeamSize || 0;
     const atLimit = sel.length >= requiredSize;
     const tablePlayers = this.data.tablePlayers.map(p => {
@@ -920,14 +918,27 @@ Page({
     });
   },
 
-  // preNominate 阶段：车主提交预选车型（发送 localSelected → 后端切到 speakingOrder）
-  submitPreNomination() {
+  // discussion 阶段：打开预选车面板（仅车主；预选后可关，FAB 消失前不可再开）
+  openPreteamPicker() {
     if (!this.checkIfTeamLeader()) return;
-    if (this.data.currentPhase !== 'preNominate') return;
+    if (this.data.currentPhase !== 'discussion' || this.data.preNominateDecided) return;
+    this.setData({ showPreteamPicker: true, showSelectCheck: true });
+  },
+
+  // 暂时跳过：仅关闭面板（不提交，FAB 保留，可再次打开）
+  closePreteamPicker() {
+    this.setData({ showPreteamPicker: false, showSelectCheck: false });
+  },
+
+  // 确认预选：提交 localSelected（可空=确认空预选）→ 关闭面板 + 刷新（preNominateDecided=true → FAB 消失）
+  confirmPreNomination() {
+    if (!this.checkIfTeamLeader()) return;
+    if (this.data.currentPhase !== 'discussion') return;
     const { gameId, localSelected } = this.data;
     wx.showLoading({ title: '提交中...', mask: true });
     api.submitPreNomination(gameId, localSelected).then(() => {
       wx.hideLoading();
+      this.setData({ showPreteamPicker: false, localSelected: [] });
       this.fetchGameState();
     }).catch(err => {
       wx.hideLoading();
@@ -966,20 +977,6 @@ Page({
     });
   },
 
-  // speakingOrder 阶段：车主开始讨论（进入 discussion 纯讨论阶段）
-  startDiscussion() {
-    if (!this.checkIfTeamLeader()) return;
-    const { gameId } = this.data;
-    wx.showLoading({ title: '提交中...', mask: true });
-    api.startDiscussion(gameId).then(() => {
-      wx.hideLoading();
-      this.fetchGameState();
-    }).catch(err => {
-      wx.hideLoading();
-      wx.showToast({ title: (err && err.message) || '开始讨论失败', icon: 'none' });
-    });
-  },
-
   // discussion 阶段：车主结束讨论（进入 teamNomination 选车提交阶段）
   endDiscussion() {
     if (!this.checkIfTeamLeader()) return;
@@ -1002,7 +999,7 @@ Page({
   // 长桌玩家点击（按阶段分发）
   onTablePlayerTap(e) {
     const { currentPhase } = this.data;
-    if (currentPhase === 'preNominate' || currentPhase === 'teamNomination') {
+    if (currentPhase === 'teamNomination' || (currentPhase === 'discussion' && this.data.showPreteamPicker)) {
       this.nominatePlayer(e);
     } else if (currentPhase === 'lake') {
       // 湖仙验人：持有者点击卡片单选目标（不可选自己/老湖仙），底部按钮确认
@@ -1139,60 +1136,6 @@ Page({
     this.setData({ showConfigView: false });
   },
 
-  // ── 车主全屏引导页 ──
-  // preNominate：提交预选（localSelected 可能为空）→ speakingOrder
-  guideSubmitPreNomination() {
-    if (this.data.guideStep !== 'preNominate') return;
-    const { gameId, localSelected } = this.data;
-    wx.showLoading({ title: '提交中...', mask: true });
-    api.submitPreNomination(gameId, localSelected).then(() => {
-      wx.hideLoading();
-      this.fetchGameState();
-    }).catch(err => {
-      wx.hideLoading();
-      wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
-    });
-  },
-
-  // preNominate：跳过预选（空预选）→ speakingOrder
-  guideSkipPreNomination() {
-    if (this.data.guideStep !== 'preNominate') return;
-    const { gameId } = this.data;
-    wx.showLoading({ title: '提交中...', mask: true });
-    api.submitPreNomination(gameId, []).then(() => {
-      wx.hideLoading();
-      this.fetchGameState();
-    }).catch(err => {
-      wx.hideLoading();
-      wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
-    });
-  },
-
-  // speakingOrder：选择方向（复选切换）
-  guidePickOrder(e) {
-    const order = e.currentTarget.dataset.order;
-    if (!['asc', 'desc'].includes(order)) return;
-    this.setData({ guideArrow: order });
-  },
-
-  // speakingOrder：确认方向 → 提交发言顺序（仍 speakingOrder）
-  guideConfirmOrder() {
-    const { gameId, guideArrow } = this.data;
-    if (!guideArrow) {
-      wx.showToast({ title: '请先选择发言顺序', icon: 'none' });
-      return;
-    }
-    wx.showLoading({ title: '提交中...', mask: true });
-    api.selectSpeakingOrder(gameId, guideArrow).then(() => {
-      wx.hideLoading();
-      this.fetchGameState();
-    }).catch(err => {
-      wx.hideLoading();
-      wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
-    });
-  },
-
-
   // lake 阶段：底部"确认查验"按钮（需先选中目标）；结果图弹窗由 lakeConfirm 阶段驱动
   confirmLakeInspect() {
     const { gameId, lakeTargetOpenId } = this.data;
@@ -1278,9 +1221,7 @@ Page({
   centerPhaseText() {
     const map = {
       roleReveal: '身份',
-      preNominate: '预选',
       teamNomination: '选车',
-      speakingOrder: '发言序',
       discussion: '发言',
       teamVote: '投票',
       missionVote: '任务',
@@ -1582,8 +1523,6 @@ Page({
   getPhaseText(phase) {
     const phaseMap = {
       'roleReveal': '角色揭示',
-      'preNominate': '车主预选车型',
-      'speakingOrder': '车主确定发言顺序',
       'discussion': '讨论阶段',
       'teamNomination': '提交车型',
       'teamVote': '队伍投票',

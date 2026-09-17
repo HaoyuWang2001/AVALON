@@ -1,5 +1,5 @@
 <!--pages/friends/friends.wxml-->
-<view class="page">
+<view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
 
   <!-- 首次设置ID遮罩：未设置前好友功能不可用 -->
   <view class="setup-mask" wx:if="{{needSetupId}}">

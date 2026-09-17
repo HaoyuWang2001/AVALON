@@ -20,6 +20,17 @@ page {
   --info: #17A2B8;
   --link: #2563EB;
   --status-inroom: #3B82F6;
+  --btn-emoji-bg: #F3F4F6;
+
+  /* 玩家卡片状态标识（车队/已投/确认/赞成/反对）渐变端色 */
+  --state-team: #FEF3C7;
+  --state-voted: #DDD6FE;
+  --state-approve: #D1FAE5;
+  --state-reject: #FEE2E2;
+  --state-good: #DBEAFE;
+  --state-evil: #FEE2E2;
+  /* 状态渐变中间停靠实色（--bg-card 可能为渐变，作停靠点需实色防嵌套失效） */
+  --bg-card-solid: #FFFFFF;
 
   /* 中性灰阶 */
   --gray-50: #F9FAFB;

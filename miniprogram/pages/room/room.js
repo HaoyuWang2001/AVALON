@@ -1,6 +1,7 @@
 // pages/room/room.js
 const app = getApp();
 const api = require('../../services/api.js');
+const { getThemeClass, getThemeBg } = require('../../utils/theme.js');
 const { buildConfigSummary } = require('../../utils/configSummary.js');
 
 const {
@@ -11,6 +12,7 @@ const {
 
 Page({
   data: {
+    themeClass: '',
     roomId: '',
     playerCount: 0,
     players: [],
@@ -46,7 +48,9 @@ Page({
   onLoad(options) {
     const { roomId } = options;
     const launchAnim = wx.getStorageSync('avalon_launch_anim') || 'A';
+    const tc = getThemeClass();
     this.setData({
+      themeClass: tc,
       roomId: roomId || '',
       launchAnim: launchAnim,
       launchAnimIndex: this.data.launchAnimOptions.indexOf(launchAnim) >= 0 ? this.data.launchAnimOptions.indexOf(launchAnim) : 0
@@ -66,6 +70,7 @@ Page({
 
   onShow() {
     if (this.data.roomId) this.fetchRoomInfo();
+    wx.setBackgroundColor({ backgroundColor: getThemeBg(this.data.themeClass) });
   },
 
   onUnload() {

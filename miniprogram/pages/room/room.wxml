@@ -1,5 +1,5 @@
 <!--pages/room/room.wxml-->
-<view class="room-page">
+<view class="room-page {{themeClass ? 'theme-' + themeClass : ''}}">
   <!-- Top Bar (公共组件：左=✕解散/退出 + −暂回首页，右=非房主配置图标) -->
   <top-bar>
     <view slot="left" class="top-icons">

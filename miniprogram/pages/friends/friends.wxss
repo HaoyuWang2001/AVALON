@@ -3,7 +3,7 @@
 
 /* ─── 首次设置ID遮罩 ─── */
 .setup-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1200; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; }
-.setup-box { width: 620rpx; background: #FFFFFF; border-radius: 28rpx; padding: 48rpx 40rpx; display: flex; flex-direction: column; align-items: center; }
+.setup-box { width: 620rpx; background: var(--bg-card); border-radius: 28rpx; padding: 48rpx 40rpx; display: flex; flex-direction: column; align-items: center; }
 .setup-title { font-size: 38rpx; font-weight: 800; color: var(--gray-900); }
 .setup-sub { font-size: 24rpx; color: var(--gray-500); margin: 16rpx 0 32rpx; line-height: 1.7; text-align: center; }
 .setup-input { width: 100%; height: 88rpx; border: 2rpx solid var(--gray-200); border-radius: 16rpx; padding: 0 24rpx; font-size: 32rpx; box-sizing: border-box; text-align: center; }
@@ -11,7 +11,7 @@
 .setup-tip { margin-top: 24rpx; font-size: 24rpx; color: var(--gray-400); }
 
 /* ─── 我的ID条 ─── */
-.my-id-bar { display: flex; align-items: center; background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); }
+.my-id-bar { display: flex; align-items: center; background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); }
 .my-avatar { width: 88rpx; height: 88rpx; border-radius: 50%; flex-shrink: 0; }
 .my-info { margin-left: 20rpx; min-width: 0; }
 .my-nick { font-size: 32rpx; font-weight: 700; color: var(--gray-900); display: block; }
