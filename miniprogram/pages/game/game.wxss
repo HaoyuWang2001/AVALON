@@ -121,7 +121,10 @@
   display: flex;
   flex-direction: column;
   gap: 16rpx;
-  padding: 8rpx 0 calc(260rpx + env(safe-area-inset-bottom)); /* 底部留白，避免被 fixed 底部框遮挡 */
+}
+/* 玩家区（列表+观众席）：底部留白避免被 fixed 底部框遮挡（内联 bottomBarHeight 动态覆盖此兜底值） */
+.player-area {
+  padding-bottom: calc(260rpx + env(safe-area-inset-bottom));
 }
 
 /* 玩家大卡片（每行全宽）：座位号左上角 + 左头像 + 右信息 */

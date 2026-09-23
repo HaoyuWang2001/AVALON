@@ -1,0 +1,41 @@
+/* pages/global-stats/global-stats.wxss */
+.page { padding: 24rpx 32rpx 0; box-sizing: border-box; }
+.page-loading { text-align: center; color: var(--text-muted); padding: 80rpx 0; }
+.card-title { font-size: 30rpx; font-weight: 700; color: var(--text-title); margin-bottom: 20rpx; }
+.empty { text-align: center; color: var(--text-muted); font-size: 26rpx; padding: 30rpx 0; }
+
+/* 基础统计网格 */
+.grid { display: flex; flex-wrap: wrap; }
+.grid-item { width: 33.33%; display: flex; flex-direction: column; align-items: center; padding: 18rpx 0; box-sizing: border-box; }
+.gi-num { font-size: 40rpx; font-weight: 800; color: var(--primary); }
+.gi-label { font-size: 22rpx; color: var(--text-muted); margin-top: 6rpx; }
+
+/* 阵营胜率 */
+.faction-row { display: flex; gap: 20rpx; }
+.faction-box { flex: 1; border-radius: 18rpx; padding: 24rpx; display: flex; flex-direction: column; align-items: center; }
+.faction-good { background: rgba(59, 130, 246, 0.14); }
+.faction-evil { background: rgba(239, 68, 68, 0.14); }
+.fb-rate { font-size: 48rpx; font-weight: 800; }
+.faction-good .fb-rate { color: #3B82F6; }
+.faction-evil .fb-rate { color: #EF4444; }
+.fb-label { font-size: 22rpx; color: var(--text-muted); margin-top: 8rpx; }
+
+/* 角色统计 */
+.role-row { display: flex; align-items: center; padding: 16rpx 0; border-bottom: 1rpx solid var(--gray-100); }
+.role-row:last-child { border-bottom: none; }
+.role-emoji { font-size: 40rpx; margin-right: 16rpx; }
+.role-name { font-size: 28rpx; font-weight: 600; flex: 1; }
+.name-good { color: #3B82F6; }
+.name-evil { color: #EF4444; }
+.role-games { font-size: 24rpx; color: var(--text-muted); margin-right: 20rpx; }
+.role-rate { font-size: 28rpx; font-weight: 800; color: var(--primary); min-width: 100rpx; text-align: right; }
+
+/* 全量对局 */
+.game-row { display: flex; align-items: center; padding: 18rpx 0; border-bottom: 1rpx solid var(--gray-100); }
+.game-row:last-child { border-bottom: none; }
+.game-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.game-room { font-size: 28rpx; font-weight: 600; color: var(--text-title); }
+.game-sub { font-size: 22rpx; color: var(--text-muted); margin-top: 4rpx; }
+.game-winner { font-size: 26rpx; font-weight: 700; flex-shrink: 0; margin-left: 16rpx; }
+.win-good { color: #3B82F6; }
+.win-evil { color: #EF4444; }

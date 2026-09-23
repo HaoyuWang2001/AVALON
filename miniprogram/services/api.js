@@ -478,6 +478,10 @@ class ApiService {
     return this.request(`/games/stats?openId=${openId}`);
   }
 
+  async getGlobalStats() {
+    return this.request('/games/stats/global');
+  }
+
   // ─────── 好友系统 ───────
 
   async setUniqueId(openId, uniqueId) {

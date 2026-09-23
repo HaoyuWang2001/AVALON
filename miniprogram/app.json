@@ -4,7 +4,8 @@
     "pages/room/room",
     "pages/game/game",
     "pages/friends/friends",
-    "pages/friend-detail/friend-detail"
+    "pages/friend-detail/friend-detail",
+    "pages/global-stats/global-stats"
   ],
   "window": {
     "backgroundTextStyle": "light",

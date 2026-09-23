@@ -71,44 +71,47 @@
     </view>
   </view>
 
-  <!-- 玩家列表（全宽大卡片，每玩家一行）；padding-bottom 动态对齐底部栏，避免遮挡 -->
-  <view class="player-list" style="{{bottomBarHeight ? 'padding-bottom:' + bottomBarHeight + 'px' : ''}}">
-    <view wx:for="{{tablePlayers}}" wx:key="openId" class="table-player {{item.cardState}}"
-      bindtap="onTablePlayerTap" bindlongpress="onPlayerLongPress" data-id="{{item.openId}}">
-      <text class="seat-no">{{item.seatNumber}}</text>
-      <view class="tplayer-avatar-wrap">
-        <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
-        <text wx:if="{{item.isCrownHolder}}" class="tplayer-crown">👑</text>
-      </view>
-      <view class="tplayer-info">
-        <text class="tplayer-name">{{item.nickName}}</text>
-        <view class="tplayer-tags">
-          <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag {{tag.cls}}">{{tag.text}}</text>
+  <!-- 玩家区（玩家列表 + 观战区）；padding-bottom 动态对齐底部栏，避免遮挡 -->
+  <view class="player-area" style="{{bottomBarHeight ? 'padding-bottom:' + bottomBarHeight + 'px' : ''}}">
+    <!-- 玩家列表（全宽大卡片，每玩家一行） -->
+    <view class="player-list">
+      <view wx:for="{{tablePlayers}}" wx:key="openId" class="table-player {{item.cardState}}"
+        bindtap="onTablePlayerTap" bindlongpress="onPlayerLongPress" data-id="{{item.openId}}">
+        <text class="seat-no">{{item.seatNumber}}</text>
+        <view class="tplayer-avatar-wrap">
+          <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="tplayer-avatar"></image>
+          <text wx:if="{{item.isCrownHolder}}" class="tplayer-crown">👑</text>
         </view>
-      </view>
-      <view wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="tplayer-gameend-role">{{item.roleName}}</view>
-      <view wx:if="{{showSelectCheck}}" class="table-check {{item.checked ? 'checked' : ''}} {{item.disabled ? 'disabled' : ''}}"
-        catchtap="onTablePlayerTap" data-id="{{item.openId}}">
-        <text wx:if="{{item.checked}}">✓</text>
-      </view>
-      <view wx:if="{{currentPhase === 'lake' && isLakeHolder && item.openId !== playerId && !item.isOldLake}}"
-        class="table-radio {{item.openId === lakeTargetOpenId ? 'radio-on' : ''}}">
-        <view class="table-radio-dot"></view>
+        <view class="tplayer-info">
+          <text class="tplayer-name">{{item.nickName}}</text>
+          <view class="tplayer-tags">
+            <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag {{tag.cls}}">{{tag.text}}</text>
+          </view>
+        </view>
+        <view wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="tplayer-gameend-role">{{item.roleName}}</view>
+        <view wx:if="{{showSelectCheck}}" class="table-check {{item.checked ? 'checked' : ''}} {{item.disabled ? 'disabled' : ''}}"
+          catchtap="onTablePlayerTap" data-id="{{item.openId}}">
+          <text wx:if="{{item.checked}}">✓</text>
+        </view>
+        <view wx:if="{{currentPhase === 'lake' && isLakeHolder && item.openId !== playerId && !item.isOldLake}}"
+          class="table-radio {{item.openId === lakeTargetOpenId ? 'radio-on' : ''}}">
+          <view class="table-radio-dot"></view>
+        </view>
       </view>
     </view>
-  </view>
 
-  <!-- 观众席 -->
-  <view class="spectators" wx:if="{{spectators.length > 0}}">
-    <view class="spectators-title">观众席（{{spectators.length}}）</view>
-    <scroll-view scroll-x class="spectators-scroll" show-scrollbar="{{false}}">
-      <view class="spectators-row">
-        <view wx:for="{{spectators}}" wx:key="openId" class="spectator-item">
-          <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="spectator-avatar"></image>
-          <text class="spectator-name">{{item.nickName}}</text>
+    <!-- 观众席 -->
+    <view class="spectators" wx:if="{{spectators.length > 0}}">
+      <view class="spectators-title">观众席（{{spectators.length}}）</view>
+      <scroll-view scroll-x class="spectators-scroll" show-scrollbar="{{false}}">
+        <view class="spectators-row">
+          <view wx:for="{{spectators}}" wx:key="openId" class="spectator-item">
+            <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="spectator-avatar"></image>
+            <text class="spectator-name">{{item.nickName}}</text>
+          </view>
         </view>
-      </view>
-    </scroll-view>
+      </scroll-view>
+    </view>
   </view>
 
   <!-- 底部按钮框（fixed 常驻） -->

@@ -1,0 +1,63 @@
+<!--pages/global-stats/global-stats.wxml-->
+<view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
+
+  <view wx:if="{{loading}}" class="page-loading">加载中...</view>
+
+  <block wx:if="{{stats}}">
+    <!-- 基础统计 -->
+    <view class="card">
+      <view class="card-title">基础统计</view>
+      <view class="grid">
+        <view class="grid-item"><text class="gi-num">{{stats.games.total}}</text><text class="gi-label">总对局</text></view>
+        <view class="grid-item"><text class="gi-num">{{stats.games.active}}</text><text class="gi-label">进行中</text></view>
+        <view class="grid-item"><text class="gi-num">{{stats.games.completed}}</text><text class="gi-label">已完成</text></view>
+        <view class="grid-item"><text class="gi-num">{{stats.rooms.total}}</text><text class="gi-label">总房间</text></view>
+        <view class="grid-item"><text class="gi-num">{{stats.rooms.active}}</text><text class="gi-label">活跃房间</text></view>
+        <view class="grid-item"><text class="gi-num">{{stats.players.total}}</text><text class="gi-label">总玩家数</text></view>
+        <view class="grid-item"><text class="gi-num">{{stats.users.total}}</text><text class="gi-label">总用户数</text></view>
+      </view>
+    </view>
+
+    <!-- 阵营胜率 -->
+    <view class="card">
+      <view class="card-title">阵营胜率</view>
+      <view class="faction-row">
+        <view class="faction-box faction-good">
+          <text class="fb-rate">{{stats.faction.goodWinRate}}%</text>
+          <text class="fb-label">蓝方 · {{stats.faction.goodGames}} 场</text>
+        </view>
+        <view class="faction-box faction-evil">
+          <text class="fb-rate">{{stats.faction.evilWinRate}}%</text>
+          <text class="fb-label">红方 · {{stats.faction.evilGames}} 场</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 角色统计 -->
+    <view class="card">
+      <view class="card-title">角色统计</view>
+      <view wx:if="{{roleStats.length === 0}}" class="empty">暂无数据</view>
+      <view wx:for="{{roleStats}}" wx:key="role" class="role-row">
+        <text class="role-emoji">{{item.emoji}}</text>
+        <text class="role-name {{item.side === 'evil' ? 'name-evil' : 'name-good'}}">{{item.roleName}}</text>
+        <text class="role-games">{{item.games}} 场</text>
+        <text class="role-rate">{{item.winRate}}</text>
+      </view>
+    </view>
+
+    <!-- 全量对局 -->
+    <view class="card">
+      <view class="card-title">全量对局（{{gameList.length}}）</view>
+      <view wx:if="{{gameList.length === 0}}" class="empty">暂无对局</view>
+      <view wx:for="{{gameList}}" wx:key="id" class="game-row" bindtap="openGame" data-id="{{item.id}}">
+        <view class="game-main">
+          <text class="game-room">房间 {{item.roomId}}</text>
+          <text class="game-sub">{{item.dateText}} · {{item.playerCount}}人 · {{item.durationText}}</text>
+        </view>
+        <text class="game-winner {{item.winnerClass}}">{{item.winnerText}}</text>
+      </view>
+    </view>
+  </block>
+
+  <view style="height: 40rpx"></view>
+</view>

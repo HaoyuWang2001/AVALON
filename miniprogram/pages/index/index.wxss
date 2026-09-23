@@ -79,9 +79,11 @@
 .gacha-main-info { flex: 1; min-width: 0; }
 .gacha-main-title { display: block; font-size: 38rpx; font-weight: 800; text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.3); }
 
-/* 副卡行：两卡等宽共同占满一行 */
-.gacha-sub-row { display: flex; gap: 20rpx; }
-.gacha-sub { flex: 1 1 0; min-width: 0; padding: 20rpx 22rpx; min-height: 176rpx; display: flex; flex-direction: row; align-items: center; }
+/* 全宽副卡（加入会议 / 牛马朋友 / 全局统计） */
+.gacha-sub { width: 100%; box-sizing: border-box; padding: 20rpx 22rpx; min-height: 176rpx; display: flex; flex-direction: row; align-items: center; }
+
+/* 社交卡：牛马朋友 + 全局统计（竖排两张彩虹卡） */
+.social-card { display: flex; flex-direction: column; gap: 20rpx; }
 
 /* 副卡：加入会议（安排·深银） */
 .gacha-epic {
