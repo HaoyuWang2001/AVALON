@@ -2193,8 +2193,8 @@ class GameModel {
         `SELECT JSON_UNQUOTE(JSON_EXTRACT(game_result, '$.winner')) as winner, COUNT(*) as c
          FROM games WHERE status = 'ended' GROUP BY winner`
       );
-      const goodGames = (factionRows.find(r => r.winner === 'good') || {}).c || 0;
-      const evilGames = (factionRows.find(r => r.winner === 'evil') || {}).c || 0;
+      const goodGames = toNum((factionRows.find(r => r.winner === 'good') || {}).c);
+      const evilGames = toNum((factionRows.find(r => r.winner === 'evil') || {}).c);
       const decided = goodGames + evilGames;
       const rate = n => decided > 0 ? Math.round(n / decided * 1000) / 10 : 0;
 

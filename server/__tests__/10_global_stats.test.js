@@ -46,6 +46,14 @@ describe('10 — 全局统计', () => {
     expect(typeof s.users.total).toBe('number');
     expect(typeof s.faction.goodWinRate).toBe('number');
     expect(typeof s.faction.evilWinRate).toBe('number');
+    // 计数必须为数值（防止 MySQL 返回字符串导致胜率算错）
+    expect(typeof s.faction.goodGames).toBe('number');
+    expect(typeof s.faction.evilGames).toBe('number');
+    const decided = s.faction.goodGames + s.faction.evilGames;
+    if (decided > 0) {
+      expect(Math.abs(s.faction.goodWinRate - s.faction.goodGames / decided * 100)).toBeLessThan(0.2);
+      expect(Math.abs(s.faction.evilWinRate - s.faction.evilGames / decided * 100)).toBeLessThan(0.2);
+    }
     expect(Array.isArray(s.roles)).toBe(true);
     // 角色聚合含本次造局的角色（5 人板必含 merlin/morgana/assassin）
     const roleKeys = s.roles.map(r => r.role);
