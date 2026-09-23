@@ -2172,6 +2172,87 @@ class GameModel {
       throw error;
     }
   }
+
+  /**
+   * 全局统计：对局/房间/玩家/用户计数 + 阵营胜率 + 角色出场/胜率 + 全量已结束对局列表
+   */
+  static async getGlobalStats() {
+    try {
+      const [gamesTotal] = await db.query('SELECT COUNT(*) as c FROM games');
+      const [gamesActive] = await db.query("SELECT COUNT(*) as c FROM games WHERE status = 'active'");
+      const [gamesCompleted] = await db.query("SELECT COUNT(*) as c FROM games WHERE status = 'ended'");
+      const [roomsTotal] = await db.query('SELECT COUNT(*) as c FROM rooms');
+      const [roomsActive] = await db.query('SELECT COUNT(*) as c FROM rooms WHERE updated_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)');
+      const [playersTotal] = await db.query('SELECT COUNT(*) as c FROM room_players');
+      const [usersTotal] = await db.query('SELECT COUNT(*) as c FROM users');
+
+      const toNum = v => parseInt(v, 10) || 0;
+
+      // 阵营胜率（仅已结束对局）
+      const factionRows = await db.query(
+        `SELECT JSON_UNQUOTE(JSON_EXTRACT(game_result, '$.winner')) as winner, COUNT(*) as c
+         FROM games WHERE status = 'ended' GROUP BY winner`
+      );
+      const goodGames = (factionRows.find(r => r.winner === 'good') || {}).c || 0;
+      const evilGames = (factionRows.find(r => r.winner === 'evil') || {}).c || 0;
+      const decided = goodGames + evilGames;
+      const rate = n => decided > 0 ? Math.round(n / decided * 1000) / 10 : 0;
+
+      // 角色出场次数 + 胜率（仅已结束对局）
+      const roleRows = await db.query(
+        `SELECT gp.role, gp.side,
+                COUNT(*) as games,
+                SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN 1 ELSE 0 END) as wins
+         FROM games g
+         JOIN game_players gp ON gp.game_id = g.id
+         WHERE g.status = 'ended'
+         GROUP BY gp.role, gp.side
+         ORDER BY games DESC`
+      );
+      const roles = roleRows.map(r => ({
+        role: r.role,
+        side: r.side,
+        games: parseInt(r.games, 10),
+        wins: parseInt(r.wins, 10) || 0,
+        winRate: parseInt(r.games, 10) > 0 ? Math.round((parseInt(r.wins, 10) || 0) / parseInt(r.games, 10) * 1000) / 10 : 0
+      }));
+
+      // 全量已结束对局（倒序）
+      const gameRows = await db.query(
+        `SELECT g.id, g.room_id as roomId, g.game_result as gameResult,
+                (SELECT COUNT(*) FROM game_players WHERE game_id = g.id) as playerCount,
+                TIMESTAMPDIFF(SECOND, g.created_at, g.ended_at) as durationSeconds,
+                g.created_at as createdAt, g.ended_at as endedAt
+         FROM games g
+         WHERE g.status = 'ended'
+         ORDER BY g.created_at DESC`
+      );
+      const games = gameRows.map(g => ({
+        id: g.id,
+        roomId: g.roomId,
+        gameResult: g.gameResult ? parseJson(g.gameResult) : null,
+        playerCount: parseInt(g.playerCount, 10) || 0,
+        durationSeconds: g.durationSeconds,
+        createdAt: g.createdAt,
+        endedAt: g.endedAt
+      }));
+
+      return {
+        stats: {
+          games: { total: toNum(gamesTotal.c), active: toNum(gamesActive.c), completed: toNum(gamesCompleted.c) },
+          rooms: { total: toNum(roomsTotal.c), active: toNum(roomsActive.c) },
+          players: { total: toNum(playersTotal.c) },
+          users: { total: toNum(usersTotal.c) },
+          faction: { goodGames, evilGames, goodWinRate: rate(goodGames), evilWinRate: rate(evilGames) },
+          roles
+        },
+        games
+      };
+    } catch (error) {
+      console.error('获取全局统计失败:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = GameModel;

@@ -773,6 +773,17 @@ function createRouter() {
       });
     }
   });
+
+  // 全局统计（基础+阵营+角色+全量已结束对局）
+  router.get('/stats/global', async (req, res) => {
+    try {
+      const result = await GameModel.getGlobalStats();
+      res.json({ success: true, ...result });
+    } catch (error) {
+      console.error('获取全局统计API错误:', error);
+      res.status(500).json({ success: false, message: error.message || '获取全局统计失败' });
+    }
+  });
   
   // 获取游戏历史记录（管理接口）
   router.get('/history/:roomId', async (req, res) => {
