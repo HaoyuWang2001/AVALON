@@ -170,11 +170,11 @@
 .meeting-zone.lead { clip-path: polygon(0 0, 100% 0, 0 100%); }
 .meeting-zone.join { clip-path: polygon(100% 0, 100% 100%, 0 100%); }
 .zone-hover { background: rgba(255,255,255,0.16); }
-.meeting-content { position: absolute; display: flex; flex-direction: row; align-items: center; gap: 14rpx; transform: translate(-50%, -50%); }
-.meeting-zone.lead .meeting-content { left: 25%; top: 33%; }
-.meeting-zone.join .meeting-content { left: 75%; top: 67%; }
+.meeting-content { position: absolute; display: flex; flex-direction: row; align-items: center; gap: 14rpx; white-space: nowrap; }
+.meeting-zone.lead .meeting-content { left: 25%; top: 33%; transform: translate(-50%, -50%); }
+.meeting-zone.join .meeting-content { right: 25%; top: 67%; transform: translate(50%, -50%); }
 .meeting-icon { width: 56rpx; height: 56rpx; flex-shrink: 0; }
-.meeting-label { font-size: 34rpx; font-weight: 800; color: #fff; text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.35); }
+.meeting-label { font-size: 34rpx; font-weight: 800; color: #fff; white-space: nowrap; text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.35); }
 
 /* ─────── 功能卡（2×2 宫格） ─────── */
 .func-grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20rpx; margin-bottom: 20rpx; }
