@@ -11,28 +11,28 @@
   overflow-y: auto;
 }
 
-/* ─────── 头部（主题渐变字 + 赛博故障撕裂 + 霓虹辉光） ─────── */
+/* ─────── 头部（三段三色 + 赛博故障撕裂 + 辉光） ─────── */
 .brand-bar { padding: 26rpx 4rpx 44rpx; text-align: center; flex-shrink: 0; }
 .brand-text {
   position: relative; display: inline-block;
   font-size: 58rpx; font-weight: 900; letter-spacing: 6rpx;
-  background: linear-gradient(135deg, var(--brand-a, #7C3AED), var(--brand-b, #2563EB));
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent; color: transparent;
   animation: brand-glow 2.2s ease-in-out infinite, brand-shake 2.6s steps(2, end) infinite;
 }
+.brand-1, .brand-2, .brand-3 { -webkit-text-fill-color: currentColor; }
+.brand-1 { color: var(--brand-1, #4C1D95); }
+.brand-2 { color: var(--brand-2, #6D28D9); }
+.brand-3 { color: var(--brand-3, #9333EA); }
 .brand-text::before, .brand-text::after {
   content: '瓦协会之练秋湖分部';
   position: absolute; left: 0; top: 0; width: 100%;
   -webkit-text-fill-color: currentColor;
-  background: none;
   pointer-events: none;
 }
 .brand-text::before { color: var(--brand-g1, #06B6D4); animation: brand-tear-a 1.8s steps(1, end) infinite; }
 .brand-text::after { color: var(--brand-g2, #EC4899); animation: brand-tear-b 2.2s steps(1, end) infinite; }
 @keyframes brand-glow {
-  0%, 100% { text-shadow: 0 0 6rpx var(--brand-a, #7C3AED), 0 0 20rpx var(--brand-b, #2563EB); }
-  50% { text-shadow: 0 0 10rpx var(--brand-a, #7C3AED), 0 0 34rpx var(--brand-b, #2563EB); }
+  0%, 100% { text-shadow: 0 0 6rpx var(--brand-glow-a, rgba(124, 58, 237, 0.3)), 0 0 18rpx var(--brand-glow-b, rgba(147, 51, 234, 0.2)); }
+  50% { text-shadow: 0 0 10rpx var(--brand-glow-a, rgba(124, 58, 237, 0.3)), 0 0 30rpx var(--brand-glow-b, rgba(147, 51, 234, 0.2)); }
 }
 @keyframes brand-shake {
   0%, 88%, 100% { transform: translate(0, 0); }
@@ -155,9 +155,9 @@
 
 /* 右上角「彩蛋」标签（与旧版同款：彩虹流光 + 抖动） */
 .func-badge {
-  position: absolute; top: 10rpx; right: 12rpx; z-index: 3;
-  font-size: 22rpx; font-weight: 800; letter-spacing: 2rpx;
-  padding: 4rpx 16rpx; border-radius: 10rpx; color: #fff;
+  position: absolute; top: 12rpx; right: 14rpx; z-index: 3;
+  font-size: 30rpx; font-weight: 800; letter-spacing: 2rpx;
+  padding: 6rpx 20rpx; border-radius: 12rpx; color: #fff;
   box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.25);
   text-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.4);
   background: linear-gradient(120deg, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);
@@ -194,6 +194,8 @@
   background: var(--glass-bg);
   border: 2rpx solid var(--glass-border);
   box-shadow: 0 0 22rpx var(--glass-glow), inset 0 0 22rpx var(--glass-glow), inset 0 2rpx 0 var(--glass-sheen);
+  backdrop-filter: blur(18rpx);
+  -webkit-backdrop-filter: blur(18rpx);
 }
 .func-glass::after {
   content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;
@@ -201,6 +203,7 @@
   opacity: 0.5;
 }
 .func-glass .func-icon, .func-glass .func-label, .func-glass .func-switch { position: relative; z-index: 1; }
+.func-rate { flex-direction: row; gap: 14rpx; }
 .func-glass .func-label { color: #F2F0FF; text-shadow: 0 0 10rpx var(--glass-glow); }
 
 .info-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
@@ -225,27 +228,27 @@
 }
 
 /* ─────── 胜率冠军（领奖台） ─────── */
-.champion-card { position: relative; overflow: hidden; background: var(--bg-card); box-shadow: var(--shadow-sm), inset 0 0 0 2rpx var(--gold, #B8860B); }
+.champion-card { position: relative; overflow: hidden; background: var(--bg-card); box-shadow: var(--shadow-sm), inset 0 0 0 2rpx var(--champion-border, #B8860B); }
 .champion-title { font-size: 30rpx; font-weight: 800; color: var(--gold, #B8860B); }
 .podium { display: flex; align-items: flex-end; justify-content: center; gap: 16rpx; padding-top: 34rpx; }
 .podium-item { flex: 1; max-width: 190rpx; display: flex; flex-direction: column; align-items: center; }
 .podium-avatar-wrap { position: relative; margin-bottom: 10rpx; }
 .podium-avatar { width: 112rpx; height: 112rpx; border-radius: 50%; border: 4rpx solid var(--gray-300); background: var(--gray-100); }
 .rank-1 .podium-avatar { width: 148rpx; height: 148rpx; border-color: #FFD700; animation: champ-glow 2.2s ease-in-out infinite; }
-.rank-2 .podium-avatar { border-color: #C0C0C0; }
+.rank-2 .podium-avatar { border-color: #9AA7B4; }
 .rank-3 .podium-avatar { border-color: #CD7F32; }
 .podium-crown { position: absolute; top: -44rpx; left: 50%; font-size: 46rpx; animation: crown-float 1.8s ease-in-out infinite; }
 .podium-badge { position: absolute; bottom: -8rpx; left: 50%; transform: translateX(-50%); width: 40rpx; height: 40rpx; border-radius: 50%; background: #333; color: #FFD700; font-size: 24rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2rpx solid #FFD700; }
-.rank-2 .podium-badge { color: #ddd; border-color: #C0C0C0; }
+.rank-2 .podium-badge { color: #C2CAD3; border-color: #9AA7B4; }
 .rank-3 .podium-badge { color: #E8A56A; border-color: #CD7F32; }
 .podium-name { font-size: 24rpx; color: var(--text-title); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
 .podium-rate { font-size: 38rpx; font-weight: 800; color: #FFD700; }
-.rank-2 .podium-rate { color: #D8D8D8; }
+.rank-2 .podium-rate { color: #A7B0BA; }
 .rank-3 .podium-rate { color: #E8A56A; }
 .podium-games { font-size: 20rpx; color: var(--text-muted); }
 .podium-stand { width: 100%; margin-top: 10rpx; border-radius: 14rpx 14rpx 0 0; display: flex; align-items: center; justify-content: center; font-size: 40rpx; font-weight: 800; color: rgba(255, 255, 255, 0.85); }
 .rank-1 .podium-stand { height: 96rpx; background: linear-gradient(180deg, #FFD700, #B8860B); }
-.rank-2 .podium-stand { height: 66rpx; background: linear-gradient(180deg, #D8D8D8, #9A9A9A); }
+.rank-2 .podium-stand { height: 66rpx; background: linear-gradient(180deg, #B8C0C9, #7C8794); }
 .rank-3 .podium-stand { height: 48rpx; background: linear-gradient(180deg, #CD7F32, #8B4513); }
 @keyframes crown-float { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10rpx); } }
 @keyframes champ-glow { 0%, 100% { box-shadow: 0 0 18rpx rgba(255, 215, 0, 0.55); } 50% { box-shadow: 0 0 34rpx rgba(255, 215, 0, 0.95); } }

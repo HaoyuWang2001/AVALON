@@ -49,9 +49,12 @@
   --c-good-pill: #A6C6F0;
   --c-evil-pill: #EEB0A0;
 
-  /* 头部渐变/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡边框 —— 烛光(暖) */
-  --brand-a: #E0B45A;
-  --brand-b: #B45309;
+  /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 烛光(暖) */
+  --brand-1: #D4A052;
+  --brand-2: #E0B45A;
+  --brand-3: #F0C060;
+  --brand-glow-a: #D4A052;
+  --brand-glow-b: #B45309;
   --brand-g1: #F0C060;
   --brand-g2: #E0533B;
   --func-face: #2E281F;
@@ -60,6 +63,9 @@
   --glass-glow: rgba(212, 160, 82, 0.26);
   --glass-sheen: rgba(255, 255, 255, 0.22);
   --role-card-border: #D4A052;
+  --role-card-bg: #2E281F;
+  --role-card-rate: #DDB56A;
+  --champion-border: #D4A052;
 
   --gray-50: #2E281F;
   --gray-100: #3A332A;
@@ -122,9 +128,12 @@
   --c-good-pill: #ABC6F8;
   --c-evil-pill: #F4B2BE;
 
-  /* 头部渐变/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡边框 —— 暗夜(冷) */
-  --brand-a: #A78BFA;
-  --brand-b: #22D3EE;
+  /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 暗夜(冷) */
+  --brand-1: #A78BFA;
+  --brand-2: #818CF8;
+  --brand-3: #22D3EE;
+  --brand-glow-a: #A78BFA;
+  --brand-glow-b: #22D3EE;
   --brand-g1: #22D3EE;
   --brand-g2: #F43F5E;
   --func-face: #29223E;
@@ -133,6 +142,9 @@
   --glass-glow: rgba(167, 139, 250, 0.3);
   --glass-sheen: rgba(255, 255, 255, 0.26);
   --role-card-border: #A78BFA;
+  --role-card-bg: #29223E;
+  --role-card-rate: #C9B27A;
+  --champion-border: #A78BFA;
 
   --gray-50: #29223E;
   --gray-100: #322A4B;
@@ -195,9 +207,12 @@
   --c-good-pill: #A6C4EA;
   --c-evil-pill: #E8A4A4;
 
-  /* 头部渐变/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡边框 —— 锻造钢铁 */
-  --brand-a: #C7D2DD;
-  --brand-b: #64748B;
+  /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 锻造钢铁 */
+  --brand-1: #C7D2DD;
+  --brand-2: #94A3B8;
+  --brand-3: #64748B;
+  --brand-glow-a: #C7D2DD;
+  --brand-glow-b: #64748B;
   --brand-g1: #7DD3FC;
   --brand-g2: #F87171;
   --func-face: #262B33;
@@ -206,6 +221,9 @@
   --glass-glow: rgba(159, 180, 200, 0.24);
   --glass-sheen: rgba(255, 255, 255, 0.22);
   --role-card-border: #AFC0D0;
+  --role-card-bg: #262B33;
+  --role-card-rate: #D4B060;
+  --champion-border: #D4A052;
 
   --gray-50: #20252C;
   --gray-100: #292F37;

@@ -10,7 +10,7 @@
 .rsc-card {
   position: relative; overflow: hidden;
   width: 400rpx; height: 500rpx; border-radius: 32rpx;
-  background: var(--bg-card-solid);
+  background: var(--role-card-bg, var(--bg-card-solid));
   box-shadow: 0 22rpx 52rpx rgba(0, 0, 0, 0.30), 0 0 0 4rpx var(--role-card-border), inset 0 2rpx 0 rgba(255, 255, 255, 0.16);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   box-sizing: border-box; padding: 40rpx;
@@ -31,7 +31,7 @@
 .rsc-name-good { background: rgba(59, 130, 246, 0.16); color: var(--c-good-pill); }
 .rsc-name-evil { background: rgba(239, 68, 68, 0.16); color: var(--c-evil-pill); }
 .rsc-meta { margin-top: 32rpx; position: relative; z-index: 1; }
-.rsc-rate { font-size: 36rpx; font-weight: 800; color: var(--c-team); }
+.rsc-rate { font-size: 36rpx; font-weight: 800; color: var(--role-card-rate, var(--c-team)); }
 
 /* 角色对局弹窗 */
 .rsc-overlay {

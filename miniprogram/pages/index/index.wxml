@@ -2,7 +2,7 @@
 <view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
   <!-- 1. 头部 -->
   <view class="brand-bar">
-    <view class="brand-text">瓦协会之练秋湖分部</view>
+    <view class="brand-text"><text class="brand-1">瓦协会</text><text class="brand-2">之</text><text class="brand-3">练秋湖分部</text></view>
   </view>
 
   <!-- 2. 胜率冠军（领奖台） -->
@@ -89,7 +89,7 @@
         <image src="/images/fossa.png" class="func-icon" mode="aspectFit"/>
         <text class="func-label">牛马朋友</text>
       </view>
-      <view class="func-item func-glass">
+      <view class="func-item func-glass func-rate">
         <text class="func-label">公开胜率</text>
         <switch class="func-switch" checked="{{publicWinrate}}" bindchange="onPublicWinrateChange" color="#8B5CF6"/>
       </view>
