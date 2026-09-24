@@ -33,7 +33,11 @@
           bindtap="openCountGames" data-count="{{item.count}}">
           <text class="cs-name">{{item.count}}人局</text>
           <text class="cs-total">{{item.total}} 场</text>
-          <text class="cs-rate">蓝 {{item.goodRate}} / 红 {{item.evilRate}}</text>
+          <view class="cs-rate">
+            <text class="rate-good">蓝 {{item.goodRate}}</text>
+            <text class="rate-sep"> / </text>
+            <text class="rate-evil">红 {{item.evilRate}}</text>
+          </view>
         </view>
       </view>
     </view>

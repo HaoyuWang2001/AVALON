@@ -26,7 +26,10 @@
 .count-stat-row:last-child { border-bottom: none; }
 .cs-name { font-size: 28rpx; font-weight: 600; color: var(--text-title); width: 140rpx; }
 .cs-total { font-size: 24rpx; color: var(--text-muted); flex: 1; }
-.cs-rate { font-size: 26rpx; font-weight: 700; color: var(--primary); }
+.cs-rate { font-size: 26rpx; font-weight: 700; display: flex; align-items: center; }
+.rate-good { color: #3B82F6; }
+.rate-sep { color: var(--text-muted); font-weight: 400; }
+.rate-evil { color: #EF4444; }
 
 /* 角色统计 */
 .role-row { display: flex; align-items: center; padding: 16rpx 0; border-bottom: 1rpx solid var(--gray-100); }
