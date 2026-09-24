@@ -1,13 +1,19 @@
 // pages/global-stats/global-stats.js
 const api = require('../../services/api.js');
 const { getThemeClass, getThemeBg } = require('../../utils/theme.js');
-const { ROLE_NAMES, ROLE_EMOJIS, CONFIG_EVIL_ROLES } = require('../../utils/constants.js');
 
-// 角色统计固定展示顺序（蓝方 → 红方）
-const ROLE_ORDER = [
-  'merlin', 'percival', 'loyal', 'lancelotBlue',
-  'morgana', 'assassin', 'mordred', 'oberon', 'minion', 'lancelotRed'
+// 角色统计固定展示（合并项取主角色数据）：梅林/派西维尔→merlin，刺客/莫甘娜→morgana
+const ROLE_STATS = [
+  { key: 'merlin',       label: '梅林/派西维尔', emoji: '🔮🛡️', source: 'merlin',       side: 'good' },
+  { key: 'lancelotBlue', label: '蓝兰斯洛特',    emoji: '🎭',   source: 'lancelotBlue', side: 'good' },
+  { key: 'morgana',      label: '刺客/莫甘娜',   emoji: '🗡️🌙', source: 'morgana',      side: 'evil' },
+  { key: 'mordred',      label: '莫德雷德',      emoji: '🌑',   source: 'mordred',      side: 'evil' },
+  { key: 'oberon',       label: '奥伯伦',        emoji: '👤',   source: 'oberon',       side: 'evil' },
+  { key: 'minion',       label: '爪牙',          emoji: '🐺',   source: 'minion',       side: 'evil' },
+  { key: 'lancelotRed',  label: '红兰斯洛特',    emoji: '🎭',   source: 'lancelotRed',  side: 'evil' }
 ];
+
+const PLAYER_COUNTS = [5, 6, 7, 8, 9, 10, 11, 12];
 
 function formatDuration(seconds) {
   const sec = parseInt(seconds, 10) || 0;
@@ -40,6 +46,7 @@ function mapGame(g) {
   return {
     id: g.id,
     playerCount: g.playerCount,
+    winner,
     durationText: formatDuration(g.durationSeconds),
     dateText: formatDate(g.endedAt || g.createdAt),
     winnerText: winner === 'good' ? '蓝方胜' : winner === 'evil' ? '红方胜' : '—',
@@ -54,8 +61,9 @@ Page({
     stats: null,
     roleStats: [],
     gameList: [],
-    roleModal: { show: false, roleName: '', emoji: '', games: [] },
-    roleModalLoading: false
+    countStats: [],
+    detailModal: { show: false, title: '', games: [] },
+    detailModalLoading: false
   },
 
   onLoad() {
@@ -77,23 +85,32 @@ Page({
       this.setData({ loading: false });
       if (!res || !res.success) return;
       const s = res.stats || {};
-      // 固定展示全部角色（无对局的显示 0 场 / —）
+      // 固定展示全部角色（合并项取主角色数据；无对局显示 0 场 / —）
       const roleMap = {};
       (s.roles || []).forEach(r => { roleMap[r.role] = r; });
-      const roleStats = ROLE_ORDER.map(role => {
-        const r = roleMap[role] || { games: 0, wins: 0 };
+      const roleStats = ROLE_STATS.map(rs => {
+        const r = roleMap[rs.source] || { games: 0, wins: 0 };
         return {
-          role,
-          roleName: ROLE_NAMES[role] || role,
-          emoji: ROLE_EMOJIS[role] || '🎴',
-          side: CONFIG_EVIL_ROLES.includes(role) ? 'evil' : 'good',
+          role: rs.source,
+          roleName: rs.label,
+          emoji: rs.emoji,
+          side: rs.side,
           games: r.games,
           wins: r.wins,
           winRate: r.games > 0 ? r.winRate + '%' : '—'
         };
       });
       const gameList = (res.games || []).map(mapGame);
-      this.setData({ stats: s, roleStats, gameList });
+      // 各人数胜率（由全部 ended 对局按人数分组）
+      const countStats = PLAYER_COUNTS.map(n => {
+        const list = gameList.filter(g => g.playerCount === n);
+        const total = list.length;
+        const good = list.filter(g => g.winner === 'good').length;
+        const evil = list.filter(g => g.winner === 'evil').length;
+        const rate = v => total > 0 ? Math.round(v / total * 1000) / 10 + '%' : '—';
+        return { count: n, total, goodRate: rate(good), evilRate: rate(evil) };
+      });
+      this.setData({ stats: s, roleStats, gameList, countStats });
     }).catch(() => this.setData({ loading: false }));
   },
 
@@ -103,19 +120,26 @@ Page({
     wx.navigateTo({ url: `/pages/game/game?gameId=${gameId}&fromHistory=1` });
   },
 
-  // 点击角色行：弹出含该角色的全部对局
+  // 点击角色行：弹出含该角色（主角色）的全部对局
   openRoleGames(e) {
     const { role, name, emoji } = e.currentTarget.dataset;
     if (!role) return;
-    this.setData({ roleModal: { show: true, roleName: name || role, emoji: emoji || '🎴', games: [] }, roleModalLoading: true });
+    this.setData({ detailModal: { show: true, title: `${emoji || ''} ${name || role}`.trim(), games: [] }, detailModalLoading: true });
     api.getRoleGames(role).then(res => {
       const games = (res && res.success && res.games ? res.games : []).map(mapGame);
-      this.setData({ roleModalLoading: false, 'roleModal.games': games });
-    }).catch(() => this.setData({ roleModalLoading: false }));
+      this.setData({ detailModalLoading: false, 'detailModal.games': games });
+    }).catch(() => this.setData({ detailModalLoading: false }));
   },
 
-  closeRoleGames() {
-    this.setData({ 'roleModal.show': false });
+  // 点击人数行：弹出该人数的全部对局（本地过滤）
+  openCountGames(e) {
+    const count = parseInt(e.currentTarget.dataset.count, 10);
+    const games = this.data.gameList.filter(g => g.playerCount === count);
+    this.setData({ detailModal: { show: true, title: `${count}人局`, games }, detailModalLoading: false });
+  },
+
+  closeDetail() {
+    this.setData({ 'detailModal.show': false });
   },
 
   noop() {}
