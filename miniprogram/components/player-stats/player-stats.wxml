@@ -31,8 +31,10 @@
       <view wx:else class="ps-private">该玩家未公开胜率</view>
     </block>
 
-    <view class="ps-actions" wx:if="{{isFriend && !isSelf}}">
-      <button class="btn btn-primary ps-action-btn" bindtap="goDetail">进入主页</button>
+    <view class="ps-actions" wx:if="{{!isSelf}}">
+      <button wx:if="{{isFriend}}" class="btn btn-primary ps-action-btn" bindtap="goDetail">进入主页</button>
+      <button wx:else class="btn ps-action-btn {{requested ? 'btn-disabled' : 'btn-primary'}}"
+              disabled="{{requested}}" bindtap="addFriend">{{requested ? '已申请' : '申请好友'}}</button>
     </view>
   </view>
 </view>

@@ -139,6 +139,16 @@ function createRouter() {
       stats.rateVisible = isSelf || (publicWinrate === 1 && stats.totalGames >= threshold);
       stats.threshold = threshold;
 
+      // 是否已存在（viewer → subject）待处理的好友申请（供"申请好友"按钮禁用判断）
+      stats.friendRequestPending = false;
+      if (viewerOpenId && viewerOpenId !== openId) {
+        const pending = await db.query(
+          'SELECT 1 FROM friend_requests WHERE from_open_id = ? AND to_open_id = ? LIMIT 1',
+          [viewerOpenId, openId]
+        );
+        stats.friendRequestPending = pending.length > 0;
+      }
+
       res.json({ success: true, stats });
     } catch (error) {
       console.error('获取个人胜率API错误:', error);

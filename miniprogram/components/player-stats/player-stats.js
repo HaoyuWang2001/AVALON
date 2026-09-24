@@ -15,6 +15,7 @@ Component({
     isSelf: false,
     loading: false,
     rateVisible: false,
+    requested: false,
     stats: null,
     roles: []
   },
@@ -30,6 +31,7 @@ Component({
         isSelf: !!o.isSelf,
         loading: true,
         rateVisible: false,
+        requested: false,
         stats: null,
         roles: []
       });
@@ -47,6 +49,7 @@ Component({
         this.setData({
           loading: false,
           rateVisible: !!(s && s.rateVisible),
+          requested: !!(s && s.friendRequestPending),
           stats: s ? {
             totalGames: s.totalGames,
             totalWinRate: s.totalGames > 0 ? s.totalWinRate + '%' : '—',
@@ -67,6 +70,24 @@ Component({
       if (!openId) return;
       this.setData({ show: false });
       wx.navigateTo({ url: `/pages/friend-detail/friend-detail?openId=${openId}` });
+    },
+    addFriend() {
+      if (this.data.isFriend || this.data.requested) return;
+      const target = this.data.openId;
+      const me = getApp().globalData.openId || wx.getStorageSync('openId');
+      if (!target || !me) return;
+      api.sendFriendRequest(me, target).then(res => {
+        if (res && res.success) {
+          this.setData({ requested: true });
+          wx.showToast({ title: '申请已发送', icon: 'success' });
+        } else {
+          wx.showToast({ title: (res && res.message) || '申请失败', icon: 'none' });
+        }
+      }).catch(err => {
+        const msg = (err && err.message) || '申请失败';
+        if (/已发送过申请|等待对方处理|已是好友/.test(msg)) this.setData({ requested: true });
+        wx.showToast({ title: msg, icon: 'none' });
+      });
     }
   }
 });
