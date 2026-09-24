@@ -15,6 +15,7 @@ Component({
     isSelf: false,
     loading: false,
     rateVisible: false,
+    privateReason: '',
     requested: false,
     stats: null,
     roles: []
@@ -31,6 +32,7 @@ Component({
         isSelf: !!o.isSelf,
         loading: true,
         rateVisible: false,
+        privateReason: '',
         requested: false,
         stats: null,
         roles: []
@@ -46,9 +48,17 @@ Component({
               winRate: r.winRate + '%'
             }))
           : [];
+        // 未公开胜率 / 未达到最小统计局数 两种情况分开
+        let privateReason = '';
+        if (s && !s.rateVisible) {
+          privateReason = (s.publicWinrate === 0)
+            ? '该玩家未公开胜率'
+            : `该玩家未达到最小统计局数（${s.threshold} 局）`;
+        }
         this.setData({
           loading: false,
           rateVisible: !!(s && s.rateVisible),
+          privateReason,
           requested: !!(s && s.friendRequestPending),
           stats: s ? {
             totalGames: s.totalGames,

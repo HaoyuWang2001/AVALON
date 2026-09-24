@@ -28,7 +28,7 @@
           </view>
         </view>
       </block>
-      <view wx:else class="ps-private">该玩家未公开胜率</view>
+      <view wx:else class="ps-private">{{privateReason || '该玩家未公开胜率'}}</view>
     </block>
 
     <view class="ps-actions" wx:if="{{!isSelf}}">
