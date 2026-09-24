@@ -62,6 +62,7 @@
           {{item.online ? '在线' : '离线'}}
           <text wx:if="{{item.room}}"> · {{item.room.gameStarted ? '对局中' : '房间等待中'}}</text>
         </text>
+        <text class="f-rate">胜率 {{item.games > 0 ? item.winRate + '%' : '—'}} · {{item.games}} 场</text>
       </view>
       <text class="f-arrow">›</text>
     </view>

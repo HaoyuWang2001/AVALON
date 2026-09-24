@@ -34,7 +34,10 @@ Page({
     totalWinRate: '',
     goodWinRate: '',
     evilWinRate: '',
-    roleStats: []
+    roleStats: [],
+    champions: [],
+    podium: [],
+    championModal: { show: false, openId: '', nickName: '', avatarUrl: '', isFriend: false, uniqueId: '', isSelf: false, loading: false, stats: null, roles: [] }
   },
 
   onLoad(options) {
@@ -363,6 +366,7 @@ Page({
   loadHistoryAndStats() {
     const openId = getApp().globalData.openId || wx.getStorageSync('openId');
     if (!openId) return;
+    this.loadChampions(openId);
     api.getUserHistory(openId, 0).then(res => {
       if (res && res.success && Array.isArray(res.history)) {
         const historyList = res.history.map(item => ({
@@ -398,10 +402,85 @@ Page({
     }).catch(() => {});
   },
 
+  // ─── 胜率冠军 ───
+  loadChampions(openId) {
+    api.getChampions(openId).then(res => {
+      if (res && res.success && Array.isArray(res.champions)) {
+        const champions = res.champions.map((c, i) => ({ ...c, rank: i + 1 }));
+        const podium = [];
+        if (champions[1]) podium.push(champions[1]);
+        if (champions[0]) podium.push(champions[0]);
+        if (champions[2]) podium.push(champions[2]);
+        this.setData({ champions, podium });
+      }
+    }).catch(() => {});
+  },
+
+  onChampionTap(e) {
+    const { openid, name, avatar, friend, uniqueid, rank } = e.currentTarget.dataset;
+    const myOpenId = getApp().globalData.openId || wx.getStorageSync('openId');
+    if (!openid) return;
+    const isSelf = openid === myOpenId;
+    this.setData({
+      championModal: {
+        show: true, openId: openid, nickName: name || '玩家', avatarUrl: avatar || DEFAULT_AVATAR,
+        isFriend: friend === 'true' || friend === true, uniqueId: uniqueid || '',
+        isSelf, rank: rank || 0, loading: true, stats: null, roles: []
+      }
+    });
+    api.getUserStats(openid).then(res => {
+      const s = (res && res.success && res.stats) || null;
+      const roles = s && Array.isArray(s.roles)
+        ? s.roles.filter(r => r.games > 0).sort((a, b) => b.games - a.games).slice(0, 3).map(r => ({
+            roleName: ROLE_NAMES[r.role] || r.role,
+            emoji: ROLE_EMOJIS[r.role] || '🎴',
+            games: r.games,
+            winRate: r.winRate + '%'
+          }))
+        : [];
+      this.setData({
+        'championModal.loading': false,
+        'championModal.stats': s ? {
+          totalGames: s.totalGames,
+          totalWinRate: s.totalGames > 0 ? s.totalWinRate + '%' : '—',
+          goodWinRate: s.goodGames > 0 ? s.goodWinRate + '%' : '—',
+          evilWinRate: s.evilGames > 0 ? s.evilWinRate + '%' : '—'
+        } : null,
+        'championModal.roles': roles
+      });
+    }).catch(() => this.setData({ 'championModal.loading': false }));
+  },
+
+  closeChampionModal() {
+    this.setData({ 'championModal.show': false });
+  },
+
+  addChampionFriend() {
+    const m = this.data.championModal;
+    const myOpenId = getApp().globalData.openId || wx.getStorageSync('openId');
+    if (!m.openId || !myOpenId) return;
+    api.sendFriendRequest(myOpenId, m.openId).then(res => {
+      if (res && res.success) {
+        this.setData({ 'championModal.isFriend': true });
+        wx.showToast({ title: '申请已发送', icon: 'success' });
+      }
+    }).catch(err => {
+      wx.showToast({ title: (err && err.message) || '申请失败', icon: 'none' });
+    });
+  },
+
+  goChampionDetail() {
+    const m = this.data.championModal;
+    if (!m.openId) return;
+    this.setData({ 'championModal.show': false });
+    wx.navigateTo({ url: `/pages/friend-detail/friend-detail?openId=${m.openId}` });
+  },
+
+  noop() {},
+
   showInfoModal() {
     this.setData({ showInfo: true });
   },
-
   closeInfo() {
     this.setData({ showInfo: false });
   },

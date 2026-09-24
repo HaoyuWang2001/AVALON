@@ -486,6 +486,11 @@ class ApiService {
     return this.request(`/games/stats/role-games?role=${encodeURIComponent(role)}`);
   }
 
+  async getChampions(openId) {
+    const q = openId ? `?openId=${encodeURIComponent(openId)}` : '';
+    return this.request(`/games/stats/champions${q}`);
+  }
+
   // ─────── 好友系统 ───────
 
   async setUniqueId(openId, uniqueId) {

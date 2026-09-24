@@ -80,6 +80,28 @@
     </view>
   </view>
 
+  <!-- 胜率冠军（领奖台） -->
+  <view class="card champion-card" wx:if="{{champions.length > 0}}">
+    <view class="champion-title">👑 胜率冠军</view>
+    <view class="podium">
+      <view wx:for="{{podium}}" wx:key="openId"
+        class="podium-item rank-{{item.rank}}"
+        bindtap="onChampionTap"
+        data-openid="{{item.openId}}" data-name="{{item.nickName}}" data-avatar="{{item.avatarUrl}}"
+        data-friend="{{item.isFriend}}" data-uniqueid="{{item.uniqueId}}" data-rank="{{item.rank}}">
+        <view class="podium-avatar-wrap">
+          <text wx:if="{{item.rank === 1}}" class="podium-crown">👑</text>
+          <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="podium-avatar"></image>
+          <view class="podium-badge">{{item.rank}}</view>
+        </view>
+        <text class="podium-name">{{item.nickName}}</text>
+        <text class="podium-rate">{{item.winRate}}%</text>
+        <text class="podium-games">{{item.games}}场</text>
+        <view class="podium-stand">{{item.rank}}</view>
+      </view>
+    </view>
+  </view>
+
   <view class="role-stats" wx:if="{{roleStats.length > 0}}">
     <view class="role-stats-title">角色胜率</view>
     <swiper class="role-stats-swiper"
@@ -130,6 +152,42 @@
       <view class="info-item">• 支持线上发牌与线下发牌+小程序发车两种模式</view>
       <view class="info-item">• 支持查看历史对局和胜率统计</view>
     </scroll-view>
+  </view>
+
+  <!-- 胜率冠军详情弹窗 -->
+  <view class="champ-overlay" wx:if="{{championModal.show}}" bindtap="closeChampionModal">
+    <view class="champ-modal" catchtap="noop">
+      <view class="champ-modal-close" bindtap="closeChampionModal">✕</view>
+      <view class="champ-modal-head">
+        <image src="{{championModal.avatarUrl || '/images/default-avatar.png'}}" class="champ-modal-avatar"></image>
+        <view class="champ-modal-name">{{championModal.nickName}}</view>
+        <view wx:if="{{championModal.isSelf}}" class="champ-modal-tag">这是你</view>
+        <view wx:elif="{{championModal.rank}}" class="champ-modal-tag champ-modal-tag-rank">胜率榜 #{{championModal.rank}}</view>
+      </view>
+      <view wx:if="{{championModal.loading}}" class="champ-modal-loading">加载中...</view>
+      <block wx:else>
+        <view wx:if="{{championModal.stats}}" class="champ-modal-stats">
+          <view class="cms-item"><text class="cms-num">{{championModal.stats.totalWinRate}}</text><text class="cms-label">总胜率</text></view>
+          <view class="cms-item"><text class="cms-num cms-good">{{championModal.stats.goodWinRate}}</text><text class="cms-label">蓝方</text></view>
+          <view class="cms-item"><text class="cms-num cms-evil">{{championModal.stats.evilWinRate}}</text><text class="cms-label">红方</text></view>
+          <view class="cms-item"><text class="cms-num">{{championModal.stats.totalGames}}</text><text class="cms-label">场次</text></view>
+        </view>
+        <view wx:if="{{championModal.roles.length > 0}}" class="champ-modal-roles">
+          <text class="cmr-title">常用角色</text>
+          <view class="cmr-row">
+            <view wx:for="{{championModal.roles}}" wx:key="roleName" class="cmr-item">
+              <text class="cmr-emoji">{{item.emoji}}</text>
+              <text class="cmr-name">{{item.roleName}}</text>
+              <text class="cmr-rate">{{item.winRate}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+      <view class="champ-modal-actions" wx:if="{{!championModal.isSelf}}">
+        <button wx:if="{{championModal.isFriend}}" class="btn btn-primary champ-action-btn" bindtap="goChampionDetail">查看主页</button>
+        <button wx:elif="{{championModal.uniqueId}}" class="btn btn-primary champ-action-btn" bindtap="addChampionFriend">加好友</button>
+      </view>
+    </view>
   </view>
 </view>
 

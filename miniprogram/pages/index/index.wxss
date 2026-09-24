@@ -221,3 +221,56 @@
   background: #d1d5db !important;
   color: #9ca3af !important;
 }
+
+/* ─────── 胜率冠军（领奖台） ─────── */
+.champion-card { position: relative; overflow: hidden; background: linear-gradient(160deg, #1F1B2E 0%, #2A2340 60%, #3B2E5A 100%); }
+.champion-title { font-size: 30rpx; font-weight: 800; color: #FFE9A8; text-shadow: 0 2rpx 10rpx rgba(255, 200, 0, 0.4); }
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 16rpx; padding-top: 34rpx; }
+.podium-item { flex: 1; max-width: 190rpx; display: flex; flex-direction: column; align-items: center; }
+.podium-avatar-wrap { position: relative; margin-bottom: 10rpx; }
+.podium-avatar { width: 112rpx; height: 112rpx; border-radius: 50%; border: 4rpx solid var(--gray-300); background: #222; }
+.rank-1 .podium-avatar { width: 148rpx; height: 148rpx; border-color: #FFD700; animation: champ-glow 2.2s ease-in-out infinite; }
+.rank-2 .podium-avatar { border-color: #C0C0C0; }
+.rank-3 .podium-avatar { border-color: #CD7F32; }
+.podium-crown { position: absolute; top: -44rpx; left: 50%; font-size: 46rpx; animation: crown-float 1.8s ease-in-out infinite; }
+.podium-badge { position: absolute; bottom: -8rpx; left: 50%; transform: translateX(-50%); width: 40rpx; height: 40rpx; border-radius: 50%; background: #333; color: #FFD700; font-size: 24rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2rpx solid #FFD700; }
+.rank-2 .podium-badge { color: #ddd; border-color: #C0C0C0; }
+.rank-3 .podium-badge { color: #E8A56A; border-color: #CD7F32; }
+.podium-name { font-size: 24rpx; color: #EDE7FF; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
+.podium-rate { font-size: 38rpx; font-weight: 800; color: #FFD700; }
+.rank-2 .podium-rate { color: #D8D8D8; }
+.rank-3 .podium-rate { color: #E8A56A; }
+.podium-games { font-size: 20rpx; color: rgba(255, 255, 255, 0.55); }
+.podium-stand { width: 100%; margin-top: 10rpx; border-radius: 14rpx 14rpx 0 0; display: flex; align-items: center; justify-content: center; font-size: 40rpx; font-weight: 800; color: rgba(255, 255, 255, 0.85); }
+.rank-1 .podium-stand { height: 96rpx; background: linear-gradient(180deg, #FFD700, #B8860B); }
+.rank-2 .podium-stand { height: 66rpx; background: linear-gradient(180deg, #D8D8D8, #9A9A9A); }
+.rank-3 .podium-stand { height: 48rpx; background: linear-gradient(180deg, #CD7F32, #8B4513); }
+@keyframes crown-float { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10rpx); } }
+@keyframes champ-glow { 0%, 100% { box-shadow: 0 0 18rpx rgba(255, 215, 0, 0.55); } 50% { box-shadow: 0 0 34rpx rgba(255, 215, 0, 0.95); } }
+
+/* ─────── 冠军详情弹窗 ─────── */
+.champ-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.55); z-index: 120; display: flex; align-items: flex-end; justify-content: center; }
+.champ-modal { width: 100%; max-width: 720rpx; background: var(--bg-card); border-radius: 28rpx 28rpx 0 0; padding: 40rpx 36rpx calc(40rpx + env(safe-area-inset-bottom)); box-sizing: border-box; position: relative; animation: champ-up 0.25s ease-out; }
+@keyframes champ-up { from { transform: translateY(60rpx); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.champ-modal-close { position: absolute; top: 24rpx; right: 28rpx; font-size: 34rpx; color: var(--text-muted); }
+.champ-modal-head { display: flex; flex-direction: column; align-items: center; }
+.champ-modal-avatar { width: 140rpx; height: 140rpx; border-radius: 50%; border: 4rpx solid #FFD700; }
+.champ-modal-name { font-size: 34rpx; font-weight: 800; color: var(--text-title); margin-top: 14rpx; }
+.champ-modal-tag { font-size: 22rpx; color: #fff; background: linear-gradient(135deg, #FFD700, #B8860B); padding: 4rpx 18rpx; border-radius: 999rpx; margin-top: 8rpx; }
+.champ-modal-tag-rank { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); }
+.champ-modal-loading { text-align: center; color: var(--text-muted); padding: 30rpx 0; }
+.champ-modal-stats { display: flex; margin-top: 24rpx; }
+.cms-item { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.cms-num { font-size: 36rpx; font-weight: 800; color: var(--primary); }
+.cms-good { color: #3B82F6; }
+.cms-evil { color: #EF4444; }
+.cms-label { font-size: 22rpx; color: var(--text-muted); margin-top: 4rpx; }
+.champ-modal-roles { margin-top: 24rpx; }
+.cmr-title { font-size: 26rpx; font-weight: 700; color: var(--text-title); }
+.cmr-row { display: flex; gap: 14rpx; margin-top: 12rpx; }
+.cmr-item { flex: 1; background: var(--gray-50); border-radius: 14rpx; padding: 14rpx 8rpx; display: flex; flex-direction: column; align-items: center; }
+.cmr-emoji { font-size: 34rpx; }
+.cmr-name { font-size: 22rpx; color: var(--text-title); margin-top: 4rpx; }
+.cmr-rate { font-size: 24rpx; font-weight: 700; color: var(--primary); margin-top: 2rpx; }
+.champ-modal-actions { margin-top: 30rpx; }
+.champ-action-btn { width: 100%; }

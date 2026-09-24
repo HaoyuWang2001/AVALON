@@ -49,6 +49,7 @@
 .f-info { flex: 1; margin-left: 18rpx; min-width: 0; }
 .f-name { font-size: 30rpx; font-weight: 600; color: var(--gray-800); display: block; }
 .f-sub { font-size: 24rpx; color: var(--gray-400); margin-top: 6rpx; display: block; }
+.f-rate { font-size: 22rpx; color: var(--primary); margin-top: 4rpx; display: block; font-weight: 600; }
 .dot { display: inline-block; width: 14rpx; height: 14rpx; border-radius: 50%; background: var(--gray-300); margin-right: 6rpx; vertical-align: middle; }
 .dot-on { background: #22C55E; }
 .f-arrow { font-size: 36rpx; color: var(--gray-300); }
