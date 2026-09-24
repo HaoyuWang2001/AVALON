@@ -784,6 +784,22 @@ function createRouter() {
       res.status(500).json({ success: false, message: error.message || '获取全局统计失败' });
     }
   });
+
+  // 含有指定角色的全部已结束对局
+  const VALID_ROLES = ['merlin', 'percival', 'loyal', 'mordred', 'morgana', 'assassin', 'minion', 'oberon', 'lancelotBlue', 'lancelotRed'];
+  router.get('/stats/role-games', async (req, res) => {
+    try {
+      const { role } = req.query;
+      if (!role || !VALID_ROLES.includes(role)) {
+        return res.status(400).json({ success: false, message: '角色参数无效' });
+      }
+      const games = await GameModel.getRoleGames(role);
+      res.json({ success: true, role, games });
+    } catch (error) {
+      console.error('获取角色对局API错误:', error);
+      res.status(500).json({ success: false, message: error.message || '获取角色对局失败' });
+    }
+  });
   
   // 获取游戏历史记录（管理接口）
   router.get('/history/:roomId', async (req, res) => {

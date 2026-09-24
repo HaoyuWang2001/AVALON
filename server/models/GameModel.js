@@ -2200,11 +2200,11 @@ class GameModel {
       const decided = goodGames + evilGames;
       const rate = n => decided > 0 ? Math.round(n / decided * 1000) / 10 : 0;
 
-      // 角色出场次数 + 胜率（仅已结束对局）
+      // 角色出场次数 + 胜率（仅已结束对局；按局去重——一局多个忠臣只计 1 次）
       const roleRows = await db.query(
         `SELECT gp.role, gp.side,
-                COUNT(*) as games,
-                SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN 1 ELSE 0 END) as wins
+                COUNT(DISTINCT g.id) as games,
+                COUNT(DISTINCT CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN g.id END) as wins
          FROM games g
          JOIN game_players gp ON gp.game_id = g.id
          WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
@@ -2253,6 +2253,42 @@ class GameModel {
       };
     } catch (error) {
       console.error('获取全局统计失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取含有指定角色的全部已结束对局（按局去重，排除房间 000000）
+   * @param {string} role 角色标识
+   * @returns {Promise<Array>} 对局列表
+   */
+  static async getRoleGames(role) {
+    try {
+      const rows = await db.query(
+        `SELECT g.id, g.room_id as roomId, g.room_number as roomNumber, g.game_result as gameResult,
+                (SELECT COUNT(*) FROM game_players WHERE game_id = g.id) as playerCount,
+                TIMESTAMPDIFF(SECOND, g.created_at, g.ended_at) as durationSeconds,
+                g.created_at as createdAt, g.ended_at as endedAt
+         FROM games g
+         JOIN game_players gp ON gp.game_id = g.id
+         WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
+           AND gp.role = ?
+         GROUP BY g.id
+         ORDER BY g.created_at DESC`,
+        [role]
+      );
+      return rows.map(g => ({
+        id: g.id,
+        roomId: g.roomId,
+        roomNumber: g.roomNumber,
+        gameResult: g.gameResult ? parseJson(g.gameResult) : null,
+        playerCount: parseInt(g.playerCount, 10) || 0,
+        durationSeconds: g.durationSeconds,
+        createdAt: g.createdAt,
+        endedAt: g.endedAt
+      }));
+    } catch (error) {
+      console.error('获取角色对局失败:', error);
       throw error;
     }
   }

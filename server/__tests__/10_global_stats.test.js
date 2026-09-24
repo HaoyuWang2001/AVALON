@@ -1,4 +1,4 @@
-const { makeUserId, createRoom, joinRoom, toggleReady, startGame, endGame, disband, apiGet } = require('./helpers/testHelper');
+const { makeUserId, createRoom, joinRoom, toggleReady, startGame, endGame, disband, createRoomAndStartGame, apiGet } = require('./helpers/testHelper');
 
 // 全局统计接口：/games/stats/global 返回基础计数 + 阵营 + 角色 + 全量已结束对局
 describe('10 — 全局统计', () => {
@@ -73,4 +73,46 @@ describe('10 — 全局统计', () => {
     expect(sample.roomId).toBeNull();
     expect(sample.roomNumber).toBe(created[0].roomId);
   });
+
+  it('10-2 忠臣(平民)按局去重：一局多个忠臣只计 1 次', async () => {
+    const loyalGamesBefore = await getRoleGamesCount('loyal');
+
+    // 8 人标准板含 3 个忠臣
+    const g = await createRoomAndStartGame(8);
+    expect(g.players.filter(p => p.role === 'loyal').length).toBe(3);
+    await endGame(g.gameId);
+    await disband(g.roomId, g.hostId);
+
+    const loyalGamesAfter = await getRoleGamesCount('loyal');
+    // 该局仅让忠臣出场次数 +1（而非 +3）
+    expect(loyalGamesAfter - loyalGamesBefore).toBe(1);
+  });
+
+  it('10-3 角色对局接口：返回含该角色的全部已结束对局', async () => {
+    const g = await createRoomAndStartGame(8);
+    await endGame(g.gameId);
+    await disband(g.roomId, g.hostId);
+
+    const res = await apiGet('/api/games/stats/role-games?role=loyal');
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.role).toBe('loyal');
+    expect(Array.isArray(res.body.games)).toBe(true);
+    const ids = res.body.games.map(x => x.id);
+    expect(ids).toContain(g.gameId);
+    const sample = res.body.games.find(x => x.id === g.gameId);
+    expect(sample.playerCount).toBe(8);
+    // 去重：同一局只出现一次
+    expect(ids.filter(id => id === g.gameId).length).toBe(1);
+
+    // 非法角色 → 400
+    const bad = await apiGet('/api/games/stats/role-games?role=bogus');
+    expect(bad.status).toBe(400);
+  });
 });
+
+async function getRoleGamesCount(role) {
+  const res = await apiGet('/api/games/stats/global');
+  const r = (res.body.stats.roles || []).find(x => x.role === role);
+  return r ? r.games : 0;
+}
