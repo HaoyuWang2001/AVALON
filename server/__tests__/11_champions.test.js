@@ -27,6 +27,16 @@ describe('11 — 胜率冠军', () => {
     for (let i = 1; i < res.body.champions.length; i++) {
       expect(res.body.champions[i - 1].winRate).toBeGreaterThanOrEqual(res.body.champions[i].winRate);
     }
+
+    // 最勤劳的小蜜蜂（全局局数最多者）
+    expect(res.body).toHaveProperty('hardworking');
+    expect(res.body.hardworking).toBeTruthy();
+    expect(res.body.hardworking).toHaveProperty('openId');
+    expect(res.body.hardworking.games).toBeGreaterThanOrEqual(1);
+    // 蜜蜂的局数应为全局最大（>= 任一冠军的局数）
+    for (const ch of res.body.champions) {
+      expect(res.body.hardworking.games).toBeGreaterThanOrEqual(ch.games);
+    }
   });
 
   it('11-2 门槛过高时无结果', async () => {

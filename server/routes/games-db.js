@@ -865,7 +865,45 @@ function createRouter() {
           isFriend
         });
       }
-      res.json({ success: true, champions });
+
+      // 最勤劳的小蜜蜂：全局已完成局数最多的玩家（不按公开胜率过滤）
+      let hardworking = null;
+      const beeRows = await db.query(
+        `SELECT t.openId, t.games,
+                u.custom_nick_name as customNickName, u.wx_nick_name as wxNickName,
+                u.avatar_url as avatarUrl, u.unique_id as uniqueId
+         FROM (
+           SELECT gp.open_id as openId, COUNT(DISTINCT g.id) as games
+           FROM game_players gp
+           JOIN games g ON g.id = gp.game_id
+           WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
+           GROUP BY gp.open_id
+         ) t
+         JOIN users u ON u.open_id = t.openId
+         ORDER BY t.games DESC
+         LIMIT 1`
+      );
+      if (beeRows.length > 0) {
+        const b = beeRows[0];
+        let beeIsFriend = false;
+        if (viewerOpenId && viewerOpenId !== b.openId) {
+          const fr = await db.query(
+            'SELECT 1 FROM friendships WHERE user_open_id = ? AND friend_open_id = ? LIMIT 1',
+            [viewerOpenId, b.openId]
+          );
+          beeIsFriend = fr.length > 0;
+        }
+        hardworking = {
+          openId: b.openId,
+          nickName: b.customNickName || b.wxNickName || '玩家',
+          avatarUrl: b.avatarUrl || '',
+          uniqueId: b.uniqueId || '',
+          games: parseInt(b.games, 10) || 0,
+          isFriend: beeIsFriend
+        };
+      }
+
+      res.json({ success: true, champions, hardworking });
     } catch (error) {
       console.error('获取胜率冠军API错误:', error);
       res.status(500).json({ success: false, message: error.message || '获取胜率冠军失败' });
