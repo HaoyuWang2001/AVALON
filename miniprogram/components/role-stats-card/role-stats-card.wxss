@@ -1,7 +1,7 @@
 /* components/role-stats-card/role-stats-card.wxss */
 .rsc { position: relative; background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); }
 .rsc-title { font-size: 34rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 12rpx; display: flex; align-items: center; }
-.rsc-title::before { content: ''; width: 6rpx; height: 30rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
+.rsc-title::before { content: ''; width: 8rpx; height: 30rpx; background: linear-gradient(180deg, var(--section-bar-from), var(--section-bar-to)); border-radius: 4rpx; margin-right: 14rpx; }
 .rsc-summary { font-size: 28rpx; color: var(--text-muted); margin-bottom: 12rpx; }
 .rsc-summary-rate, .rsc-summary-good, .rsc-summary-evil { font-weight: 700; }
 .rsc-summary-rate { color: var(--c-violet); }

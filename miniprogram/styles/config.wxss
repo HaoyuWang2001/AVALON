@@ -21,7 +21,7 @@
 .config-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .config-section { background: var(--bg-card); border-radius: 24rpx; padding: 28rpx; margin-bottom: 20rpx; box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04); }
 .section-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 20rpx; display: flex; align-items: center; }
-.section-title::before { content: ''; width: 6rpx; height: 24rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 12rpx; }
+.section-title::before { content: ''; width: 8rpx; height: 24rpx; background: linear-gradient(180deg, var(--section-bar-from), var(--section-bar-to)); border-radius: 4rpx; margin-right: 12rpx; }
 
 /* ─────── Board type toggle ─────── */
 .board-toggle { display: flex; gap: 16rpx; }

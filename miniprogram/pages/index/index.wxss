@@ -124,7 +124,7 @@
   0%, 100% { background-position: 15% 15%; }
   50%      { background-position: 85% 85%; }
 }
-.profile-avatar-btn { position: absolute; top: -70rpx; left: 36rpx; width: 140rpx !important; height: 140rpx !important; border: none; background: var(--bg-card); border-radius: 50%; overflow: hidden; padding: 0 !important; margin: 0 !important; box-sizing: border-box; z-index: 2; box-shadow: 0 0 0 8rpx rgba(196, 181, 253, 0.35), 0 8rpx 20rpx rgba(0, 0, 0, 0.15); }
+.profile-avatar-btn { position: absolute; top: -70rpx; left: 36rpx; width: 140rpx !important; height: 140rpx !important; border: none; background: var(--bg-card); border-radius: 50%; overflow: hidden; padding: 0 !important; margin: 0 !important; box-sizing: border-box; z-index: 2; box-shadow: 0 0 0 8rpx var(--profile-ring-glow), 0 8rpx 20rpx rgba(0, 0, 0, 0.15); }
 .profile-avatar-btn::after { border: none; display: none; }
 .profile-avatar-img { width: 100%; height: 100%; border-radius: 50%; display: block; }
 .profile-name { position: absolute; top: 20rpx; left: 204rpx; right: 96rpx; height: 60rpx; line-height: 60rpx; font-size: 40rpx; font-weight: 800; color: var(--profile-fg, #FFFFFF); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -133,8 +133,8 @@
 .pstat { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .pstat-num { font-size: 46rpx; font-weight: 800; color: var(--profile-fg, #FFFFFF); }
 .pstat-label { font-size: 24rpx; color: var(--profile-fg, #FFFFFF); margin-top: 6rpx; }
-.pstat-div { width: 6rpx; height: 60rpx; background: var(--profile-ring, #C4B5FD); border-radius: 3rpx; }
-.pstats-longdiv { height: 6rpx; background: var(--profile-ring, #C4B5FD); border-radius: 3rpx; margin: 0 0 88rpx; }
+.pstat-div { width: 6rpx; height: 60rpx; background: var(--profile-divider); border-radius: 3rpx; }
+.pstats-longdiv { height: 6rpx; background: var(--profile-divider); border-radius: 3rpx; margin: 0 0 88rpx; }
 
 /* ─────── 用户卡 emoji 按钮（游戏说明） ─────── */
 .user-emoji-btn {

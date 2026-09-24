@@ -75,7 +75,10 @@
   --champion-fg: #F7F1E8;
   --profile-fg: #F7F1E8;
   --profile-name: #B49CE0;
-  --profile-ring: #B49CE0;
+  --profile-divider: #D4A052;
+  --profile-ring-glow: rgba(212, 160, 82, 0.35);
+  --section-bar-from: #E0B45A;
+  --section-bar-to: #B45309;
 
   --gray-50: #2E281F;
   --gray-100: #3A332A;
@@ -164,7 +167,10 @@
   --champion-fg: #D8D2EE;
   --profile-fg: #D8D2EE;
   --profile-name: #B4A6F0;
-  --profile-ring: #B4A6F0;
+  --profile-divider: #A78BFA;
+  --profile-ring-glow: rgba(167, 139, 250, 0.35);
+  --section-bar-from: #A78BFA;
+  --section-bar-to: #22D3EE;
 
   --gray-50: #29223E;
   --gray-100: #322A4B;
@@ -253,7 +259,10 @@
   --champion-fg: #C7D2DD;
   --profile-fg: #C7D2DD;
   --profile-name: #9C90D8;
-  --profile-ring: #9C90D8;
+  --profile-divider: #94A3B8;
+  --profile-ring-glow: rgba(148, 163, 184, 0.35);
+  --section-bar-from: #94A3B8;
+  --section-bar-to: #64748B;
 
   --gray-50: #20252C;
   --gray-100: #292F37;

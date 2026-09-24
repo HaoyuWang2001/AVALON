@@ -1,6 +1,6 @@
 /* components/history-card/history-card.wxss */
 .hc-title { font-size: 34rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 12rpx; display: flex; align-items: center; }
-.hc-title::before { content: ''; width: 6rpx; height: 30rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
+.hc-title::before { content: ''; width: 8rpx; height: 30rpx; background: linear-gradient(180deg, var(--section-bar-from), var(--section-bar-to)); border-radius: 4rpx; margin-right: 14rpx; }
 .hc-empty { text-align: center; color: var(--gray-400); font-size: 26rpx; padding: 40rpx 0; }
 .hc-scroll { max-height: 760rpx; }
 .hc-item { padding: 18rpx 0; border-bottom: 1rpx solid var(--gray-100); }

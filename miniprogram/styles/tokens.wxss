@@ -72,9 +72,13 @@ page {
   --profile-bg: linear-gradient(135deg, #2E1065 0%, #3B0764 45%, #5B21B6 100%);
   --profile-fg: #FFFFFF;
   --profile-name: #C4B5FD;
-  --profile-ring: #C4B5FD;
+  --profile-divider: #C4B5FD;
+  --profile-ring-glow: rgba(196, 181, 253, 0.35);
   --hc-good: #1E40AF;
   --hc-evil: #B91C1C;
+  /* 小节竖线（角色胜率 / 历史对局 / 配置弹窗） */
+  --section-bar-from: #8B5CF6;
+  --section-bar-to: #6D28D9;
 
   /* 中性灰阶 */
   --gray-50: #F9FAFB;
