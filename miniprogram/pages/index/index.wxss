@@ -15,7 +15,7 @@
 .brand-bar { padding: 26rpx 4rpx 44rpx; text-align: center; flex-shrink: 0; }
 .brand-text {
   position: relative; display: inline-block;
-  font-size: 58rpx; font-weight: 900; letter-spacing: 6rpx;
+  font-size: 68rpx; font-weight: 900; letter-spacing: 5rpx;
   animation: brand-glow 2.2s ease-in-out infinite, brand-shake 2.6s steps(2, end) infinite;
 }
 .brand-1, .brand-2, .brand-3 { -webkit-text-fill-color: currentColor; }
@@ -43,16 +43,16 @@
   98% { transform: translate(-2rpx, 1rpx); }
 }
 @keyframes brand-tear-a {
-  0%, 80%, 100% { clip-path: inset(0 0 78% 0); transform: translate(0, 0); opacity: 0.85; }
-  83% { clip-path: inset(0 0 72% 0); transform: translate(-6rpx, -2rpx); opacity: 1; }
-  88% { clip-path: inset(0 0 84% 0); transform: translate(5rpx, 2rpx); opacity: 0.9; }
-  92% { clip-path: inset(0 0 76% 0); transform: translate(-3rpx, 1rpx); }
+  0%, 80%, 100% { clip-path: inset(0 0 70% 0); transform: translate(0, 0); opacity: 0.85; }
+  83% { clip-path: inset(0 0 64% 0); transform: translate(-6rpx, -2rpx); opacity: 1; }
+  88% { clip-path: inset(0 0 78% 0); transform: translate(5rpx, 2rpx); opacity: 0.9; }
+  92% { clip-path: inset(0 0 68% 0); transform: translate(-3rpx, 1rpx); }
 }
 @keyframes brand-tear-b {
-  0%, 76%, 100% { clip-path: inset(78% 0 0 0); transform: translate(0, 0); opacity: 0.85; }
-  79% { clip-path: inset(72% 0 0 0); transform: translate(6rpx, 2rpx); opacity: 1; }
-  85% { clip-path: inset(84% 0 0 0); transform: translate(-5rpx, -2rpx); opacity: 0.9; }
-  90% { clip-path: inset(76% 0 0 0); transform: translate(3rpx, 1rpx); }
+  0%, 76%, 100% { clip-path: inset(70% 0 0 0); transform: translate(0, 0); opacity: 0.85; }
+  79% { clip-path: inset(64% 0 0 0); transform: translate(6rpx, 2rpx); opacity: 1; }
+  85% { clip-path: inset(78% 0 0 0); transform: translate(-5rpx, -2rpx); opacity: 0.9; }
+  90% { clip-path: inset(68% 0 0 0); transform: translate(3rpx, 1rpx); }
 }
 
 /* ─────── 个人信息卡（头像半嵌 + 三栏数据） ─────── */
