@@ -50,6 +50,7 @@ Page({
     summary: null,
     champions: [],
     podium: [],
+    hardworking: null,
     publicWinrate: true
   },
 
@@ -437,7 +438,7 @@ Page({
         if (champions[1]) podium.push(champions[1]);
         if (champions[0]) podium.push(champions[0]);
         if (champions[2]) podium.push(champions[2]);
-        this.setData({ champions, podium });
+        this.setData({ champions, podium, hardworking: res.hardworking || null });
       }
     }).catch(() => {});
   },
