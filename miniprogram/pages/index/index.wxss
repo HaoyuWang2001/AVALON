@@ -11,19 +11,22 @@
   overflow-y: auto;
 }
 
-/* ─────── 头部（三段三色 + 赛博故障撕裂 + 辉光） ─────── */
+/* ─────── 头部（三段各具故障：霓虹/隐现/放大 + 下划线） ─────── */
 .brand-bar { padding: 26rpx 4rpx 44rpx; text-align: center; flex-shrink: 0; }
 .brand-text {
   position: relative; display: inline-block;
   font-size: 68rpx; font-weight: 900; letter-spacing: 5rpx; font-style: italic;
   font-family: 'ZCOOL QingKe HuangYou', 'Smiley Sans', 'PingFang SC', 'Heiti SC', 'Microsoft YaHei', sans-serif;
-  animation: brand-glow 2.2s ease-in-out infinite, brand-shake 2.6s steps(2, end) infinite;
 }
-.brand-1, .brand-2, .brand-3 { -webkit-text-fill-color: currentColor; animation: brand-flicker 4s steps(1, end) infinite; }
-.brand-1 { color: var(--brand-1, #2E1065); }
-.brand-2 { color: var(--brand-2, #4C1D95); animation-duration: 4.8s; animation-delay: -0.9s; }
-.brand-3 { color: var(--brand-3, #6D28D9); animation-duration: 5.6s; animation-delay: -1.7s; }
-/* 颜色突变/故障：全色域随机跳变（steps 无过渡，猝变） */
+.brand-1, .brand-2, .brand-3 { -webkit-text-fill-color: currentColor; }
+/* 瓦协会：专注霓虹颜色变化（全色域，速率同前）；故障带极小 */
+.brand-1 { color: var(--brand-1, #2E1065); animation: brand-flicker 4s steps(1, end) infinite, brand-neon 2s ease-in-out infinite; }
+/* 之：时隐时现；黑/深紫/白(消失) 有限色；周期延长 */
+.brand-2 { color: var(--brand-2, #4C1D95); display: inline-block; animation: zhi-appear 7s steps(1, end) infinite; }
+/* 练秋湖分部：下划线；紫/深紫/黑/深灰 有限色；突然放大故障 */
+.brand-3 { color: var(--brand-3, #6D28D9); display: inline-block; text-decoration: underline; text-underline-offset: 6rpx; text-decoration-color: currentColor; transform-origin: center bottom; animation: lianqiu-glitch 5.6s steps(1, end) infinite; }
+
+/* 瓦协会：全色域霓虹跳变（steps 无过渡） */
 @keyframes brand-flicker {
   0% { color: #FF3B30; }
   5% { color: #FF9500; }
@@ -47,37 +50,51 @@
   95% { color: #FACC15; }
   100% { color: #FF3B30; }
 }
+/* 瓦协会霓虹辉光（跟随当前色 currentColor） */
+@keyframes brand-neon {
+  0%, 100% { text-shadow: 0 0 6rpx currentColor, 0 0 16rpx currentColor; }
+  50% { text-shadow: 0 0 12rpx currentColor, 0 0 30rpx currentColor; }
+}
+/* 之：黑/深紫/白(消失) 随机，时隐时现，周期长 */
+@keyframes zhi-appear {
+  0%, 100% { color: #000000; opacity: 1; }
+  16% { color: #2E1065; opacity: 1; }
+  32% { color: #FFFFFF; opacity: 0; }
+  44% { color: #000000; opacity: 1; }
+  60% { color: #6D28D9; opacity: 1; }
+  74% { color: #FFFFFF; opacity: 0; }
+  86% { color: #2E1065; opacity: 1; }
+}
+/* 练秋湖分部：紫/深紫/黑/深灰，突然放大故障 */
+@keyframes lianqiu-glitch {
+  0%, 100% { color: #6D28D9; transform: scale(1); }
+  15% { color: #2E1065; transform: scale(1); }
+  28% { color: #000000; transform: scale(1); }
+  35% { color: #4B5563; transform: scale(1.30); }
+  41% { color: #2E1065; transform: scale(1); }
+  56% { color: #6D28D9; transform: scale(1); }
+  70% { color: #1F2937; transform: scale(1); }
+  77% { color: #6D28D9; transform: scale(1.24); }
+  83% { color: #2E1065; transform: scale(1); }
+}
+/* 整串故障层：上下带极小（几乎不可见） */
 .brand-text::before, .brand-text::after {
   content: '瓦协会之练秋湖分部';
   position: absolute; left: 0; top: 0; width: 100%;
   -webkit-text-fill-color: currentColor;
   pointer-events: none;
 }
-.brand-text::before { color: var(--brand-g1, #06B6D4); animation: brand-tear-a 1.8s steps(1, end) infinite; }
-.brand-text::after { color: var(--brand-g2, #EC4899); animation: brand-tear-b 2.2s steps(1, end) infinite; }
-@keyframes brand-glow {
-  0%, 100% { text-shadow: 0 0 6rpx var(--brand-glow-a, rgba(124, 58, 237, 0.3)), 0 0 18rpx var(--brand-glow-b, rgba(147, 51, 234, 0.2)); }
-  50% { text-shadow: 0 0 10rpx var(--brand-glow-a, rgba(124, 58, 237, 0.3)), 0 0 30rpx var(--brand-glow-b, rgba(147, 51, 234, 0.2)); }
-}
-@keyframes brand-shake {
-  0%, 88%, 100% { transform: translate(0, 0) scaleY(1) skewX(0deg); }
-  90% { transform: translate(-6rpx, 4rpx) scaleY(1.14) skewX(-7deg); }
-  92% { transform: translate(6rpx, -4rpx) scaleY(0.88) skewX(6deg); }
-  94% { transform: translate(-5rpx, 3rpx) scaleY(1.10) skewX(-5deg); }
-  96% { transform: translate(5rpx, -3rpx) scaleY(0.92) skewX(4deg); }
-  98% { transform: translate(-3rpx, 2rpx) scaleY(1.06) skewX(-3deg); }
-}
+.brand-text::before { color: var(--brand-g1, #A855F7); animation: brand-tear-a 3s steps(1, end) infinite; }
+.brand-text::after { color: var(--brand-g2, #000000); animation: brand-tear-b 3.4s steps(1, end) infinite; }
 @keyframes brand-tear-a {
-  0%, 80%, 100% { clip-path: inset(0 0 70% 0); transform: translate(0, 0); opacity: 0.85; }
-  83% { clip-path: inset(0 0 64% 0); transform: translate(-6rpx, -2rpx); opacity: 1; }
-  88% { clip-path: inset(0 0 78% 0); transform: translate(5rpx, 2rpx); opacity: 0.9; }
-  92% { clip-path: inset(0 0 68% 0); transform: translate(-3rpx, 1rpx); }
+  0%, 90%, 100% { clip-path: inset(0 0 96% 0); transform: translate(0, 0); opacity: 0; }
+  92% { clip-path: inset(0 0 90% 0); transform: translate(-5rpx, -1rpx); opacity: 0.6; }
+  96% { clip-path: inset(0 0 97% 0); transform: translate(4rpx, 1rpx); opacity: 0.4; }
 }
 @keyframes brand-tear-b {
-  0%, 76%, 100% { clip-path: inset(70% 0 0 0); transform: translate(0, 0); opacity: 0.85; }
-  79% { clip-path: inset(64% 0 0 0); transform: translate(6rpx, 2rpx); opacity: 1; }
-  85% { clip-path: inset(78% 0 0 0); transform: translate(-5rpx, -2rpx); opacity: 0.9; }
-  90% { clip-path: inset(68% 0 0 0); transform: translate(3rpx, 1rpx); }
+  0%, 90%, 100% { clip-path: inset(96% 0 0 0); transform: translate(0, 0); opacity: 0; }
+  92% { clip-path: inset(90% 0 0 0); transform: translate(5rpx, 1rpx); opacity: 0.6; }
+  96% { clip-path: inset(97% 0 0 0); transform: translate(-4rpx, -1rpx); opacity: 0.4; }
 }
 
 /* ─────── 个人信息卡（头像半嵌 + 三栏数据） ─────── */
