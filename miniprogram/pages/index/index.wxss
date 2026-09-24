@@ -19,10 +19,21 @@
   font-family: 'ZCOOL QingKe HuangYou', 'Smiley Sans', 'PingFang SC', 'Heiti SC', 'Microsoft YaHei', sans-serif;
   animation: brand-glow 2.2s ease-in-out infinite, brand-shake 2.6s steps(2, end) infinite;
 }
-.brand-1, .brand-2, .brand-3 { -webkit-text-fill-color: currentColor; }
-.brand-1 { color: var(--brand-1, #4C1D95); }
-.brand-2 { color: var(--brand-2, #6D28D9); }
-.brand-3 { color: var(--brand-3, #9333EA); }
+.brand-1, .brand-2, .brand-3 { -webkit-text-fill-color: currentColor; animation: brand-flicker 3s steps(1, end) infinite; }
+.brand-1 { color: var(--brand-1, #2E1065); }
+.brand-2 { color: var(--brand-2, #4C1D95); animation-duration: 3.6s; animation-delay: -0.8s; }
+.brand-3 { color: var(--brand-3, #6D28D9); animation-duration: 4.2s; animation-delay: -1.6s; }
+/* 颜色突变/故障：深紫↔黑↔浅紫↔亮紫 随机跳变（steps 无过渡，猝变） */
+@keyframes brand-flicker {
+  0% { color: var(--brand-1, #2E1065); }
+  14% { color: #000000; }
+  28% { color: #C4B5FD; }
+  42% { color: var(--brand-3, #6D28D9); }
+  56% { color: #A855F7; }
+  70% { color: #E9D5FF; }
+  84% { color: var(--brand-2, #4C1D95); }
+  100% { color: #000000; }
+}
 .brand-text::before, .brand-text::after {
   content: '瓦协会之练秋湖分部';
   position: absolute; left: 0; top: 0; width: 100%;
