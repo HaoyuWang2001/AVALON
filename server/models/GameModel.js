@@ -211,11 +211,11 @@ class GameModel {
         const lakeEnabled = !!(roomConfig && roomConfig.rules && roomConfig.rules.ladyOfTheLake);
         const firstLakeHolderOpenId = lakeEnabled && players[firstLakeHolderIndex] ? players[firstLakeHolderIndex].openId : null;
         await connection.execute(
-          `INSERT INTO games (id, room_id, room_number, owner_id, current_phase, current_round, 
+          `INSERT INTO games (id, room_id, room_number, room_config_snapshot, owner_id, current_phase, current_round, 
                               team_leader_index, failed_nominations, lake_holder_open_id,
                               speaking_order, status, created_at, updated_at)
-           VALUES (?, ?, ?, ?, 'roleReveal', 1, ?, 0, ?, 'asc', 'active', NOW(), NOW())`,
-          [gameId, roomId, roomId, ownerId, firstLeaderIndex, firstLakeHolderOpenId]
+           VALUES (?, ?, ?, ?, ?, 'roleReveal', 1, ?, 0, ?, 'asc', 'active', NOW(), NOW())`,
+          [gameId, roomId, roomId, roomConfig ? JSON.stringify(roomConfig) : null, ownerId, firstLeaderIndex, firstLakeHolderOpenId]
         );
         
         // 5. 添加游戏玩家角色
@@ -570,7 +570,8 @@ class GameModel {
 
       // 获取游戏基本信息
       const games = await db.query(
-        `SELECT id as gameId, room_id as roomId, owner_id as ownerId, current_phase as currentPhase, current_round as currentRound,
+        `SELECT id as gameId, room_id as roomId, room_config_snapshot as roomConfigSnapshot,
+                owner_id as ownerId, current_phase as currentPhase, current_round as currentRound,
                 team_leader_index as teamLeaderIndex, nominated_team as nominatedTeam,
                 failed_nominations as failedNominations, lake_holder_open_id as lakeHolderOpenId,
                 pre_nominated_team as preNominatedTeam, speaking_order as speakingOrder,
@@ -596,9 +597,12 @@ class GameModel {
       if (game.assassination) game.assassination = parseJson(game.assassination);
       if (game.lancelotResult) game.lancelotResult = parseJson(game.lancelotResult);
 
-      // 房间配置（视野判定 + 湖仙 + 可见性）
-      const roomRows = await db.query('SELECT room_config FROM rooms WHERE id = ?', [game.roomId]);
-      const roomConfig = roomRows.length ? parseJson(roomRows[0].room_config) : null;
+      // 房间配置（视野判定 + 湖仙 + 可见性）：优先开局快照，回退房间当前配置
+      let roomConfig = game.roomConfigSnapshot ? parseJson(game.roomConfigSnapshot) : null;
+      if (!roomConfig) {
+        const roomRows = await db.query('SELECT room_config FROM rooms WHERE id = ?', [game.roomId]);
+        roomConfig = roomRows.length ? parseJson(roomRows[0].room_config) : null;
+      }
       const rules = (roomConfig && roomConfig.rules) || {};
 
       // 获取游戏玩家（基于 game_players 快照，不依赖 room_players，房间删除后历史对局仍完整）

@@ -1138,7 +1138,7 @@ Page({
   openConfigView() {
     const rc = this.data.roomConfigVal;
     if (!rc) {
-      wx.showToast({ title: '暂无配置', icon: 'none' });
+      wx.showModal({ title: '暂无版型配置', content: '该对局为旧记录或房间已删除，未保存版型配置。', showCancel: false });
       return;
     }
     this.setData({

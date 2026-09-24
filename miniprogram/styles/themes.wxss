@@ -25,7 +25,7 @@
 
   --text-title: #F7F1E8;
   --text-body: #E0D5C7;
-  --text-muted: #9C8F80;
+  --text-muted: #B0A493;
   --link: #60A5FA;
   --status-inroom: #7C8FB8;
   --btn-emoji-bg: #40382D;
@@ -84,8 +84,8 @@
   --gray-100: #3A332A;
   --gray-200: #362F24;
   --gray-300: #4B4134;
-  --gray-400: #6D6254;
-  --gray-500: #8F8475;
+  --gray-400: #B0A493;
+  --gray-500: #B0A493;
   --gray-600: #B8AC9C;
   --gray-700: #D9CEC0;
   --gray-800: #EAE2D6;
@@ -117,7 +117,7 @@
 
   --text-title: #D8D2EE;
   --text-body: #B6B0D9;
-  --text-muted: #8B85A7;
+  --text-muted: #A29BC0;
   --link: #93C5FD;
   --status-inroom: #7C8FB8;
   --btn-emoji-bg: #2E2745;
@@ -158,7 +158,7 @@
   --glass-sheen: rgba(255, 255, 255, 0.26);
   --role-card-border: #A78BFA;
   --role-card-bg: #29223E;
-  --role-card-rate: #C9B27A;
+  --role-card-rate: #B4A6F0;
   --champion-border: #A78BFA;
   --champion-bg: #29223E;
   --profile-bg: #29223E;
@@ -176,8 +176,8 @@
   --gray-100: #322A4B;
   --gray-200: #322A4B;
   --gray-300: #413958;
-  --gray-400: #5C5472;
-  --gray-500: #756F8C;
+  --gray-400: #A29BC0;
+  --gray-500: #A29BC0;
   --gray-600: #8B85A7;
   --gray-700: #B6B0D9;
   --gray-800: #C9C3E4;
@@ -209,7 +209,7 @@
 
   --text-title: #C7D2DD;
   --text-body: #A7B4C0;
-  --text-muted: #8A959F;
+  --text-muted: #9EA9B5;
   --link: #93C5FD;
   --status-inroom: #7C8FB8;
   --btn-emoji-bg: #3B444E;
@@ -250,7 +250,7 @@
   --glass-sheen: rgba(255, 255, 255, 0.22);
   --role-card-border: #AFC0D0;
   --role-card-bg: #262B33;
-  --role-card-rate: #D4B060;
+  --role-card-rate: #C7D2DD;
   --champion-border: #D4A052;
   --champion-bg: #262B33;
   --profile-bg: #262B33;
@@ -268,8 +268,8 @@
   --gray-100: #292F37;
   --gray-200: #343B44;
   --gray-300: #48505A;
-  --gray-400: #5F6873;
-  --gray-500: #7A848F;
+  --gray-400: #9EA9B5;
+  --gray-500: #9EA9B5;
   --gray-600: #8A959F;
   --gray-700: #A7B4C0;
   --gray-800: #B9C5CF;

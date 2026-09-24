@@ -68,6 +68,7 @@ CREATE TABLE games (
     id VARCHAR(36) PRIMARY KEY COMMENT 'UUID游戏ID',
     room_id VARCHAR(6) NULL COMMENT '房间ID（房间删除后置NULL，游戏记录保留）',
     room_number VARCHAR(6) NULL COMMENT '开局快照房间号（房间删除后仍保留，写入后不可变）',
+    room_config_snapshot JSON NULL COMMENT '开局快照房间配置（房间删除后历史对局仍可还原版型）',
     owner_id VARCHAR(64) NOT NULL COMMENT '游戏所有者（从rooms.owner_id复制）',
     current_phase VARCHAR(50) DEFAULT 'waiting' COMMENT '当前阶段',
     current_round INT DEFAULT 1 COMMENT '当前回合(1-5)',
