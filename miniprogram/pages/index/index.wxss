@@ -19,20 +19,33 @@
   font-family: 'ZCOOL QingKe HuangYou', 'Smiley Sans', 'PingFang SC', 'Heiti SC', 'Microsoft YaHei', sans-serif;
   animation: brand-glow 2.2s ease-in-out infinite, brand-shake 2.6s steps(2, end) infinite;
 }
-.brand-1, .brand-2, .brand-3 { -webkit-text-fill-color: currentColor; animation: brand-flicker 3s steps(1, end) infinite; }
+.brand-1, .brand-2, .brand-3 { -webkit-text-fill-color: currentColor; animation: brand-flicker 4s steps(1, end) infinite; }
 .brand-1 { color: var(--brand-1, #2E1065); }
-.brand-2 { color: var(--brand-2, #4C1D95); animation-duration: 3.6s; animation-delay: -0.8s; }
-.brand-3 { color: var(--brand-3, #6D28D9); animation-duration: 4.2s; animation-delay: -1.6s; }
-/* 颜色突变/故障：深紫↔黑↔浅紫↔亮紫 随机跳变（steps 无过渡，猝变） */
+.brand-2 { color: var(--brand-2, #4C1D95); animation-duration: 4.8s; animation-delay: -0.9s; }
+.brand-3 { color: var(--brand-3, #6D28D9); animation-duration: 5.6s; animation-delay: -1.7s; }
+/* 颜色突变/故障：全色域随机跳变（steps 无过渡，猝变） */
 @keyframes brand-flicker {
-  0% { color: var(--brand-1, #2E1065); }
-  14% { color: #000000; }
-  28% { color: #C4B5FD; }
-  42% { color: var(--brand-3, #6D28D9); }
-  56% { color: #A855F7; }
-  70% { color: #E9D5FF; }
-  84% { color: var(--brand-2, #4C1D95); }
-  100% { color: #000000; }
+  0% { color: #FF3B30; }
+  5% { color: #FF9500; }
+  10% { color: #FFCC00; }
+  15% { color: #34C759; }
+  20% { color: #00C7BE; }
+  25% { color: #30B0C7; }
+  30% { color: #007AFF; }
+  35% { color: #5856D6; }
+  40% { color: #AF52DE; }
+  45% { color: #FF2D55; }
+  50% { color: #000000; }
+  55% { color: #FFFFFF; }
+  60% { color: #C4B5FD; }
+  65% { color: #2E1065; }
+  70% { color: #A855F7; }
+  75% { color: #E9D5FF; }
+  80% { color: #10B981; }
+  85% { color: #F43F5E; }
+  90% { color: #3B82F6; }
+  95% { color: #FACC15; }
+  100% { color: #FF3B30; }
 }
 .brand-text::before, .brand-text::after {
   content: '瓦协会之练秋湖分部';
