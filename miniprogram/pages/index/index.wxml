@@ -77,21 +77,21 @@
     </view>
   </view>
 
-  <!-- 召开会议 / 加入会议（直接放置） -->
-  <block wx:if="{{!currentRoom}}">
-    <view class="gacha-card gacha-main" hover-class="card-hover" hover-stay-time="80" bindtap="openConfigs">
-      <view class="gacha-main-icon"><image src="/images/sword.png" class="gacha-icon-img-lg" mode="aspectFit"/></view>
-      <view class="gacha-main-info">
-        <text class="gacha-main-title">召开会议</text>
+  <!-- 召开会议 / 加入会议（合并按钮：(A) 对角全切；左上靛青=召开，右下银=加入） -->
+  <view class="meeting-btn" hover-class="meeting-press" hover-stay-time="80" wx:if="{{!currentRoom}}">
+    <view class="meeting-zone lead" hover-class="zone-hover" bindtap="openConfigs">
+      <view class="meeting-content">
+        <image class="meeting-icon" src="/images/sword.png" mode="aspectFit"/>
+        <text class="meeting-label">召开会议</text>
       </view>
     </view>
-    <view class="gacha-card gacha-sub gacha-epic" hover-class="card-hover" hover-stay-time="80" bindtap="joinRoom">
-      <view class="gacha-sub-icon"><image src="/images/door.png" class="gacha-icon-img" mode="aspectFit"/></view>
-      <view class="gacha-sub-info">
-        <text class="gacha-sub-title">加入会议</text>
+    <view class="meeting-zone join" hover-class="zone-hover" bindtap="joinRoom">
+      <view class="meeting-content">
+        <image class="meeting-icon" src="/images/door.png" mode="aspectFit"/>
+        <text class="meeting-label">加入会议</text>
       </view>
     </view>
-  </block>
+  </view>
 
   <!-- 功能格 2×2（直接放置；第一行彩蛋风 / 第二行玻璃质感） -->
   <view class="func-grid">
