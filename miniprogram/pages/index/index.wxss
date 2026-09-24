@@ -71,8 +71,8 @@
 .pstat { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .pstat-num { font-size: 46rpx; font-weight: 800; color: var(--profile-fg, #FFFFFF); }
 .pstat-label { font-size: 24rpx; color: var(--profile-fg, #FFFFFF); opacity: 0.85; margin-top: 6rpx; }
-.pstat-div { width: 4rpx; height: 60rpx; background: var(--profile-ring, #C4B5FD); border-radius: 2rpx; }
-.pstats-longdiv { height: 4rpx; background: var(--profile-ring, #C4B5FD); border-radius: 2rpx; margin: 0 0 26rpx; }
+.pstat-div { width: 6rpx; height: 60rpx; background: var(--profile-ring, #C4B5FD); border-radius: 3rpx; }
+.pstats-longdiv { height: 6rpx; background: var(--profile-ring, #C4B5FD); border-radius: 3rpx; margin: 0 0 64rpx; }
 
 /* ─────── 用户卡 emoji 按钮（游戏说明） ─────── */
 .user-emoji-btn {
@@ -244,7 +244,7 @@
 .rank-1 .podium-avatar { width: 148rpx; height: 148rpx; border-color: #FFD700; animation: champ-glow 2.2s ease-in-out infinite; }
 .rank-2 .podium-avatar { border-color: #B8C0C9; }
 .rank-3 .podium-avatar { border-color: #CD7F32; }
-.podium-crown { position: absolute; top: -44rpx; left: 50%; font-size: 46rpx; animation: crown-float 1.8s ease-in-out infinite; }
+.podium-crown { position: absolute; top: -62rpx; left: 50%; font-size: 66rpx; animation: crown-float 1.8s ease-in-out infinite; }
 .podium-badge { position: absolute; bottom: -8rpx; left: 50%; transform: translateX(-50%); width: 40rpx; height: 40rpx; border-radius: 50%; background: #333; color: #FFD700; font-size: 24rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2rpx solid #FFD700; }
 .rank-2 .podium-badge { color: #CDD5DD; border-color: #B8C0C9; }
 .rank-3 .podium-badge { color: #E8A56A; border-color: #CD7F32; }
