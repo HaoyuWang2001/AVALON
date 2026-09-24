@@ -12,10 +12,10 @@
 }
 
 /* ─────── 头部（三段差异化故障：霓虹流光 / 拉长 / 撕裂放大） ─────── */
-.brand-bar { padding: 26rpx 0 44rpx; margin-left: -24rpx; margin-right: -24rpx; text-align: center; flex-shrink: 0; }
+.brand-bar { padding: 26rpx 0 0 0; margin-left: -24rpx; margin-right: -24rpx; text-align: center; flex-shrink: 0; }
 .brand-text {
   position: relative; display: inline-block; white-space: nowrap;
-  font-size: 68rpx; font-weight: 900; letter-spacing: 4rpx; font-style: italic;
+  font-size: 60rpx; font-weight: 900; letter-spacing: 4rpx; font-style: italic;
   font-family: 'ZCOOL QingKe HuangYou', 'Smiley Sans', 'PingFang SC', 'Heiti SC', 'Microsoft YaHei', sans-serif;
 }
 .brand-1, .brand-2, .brand-3 { position: relative; display: inline-block; -webkit-text-fill-color: currentColor; }
@@ -62,6 +62,7 @@
 /* 练秋湖分部：主题紫实色 + 下划线 + 极短故障 burst(C) */
 .brand-3 {
   color: var(--brand-3, #6D28D9);
+  font-style: normal;
   text-decoration: underline; text-underline-offset: 6rpx; text-decoration-color: var(--brand-3, #6D28D9);
   -webkit-text-fill-color: currentColor;
   animation: lianqiu-burst 12s steps(1, end) infinite;
