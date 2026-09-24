@@ -90,7 +90,7 @@
       <view class="func-badge">彩蛋</view>
     </view>
     <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="onChangeTheme">
-      <view class="func-icon-box"><text class="func-emoji">🎨</text></view>
+      <view class="func-icon-box"><image src="/images/themes.png" class="func-icon" mode="aspectFit"/></view>
       <text class="func-label">更改主题</text>
     </view>
     <view class="func-item func-glass">
