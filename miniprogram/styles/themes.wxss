@@ -29,12 +29,25 @@
   --link: #60A5FA;
   --status-inroom: #7C8FB8;
   --btn-emoji-bg: #40382D;
-  --state-team: #5C4A1E;
-  --state-voted: #4A2E52;
-  --state-approve: #2C4A28;
-  --state-reject: #5E2A1E;
-  --state-good: #2A3A5C;
-  --state-evil: #5E2A1E;
+  --state-team: #5A4720;
+  --state-voted: #493056;
+  --state-approve: #2B4530;
+  --state-reject: #573026;
+  --state-good: #2B3A57;
+  --state-evil: #573026;
+
+  /* 统一语义文字色（记录/荣誉/状态）——烛光(暖) */
+  --c-good: #8FB4E8;
+  --c-evil: #E89A86;
+  --c-win: #7FC8A0;
+  --c-team: #DDB56A;
+  --c-violet: #B49CE0;
+  --c-online: #7FC8A0;
+  --c-offline: #8F8475;
+  --c-inroom: #8FB4E8;
+  --c-ingame: #E89A86;
+  --c-good-pill: #A6C6F0;
+  --c-evil-pill: #EEB0A0;
 
   --gray-50: #2E281F;
   --gray-100: #3A332A;
@@ -77,12 +90,25 @@
   --link: #93C5FD;
   --status-inroom: #7C8FB8;
   --btn-emoji-bg: #2E2745;
-  --state-team: #56492A;
+  --state-team: #55492E;
   --state-voted: #3E2E6E;
-  --state-approve: #1B4A44;
+  --state-approve: #1E4A46;
   --state-reject: #55243E;
   --state-good: #26325E;
   --state-evil: #55243E;
+
+  /* 统一语义文字色（记录/荣誉/状态）——暗夜(冷) */
+  --c-good: #93B4F5;
+  --c-evil: #F09AA8;
+  --c-win: #6FD3C7;
+  --c-team: #C9B27A;
+  --c-violet: #B4A6F0;
+  --c-online: #6FD3C7;
+  --c-offline: #8B85A7;
+  --c-inroom: #93B4F5;
+  --c-ingame: #F09AA8;
+  --c-good-pill: #ABC6F8;
+  --c-evil-pill: #F4B2BE;
 
   --gray-50: #29223E;
   --gray-100: #322A4B;
@@ -125,12 +151,25 @@
   --link: #93C5FD;
   --status-inroom: #7C8FB8;
   --btn-emoji-bg: #3B444E;
-  --state-team: #5A481F;
+  --state-team: #574826;
   --state-voted: #43336B;
   --state-approve: #1D4A37;
-  --state-reject: #5A2424;
+  --state-reject: #572828;
   --state-good: #1D3A6B;
-  --state-evil: #5A2424;
+  --state-evil: #572828;
+
+  /* 统一语义文字色（记录/荣誉/状态）——锻造钢铁 */
+  --c-good: #8FB6E0;
+  --c-evil: #E08A8A;
+  --c-win: #6FC79A;
+  --c-team: #D4B060;
+  --c-violet: #9C90D8;
+  --c-online: #6FC79A;
+  --c-offline: #8A959F;
+  --c-inroom: #8FB6E0;
+  --c-ingame: #E08A8A;
+  --c-good-pill: #A6C4EA;
+  --c-evil-pill: #E8A4A4;
 
   --gray-50: #20252C;
   --gray-100: #292F37;

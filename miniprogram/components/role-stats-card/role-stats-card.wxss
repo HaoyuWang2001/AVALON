@@ -17,10 +17,10 @@
 .rsc-card:active { transform: scale(0.97); }
 .rsc-emoji { font-size: 180rpx; line-height: 1.2; }
 .rsc-name { font-size: 28rpx; font-weight: 700; padding: 8rpx 28rpx; border-radius: 28rpx; margin-top: 24rpx; }
-.rsc-name-good { background: rgba(59, 130, 246, 0.16); color: #93C5FD; }
-.rsc-name-evil { background: rgba(239, 68, 68, 0.16); color: #FCA5A5; }
+.rsc-name-good { background: rgba(59, 130, 246, 0.16); color: var(--c-good-pill); }
+.rsc-name-evil { background: rgba(239, 68, 68, 0.16); color: var(--c-evil-pill); }
 .rsc-meta { margin-top: 32rpx; }
-.rsc-rate { font-size: 36rpx; font-weight: 800; color: var(--gold, #B8860B); }
+.rsc-rate { font-size: 36rpx; font-weight: 800; color: var(--c-team); }
 
 /* 角色对局弹窗 */
 .rsc-overlay {

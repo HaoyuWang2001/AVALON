@@ -32,6 +32,19 @@ page {
   /* 状态渐变中间停靠实色（--bg-card 可能为渐变，作停靠点需实色防嵌套失效） */
   --bg-card-solid: #FFFFFF;
 
+  /* 统一语义文字色（记录/荣誉/状态）；三暗色主题在 themes.wxss 覆盖；亮色沿用现值 */
+  --c-good: #3B82F6;
+  --c-evil: #EF4444;
+  --c-win: #10B981;
+  --c-team: #B8860B;
+  --c-violet: #6D28D9;
+  --c-online: #22C55E;
+  --c-offline: #9CA3AF;
+  --c-inroom: #3B82F6;
+  --c-ingame: #EF4444;
+  --c-good-pill: #93C5FD;
+  --c-evil-pill: #FCA5A5;
+
   /* 中性灰阶 */
   --gray-50: #F9FAFB;
   --gray-100: #F3F4F6;

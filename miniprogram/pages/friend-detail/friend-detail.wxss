@@ -12,10 +12,10 @@
 .hd-status-row { display: flex; align-items: center; margin-top: 12rpx; }
 .hd-dot { width: 16rpx; height: 16rpx; border-radius: 50%; margin-right: 8rpx; flex-shrink: 0; }
 .hd-status { font-size: 26rpx; }
-.hd-dot.st-online { background: #22C55E; }
-.hd-dot.st-offline { background: var(--gray-300); }
-.st-online { color: #22C55E; }
-.st-offline { color: var(--gray-400); }
+.hd-dot.st-online { background: var(--c-online); }
+.hd-dot.st-offline { background: var(--c-offline); }
+.st-online { color: var(--c-online); }
+.st-offline { color: var(--c-offline); }
 .more-btn { margin-left: 12rpx; flex-shrink: 0; font-size: 40rpx; font-weight: 800; color: var(--gray-500); line-height: 1; padding: 8rpx 8rpx 16rpx 16rpx; }
 
 /* 状态卡 */

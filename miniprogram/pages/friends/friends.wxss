@@ -52,12 +52,12 @@
 .f-dot { width: 14rpx; height: 14rpx; border-radius: 50%; margin-right: 8rpx; flex-shrink: 0; }
 .f-status-text { font-size: 24rpx; }
 .f-room-text { font-size: 24rpx; margin-left: 10rpx; }
-.f-dot.st-online { background: #22C55E; }
-.f-dot.st-offline { background: var(--gray-300); }
-.st-online { color: #22C55E; }
-.st-offline { color: var(--gray-400); }
-.st-inroom { color: #3B82F6; }
-.st-ingame { color: #EF4444; }
+.f-dot.st-online { background: var(--c-online); }
+.f-dot.st-offline { background: var(--c-offline); }
+.st-online { color: var(--c-online); }
+.st-offline { color: var(--c-offline); }
+.st-inroom { color: var(--c-inroom); }
+.st-ingame { color: var(--c-ingame); }
 .f-rate { font-size: 22rpx; color: var(--primary); margin-top: 4rpx; display: block; font-weight: 600; }
 .f-sub { font-size: 24rpx; color: var(--gray-400); margin-top: 6rpx; display: block; }
 .f-arrow { font-size: 36rpx; color: var(--gray-300); }

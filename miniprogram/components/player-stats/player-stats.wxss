@@ -20,8 +20,8 @@
 .ps-stats { display: flex; margin-top: 24rpx; }
 .ps-stat { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .ps-num { font-size: 36rpx; font-weight: 800; color: var(--primary); }
-.ps-good { color: #3B82F6; }
-.ps-evil { color: #EF4444; }
+.ps-good { color: var(--c-good); }
+.ps-evil { color: var(--c-evil); }
 .ps-label { font-size: 22rpx; color: var(--text-muted); margin-top: 4rpx; }
 .ps-roles { margin-top: 24rpx; }
 .ps-roles-title { font-size: 26rpx; font-weight: 700; color: var(--text-title); }

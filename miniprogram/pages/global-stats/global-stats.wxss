@@ -16,8 +16,8 @@
 .faction-good { background: rgba(59, 130, 246, 0.14); }
 .faction-evil { background: rgba(239, 68, 68, 0.14); }
 .fb-rate { font-size: 48rpx; font-weight: 800; }
-.faction-good .fb-rate { color: #3B82F6; }
-.faction-evil .fb-rate { color: #EF4444; }
+.faction-good .fb-rate { color: var(--c-good); }
+.faction-evil .fb-rate { color: var(--c-evil); }
 .fb-label { font-size: 22rpx; color: var(--text-muted); margin-top: 8rpx; }
 
 /* 各人数胜率（阵营卡内） */
@@ -27,17 +27,17 @@
 .cs-name { font-size: 28rpx; font-weight: 600; color: var(--text-title); width: 140rpx; }
 .cs-total { font-size: 24rpx; color: var(--text-muted); flex: 1; }
 .cs-rate { font-size: 26rpx; font-weight: 700; display: flex; align-items: center; }
-.rate-good { color: #3B82F6; }
+.rate-good { color: var(--c-good); }
 .rate-sep { color: var(--text-muted); font-weight: 400; }
-.rate-evil { color: #EF4444; }
+.rate-evil { color: var(--c-evil); }
 
 /* 角色统计 */
 .role-row { display: flex; align-items: center; padding: 16rpx 0; border-bottom: 1rpx solid var(--gray-100); }
 .role-row:last-child { border-bottom: none; }
 .role-emoji { font-size: 40rpx; margin-right: 16rpx; }
 .role-name { font-size: 28rpx; font-weight: 600; flex: 1; }
-.name-good { color: #3B82F6; }
-.name-evil { color: #EF4444; }
+.name-good { color: var(--c-good); }
+.name-evil { color: var(--c-evil); }
 .role-games { font-size: 24rpx; color: var(--text-muted); margin-right: 20rpx; }
 .role-rate { font-size: 28rpx; font-weight: 800; color: var(--primary); min-width: 100rpx; text-align: right; }
 
@@ -50,8 +50,8 @@
 .game-sub { font-size: 22rpx; color: var(--text-muted); margin-top: 4rpx; }
 .game-winner-wrap { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; margin-left: 16rpx; }
 .game-winner { font-size: 26rpx; font-weight: 700; }
-.win-good { color: #3B82F6; }
-.win-evil { color: #EF4444; }
+.win-good { color: var(--c-good); }
+.win-evil { color: var(--c-evil); }
 
 /* 角色对局弹窗 */
 .modal-overlay {
