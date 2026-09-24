@@ -6,14 +6,12 @@
 .hc-item:last-child { border-bottom: none; }
 .hc-item:active { opacity: 0.7; }
 .hc-line { display: flex; align-items: center; justify-content: space-between; }
-.hc-left { flex: 1; min-width: 0; display: flex; align-items: baseline; overflow: hidden; }
 .hc-role { font-size: 28rpx; font-weight: 700; flex-shrink: 0; }
-.hc-good { color: var(--c-good); }
-.hc-evil { color: var(--c-evil); }
-.hc-meta { font-size: 24rpx; color: var(--c-violet); white-space: nowrap; }
+.hc-good { color: var(--hc-good, var(--c-good)); }
+.hc-evil { color: var(--hc-evil, var(--c-evil)); }
 .hc-right { display: flex; align-items: center; flex-shrink: 0; margin-left: 16rpx; }
 .hc-duration { font-size: 24rpx; color: var(--text-muted); margin-right: 16rpx; }
 .hc-result { font-size: 24rpx; font-weight: 700; padding: 2rpx 18rpx; border-radius: 8rpx; }
 .hc-result.win { color: var(--c-win); background: var(--state-approve); }
 .hc-result.lose { color: var(--c-evil); background: var(--state-reject); }
-.hc-date { font-size: 22rpx; color: var(--text-muted); margin-top: 6rpx; display: block; }
+.hc-meta { font-size: 22rpx; color: var(--text-muted); margin-top: 6rpx; display: block; }

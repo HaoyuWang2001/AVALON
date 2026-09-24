@@ -55,18 +55,23 @@
   90% { clip-path: inset(52% 0 0 0); transform: translate(3rpx, 1rpx); }
 }
 
-/* ─────── 个人信息卡（放大） ─────── */
+/* ─────── 个人信息卡（头像半嵌 + 三栏数据） ─────── */
 .profile-card {
   position: relative;
-  background: var(--bg-card); border-radius: 28rpx; padding: 44rpx 32rpx; margin-bottom: 20rpx;
-  box-shadow: var(--shadow-sm); display: flex; align-items: center; flex-shrink: 0;
+  margin-top: 76rpx; margin-bottom: 20rpx;
+  background: var(--profile-bg, var(--bg-card)); border-radius: 28rpx; padding: 84rpx 24rpx 26rpx;
+  box-shadow: var(--shadow-sm); flex-shrink: 0;
 }
-.avatar-btn { width: 160rpx !important; height: 160rpx !important; border: 6rpx solid var(--primary-light); background: var(--bg-card); border-radius: 50%; overflow: hidden; padding: 0 !important; margin: 0 !important; flex-shrink: 0; box-sizing: border-box; display: flex !important; align-items: center; justify-content: center; line-height: normal; }
-.avatar-btn::after { border: none; display: none; }
-.avatar-img { width: 148rpx; height: 148rpx; border-radius: 50%; display: block; }
-.profile-info { margin-left: 32rpx; flex: 1; min-width: 0; }
-.user-name-text { font-size: 46rpx; font-weight: 800; color: var(--text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-avatar-btn { position: absolute; top: -70rpx; left: 36rpx; width: 140rpx !important; height: 140rpx !important; border: 6rpx solid var(--bg-card-solid); background: var(--bg-card); border-radius: 50%; overflow: hidden; padding: 0 !important; margin: 0 !important; box-sizing: border-box; z-index: 2; box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.12); }
+.profile-avatar-btn::after { border: none; display: none; }
+.profile-avatar-img { width: 100%; height: 100%; border-radius: 50%; display: block; }
+.profile-name { position: absolute; top: -60rpx; left: 204rpx; right: 96rpx; height: 60rpx; line-height: 60rpx; font-size: 40rpx; font-weight: 800; color: var(--text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .name-placeholder { color: var(--text-muted); font-weight: 400; }
+.pstats { display: flex; align-items: center; }
+.pstat { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.pstat-num { font-size: 46rpx; font-weight: 800; color: var(--text-title); }
+.pstat-label { font-size: 24rpx; color: var(--text-muted); margin-top: 6rpx; }
+.pstat-div { width: 2rpx; height: 60rpx; background: var(--gray-200); }
 
 /* ─────── 用户卡 emoji 按钮（游戏说明） ─────── */
 .user-emoji-btn {
@@ -78,6 +83,7 @@
   border: 2rpx solid var(--border-color, #E5E7EB);
   transition: transform 0.12s ease;
 }
+.profile-card .user-emoji-btn { position: absolute; margin: 0; top: 18rpx; right: 22rpx; z-index: 3; }
 .user-emoji-hover { transform: scale(0.9); opacity: 0.8; }
 
 .login-btn { width: 100%; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; border-radius: 16rpx; font-size: 32rpx; font-weight: 600; padding: 24rpx; box-shadow: 0 6rpx 20rpx rgba(124,58,237,0.3); }
@@ -228,7 +234,7 @@
 }
 
 /* ─────── 胜率冠军（领奖台） ─────── */
-.champion-card { position: relative; overflow: hidden; background: var(--bg-card); box-shadow: var(--shadow-sm), inset 0 0 0 2rpx var(--champion-border, #B8860B); }
+.champion-card { position: relative; overflow: hidden; background: var(--champion-bg, var(--bg-card)); box-shadow: var(--shadow-sm), inset 0 0 0 2rpx var(--champion-border, #B8860B); }
 .champion-title { font-size: 30rpx; font-weight: 800; color: var(--gold, #B8860B); }
 .podium { display: flex; align-items: flex-end; justify-content: center; gap: 16rpx; padding-top: 34rpx; }
 .podium-item { flex: 1; max-width: 190rpx; display: flex; flex-direction: column; align-items: center; }

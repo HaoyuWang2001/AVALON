@@ -45,12 +45,12 @@ page {
   --c-good-pill: #93C5FD;
   --c-evil-pill: #FCA5A5;
 
-  /* 主页头部：三段三色 + 辉光 + 故障分层色 */
-  --brand-1: #4C1D95;
-  --brand-2: #6D28D9;
-  --brand-3: #9333EA;
-  --brand-glow-a: rgba(124, 58, 237, 0.30);
-  --brand-glow-b: rgba(147, 51, 234, 0.20);
+  /* 主页头部：三段三色 + 辉光 + 故障分层色（黎明初现：深紫·皇家） */
+  --brand-1: #2E1065;
+  --brand-2: #4C1D95;
+  --brand-3: #6D28D9;
+  --brand-glow-a: rgba(76, 29, 149, 0.28);
+  --brand-glow-b: rgba(109, 40, 217, 0.20);
   --brand-g1: #06B6D4;
   --brand-g2: #EC4899;
   /* 彩蛋功能卡卡面（亮色：中饱和紫，白图标可读） */
@@ -60,11 +60,15 @@ page {
   --glass-border: rgba(167, 139, 250, 0.8);
   --glass-glow: rgba(139, 92, 246, 0.35);
   --glass-sheen: rgba(255, 255, 255, 0.45);
-  /* 角色胜率卡牌 + 胜率冠军卡边框 */
+  /* 角色胜率卡牌 + 胜率冠军卡 + 个人信息卡 + 历史角色名 */
   --role-card-border: #8B5CF6;
-  --role-card-bg: #0B0B12;
-  --role-card-rate: #E5C46A;
+  --role-card-bg: linear-gradient(160deg, #4C1D95, #1E1B4B);
+  --role-card-rate: #C4B5FD;
   --champion-border: #8B5CF6;
+  --champion-bg: #E9D5FF;
+  --profile-bg: #F3E8FF;
+  --hc-good: #1E40AF;
+  --hc-evil: #B91C1C;
 
   /* 中性灰阶 */
   --gray-50: #F9FAFB;
@@ -86,7 +90,7 @@ page {
   /* 文字色（兼容历史命名） */
   --text-title: #111827;
   --text-body: #374151;
-  --text-muted: #9CA3AF;
+  --text-muted: #6B7280;
 
   /* 圆角 */
   --radius-sm: 8rpx;

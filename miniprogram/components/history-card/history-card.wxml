@@ -5,16 +5,13 @@
   <scroll-view wx:else scroll-y class="hc-scroll" show-scrollbar="{{false}}">
     <view wx:for="{{games}}" wx:key="gameId" class="hc-item" bindtap="onGameTap" data-id="{{item.gameId}}">
       <view class="hc-line">
-        <view class="hc-left">
-          <text class="hc-role {{item.side === 'evil' ? 'hc-evil' : 'hc-good'}}">{{item.roleName}}</text>
-          <text class="hc-meta"> · {{item.playerCount}}人局</text>
-        </view>
+        <text class="hc-role {{item.side === 'evil' ? 'hc-evil' : 'hc-good'}}">{{item.roleName}}</text>
         <view class="hc-right">
           <text class="hc-duration">{{item.durationText}}</text>
           <text class="hc-result {{item.isWin ? 'win' : 'lose'}}">{{item.isWin ? '胜' : '负'}}</text>
         </view>
       </view>
-      <text class="hc-date">{{item.dateText}}</text>
+      <text class="hc-meta">{{item.playerCount}} 人局 · {{item.dateText}}</text>
     </view>
   </scroll-view>
 </view>
