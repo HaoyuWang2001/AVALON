@@ -70,7 +70,7 @@
 .pstats { display: flex; align-items: center; margin: 28rpx 0; }
 .pstat { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .pstat-num { font-size: 46rpx; font-weight: 800; color: var(--profile-fg, #FFFFFF); }
-.pstat-label { font-size: 24rpx; color: var(--profile-fg, #FFFFFF); opacity: 0.85; margin-top: 6rpx; }
+.pstat-label { font-size: 24rpx; color: var(--profile-fg, #FFFFFF); margin-top: 6rpx; }
 .pstat-div { width: 6rpx; height: 60rpx; background: var(--profile-ring, #C4B5FD); border-radius: 3rpx; }
 .pstats-longdiv { height: 6rpx; background: var(--profile-ring, #C4B5FD); border-radius: 3rpx; margin: 0 0 64rpx; }
 
@@ -248,12 +248,11 @@
 .podium-badge { position: absolute; bottom: -8rpx; left: 50%; transform: translateX(-50%); width: 40rpx; height: 40rpx; border-radius: 50%; background: #333; color: #FFD700; font-size: 24rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2rpx solid #FFD700; }
 .rank-2 .podium-badge { color: #CDD5DD; border-color: #B8C0C9; }
 .rank-3 .podium-badge { color: #E8A56A; border-color: #CD7F32; }
-.podium-name { font-size: 24rpx; color: var(--champion-fg, #FFFFFF); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
+.podium-name { font-size: 28rpx; color: var(--champion-fg, #FFFFFF); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
 .podium-rate-line { display: flex; align-items: baseline; justify-content: center; }
 .podium-rate { font-size: 38rpx; font-weight: 800; color: #FFD700; }
 .rank-2 .podium-rate { color: #CDD5DD; }
 .rank-3 .podium-rate { color: #E8A56A; }
-.podium-games { font-size: 20rpx; color: var(--champion-fg, #FFFFFF); opacity: 0.72; }
 .podium-stand { width: 100%; margin-top: 10rpx; border-radius: 14rpx 14rpx 0 0; display: flex; align-items: center; justify-content: center; font-size: 40rpx; font-weight: 800; color: rgba(255, 255, 255, 0.85); }
 .rank-1 .podium-stand { height: 96rpx; background: linear-gradient(180deg, #FFD700, #B8860B); }
 .rank-2 .podium-stand { height: 66rpx; background: linear-gradient(180deg, #C9D1D8, #8E99A4); }

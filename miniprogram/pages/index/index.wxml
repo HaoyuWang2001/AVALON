@@ -34,10 +34,7 @@
             <view class="podium-badge">{{item.rank}}</view>
           </view>
           <text class="podium-name">{{item.nickName}}</text>
-          <view class="podium-rate-line">
-            <text class="podium-rate">{{item.winRate}}%</text>
-            <text class="podium-games">（{{item.games}}场）</text>
-          </view>
+          <text class="podium-rate">{{item.winRate}}%</text>
           <view class="podium-stand">{{item.rank}}</view>
         </view>
       </view>
