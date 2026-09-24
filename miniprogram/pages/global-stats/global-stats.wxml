@@ -55,7 +55,6 @@
           </view>
           <view class="game-winner-wrap">
             <text class="game-winner {{item.winnerClass}}">{{item.winnerText}}</text>
-            <text wx:if="{{item.winnerSub}}" class="game-winner-sub">{{item.winnerSub}}</text>
           </view>
         </view>
       </scroll-view>
@@ -82,7 +81,6 @@
             </view>
             <view class="game-winner-wrap">
               <text class="game-winner {{item.winnerClass}}">{{item.winnerText}}</text>
-              <text wx:if="{{item.winnerSub}}" class="game-winner-sub">{{item.winnerSub}}</text>
             </view>
           </view>
         </scroll-view>

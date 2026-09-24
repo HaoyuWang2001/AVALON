@@ -39,7 +39,6 @@
 .game-sub { font-size: 22rpx; color: var(--text-muted); margin-top: 4rpx; }
 .game-winner-wrap { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; margin-left: 16rpx; }
 .game-winner { font-size: 26rpx; font-weight: 700; }
-.game-winner-sub { font-size: 20rpx; color: var(--text-muted); margin-top: 4rpx; }
 .win-good { color: #3B82F6; }
 .win-evil { color: #EF4444; }
 
