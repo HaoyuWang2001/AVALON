@@ -73,6 +73,7 @@
   --champion-fg: #F7F1E8;
   --profile-fg: #F7F1E8;
   --profile-name: #B49CE0;
+  --profile-ring: #B49CE0;
 
   --gray-50: #2E281F;
   --gray-100: #3A332A;
@@ -159,6 +160,7 @@
   --champion-fg: #D8D2EE;
   --profile-fg: #D8D2EE;
   --profile-name: #B4A6F0;
+  --profile-ring: #B4A6F0;
 
   --gray-50: #29223E;
   --gray-100: #322A4B;
@@ -245,6 +247,7 @@
   --champion-fg: #C7D2DD;
   --profile-fg: #C7D2DD;
   --profile-name: #9C90D8;
+  --profile-ring: #9C90D8;
 
   --gray-50: #20252C;
   --gray-100: #292F37;

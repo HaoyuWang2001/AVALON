@@ -5,7 +5,7 @@
     <view class="brand-text"><text class="brand-1">瓦协会</text><text class="brand-2">之</text><text class="brand-3">练秋湖分部</text></view>
   </view>
 
-  <!-- 2. 个人信息（头像半嵌 + 三栏数据） -->
+  <!-- 2. 个人信息 + 胜率冠军（合并卡） -->
   <view class="card profile-card">
     <button size="mini" class="profile-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" binderror="onAvatarError" bindtap="onAvatarTap">
       <image src="{{userInfo.avatarUrl}}" class="profile-avatar-img"/>
@@ -15,32 +15,33 @@
     <view class="pstats">
       <view class="pstat"><text class="pstat-num">{{summary ? summary.totalGames : 0}}</text><text class="pstat-label">对局数</text></view>
       <view class="pstat-div"></view>
-      <view class="pstat"><text class="pstat-num">{{summary && summary.totalGames ? summary.totalWinRate + '%' : '-'}}</text><text class="pstat-label">胜率</text></view>
+      <view class="pstat"><text class="pstat-num">{{summary && summary.totalGames ? summary.totalWinRate + '%' : '-'}}</text><text class="pstat-label">总胜率</text></view>
       <view class="pstat-div"></view>
       <view class="pstat"><text class="pstat-num">-</text><text class="pstat-label">获赞数</text></view>
     </view>
-  </view>
 
-  <!-- 3. 胜率冠军（领奖台） -->
-  <view class="card champion-card" wx:if="{{champions.length > 0}}">
-    <view class="champion-title">👑 胜率冠军</view>
-    <view class="podium">
-      <view wx:for="{{podium}}" wx:key="openId"
-        class="podium-item rank-{{item.rank}}"
-        bindtap="onChampionTap"
-        data-openid="{{item.openId}}" data-name="{{item.nickName}}" data-avatar="{{item.avatarUrl}}"
-        data-friend="{{item.isFriend}}">
-        <view class="podium-avatar-wrap">
-          <text wx:if="{{item.rank === 1}}" class="podium-crown">👑</text>
-          <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="podium-avatar"></image>
-          <view class="podium-badge">{{item.rank}}</view>
+    <block wx:if="{{champions.length > 0}}">
+      <view class="pstats-longdiv"></view>
+      <view class="podium">
+        <view wx:for="{{podium}}" wx:key="openId"
+          class="podium-item rank-{{item.rank}}"
+          bindtap="onChampionTap"
+          data-openid="{{item.openId}}" data-name="{{item.nickName}}" data-avatar="{{item.avatarUrl}}"
+          data-friend="{{item.isFriend}}">
+          <view class="podium-avatar-wrap">
+            <text wx:if="{{item.rank === 1}}" class="podium-crown">👑</text>
+            <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="podium-avatar"></image>
+            <view class="podium-badge">{{item.rank}}</view>
+          </view>
+          <text class="podium-name">{{item.nickName}}</text>
+          <view class="podium-rate-line">
+            <text class="podium-rate">{{item.winRate}}%</text>
+            <text class="podium-games">（{{item.games}}场）</text>
+          </view>
+          <view class="podium-stand">{{item.rank}}</view>
         </view>
-        <text class="podium-name">{{item.nickName}}</text>
-        <text class="podium-rate">{{item.winRate}}%</text>
-        <text class="podium-games">{{item.games}}场</text>
-        <view class="podium-stand">{{item.rank}}</view>
       </view>
-    </view>
+    </block>
   </view>
 
   <!-- 4. 房间 / 开始游戏 -->

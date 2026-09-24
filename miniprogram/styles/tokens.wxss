@@ -51,8 +51,8 @@ page {
   --brand-3: #6D28D9;
   --brand-glow-a: rgba(76, 29, 149, 0.28);
   --brand-glow-b: rgba(109, 40, 217, 0.20);
-  --brand-g1: #06B6D4;
-  --brand-g2: #EC4899;
+  --brand-g1: #A78BFA;
+  --brand-g2: #D4A052;
   /* 彩蛋功能卡卡面（亮色：深紫渐变，白图标可读） */
   --func-face: linear-gradient(135deg, #5B21B6, #3B0764);
   /* 玻璃色系（亮色：紫色半透明玻璃） */
@@ -66,10 +66,11 @@ page {
   --role-card-rate: #C4B5FD;
   --champion-border: #8B5CF6;
   --champion-bg: linear-gradient(160deg, #4C1D95, #2E1065);
-  --champion-fg: #F5F3FF;
+  --champion-fg: #FFFFFF;
   --profile-bg: linear-gradient(135deg, #6D28D9 0%, #5B21B6 45%, #3B0764 100%);
   --profile-fg: #FFFFFF;
   --profile-name: #C4B5FD;
+  --profile-ring: #C4B5FD;
   --hc-good: #1E40AF;
   --hc-evil: #B91C1C;
 

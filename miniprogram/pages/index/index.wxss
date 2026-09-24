@@ -43,16 +43,16 @@
   98% { transform: translate(-2rpx, 1rpx); }
 }
 @keyframes brand-tear-a {
-  0%, 80%, 100% { clip-path: inset(0 0 88% 0); transform: translate(0, 0); opacity: 0.85; }
-  83% { clip-path: inset(0 0 82% 0); transform: translate(-6rpx, -2rpx); opacity: 1; }
-  88% { clip-path: inset(0 0 92% 0); transform: translate(5rpx, 2rpx); opacity: 0.9; }
-  92% { clip-path: inset(0 0 84% 0); transform: translate(-3rpx, 1rpx); }
+  0%, 80%, 100% { clip-path: inset(0 0 78% 0); transform: translate(0, 0); opacity: 0.85; }
+  83% { clip-path: inset(0 0 72% 0); transform: translate(-6rpx, -2rpx); opacity: 1; }
+  88% { clip-path: inset(0 0 84% 0); transform: translate(5rpx, 2rpx); opacity: 0.9; }
+  92% { clip-path: inset(0 0 76% 0); transform: translate(-3rpx, 1rpx); }
 }
 @keyframes brand-tear-b {
-  0%, 76%, 100% { clip-path: inset(88% 0 0 0); transform: translate(0, 0); opacity: 0.85; }
-  79% { clip-path: inset(82% 0 0 0); transform: translate(6rpx, 2rpx); opacity: 1; }
-  85% { clip-path: inset(92% 0 0 0); transform: translate(-5rpx, -2rpx); opacity: 0.9; }
-  90% { clip-path: inset(84% 0 0 0); transform: translate(3rpx, 1rpx); }
+  0%, 76%, 100% { clip-path: inset(78% 0 0 0); transform: translate(0, 0); opacity: 0.85; }
+  79% { clip-path: inset(72% 0 0 0); transform: translate(6rpx, 2rpx); opacity: 1; }
+  85% { clip-path: inset(84% 0 0 0); transform: translate(-5rpx, -2rpx); opacity: 0.9; }
+  90% { clip-path: inset(76% 0 0 0); transform: translate(3rpx, 1rpx); }
 }
 
 /* ─────── 个人信息卡（头像半嵌 + 三栏数据） ─────── */
@@ -62,16 +62,17 @@
   background: var(--profile-bg, var(--bg-card)); border-radius: 28rpx; padding: 84rpx 24rpx 26rpx;
   box-shadow: var(--shadow-sm); flex-shrink: 0;
 }
-.profile-avatar-btn { position: absolute; top: -70rpx; left: 36rpx; width: 140rpx !important; height: 140rpx !important; border: 6rpx solid var(--bg-card-solid); background: var(--bg-card); border-radius: 50%; overflow: hidden; padding: 0 !important; margin: 0 !important; box-sizing: border-box; z-index: 2; box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.12); }
+.profile-avatar-btn { position: absolute; top: -70rpx; left: 36rpx; width: 140rpx !important; height: 140rpx !important; border: none; background: var(--bg-card); border-radius: 50%; overflow: hidden; padding: 0 !important; margin: 0 !important; box-sizing: border-box; z-index: 2; box-shadow: 0 0 0 8rpx rgba(196, 181, 253, 0.35), 0 8rpx 20rpx rgba(0, 0, 0, 0.15); }
 .profile-avatar-btn::after { border: none; display: none; }
 .profile-avatar-img { width: 100%; height: 100%; border-radius: 50%; display: block; }
-.profile-name { position: absolute; top: 20rpx; left: 204rpx; right: 96rpx; height: 60rpx; line-height: 60rpx; font-size: 40rpx; font-weight: 800; color: var(--profile-name, #C4B5FD); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.name-placeholder { color: var(--profile-name, #C4B5FD); opacity: 0.7; font-weight: 400; }
-.pstats { display: flex; align-items: center; }
+.profile-name { position: absolute; top: 20rpx; left: 204rpx; right: 96rpx; height: 60rpx; line-height: 60rpx; font-size: 40rpx; font-weight: 800; color: var(--profile-fg, #FFFFFF); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.name-placeholder { color: var(--profile-fg, #FFFFFF); opacity: 0.7; font-weight: 400; }
+.pstats { display: flex; align-items: center; margin: 28rpx 0; }
 .pstat { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .pstat-num { font-size: 46rpx; font-weight: 800; color: var(--profile-fg, #FFFFFF); }
 .pstat-label { font-size: 24rpx; color: var(--profile-fg, #FFFFFF); opacity: 0.85; margin-top: 6rpx; }
-.pstat-div { width: 2rpx; height: 60rpx; background: rgba(255, 255, 255, 0.30); }
+.pstat-div { width: 4rpx; height: 60rpx; background: var(--profile-ring, #C4B5FD); border-radius: 2rpx; }
+.pstats-longdiv { height: 4rpx; background: var(--profile-ring, #C4B5FD); border-radius: 2rpx; margin: 0 0 26rpx; }
 
 /* ─────── 用户卡 emoji 按钮（游戏说明） ─────── */
 .user-emoji-btn {
@@ -236,27 +237,26 @@
 }
 
 /* ─────── 胜率冠军（领奖台） ─────── */
-.champion-card { position: relative; overflow: hidden; background: var(--champion-bg, var(--bg-card)); box-shadow: var(--shadow-sm), inset 0 0 0 2rpx var(--champion-border, #B8860B); }
-.champion-title { font-size: 30rpx; font-weight: 800; color: var(--gold, #B8860B); }
-.podium { display: flex; align-items: flex-end; justify-content: center; gap: 16rpx; padding-top: 34rpx; }
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 16rpx; padding-top: 0; }
 .podium-item { flex: 1; max-width: 190rpx; display: flex; flex-direction: column; align-items: center; }
 .podium-avatar-wrap { position: relative; margin-bottom: 10rpx; }
 .podium-avatar { width: 112rpx; height: 112rpx; border-radius: 50%; border: 4rpx solid var(--gray-300); background: var(--gray-100); }
 .rank-1 .podium-avatar { width: 148rpx; height: 148rpx; border-color: #FFD700; animation: champ-glow 2.2s ease-in-out infinite; }
-.rank-2 .podium-avatar { border-color: #9AA7B4; }
+.rank-2 .podium-avatar { border-color: #B8C0C9; }
 .rank-3 .podium-avatar { border-color: #CD7F32; }
 .podium-crown { position: absolute; top: -44rpx; left: 50%; font-size: 46rpx; animation: crown-float 1.8s ease-in-out infinite; }
 .podium-badge { position: absolute; bottom: -8rpx; left: 50%; transform: translateX(-50%); width: 40rpx; height: 40rpx; border-radius: 50%; background: #333; color: #FFD700; font-size: 24rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2rpx solid #FFD700; }
-.rank-2 .podium-badge { color: #C2CAD3; border-color: #9AA7B4; }
+.rank-2 .podium-badge { color: #CDD5DD; border-color: #B8C0C9; }
 .rank-3 .podium-badge { color: #E8A56A; border-color: #CD7F32; }
-.podium-name { font-size: 24rpx; color: var(--champion-fg, #F5F3FF); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
+.podium-name { font-size: 24rpx; color: var(--champion-fg, #FFFFFF); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
+.podium-rate-line { display: flex; align-items: baseline; justify-content: center; }
 .podium-rate { font-size: 38rpx; font-weight: 800; color: #FFD700; }
-.rank-2 .podium-rate { color: #A7B0BA; }
+.rank-2 .podium-rate { color: #CDD5DD; }
 .rank-3 .podium-rate { color: #E8A56A; }
-.podium-games { font-size: 20rpx; color: var(--champion-fg, #F5F3FF); opacity: 0.72; }
+.podium-games { font-size: 20rpx; color: var(--champion-fg, #FFFFFF); opacity: 0.72; }
 .podium-stand { width: 100%; margin-top: 10rpx; border-radius: 14rpx 14rpx 0 0; display: flex; align-items: center; justify-content: center; font-size: 40rpx; font-weight: 800; color: rgba(255, 255, 255, 0.85); }
 .rank-1 .podium-stand { height: 96rpx; background: linear-gradient(180deg, #FFD700, #B8860B); }
-.rank-2 .podium-stand { height: 66rpx; background: linear-gradient(180deg, #B8C0C9, #7C8794); }
+.rank-2 .podium-stand { height: 66rpx; background: linear-gradient(180deg, #C9D1D8, #8E99A4); }
 .rank-3 .podium-stand { height: 48rpx; background: linear-gradient(180deg, #CD7F32, #8B4513); }
 @keyframes crown-float { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10rpx); } }
 @keyframes champ-glow { 0%, 100% { box-shadow: 0 0 18rpx rgba(255, 215, 0, 0.55); } 50% { box-shadow: 0 0 34rpx rgba(255, 215, 0, 0.95); } }
