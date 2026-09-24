@@ -54,15 +54,8 @@
   50% { text-shadow: 0 0 12rpx currentColor, 0 0 30rpx currentColor; }
 }
 
-/* 之：保持黑色、字号略小，仅随机纵向拉长（放弃颜色/显现变化） */
-.brand-2 { color: #000000; font-size: 0.86em; transform-origin: center center; animation: zhi-stretch 12s steps(1, end) infinite; }
-@keyframes zhi-stretch {
-  0%, 100% { transform: scaleY(1); }
-  18% { transform: scaleY(2.6); }
-  22% { transform: scaleY(1); }
-  58% { transform: scaleY(1.9); }
-  62% { transform: scaleY(1); }
-}
+/* 之：保持黑色、字号略小（无任何变化） */
+.brand-2 { color: #000000; font-size: 0.86em; }
 
 /* 练秋湖分部：下划线；紫/深紫/黑/深灰；随机撕裂/抖动/扭曲 + 随机放大(保持~1s，间隔 5~10s) */
 .brand-3 { color: var(--brand-3, #6D28D9); text-decoration: underline; text-underline-offset: 6rpx; text-decoration-color: currentColor; transform-origin: center bottom; animation: lianqiu-glitch 14s steps(1, end) infinite; }
