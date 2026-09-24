@@ -52,7 +52,7 @@ page {
   --brand-glow-a: rgba(76, 29, 149, 0.28);
   --brand-glow-b: rgba(109, 40, 217, 0.20);
   --brand-g1: #A855F7;
-  --brand-g2: #000000;
+  --brand-g2: #4C1D95;
   /* 彩蛋功能卡卡面（亮色：深紫渐变，白图标可读） */
   --func-face: linear-gradient(135deg, #5B21B6, #3B0764);
   /* 玻璃色系（亮色：紫色半透明玻璃） */

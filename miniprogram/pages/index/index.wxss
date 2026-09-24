@@ -19,6 +19,8 @@
   font-family: 'ZCOOL QingKe HuangYou', 'Smiley Sans', 'PingFang SC', 'Heiti SC', 'Microsoft YaHei', sans-serif;
 }
 .brand-1, .brand-2, .brand-3 { position: relative; display: inline-block; -webkit-text-fill-color: currentColor; }
+/* 头部文字仅亮色主题(黎明初现)显示，暗色主题隐藏 */
+.theme-torch .brand-bar, .theme-aurora .brand-bar, .theme-steel .brand-bar { display: none; }
 
 /* 瓦协会：原字体；慢速霓虹(无白) + 彩色流光滑过；故障带极小 */
 .brand-1 { font-family: 'PingFang SC', 'Heiti SC', 'Microsoft YaHei', sans-serif; font-style: normal; color: var(--brand-1, #2E1065); animation: brand-neon-flicker 7s steps(1, end) infinite, brand-neon 2.4s ease-in-out infinite; }
@@ -57,18 +59,13 @@
 /* 之：保持黑色、字号略小（无任何变化） */
 .brand-2 { color: #000000; font-size: 0.86em; }
 
-/* 练秋湖分部：全息金属渐变 + 高光扫过(B) + 极短故障 burst(C) + 下划线 */
+/* 练秋湖分部：主题紫实色 + 下划线 + 极短故障 burst(C) */
 .brand-3 {
-  color: #7C3AED;
-  text-decoration: underline; text-underline-offset: 6rpx; text-decoration-color: #7C3AED;
-  background: linear-gradient(100deg, #2E1065, #6D28D9, #A78BFA, #C4B5FD, #7C3AED, #4C1D95, #2E1065);
-  background-size: 260% 100%;
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: lianqiu-holo 7s linear infinite, lianqiu-burst 12s steps(1, end) infinite;
+  color: var(--brand-3, #6D28D9);
+  text-decoration: underline; text-underline-offset: 6rpx; text-decoration-color: var(--brand-3, #6D28D9);
+  -webkit-text-fill-color: currentColor;
+  animation: lianqiu-burst 12s steps(1, end) infinite;
 }
-/* B：金属高光扫过 */
-@keyframes lianqiu-holo { 0% { background-position: 0% 50%; } 100% { background-position: 260% 50%; } }
 /* C：每 5~10s 一次极短 burst（轻微错位 + 扭曲 + 细撕裂，~180ms 后复原） */
 @keyframes lianqiu-burst {
   0%, 29%, 33%, 72%, 76%, 100% { transform: translate(0, 0) skewX(0deg); clip-path: inset(0 0 0 0); }
@@ -96,20 +93,21 @@
 .brand-text::before, .brand-text::after {
   content: '瓦协会之练秋湖分部';
   position: absolute; left: 0; top: 0; width: 100%;
+  line-height: 1;
   -webkit-text-fill-color: currentColor;
   pointer-events: none;
 }
 .brand-text::before { color: var(--brand-g1, #A855F7); animation: brand-tear-a 3s steps(1, end) infinite; }
 .brand-text::after { color: var(--brand-g2, #000000); animation: brand-tear-b 3.4s steps(1, end) infinite; }
 @keyframes brand-tear-a {
-  0%, 90%, 100% { clip-path: inset(0 0 96% 0); transform: translate(0, 0); opacity: 0; }
-  92% { clip-path: inset(0 0 90% 0); transform: translate(-5rpx, -1rpx); opacity: 0.6; }
-  96% { clip-path: inset(0 0 97% 0); transform: translate(4rpx, 1rpx); opacity: 0.4; }
+  0%, 90%, 100% { clip-path: inset(96% 0 0 0); transform: translate(0, 0); opacity: 0; }
+  92% { clip-path: inset(40% 0 34% 0); transform: translate(-5rpx, -1rpx); opacity: 0.5; }
+  96% { clip-path: inset(56% 0 22% 0); transform: translate(4rpx, 1rpx); opacity: 0.35; }
 }
 @keyframes brand-tear-b {
   0%, 90%, 100% { clip-path: inset(96% 0 0 0); transform: translate(0, 0); opacity: 0; }
-  92% { clip-path: inset(90% 0 0 0); transform: translate(5rpx, 1rpx); opacity: 0.6; }
-  96% { clip-path: inset(97% 0 0 0); transform: translate(-4rpx, -1rpx); opacity: 0.4; }
+  92% { clip-path: inset(30% 0 46% 0); transform: translate(5rpx, 1rpx); opacity: 0.5; }
+  96% { clip-path: inset(48% 0 30% 0); transform: translate(-4rpx, -1rpx); opacity: 0.35; }
 }
 
 /* ─────── 个人信息卡（头像半嵌 + 三栏数据） ─────── */
