@@ -43,16 +43,16 @@
   98% { transform: translate(-2rpx, 1rpx); }
 }
 @keyframes brand-tear-a {
-  0%, 80%, 100% { clip-path: inset(0 0 58% 0); transform: translate(0, 0); opacity: 0.85; }
-  83% { clip-path: inset(0 0 48% 0); transform: translate(-6rpx, -2rpx); opacity: 1; }
-  88% { clip-path: inset(0 0 68% 0); transform: translate(5rpx, 2rpx); opacity: 0.9; }
-  92% { clip-path: inset(0 0 54% 0); transform: translate(-3rpx, 1rpx); }
+  0%, 80%, 100% { clip-path: inset(0 0 88% 0); transform: translate(0, 0); opacity: 0.85; }
+  83% { clip-path: inset(0 0 82% 0); transform: translate(-6rpx, -2rpx); opacity: 1; }
+  88% { clip-path: inset(0 0 92% 0); transform: translate(5rpx, 2rpx); opacity: 0.9; }
+  92% { clip-path: inset(0 0 84% 0); transform: translate(-3rpx, 1rpx); }
 }
 @keyframes brand-tear-b {
-  0%, 76%, 100% { clip-path: inset(60% 0 0 0); transform: translate(0, 0); opacity: 0.85; }
-  79% { clip-path: inset(48% 0 0 0); transform: translate(6rpx, 2rpx); opacity: 1; }
-  85% { clip-path: inset(66% 0 0 0); transform: translate(-5rpx, -2rpx); opacity: 0.9; }
-  90% { clip-path: inset(52% 0 0 0); transform: translate(3rpx, 1rpx); }
+  0%, 76%, 100% { clip-path: inset(88% 0 0 0); transform: translate(0, 0); opacity: 0.85; }
+  79% { clip-path: inset(82% 0 0 0); transform: translate(6rpx, 2rpx); opacity: 1; }
+  85% { clip-path: inset(92% 0 0 0); transform: translate(-5rpx, -2rpx); opacity: 0.9; }
+  90% { clip-path: inset(84% 0 0 0); transform: translate(3rpx, 1rpx); }
 }
 
 /* ─────── 个人信息卡（头像半嵌 + 三栏数据） ─────── */
@@ -65,13 +65,13 @@
 .profile-avatar-btn { position: absolute; top: -70rpx; left: 36rpx; width: 140rpx !important; height: 140rpx !important; border: 6rpx solid var(--bg-card-solid); background: var(--bg-card); border-radius: 50%; overflow: hidden; padding: 0 !important; margin: 0 !important; box-sizing: border-box; z-index: 2; box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.12); }
 .profile-avatar-btn::after { border: none; display: none; }
 .profile-avatar-img { width: 100%; height: 100%; border-radius: 50%; display: block; }
-.profile-name { position: absolute; top: -60rpx; left: 204rpx; right: 96rpx; height: 60rpx; line-height: 60rpx; font-size: 40rpx; font-weight: 800; color: var(--text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.name-placeholder { color: var(--text-muted); font-weight: 400; }
+.profile-name { position: absolute; top: 20rpx; left: 204rpx; right: 96rpx; height: 60rpx; line-height: 60rpx; font-size: 40rpx; font-weight: 800; color: var(--profile-name, #C4B5FD); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.name-placeholder { color: var(--profile-name, #C4B5FD); opacity: 0.7; font-weight: 400; }
 .pstats { display: flex; align-items: center; }
 .pstat { flex: 1; display: flex; flex-direction: column; align-items: center; }
-.pstat-num { font-size: 46rpx; font-weight: 800; color: var(--text-title); }
-.pstat-label { font-size: 24rpx; color: var(--text-muted); margin-top: 6rpx; }
-.pstat-div { width: 2rpx; height: 60rpx; background: var(--gray-200); }
+.pstat-num { font-size: 46rpx; font-weight: 800; color: var(--profile-fg, #FFFFFF); }
+.pstat-label { font-size: 24rpx; color: var(--profile-fg, #FFFFFF); opacity: 0.85; margin-top: 6rpx; }
+.pstat-div { width: 2rpx; height: 60rpx; background: rgba(255, 255, 255, 0.30); }
 
 /* ─────── 用户卡 emoji 按钮（游戏说明） ─────── */
 .user-emoji-btn {
@@ -154,8 +154,10 @@
   position: relative; overflow: hidden; color: #fff;
 }
 .func-hover { transform: scale(0.96); opacity: 0.92; }
-.func-icon { width: 58rpx; height: 58rpx; }
-.func-emoji { font-size: 54rpx; }
+.func-icon { width: 42rpx; height: 42rpx; }
+.func-emoji { font-size: 36rpx; }
+.func-row { flex-direction: row; gap: 16rpx; }
+.func-icon-box { width: 64rpx; height: 64rpx; border-radius: 16rpx; background: rgba(255, 255, 255, 0.16); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.18); }
 .func-label { font-size: 28rpx; font-weight: 700; }
 .func-switch { transform: scale(0.9); }
 
@@ -198,15 +200,15 @@
 /* 第二行：玻璃色系（更强玻璃质感：多层渐变 + 顶部高光 + 对角光泽 + 内描边） */
 .func-glass {
   background: var(--glass-bg);
-  border: 2rpx solid var(--glass-border);
-  box-shadow: 0 0 22rpx var(--glass-glow), inset 0 0 22rpx var(--glass-glow), inset 0 2rpx 0 var(--glass-sheen);
-  backdrop-filter: blur(18rpx);
-  -webkit-backdrop-filter: blur(18rpx);
+  border: 3rpx solid var(--glass-border);
+  box-shadow: 0 0 26rpx var(--glass-glow), inset 0 0 26rpx var(--glass-glow), inset 0 3rpx 0 var(--glass-sheen), inset 0 -8rpx 20rpx rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(22rpx);
+  -webkit-backdrop-filter: blur(22rpx);
 }
 .func-glass::after {
   content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;
-  background: linear-gradient(135deg, var(--glass-sheen) 0%, transparent 42%, transparent 58%, var(--glass-sheen) 100%);
-  opacity: 0.5;
+  background: linear-gradient(135deg, var(--glass-sheen) 0%, transparent 38%, transparent 62%, var(--glass-sheen) 100%), radial-gradient(circle at 22% 12%, rgba(255, 255, 255, 0.35), transparent 45%);
+  opacity: 0.6;
 }
 .func-glass .func-icon, .func-glass .func-label, .func-glass .func-switch { position: relative; z-index: 1; }
 .func-rate { flex-direction: row; gap: 14rpx; }
@@ -247,11 +249,11 @@
 .podium-badge { position: absolute; bottom: -8rpx; left: 50%; transform: translateX(-50%); width: 40rpx; height: 40rpx; border-radius: 50%; background: #333; color: #FFD700; font-size: 24rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2rpx solid #FFD700; }
 .rank-2 .podium-badge { color: #C2CAD3; border-color: #9AA7B4; }
 .rank-3 .podium-badge { color: #E8A56A; border-color: #CD7F32; }
-.podium-name { font-size: 24rpx; color: var(--text-title); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
+.podium-name { font-size: 24rpx; color: var(--champion-fg, #F5F3FF); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
 .podium-rate { font-size: 38rpx; font-weight: 800; color: #FFD700; }
 .rank-2 .podium-rate { color: #A7B0BA; }
 .rank-3 .podium-rate { color: #E8A56A; }
-.podium-games { font-size: 20rpx; color: var(--text-muted); }
+.podium-games { font-size: 20rpx; color: var(--champion-fg, #F5F3FF); opacity: 0.72; }
 .podium-stand { width: 100%; margin-top: 10rpx; border-radius: 14rpx 14rpx 0 0; display: flex; align-items: center; justify-content: center; font-size: 40rpx; font-weight: 800; color: rgba(255, 255, 255, 0.85); }
 .rank-1 .podium-stand { height: 96rpx; background: linear-gradient(180deg, #FFD700, #B8860B); }
 .rank-2 .podium-stand { height: 66rpx; background: linear-gradient(180deg, #B8C0C9, #7C8794); }

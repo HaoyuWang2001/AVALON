@@ -80,21 +80,22 @@
   <!-- 5. 功能卡 2×2 -->
   <view class="card func-card">
     <view class="func-grid">
-      <view class="func-item func-egg" hover-class="func-hover" hover-stay-time="80" bindtap="goToGlobalStats">
-        <image src="/images/medal.png" class="func-icon" mode="aspectFit"/>
+      <view class="func-item func-egg func-row" hover-class="func-hover" hover-stay-time="80" bindtap="goToGlobalStats">
+        <view class="func-icon-box"><image src="/images/medal.png" class="func-icon" mode="aspectFit"/></view>
         <text class="func-label">全局统计</text>
         <view class="func-badge">彩蛋</view>
       </view>
-      <view class="func-item func-egg" hover-class="func-hover" hover-stay-time="80" bindtap="onChangeTheme">
-        <text class="func-emoji">🎨</text>
+      <view class="func-item func-egg func-row" hover-class="func-hover" hover-stay-time="80" bindtap="onChangeTheme">
+        <view class="func-icon-box"><text class="func-emoji">🎨</text></view>
         <text class="func-label">更改主题</text>
         <view class="func-badge">彩蛋</view>
       </view>
-      <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="goToFriends">
-        <image src="/images/fossa.png" class="func-icon" mode="aspectFit"/>
+      <view class="func-item func-glass func-row" hover-class="func-hover" hover-stay-time="80" bindtap="goToFriends">
+        <view class="func-icon-box"><image src="/images/fossa.png" class="func-icon" mode="aspectFit"/></view>
         <text class="func-label">牛马朋友</text>
       </view>
-      <view class="func-item func-glass func-rate">
+      <view class="func-item func-glass func-row func-rate">
+        <view class="func-icon-box"><text class="func-emoji">👁️</text></view>
         <text class="func-label">公开胜率</text>
         <switch class="func-switch" checked="{{publicWinrate}}" bindchange="onPublicWinrateChange" color="#8B5CF6"/>
       </view>
