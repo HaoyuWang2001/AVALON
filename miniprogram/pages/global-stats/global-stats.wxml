@@ -10,7 +10,7 @@
       <view class="grid">
         <view class="grid-item"><text class="gi-num">{{stats.games.completed}}</text><text class="gi-label">已完成对局</text></view>
         <view class="grid-item"><text class="gi-num">{{stats.games.active}}</text><text class="gi-label">进行中对局</text></view>
-        <view class="grid-item"><text class="gi-num">{{stats.players.total}}</text><text class="gi-label">总玩家数</text></view>
+        <view class="grid-item"><text class="gi-num">{{stats.users.registered}}</text><text class="gi-label">总玩家数</text></view>
         <view class="grid-item"><text class="gi-num">{{stats.rooms.total}}</text><text class="gi-label">总房间数</text></view>
       </view>
     </view>
