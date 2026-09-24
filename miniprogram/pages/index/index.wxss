@@ -162,14 +162,18 @@
   position: relative; width: 100%; height: 220rpx; margin-bottom: 20rpx;
   border-radius: 24rpx; overflow: hidden; box-sizing: border-box;
   background: linear-gradient(135deg, #3730A3 0%, #312E81 40%, #64748B 60%, #475569 100%);
+  background-size: 170% 170%;
   box-shadow: 0 12rpx 32rpx rgba(30,41,59,0.35), inset 0 2rpx 0 rgba(255,255,255,0.35);
-  transition: transform 0.12s ease;
+  transition: transform 0.1s ease;
+  animation: meeting-breathe 7s ease-in-out infinite;
 }
-.meeting-press { transform: scale(0.97); }
-.meeting-zone { position: absolute; top: 0; left: 0; right: 0; bottom: 0; transition: background 0.12s ease; }
+@keyframes meeting-breathe {
+  0%, 100% { background-position: 15% 15%; }
+  50%      { background-position: 85% 85%; }
+}
+.meeting-zone { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
 .meeting-zone.lead { clip-path: polygon(0 0, 100% 0, 0 100%); }
 .meeting-zone.join { clip-path: polygon(100% 0, 100% 100%, 0 100%); }
-.zone-hover { background: rgba(255,255,255,0.16); }
 .meeting-content { position: absolute; display: flex; flex-direction: row; align-items: center; gap: 14rpx; white-space: nowrap; }
 .meeting-zone.lead .meeting-content { left: 25%; top: 33%; transform: translate(-50%, -50%); }
 .meeting-zone.join .meeting-content { right: 25%; top: 67%; transform: translate(50%, -50%); }

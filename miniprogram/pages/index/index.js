@@ -51,7 +51,8 @@ Page({
     champions: [],
     podium: [],
     hardworking: null,
-    publicWinrate: true
+    publicWinrate: true,
+    meetingPressStyle: ''
   },
 
   onLoad(options) {
@@ -247,6 +248,10 @@ Page({
     });
   },
 
+  onReady() {
+    this._measureMeeting();
+  },
+
   onShow() {
     if (getApp().globalData.openId) {
       this.checkCurrentRoom();
@@ -254,11 +259,36 @@ Page({
     }
     // 返回本页时重新应用主题背景（离开时已复位，保证其他亮色页面不串色）
     wx.setBackgroundColor({ backgroundColor: getThemeBg(this.data.themeClass) });
+    this._measureMeeting();
   },
 
   onHide() {
     // 离开本页：窗口背景复位为默认亮色，避免暗色泄漏到 room/game 等亮色页面
     wx.setBackgroundColor({ backgroundColor: '#F5F5F5' });
+  },
+
+  // 召开/加入会议合并按钮：缓存按钮位置，用于按压方向判定
+  _measureMeeting() {
+    wx.createSelectorQuery().select('.meeting-btn')
+      .boundingClientRect(r => { if (r) this._meetingRect = r; })
+      .exec();
+  },
+
+  // 按压：按哪个角，哪个角向里凹（偏移越大倾斜越大，中心为 0）
+  onMeetingTouchStart(e) {
+    const r = this._meetingRect;
+    const t = e.touches && e.touches[0];
+    if (!r || !t || !r.width || !r.height) return;
+    const nx = Math.max(-1, Math.min(1, (t.clientX - r.left) / r.width * 2 - 1));
+    const ny = Math.max(-1, Math.min(1, (t.clientY - r.top) / r.height * 2 - 1));
+    const M = 9;
+    this.setData({
+      meetingPressStyle: `transform: perspective(760rpx) rotateX(${(-ny * M).toFixed(2)}deg) rotateY(${(nx * M).toFixed(2)}deg) scale(0.985);`
+    });
+  },
+
+  onMeetingTouchEnd() {
+    if (this.data.meetingPressStyle) this.setData({ meetingPressStyle: '' });
   },
 
   onPullDownRefresh() {

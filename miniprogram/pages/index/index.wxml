@@ -78,14 +78,15 @@
   </view>
 
   <!-- 召开会议 / 加入会议（合并按钮：(A) 对角全切；左上靛青=召开，右下银=加入） -->
-  <view class="meeting-btn" hover-class="meeting-press" hover-stay-time="80" wx:if="{{!currentRoom}}">
-    <view class="meeting-zone lead" hover-class="zone-hover" bindtap="openConfigs">
+  <view class="meeting-btn" style="{{meetingPressStyle}}" wx:if="{{!currentRoom}}"
+        bindtouchstart="onMeetingTouchStart" bindtouchend="onMeetingTouchEnd" bindtouchcancel="onMeetingTouchEnd">
+    <view class="meeting-zone lead" bindtap="openConfigs">
       <view class="meeting-content">
         <image class="meeting-icon" src="/images/sword.png" mode="aspectFit"/>
         <text class="meeting-label">召开会议</text>
       </view>
     </view>
-    <view class="meeting-zone join" hover-class="zone-hover" bindtap="joinRoom">
+    <view class="meeting-zone join" bindtap="joinRoom">
       <view class="meeting-content">
         <image class="meeting-icon" src="/images/door.png" mode="aspectFit"/>
         <text class="meeting-label">加入会议</text>
