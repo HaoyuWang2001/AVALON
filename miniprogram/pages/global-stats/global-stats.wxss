@@ -31,6 +31,7 @@
 .role-rate { font-size: 28rpx; font-weight: 800; color: var(--primary); min-width: 100rpx; text-align: right; }
 
 /* 全量对局 */
+.game-scroll { max-height: 1100rpx; }
 .game-row { display: flex; align-items: center; padding: 18rpx 0; border-bottom: 1rpx solid var(--gray-100); }
 .game-row:last-child { border-bottom: none; }
 .game-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }

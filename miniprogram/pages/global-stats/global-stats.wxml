@@ -43,20 +43,22 @@
       </view>
     </view>
 
-    <!-- 全量对局 -->
+    <!-- 全量对局（滚动框可见约10条，可滑动查看全部，不截断） -->
     <view class="card">
       <view class="card-title">全量对局（{{gameList.length}}）</view>
       <view wx:if="{{gameList.length === 0}}" class="empty">暂无对局</view>
-      <view wx:for="{{gameList}}" wx:key="id" class="game-row" bindtap="openGame" data-id="{{item.id}}">
-        <view class="game-main">
-          <text class="game-title">{{item.playerCount}}人局 · {{item.durationText}}</text>
-          <text class="game-sub">{{item.dateText}}</text>
+      <scroll-view wx:else scroll-y class="game-scroll">
+        <view wx:for="{{gameList}}" wx:key="id" class="game-row" bindtap="openGame" data-id="{{item.id}}">
+          <view class="game-main">
+            <text class="game-title">{{item.playerCount}}人局 · {{item.durationText}}</text>
+            <text class="game-sub">{{item.dateText}}</text>
+          </view>
+          <view class="game-winner-wrap">
+            <text class="game-winner {{item.winnerClass}}">{{item.winnerText}}</text>
+            <text wx:if="{{item.winnerSub}}" class="game-winner-sub">{{item.winnerSub}}</text>
+          </view>
         </view>
-        <view class="game-winner-wrap">
-          <text class="game-winner {{item.winnerClass}}">{{item.winnerText}}</text>
-          <text wx:if="{{item.winnerSub}}" class="game-winner-sub">{{item.winnerSub}}</text>
-        </view>
-      </view>
+      </scroll-view>
     </view>
   </block>
 
