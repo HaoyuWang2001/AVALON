@@ -12,10 +12,10 @@
 }
 
 /* ─────── 头部（三段差异化故障：霓虹流光 / 拉长 / 撕裂放大） ─────── */
-.brand-bar { padding: 26rpx 4rpx 44rpx; text-align: center; flex-shrink: 0; }
+.brand-bar { padding: 26rpx 0 44rpx; margin-left: -24rpx; margin-right: -24rpx; text-align: center; flex-shrink: 0; }
 .brand-text {
-  position: relative; display: inline-block;
-  font-size: 68rpx; font-weight: 900; letter-spacing: 5rpx; font-style: italic;
+  position: relative; display: inline-block; white-space: nowrap;
+  font-size: 68rpx; font-weight: 900; letter-spacing: 4rpx; font-style: italic;
   font-family: 'ZCOOL QingKe HuangYou', 'Smiley Sans', 'PingFang SC', 'Heiti SC', 'Microsoft YaHei', sans-serif;
 }
 .brand-1, .brand-2, .brand-3 { position: relative; display: inline-block; -webkit-text-fill-color: currentColor; }
