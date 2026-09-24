@@ -277,47 +277,59 @@ Page({
   },
 
   // 按压：按哪个角，哪个角向里凹（偏移越大倾斜越大，中心为 0）
+  // 按压 + 颜色铺满：touchstart 同刻触发，松手后（已满足随机时长）再打开组件
   onMeetingTouchStart(e) {
-    const r = this._meetingRect;
+    if (this._meetingBusy) return;
+    clearTimeout(this._meetingCommitTimer);
     const t = e.touches && e.touches[0];
-    if (!r || !t || !r.width || !r.height) return;
-    const nx = Math.max(-1, Math.min(1, (t.clientX - r.left) / r.width * 2 - 1));
-    const ny = Math.max(-1, Math.min(1, (t.clientY - r.top) / r.height * 2 - 1));
-    const M = 9;
-    this.setData({
-      meetingPressStyle: `transform: perspective(760rpx) rotateX(${(-ny * M).toFixed(2)}deg) rotateY(${(nx * M).toFixed(2)}deg) scale(0.985);`
-    });
+    const side = (e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.side) || 'lead';
+    const ms = 360 + Math.floor(Math.random() * 141);
+    this._meetingStartAt = Date.now();
+    this._meetingStartX = t ? t.clientX : 0;
+    this._meetingStartY = t ? t.clientY : 0;
+    this._meetingMoved = false;
+    this._meetingMs = ms;
+    this._meetingSide = side;
+    const patch = { meetingFillClass: 'filling-' + side, meetingFillMs: ms };
+    const r = this._meetingRect;
+    if (r && t && r.width && r.height) {
+      const nx = Math.max(-1, Math.min(1, (t.clientX - r.left) / r.width * 2 - 1));
+      const ny = Math.max(-1, Math.min(1, (t.clientY - r.top) / r.height * 2 - 1));
+      const M = 9;
+      patch.meetingPressStyle = `transform: perspective(760rpx) rotateX(${(-ny * M).toFixed(2)}deg) rotateY(${(nx * M).toFixed(2)}deg) scale(0.985);`;
+    }
+    this.setData(patch);
+  },
+
+  onMeetingTouchMove(e) {
+    const t = e.touches && e.touches[0];
+    if (!t || this._meetingMoved) return;
+    const dx = t.clientX - (this._meetingStartX || 0);
+    const dy = t.clientY - (this._meetingStartY || 0);
+    if (dx * dx + dy * dy > 225) this._meetingMoved = true; // >15px 视为拖动
   },
 
   onMeetingTouchEnd() {
-    // 松开后短暂保留按压：让快速单击也能看到按压效果
-    clearTimeout(this._meetingResetTimer);
-    this._meetingResetTimer = setTimeout(() => {
-      if (!this._meetingBusy) this.setData({ meetingPressStyle: '' });
-    }, 450);
-  },
-
-  onMeetingTouchCancel() {
-    clearTimeout(this._meetingResetTimer);
-    this._meetingBusy = false;
-    this.setData({ meetingPressStyle: '', meetingFillClass: '' });
-  },
-
-  onMeetingLeadTap() { this._meetingCommit('lead', 'openConfigs'); },
-  onMeetingJoinTap() { this._meetingCommit('join', 'joinRoom'); },
-
-  // 强制先看到按压 + 颜色铺满（随机 360~500ms），再打开组件
-  _meetingCommit(side, action) {
-    if (this._meetingBusy) return;
+    if (this._meetingMoved || !this._meetingSide) { this._resetMeeting(); return; }
     this._meetingBusy = true;
-    clearTimeout(this._meetingResetTimer);
-    const ms = 360 + Math.floor(Math.random() * 141);
-    this.setData({ meetingFillClass: 'filling-' + side, meetingFillMs: ms });
-    setTimeout(() => {
-      this.setData({ meetingFillClass: '', meetingPressStyle: '' });
-      this._meetingBusy = false;
+    const rest = Math.max(0, (this._meetingMs || 0) - (Date.now() - (this._meetingStartAt || 0)));
+    this._meetingCommitTimer = setTimeout(() => {
+      const action = this._meetingSide === 'join' ? 'joinRoom' : 'openConfigs';
+      this._resetMeeting();
       this[action]();
-    }, ms);
+    }, rest);
+  },
+
+  onMeetingTouchCancel() { this._resetMeeting(); },
+
+  _resetMeeting() {
+    clearTimeout(this._meetingCommitTimer);
+    this._meetingBusy = false;
+    this._meetingMoved = false;
+    this._meetingSide = null;
+    if (this.data.meetingFillClass || this.data.meetingPressStyle) {
+      this.setData({ meetingFillClass: '', meetingPressStyle: '' });
+    }
   },
 
   onPullDownRefresh() {

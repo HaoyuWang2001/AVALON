@@ -48,6 +48,8 @@
   --c-ingame: #E89A86;
   --c-good-pill: #A6C6F0;
   --c-evil-pill: #EEB0A0;
+  --c-good-bg: rgba(143, 180, 232, 0.16);
+  --c-evil-bg: rgba(232, 154, 134, 0.16);
 
   /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 烛光(暖) */
   --brand-1: #D4A052;
@@ -135,6 +137,8 @@
   --c-ingame: #F09AA8;
   --c-good-pill: #ABC6F8;
   --c-evil-pill: #F4B2BE;
+  --c-good-bg: rgba(147, 180, 245, 0.16);
+  --c-evil-bg: rgba(240, 154, 168, 0.16);
 
   /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 暗夜(冷) */
   --brand-1: #A78BFA;
@@ -222,6 +226,8 @@
   --c-ingame: #E08A8A;
   --c-good-pill: #A6C4EA;
   --c-evil-pill: #E8A4A4;
+  --c-good-bg: rgba(143, 182, 224, 0.16);
+  --c-evil-bg: rgba(224, 138, 138, 0.16);
 
   /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 锻造钢铁 */
   --brand-1: #C7D2DD;

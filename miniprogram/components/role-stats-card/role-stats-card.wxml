@@ -1,12 +1,10 @@
 <!--components/role-stats-card/role-stats-card.wxml-->
 <view class="rsc">
   <view class="rsc-title">{{title}}</view>
-  <view class="rsc-summary" wx:if="{{summary && summary.totalGames > 0}}">胜率 {{summary.totalWinRate}}%({{summary.totalWins}}/{{summary.totalGames}}) · 蓝方 {{summary.goodWinRate}} · 红方 {{summary.evilWinRate}}</view>
+  <view class="rsc-summary" wx:if="{{summary && summary.totalGames > 0}}"><text class="rsc-summary-rate">胜率 {{summary.totalWinRate}}%({{summary.totalWins}}/{{summary.totalGames}})</text> · <text class="rsc-summary-good">蓝方 {{summary.goodWinRate}}</text> · <text class="rsc-summary-evil">红方 {{summary.evilWinRate}}</text></view>
   <view wx:if="{{roles.length === 0}}" class="rsc-empty">暂无数据</view>
   <swiper wx:else class="rsc-swiper"
-          indicator-dots="{{roles.length > 1}}"
-          indicator-color="rgba(139,92,246,0.25)"
-          indicator-active-color="#8B5CF6"
+          bindchange="onSwiperChange"
           duration="300">
     <swiper-item wx:for="{{roles}}" wx:key="role">
       <view class="rsc-item">
@@ -18,6 +16,9 @@
       </view>
     </swiper-item>
   </swiper>
+  <view class="rsc-dots" wx:if="{{roles.length > 1}}">
+    <view wx:for="{{roles}}" wx:key="role" class="rsc-dot {{index === swiperIndex ? 'on' : ''}}"></view>
+  </view>
 
   <!-- 角色对局弹窗 -->
   <view class="rsc-overlay" wx:if="{{modalShow}}" bindtap="closeModal" catchtouchmove="noop">

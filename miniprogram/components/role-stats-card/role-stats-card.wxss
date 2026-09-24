@@ -1,8 +1,12 @@
 /* components/role-stats-card/role-stats-card.wxss */
-.rsc { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); }
+.rsc { position: relative; background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); }
 .rsc-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 12rpx; display: flex; align-items: center; }
 .rsc-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
 .rsc-summary { font-size: 24rpx; color: var(--text-muted); margin-bottom: 12rpx; }
+.rsc-summary-rate, .rsc-summary-good, .rsc-summary-evil { font-weight: 700; }
+.rsc-summary-rate { color: var(--c-violet); }
+.rsc-summary-good { color: var(--hc-good); }
+.rsc-summary-evil { color: var(--hc-evil); }
 .rsc-empty { text-align: center; color: var(--gray-400); font-size: 26rpx; padding: 40rpx 0; }
 
 .rsc-swiper { width: 100%; height: 660rpx; }
@@ -28,10 +32,15 @@
 .rsc-card:active { transform: scale(0.97); }
 .rsc-emoji { font-size: 180rpx; line-height: 1.2; position: relative; z-index: 1; }
 .rsc-name { font-size: 28rpx; font-weight: 700; padding: 8rpx 28rpx; border-radius: 28rpx; margin-top: 24rpx; position: relative; z-index: 1; }
-.rsc-name-good { background: rgba(59, 130, 246, 0.16); color: var(--c-good-pill); }
-.rsc-name-evil { background: rgba(239, 68, 68, 0.16); color: var(--c-evil-pill); }
+.rsc-name-good { background: var(--c-good-bg); color: var(--c-good-pill); }
+.rsc-name-evil { background: var(--c-evil-bg); color: var(--c-evil-pill); }
 .rsc-meta { margin-top: 32rpx; position: relative; z-index: 1; }
 .rsc-rate { font-size: 36rpx; font-weight: 800; color: var(--role-card-rate, var(--c-team)); }
+
+/* 自定义 swiper 指示点（token 化，替代硬编码的内置指示器） */
+.rsc-dots { position: absolute; left: 0; right: 0; bottom: 30rpx; display: flex; align-items: center; justify-content: center; }
+.rsc-dot { width: 12rpx; height: 12rpx; border-radius: 50%; margin: 0 7rpx; background: var(--gradient-start); opacity: 0.25; transition: opacity 0.2s ease; }
+.rsc-dot.on { opacity: 1; }
 
 /* 角色对局弹窗 */
 .rsc-overlay {

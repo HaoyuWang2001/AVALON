@@ -44,6 +44,8 @@ page {
   --c-ingame: #EF4444;
   --c-good-pill: #93C5FD;
   --c-evil-pill: #FCA5A5;
+  --c-good-bg: rgba(59, 130, 246, 0.16);
+  --c-evil-bg: rgba(239, 68, 68, 0.16);
 
   /* 主页头部：三段三色 + 辉光 + 故障分层色（黎明初现：深紫·皇家） */
   --brand-1: #2E1065;

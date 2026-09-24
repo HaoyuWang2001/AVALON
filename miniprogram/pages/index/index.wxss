@@ -171,18 +171,18 @@
   box-shadow: 0 12rpx 32rpx rgba(30,41,59,0.35), inset 0 2rpx 0 rgba(255,255,255,0.35);
   transition: transform 0.1s ease;
 }
-/* 点击后该半区颜色逐渐铺满（对角线推进） */
-.meeting-fill { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; clip-path: polygon(0 0, 0 0, 0 0, 0 0); }
-.meeting-btn.filling-lead .meeting-fill { background: linear-gradient(135deg, #3730A3, #312E81); animation: meeting-fill-lead var(--fill-ms, 420ms) ease forwards; }
-.meeting-btn.filling-join .meeting-fill { background: linear-gradient(135deg, #64748B, #475569); animation: meeting-fill-join var(--fill-ms, 420ms) ease forwards; }
-@keyframes meeting-fill-lead {
-  from { clip-path: polygon(0 0, 100% 0, 0 100%, 0 100%); }
-  to   { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+/* 点击后该半区颜色软边铺满（对角线渐变扫过，无硬边界） */
+.meeting-fill { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; background-repeat: no-repeat; background-size: 260% 260%; }
+.meeting-btn.filling-lead .meeting-fill {
+  background-image: linear-gradient(135deg, #3730A3 0%, #312E81 40%, rgba(49,46,129,0) 68%, rgba(49,46,129,0) 100%);
+  animation: meeting-fill-lead var(--fill-ms, 420ms) ease-out forwards;
 }
-@keyframes meeting-fill-join {
-  from { clip-path: polygon(100% 0, 100% 100%, 0 100%, 0 100%); }
-  to   { clip-path: polygon(100% 0, 100% 100%, 0 100%, 0 0); }
+.meeting-btn.filling-join .meeting-fill {
+  background-image: linear-gradient(135deg, rgba(71,85,105,0) 0%, rgba(71,85,105,0) 32%, #64748B 60%, #475569 100%);
+  animation: meeting-fill-join var(--fill-ms, 420ms) ease-out forwards;
 }
+@keyframes meeting-fill-lead { from { background-position: 100% 100%; } to { background-position: 0% 0%; } }
+@keyframes meeting-fill-join { from { background-position: 0% 0%; } to { background-position: 100% 100%; } }
 .meeting-zone { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
 .meeting-zone.lead { clip-path: polygon(0 0, 100% 0, 0 100%); }
 .meeting-zone.join { clip-path: polygon(100% 0, 100% 100%, 0 100%); }

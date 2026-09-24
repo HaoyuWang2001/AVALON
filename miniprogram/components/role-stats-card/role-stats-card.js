@@ -15,9 +15,13 @@ Component({
   data: {
     modalShow: false,
     modalTitle: '',
-    modalGames: []
+    modalGames: [],
+    swiperIndex: 0
   },
   methods: {
+    onSwiperChange(e) {
+      this.setData({ swiperIndex: e.detail.current });
+    },
     onRoleTap(e) {
       const role = e.currentTarget.dataset.role;
       const name = e.currentTarget.dataset.name;
