@@ -16,8 +16,8 @@ const THEME_BG = {
   steel: '#171A1F'
 };
 
-const THEME_ORDER = ['torch', 'aurora', 'steel', ''];
-const THEME_LABELS = ['🔥 烛光殿堂', '🌌 暗夜圆桌', '⚔️ 锻造钢铁', '☀️ 亮色'];
+const THEME_ORDER = ['', 'torch', 'aurora', 'steel'];
+const THEME_LABELS = ['🌅 黎明初现', '🔥 烛光殿堂', '🌌 暗夜圆桌', '⚔️ 锻造钢铁'];
 
 // 读取当前主题 key（'' = 亮色）
 function getThemeClass() {

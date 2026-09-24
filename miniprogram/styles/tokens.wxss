@@ -45,6 +45,21 @@ page {
   --c-good-pill: #93C5FD;
   --c-evil-pill: #FCA5A5;
 
+  /* 主页头部：主题渐变 + 故障分层色 */
+  --brand-a: #7C3AED;
+  --brand-b: #2563EB;
+  --brand-g1: #06B6D4;
+  --brand-g2: #EC4899;
+  /* 彩蛋功能卡卡面（白色图标需深底） */
+  --func-face: #1F2937;
+  /* 玻璃色系（牛马朋友/公开胜率） */
+  --glass-bg: linear-gradient(135deg, rgba(30, 27, 75, 0.92), rgba(15, 23, 42, 0.92));
+  --glass-border: rgba(139, 92, 246, 0.55);
+  --glass-glow: rgba(139, 92, 246, 0.28);
+  --glass-sheen: rgba(255, 255, 255, 0.28);
+  /* 角色胜率卡牌边框 */
+  --role-card-border: #8B5CF6;
+
   /* 中性灰阶 */
   --gray-50: #F9FAFB;
   --gray-100: #F3F4F6;

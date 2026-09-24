@@ -78,10 +78,12 @@
       <view class="func-item func-egg" hover-class="func-hover" hover-stay-time="80" bindtap="goToGlobalStats">
         <image src="/images/medal.png" class="func-icon" mode="aspectFit"/>
         <text class="func-label">全局统计</text>
+        <view class="func-badge">彩蛋</view>
       </view>
       <view class="func-item func-egg" hover-class="func-hover" hover-stay-time="80" bindtap="onChangeTheme">
         <text class="func-emoji">🎨</text>
         <text class="func-label">更改主题</text>
+        <view class="func-badge">彩蛋</view>
       </view>
       <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="goToFriends">
         <image src="/images/fossa.png" class="func-icon" mode="aspectFit"/>

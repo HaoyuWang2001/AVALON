@@ -11,33 +11,49 @@
   overflow-y: auto;
 }
 
-/* ─────── 头部（黑暗潮流：霓虹辉光 + 故障抖动） ─────── */
-.brand-bar { padding: 24rpx 4rpx 20rpx; text-align: center; flex-shrink: 0; }
+/* ─────── 头部（主题渐变字 + 赛博故障撕裂 + 霓虹辉光） ─────── */
+.brand-bar { padding: 26rpx 4rpx 44rpx; text-align: center; flex-shrink: 0; }
 .brand-text {
   position: relative; display: inline-block;
-  font-size: 44rpx; font-weight: 900; letter-spacing: 8rpx; color: #ECE9FF;
-  animation: brand-glow 2.6s ease-in-out infinite, brand-shake 3.6s steps(3, end) infinite;
+  font-size: 58rpx; font-weight: 900; letter-spacing: 6rpx;
+  background: linear-gradient(135deg, var(--brand-a, #7C3AED), var(--brand-b, #2563EB));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: brand-glow 2.2s ease-in-out infinite, brand-shake 2.6s steps(2, end) infinite;
 }
 .brand-text::before, .brand-text::after {
   content: '瓦协会之练秋湖分部';
   position: absolute; left: 0; top: 0; width: 100%;
+  -webkit-text-fill-color: currentColor;
+  background: none;
   pointer-events: none;
 }
-.brand-text::before { color: #22D3EE; clip-path: inset(0 0 58% 0); animation: brand-glitch-a 2.8s infinite; }
-.brand-text::after { color: #F43F5E; clip-path: inset(58% 0 0 0); animation: brand-glitch-b 3.2s infinite; }
+.brand-text::before { color: var(--brand-g1, #06B6D4); animation: brand-tear-a 1.8s steps(1, end) infinite; }
+.brand-text::after { color: var(--brand-g2, #EC4899); animation: brand-tear-b 2.2s steps(1, end) infinite; }
 @keyframes brand-glow {
-  0%, 100% { text-shadow: 0 0 6rpx rgba(139, 92, 246, 0.9), 0 0 18rpx rgba(139, 92, 246, 0.6), 0 0 34rpx rgba(59, 130, 246, 0.45); }
-  50% { text-shadow: 0 0 10rpx rgba(139, 92, 246, 1), 0 0 28rpx rgba(139, 92, 246, 0.85), 0 0 52rpx rgba(59, 130, 246, 0.7); }
+  0%, 100% { text-shadow: 0 0 6rpx var(--brand-a, #7C3AED), 0 0 20rpx var(--brand-b, #2563EB); }
+  50% { text-shadow: 0 0 10rpx var(--brand-a, #7C3AED), 0 0 34rpx var(--brand-b, #2563EB); }
 }
 @keyframes brand-shake {
-  0%, 90%, 100% { transform: translate(0, 0); }
-  92% { transform: translate(-2rpx, 1rpx); }
-  94% { transform: translate(2rpx, -1rpx); }
-  96% { transform: translate(-1rpx, -1rpx); }
-  98% { transform: translate(1rpx, 1rpx); }
+  0%, 88%, 100% { transform: translate(0, 0); }
+  90% { transform: translate(-5rpx, 2rpx); }
+  92% { transform: translate(5rpx, -2rpx); }
+  94% { transform: translate(-4rpx, -2rpx); }
+  96% { transform: translate(4rpx, 2rpx); }
+  98% { transform: translate(-2rpx, 1rpx); }
 }
-@keyframes brand-glitch-a { 0%, 88%, 100% { transform: translate(0, 0); opacity: 0.9; } 90% { transform: translate(-3rpx, -1rpx); opacity: 1; } 93% { transform: translate(2rpx, 1rpx); } }
-@keyframes brand-glitch-b { 0%, 86%, 100% { transform: translate(0, 0); opacity: 0.9; } 89% { transform: translate(3rpx, 1rpx); opacity: 1; } 92% { transform: translate(-2rpx, -1rpx); } }
+@keyframes brand-tear-a {
+  0%, 80%, 100% { clip-path: inset(0 0 58% 0); transform: translate(0, 0); opacity: 0.85; }
+  83% { clip-path: inset(0 0 48% 0); transform: translate(-6rpx, -2rpx); opacity: 1; }
+  88% { clip-path: inset(0 0 68% 0); transform: translate(5rpx, 2rpx); opacity: 0.9; }
+  92% { clip-path: inset(0 0 54% 0); transform: translate(-3rpx, 1rpx); }
+}
+@keyframes brand-tear-b {
+  0%, 76%, 100% { clip-path: inset(60% 0 0 0); transform: translate(0, 0); opacity: 0.85; }
+  79% { clip-path: inset(48% 0 0 0); transform: translate(6rpx, 2rpx); opacity: 1; }
+  85% { clip-path: inset(66% 0 0 0); transform: translate(-5rpx, -2rpx); opacity: 0.9; }
+  90% { clip-path: inset(52% 0 0 0); transform: translate(3rpx, 1rpx); }
+}
 
 /* ─────── 个人信息卡（放大） ─────── */
 .profile-card {
@@ -125,9 +141,9 @@
 
 /* ─────── 功能卡（2×2 宫格） ─────── */
 .func-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
-.func-grid { display: flex; flex-wrap: wrap; gap: 20rpx; }
+.func-grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20rpx; }
 .func-item {
-  width: calc(50% - 10rpx); box-sizing: border-box; min-height: 156rpx;
+  width: 48%; box-sizing: border-box; min-height: 156rpx;
   border-radius: 20rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10rpx;
   position: relative; overflow: hidden; color: #fff;
 }
@@ -137,7 +153,29 @@
 .func-label { font-size: 28rpx; font-weight: 700; }
 .func-switch { transform: scale(0.9); }
 
-/* 第一行：彩蛋风（动态彩虹描边 + 深色卡面） */
+/* 右上角「彩蛋」标签（与旧版同款：彩虹流光 + 抖动） */
+.func-badge {
+  position: absolute; top: 10rpx; right: 12rpx; z-index: 3;
+  font-size: 22rpx; font-weight: 800; letter-spacing: 2rpx;
+  padding: 4rpx 16rpx; border-radius: 10rpx; color: #fff;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.4);
+  background: linear-gradient(120deg, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);
+  background-size: 300% 300%;
+  animation: badge-shake 1.4s ease-in-out infinite, rainbow-flow 6s linear infinite;
+}
+@keyframes badge-shake {
+  0%, 100% { transform: rotate(-8deg) translate(0, 0); }
+  12% { transform: rotate(-5deg) translate(-2rpx, 1rpx); }
+  24% { transform: rotate(-10deg) translate(2rpx, -2rpx); }
+  36% { transform: rotate(-4deg) translate(-1rpx, 2rpx); }
+  48% { transform: rotate(-9deg) translate(3rpx, -1rpx); }
+  60% { transform: rotate(-6deg) translate(-2rpx, 1rpx); }
+  72% { transform: rotate(-11deg) translate(1rpx, -2rpx); }
+  84% { transform: rotate(-5deg) translate(-3rpx, 1rpx); }
+}
+
+/* 第一行：彩蛋风（流动彩虹描边加粗 + 主题卡面） */
 .func-egg {
   background: linear-gradient(120deg, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);
   background-size: 400% 400%;
@@ -145,19 +183,25 @@
   box-shadow: 0 8rpx 24rpx rgba(245, 158, 11, 0.32);
 }
 .func-egg::before {
-  content: ''; position: absolute; top: 7rpx; left: 7rpx; right: 7rpx; bottom: 7rpx;
-  border-radius: 15rpx; background: #1F2937;
+  content: ''; position: absolute; top: 14rpx; left: 14rpx; right: 14rpx; bottom: 14rpx;
+  border-radius: 12rpx; background: var(--func-face, #1F2937);
 }
 .func-egg .func-icon, .func-egg .func-emoji, .func-egg .func-label { position: relative; z-index: 1; }
 @keyframes rainbow-flow { 0% { background-position: 0% 50%; } 100% { background-position: 400% 50%; } }
 
-/* 第二行：深色玻璃拟态 + 霓虹描边 */
+/* 第二行：玻璃色系（更强玻璃质感：多层渐变 + 顶部高光 + 对角光泽 + 内描边） */
 .func-glass {
-  background: linear-gradient(135deg, rgba(30, 27, 75, 0.92), rgba(15, 23, 42, 0.92));
-  border: 2rpx solid rgba(139, 92, 246, 0.55);
-  box-shadow: 0 0 22rpx rgba(139, 92, 246, 0.28), inset 0 0 22rpx rgba(139, 92, 246, 0.12);
+  background: var(--glass-bg);
+  border: 2rpx solid var(--glass-border);
+  box-shadow: 0 0 22rpx var(--glass-glow), inset 0 0 22rpx var(--glass-glow), inset 0 2rpx 0 var(--glass-sheen);
 }
-.func-glass .func-label { color: #E9E6FF; text-shadow: 0 0 10rpx rgba(139, 92, 246, 0.6); }
+.func-glass::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;
+  background: linear-gradient(135deg, var(--glass-sheen) 0%, transparent 42%, transparent 58%, var(--glass-sheen) 100%);
+  opacity: 0.5;
+}
+.func-glass .func-icon, .func-glass .func-label, .func-glass .func-switch { position: relative; z-index: 1; }
+.func-glass .func-label { color: #F2F0FF; text-shadow: 0 0 10rpx var(--glass-glow); }
 
 .info-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
 .info-item { font-size: 26rpx; color: var(--gray-500); line-height: 1.8; }
@@ -181,12 +225,12 @@
 }
 
 /* ─────── 胜率冠军（领奖台） ─────── */
-.champion-card { position: relative; overflow: hidden; background: linear-gradient(160deg, #1F1B2E 0%, #2A2340 60%, #3B2E5A 100%); }
-.champion-title { font-size: 30rpx; font-weight: 800; color: #FFE9A8; text-shadow: 0 2rpx 10rpx rgba(255, 200, 0, 0.4); }
+.champion-card { position: relative; overflow: hidden; background: var(--bg-card); box-shadow: var(--shadow-sm), inset 0 0 0 2rpx var(--gold, #B8860B); }
+.champion-title { font-size: 30rpx; font-weight: 800; color: var(--gold, #B8860B); }
 .podium { display: flex; align-items: flex-end; justify-content: center; gap: 16rpx; padding-top: 34rpx; }
 .podium-item { flex: 1; max-width: 190rpx; display: flex; flex-direction: column; align-items: center; }
 .podium-avatar-wrap { position: relative; margin-bottom: 10rpx; }
-.podium-avatar { width: 112rpx; height: 112rpx; border-radius: 50%; border: 4rpx solid var(--gray-300); background: #222; }
+.podium-avatar { width: 112rpx; height: 112rpx; border-radius: 50%; border: 4rpx solid var(--gray-300); background: var(--gray-100); }
 .rank-1 .podium-avatar { width: 148rpx; height: 148rpx; border-color: #FFD700; animation: champ-glow 2.2s ease-in-out infinite; }
 .rank-2 .podium-avatar { border-color: #C0C0C0; }
 .rank-3 .podium-avatar { border-color: #CD7F32; }
@@ -194,11 +238,11 @@
 .podium-badge { position: absolute; bottom: -8rpx; left: 50%; transform: translateX(-50%); width: 40rpx; height: 40rpx; border-radius: 50%; background: #333; color: #FFD700; font-size: 24rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2rpx solid #FFD700; }
 .rank-2 .podium-badge { color: #ddd; border-color: #C0C0C0; }
 .rank-3 .podium-badge { color: #E8A56A; border-color: #CD7F32; }
-.podium-name { font-size: 24rpx; color: #EDE7FF; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
+.podium-name { font-size: 24rpx; color: var(--text-title); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
 .podium-rate { font-size: 38rpx; font-weight: 800; color: #FFD700; }
 .rank-2 .podium-rate { color: #D8D8D8; }
 .rank-3 .podium-rate { color: #E8A56A; }
-.podium-games { font-size: 20rpx; color: rgba(255, 255, 255, 0.55); }
+.podium-games { font-size: 20rpx; color: var(--text-muted); }
 .podium-stand { width: 100%; margin-top: 10rpx; border-radius: 14rpx 14rpx 0 0; display: flex; align-items: center; justify-content: center; font-size: 40rpx; font-weight: 800; color: rgba(255, 255, 255, 0.85); }
 .rank-1 .podium-stand { height: 96rpx; background: linear-gradient(180deg, #FFD700, #B8860B); }
 .rank-2 .podium-stand { height: 66rpx; background: linear-gradient(180deg, #D8D8D8, #9A9A9A); }
