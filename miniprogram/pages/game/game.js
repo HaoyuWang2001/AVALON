@@ -311,7 +311,7 @@ Page({
     this._loadFriendSet();
   },
 
-  // 缓存好友 openId 集合（结束对局长按申请好友判断用）
+  // 缓存好友 openId 集合（玩家信息底部框判断是否好友用）
   _loadFriendSet() {
     const openId = app.globalData.openId;
     if (!openId) { this._friendSet = new Set(); return; }
@@ -1011,6 +1011,12 @@ Page({
 
   // 长桌玩家点击（按阶段分发）
   onTablePlayerTap(e) {
+    // 对局已结束（含历史回顾）：点击玩家弹出玩家胜率弹窗
+    if (this.data.currentPhase === 'gameEnd') {
+      const id = e.currentTarget.dataset.id;
+      if (id) this.openPlayerStats(id);
+      return;
+    }
     // 观战者：点击玩家弹出玩家胜率弹窗（不参与提名/刺杀等操作）
     if (this.data.isSpectator) {
       const id = e.currentTarget.dataset.id;
@@ -1056,16 +1062,13 @@ Page({
     });
   },
 
-  // 长按卡片：进行中→身份标记面板；已结束(gameEnd)→好友申请底部框（不再允许标记身份）
+  // 长按卡片：进行中→身份标记面板；已结束(gameEnd)→不响应（点击玩家已改为弹玩家弹窗）
   onPlayerLongPress(e) {
     if (!this.data.gameId && !this.data.roomId) return;
     const targetOpenId = e.currentTarget.dataset.id;
     if (!targetOpenId) return;
+    if (this.data.currentPhase === 'gameEnd') return;
     const target = (this.data.allPlayers || []).find(p => p.openId === targetOpenId);
-    if (this.data.currentPhase === 'gameEnd') {
-      this._showFriendRequestSheet(target);
-      return;
-    }
     const cur = (this.data.identityMarks || {})[targetOpenId] || {};
     // 打开面板时按当前标记预填阵营/角色，并生成对应阵营的角色选项
     const sideSel = cur.side || '';
@@ -1077,33 +1080,6 @@ Page({
       markSideSel: sideSel,
       markRoleSel: cur.role || '',
       markRoleOptions: this.buildMarkRoleOptions(sideSel)
-    });
-  },
-
-  // 结束对局长按：弹好友申请底部框（非自己、非好友、未申请过）
-  _showFriendRequestSheet(target) {
-    const targetOpenId = target && target.openId;
-    const myOpenId = app.globalData.openId;
-    if (!targetOpenId || targetOpenId === myOpenId) return;
-    if (this._friendSet && this._friendSet.has(targetOpenId)) {
-      wx.showToast({ title: '你们已是好友', icon: 'none' });
-      return;
-    }
-    const name = target.nickName || '该玩家';
-    wx.showActionSheet({
-      itemList: ['申请好友'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          api.sendFriendRequest(myOpenId, targetOpenId).then(r => {
-            if (r && r.success) {
-              wx.showToast({ title: '申请已发送', icon: 'success' });
-              if (this._friendSet) this._friendSet.add(targetOpenId);
-            }
-          }).catch(err => {
-            wx.showToast({ title: (err && err.message) || '申请失败', icon: 'none' });
-          });
-        }
-      }
     });
   },
 

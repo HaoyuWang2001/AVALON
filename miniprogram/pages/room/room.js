@@ -59,7 +59,7 @@ Page({
     this._loadFriendSet();
   },
 
-  // 缓存好友 openId 集合（长按申请好友判断用）
+  // 缓存好友 openId 集合（玩家信息底部框判断是否好友用）
   _loadFriendSet() {
     const openId = app.globalData.openId;
     if (!openId) { this._friendSet = new Set(); return; }
@@ -383,18 +383,12 @@ Page({
     const isHost = this.data.isHost;
     const isBanned = player.bannedFromSeating;
 
-    // 申请好友入口：非自己、非好友、未申请过
-    const canAddFriend = !(this._friendSet && this._friendSet.has(playerId));
-
+    // 长按：房主管理菜单（好友申请已移至玩家信息底部框）
     const items = [];
     const actions = [];
     if (isHost) {
       items.push('踢出房间', isBanned ? '允许上座' : '禁止上座', '转让房主');
       actions.push('kick', 'ban', 'transfer');
-      if (canAddFriend) { items.push('申请好友'); actions.push('friend'); }
-    } else if (canAddFriend) {
-      items.push('申请好友');
-      actions.push('friend');
     }
 
     if (items.length === 0) return;
@@ -426,15 +420,6 @@ Page({
                 }).catch(() => {});
               }
             }
-          });
-        } else if (act === 'friend') {
-          api.sendFriendRequest(myOpenId, playerId).then(r2 => {
-            if (r2 && r2.success) {
-              wx.showToast({ title: '申请已发送', icon: 'success' });
-              if (this._friendSet) this._friendSet.add(playerId);
-            }
-          }).catch(err => {
-            wx.showToast({ title: (err && err.message) || '申请失败', icon: 'none' });
           });
         }
       }
