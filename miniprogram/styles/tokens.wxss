@@ -54,7 +54,7 @@ page {
   --brand-g1: #A855F7;
   --brand-g2: #4C1D95;
   /* 彩蛋功能卡卡面（亮色：深紫渐变，白图标可读） */
-  --func-face: linear-gradient(135deg, #5B21B6, #3B0764);
+  --func-face: #1F2937;
   /* 玻璃色系（亮色：紫色半透明玻璃） */
   --glass-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.72), rgba(91, 33, 182, 0.66));
   --glass-border: rgba(167, 139, 250, 0.8);

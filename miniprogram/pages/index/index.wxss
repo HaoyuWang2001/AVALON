@@ -156,9 +156,6 @@
 .current-room-btns { display: flex; gap: 20rpx; }
 .room-btn { font-size: 30rpx !important; padding: 20rpx 16rpx !important; }
 
-.action-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
-.action-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 24rpx; display: flex; align-items: center; }
-.action-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
 
 /* ─────── 卡牌大厅按钮 ─────── */
 .gacha-card { position: relative; overflow: hidden; border-radius: 22rpx; color: #fff; box-sizing: border-box; transition: transform 0.15s ease, opacity 0.15s ease; }
@@ -183,7 +180,7 @@
 }
 .gacha-main-info { flex: 1; min-width: 0; }
 .gacha-main-title { display: block; font-size: 38rpx; font-weight: 800; text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.3); }
-.gacha-sub { width: 100%; box-sizing: border-box; padding: 20rpx 22rpx; min-height: 176rpx; display: flex; flex-direction: row; align-items: center; }
+.gacha-sub { width: 100%; box-sizing: border-box; padding: 20rpx 22rpx; min-height: 176rpx; margin-bottom: 20rpx; display: flex; flex-direction: row; align-items: center; }
 .gacha-epic {
   background: linear-gradient(135deg, #94A3B8, #475569);
   border: 2rpx solid rgba(226,232,240,0.6);
@@ -202,25 +199,23 @@
 @keyframes card-shimmer { 0% { left: -160%; } 60%, 100% { left: 160%; } }
 
 /* ─────── 功能卡（2×2 宫格） ─────── */
-.func-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
-.func-grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20rpx; }
+.func-grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20rpx; margin-bottom: 20rpx; }
 .func-item {
   width: 48%; box-sizing: border-box; min-height: 156rpx;
-  border-radius: 20rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10rpx;
-  position: relative; overflow: hidden; color: #fff;
+  border-radius: 20rpx; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 18rpx;
+  padding: 0 22rpx; position: relative; overflow: hidden; color: #fff;
 }
 .func-hover { transform: scale(0.96); opacity: 0.92; }
-.func-icon { width: 42rpx; height: 42rpx; }
-.func-emoji { font-size: 36rpx; }
-.func-row { flex-direction: row; gap: 16rpx; }
-.func-icon-box { width: 64rpx; height: 64rpx; border-radius: 16rpx; background: rgba(255, 255, 255, 0.16); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.18); }
-.func-label { font-size: 28rpx; font-weight: 700; }
+.func-icon { width: 48rpx; height: 48rpx; }
+.func-emoji { font-size: 48rpx; }
+.func-icon-box { width: 72rpx; height: 72rpx; border-radius: 16rpx; background: rgba(255, 255, 255, 0.16); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.18); }
+.func-label { font-size: 30rpx; font-weight: 800; }
 .func-switch { transform: scale(0.9); }
 
 /* 右上角「彩蛋」标签（与旧版同款：彩虹流光 + 抖动） */
 .func-badge {
   position: absolute; top: 12rpx; right: 14rpx; z-index: 3;
-  font-size: 30rpx; font-weight: 800; letter-spacing: 2rpx;
+  font-size: 32rpx; font-weight: 800; letter-spacing: 2rpx;
   padding: 6rpx 20rpx; border-radius: 12rpx; color: #fff;
   box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.25);
   text-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.4);
@@ -244,31 +239,28 @@
   background: linear-gradient(120deg, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);
   background-size: 400% 400%;
   animation: rainbow-flow 6s linear infinite;
-  box-shadow: 0 8rpx 24rpx rgba(245, 158, 11, 0.32);
+  box-shadow: 0 8rpx 24rpx var(--egg-glow, rgba(245, 158, 11, 0.32));
 }
 .func-egg::before {
-  content: ''; position: absolute; top: 14rpx; left: 14rpx; right: 14rpx; bottom: 14rpx;
-  border-radius: 12rpx; background: var(--func-face, #1F2937);
+  content: ''; position: absolute; top: 7rpx; left: 7rpx; right: 7rpx; bottom: 7rpx;
+  border-radius: 15rpx; background: var(--func-face, #1F2937);
 }
-.func-egg .func-icon, .func-egg .func-emoji, .func-egg .func-label { position: relative; z-index: 1; }
+.func-egg .func-icon-box, .func-egg .func-icon, .func-egg .func-emoji, .func-egg .func-label { position: relative; z-index: 1; }
 @keyframes rainbow-flow { 0% { background-position: 0% 50%; } 100% { background-position: 400% 50%; } }
 
 /* 第二行：玻璃色系（更强玻璃质感：多层渐变 + 顶部高光 + 对角光泽 + 内描边） */
 .func-glass {
-  background: var(--glass-bg);
-  border: 3rpx solid var(--glass-border);
-  box-shadow: 0 0 26rpx var(--glass-glow), inset 0 0 26rpx var(--glass-glow), inset 0 3rpx 0 var(--glass-sheen), inset 0 -8rpx 20rpx rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(22rpx);
-  -webkit-backdrop-filter: blur(22rpx);
+  background: var(--func-face, #1F2937);
+  border: 2rpx solid rgba(255, 255, 255, 0.30);
+  box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.32), inset 0 0 26rpx rgba(255, 255, 255, 0.10), 0 4rpx 14rpx rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18rpx);
+  -webkit-backdrop-filter: blur(18rpx);
 }
 .func-glass::after {
   content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;
-  background: linear-gradient(135deg, var(--glass-sheen) 0%, transparent 38%, transparent 62%, var(--glass-sheen) 100%), radial-gradient(circle at 22% 12%, rgba(255, 255, 255, 0.35), transparent 45%);
-  opacity: 0.6;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, transparent 44%, transparent 58%, rgba(255, 255, 255, 0.10) 100%);
 }
-.func-glass .func-icon, .func-glass .func-label, .func-glass .func-switch { position: relative; z-index: 1; }
-.func-rate { flex-direction: row; gap: 14rpx; }
-.func-glass .func-label { color: #F2F0FF; text-shadow: 0 0 10rpx var(--glass-glow); }
+.func-glass .func-icon-box, .func-glass .func-icon, .func-glass .func-emoji, .func-glass .func-label, .func-glass .func-switch { position: relative; z-index: 1; }
 
 .info-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
 .info-item { font-size: 26rpx; color: var(--gray-500); line-height: 1.8; }
