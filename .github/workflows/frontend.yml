@@ -1,11 +1,9 @@
 name: frontend
 
+# 仅手动触发（不再随前端 push 自动生成预览码）。
+# 需要真机预览时：GitHub → Actions → frontend → Run workflow。
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'miniprogram/**'
-      - 'scripts/preview-on-server.sh'
+  workflow_dispatch:
 
 jobs:
   preview:
