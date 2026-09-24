@@ -50,6 +50,7 @@ Page({
     summary: null,
     champions: [],
     podium: [],
+    championsLoaded: false,
     hardworking: null,
     publicWinrate: true,
     meetingPressStyle: '',
@@ -509,7 +510,7 @@ Page({
         if (champions[1]) podium.push(champions[1]);
         if (champions[0]) podium.push(champions[0]);
         if (champions[2]) podium.push(champions[2]);
-        this.setData({ champions, podium, hardworking: res.hardworking || null });
+        this.setData({ champions, podium, hardworking: res.hardworking || null, championsLoaded: true });
       }
     }).catch(() => {});
   },
@@ -536,17 +537,30 @@ Page({
     const val = !!e.detail.value;
     this.setData({ publicWinrate: val }); // 先同步开关视觉，取消/被禁止时回滚
 
-    // 关闭操作且位于胜率前三榜单 → 禁止
-    const inTop3 = !val && (this.data.podium || []).some(p => p.openId === openId);
-    if (inTop3) {
-      wx.showModal({
-        title: '无法关闭',
-        content: '您当前位于胜率前三榜单，公开胜率不可关闭；需胜率掉出前三后方可关闭。',
-        showCancel: false,
-        confirmText: '知道了',
-        success: () => this.setData({ publicWinrate: true })
-      });
-      return;
+    if (!val) {
+      // 榜单未加载完成：保守禁止关闭
+      if (!this.data.championsLoaded) {
+        wx.showModal({
+          title: '请稍候',
+          content: '榜单数据加载中，暂时无法关闭公开胜率，请稍后重试。',
+          showCancel: false,
+          confirmText: '知道了',
+          success: () => this.setData({ publicWinrate: true })
+        });
+        return;
+      }
+      // 关闭操作且位于胜率前三榜单 → 禁止
+      const inTop3 = (this.data.podium || []).some(p => p.openId === openId);
+      if (inTop3) {
+        wx.showModal({
+          title: '无法关闭',
+          content: '您当前位于胜率前三榜单，公开胜率不可关闭；需胜率掉出前三后方可关闭。',
+          showCancel: false,
+          confirmText: '知道了',
+          success: () => this.setData({ publicWinrate: true })
+        });
+        return;
+      }
     }
 
     wx.showModal({
