@@ -3,7 +3,8 @@
   "enablePullDownRefresh": true,
   "usingComponents": {
     "configs": "/components/configs/configs",
-    "theme-toggle": "/components/theme-toggle/theme-toggle",
-    "player-stats": "/components/player-stats/player-stats"
+    "player-stats": "/components/player-stats/player-stats",
+    "role-stats-card": "/components/role-stats-card/role-stats-card",
+    "history-card": "/components/history-card/history-card"
   }
 }

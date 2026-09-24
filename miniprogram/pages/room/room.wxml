@@ -162,7 +162,7 @@
   </view>
 
   <!-- 启动动画选择弹窗（房主） -->
-  <view class="launch-modal" wx:if="{{showLaunchAnimModal}}">
+  <view class="launch-modal" wx:if="{{showLaunchAnimModal}}" catchtouchmove="noop">
     <view class="launch-modal-mask" bindtap="closeLaunchAnimModal"></view>
     <view class="launch-modal-panel">
       <view class="launch-modal-title">这是一个神秘的选项...</view>
@@ -176,7 +176,7 @@
   </view>
 
   <!-- 只读配置缩略弹窗（所有人） -->
-  <view class="config-view-overlay" wx:if="{{showConfigView}}" bindtap="closeConfigView">
+  <view class="config-view-overlay" wx:if="{{showConfigView}}" bindtap="closeConfigView" catchtouchmove="noop">
     <view class="config-view-panel" catchtap="noop">
       <view class="config-view-title">版型</view>
       <scroll-view scroll-y class="config-view-scroll">

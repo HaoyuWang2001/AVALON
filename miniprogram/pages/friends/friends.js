@@ -172,6 +172,8 @@ Page({
     });
   },
 
+  noop() {},
+
   // ─── 申请列表 ───
   loadRequests() {
     if (!this._openId) return;

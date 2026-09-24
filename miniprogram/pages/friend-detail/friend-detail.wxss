@@ -20,39 +20,9 @@
 
 /* 状态卡 */
 .status-card { display: flex; align-items: center; justify-content: space-between; padding: 28rpx; }
-.status-empty { font-size: 30rpx; color: var(--gray-500); }
 .status-text { font-size: 30rpx; font-weight: 600; color: var(--gray-800); }
 .status-btns { display: flex; gap: 12rpx; }
 .status-btn { flex-shrink: 0; }
 
-/* 统计与历史 */
-.card-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 16rpx; }
-.stats-summary { font-size: 24rpx; color: var(--gray-600); margin-bottom: 16rpx; }
-.list-empty { text-align: center; color: var(--gray-400); font-size: 26rpx; padding: 40rpx 0; }
-
-/* 角色胜率（主页同款 swiper） */
-.role-stats-swiper { width: 100%; height: 660rpx; }
-.stat-role-item { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-.stat-role-card {
-  width: 400rpx; height: 500rpx; border-radius: 32rpx;
-  background: var(--bg-card-solid);
-  box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.18), inset 0 0 0 2rpx var(--gold, #B8860B);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  box-sizing: border-box; padding: 40rpx;
-}
-.stat-role-emoji { font-size: 180rpx; line-height: 1.2; }
-.stat-role-name { font-size: 28rpx; font-weight: 700; padding: 8rpx 28rpx; border-radius: 28rpx; margin-top: 24rpx; }
-.stat-name-good { background: rgba(59, 130, 246, 0.16); color: #93C5FD; }
-.stat-name-evil { background: rgba(239, 68, 68, 0.16); color: #FCA5A5; }
-.stat-role-meta { margin-top: 32rpx; }
-.stat-role-rate { font-size: 36rpx; font-weight: 800; color: var(--gold, #B8860B); }
-
-/* 历史对局 */
-.hist-scroll { max-height: 760rpx; }
-.hist-item { display: flex; align-items: center; padding: 18rpx 0; border-bottom: 1rpx solid var(--gray-100); }
-.hist-item:last-child { border-bottom: none; }
-.hist-role { font-size: 28rpx; font-weight: 600; color: var(--gray-800); flex: 1; }
-.hist-duration { font-size: 24rpx; color: var(--gray-400); margin-right: 16rpx; }
-.hist-result { font-size: 26rpx; font-weight: 700; }
-.hist-result.win { color: var(--success); }
-.hist-result.lose { color: var(--danger); }
+/* 历史对局外层（内容由 history-card 组件渲染） */
+.history-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); }

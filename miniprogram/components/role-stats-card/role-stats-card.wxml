@@ -1,0 +1,29 @@
+<!--components/role-stats-card/role-stats-card.wxml-->
+<view class="rsc">
+  <view class="rsc-title">{{title}}</view>
+  <view class="rsc-summary" wx:if="{{summary && summary.totalGames > 0}}">胜率 {{summary.totalWinRate}}%({{summary.totalWins}}/{{summary.totalGames}}) · 蓝方 {{summary.goodWinRate}} · 红方 {{summary.evilWinRate}}</view>
+  <view wx:if="{{roles.length === 0}}" class="rsc-empty">暂无数据</view>
+  <swiper wx:else class="rsc-swiper"
+          indicator-dots="{{roles.length > 1}}"
+          indicator-color="rgba(139,92,246,0.25)"
+          indicator-active-color="#8B5CF6"
+          duration="300">
+    <swiper-item wx:for="{{roles}}" wx:key="role">
+      <view class="rsc-item">
+        <view class="rsc-card" bindtap="onRoleTap" data-role="{{item.role}}" data-name="{{item.roleName}}">
+          <text class="rsc-emoji">{{item.emoji}}</text>
+          <view class="rsc-name {{item.side === 'evil' ? 'rsc-name-evil' : 'rsc-name-good'}}">{{item.roleName}}</view>
+          <view class="rsc-meta"><text class="rsc-rate">{{item.wins}}/{{item.games}} ({{item.winRate}})</text></view>
+        </view>
+      </view>
+    </swiper-item>
+  </swiper>
+
+  <!-- 角色对局弹窗 -->
+  <view class="rsc-overlay" wx:if="{{modalShow}}" bindtap="closeModal" catchtouchmove="noop">
+    <view class="rsc-modal" catchtap="noop">
+      <view class="rsc-modal-close" bindtap="closeModal">✕</view>
+      <history-card title="{{modalTitle}}" games="{{modalGames}}" />
+    </view>
+  </view>
+</view>

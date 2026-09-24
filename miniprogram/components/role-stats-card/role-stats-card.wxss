@@ -1,0 +1,38 @@
+/* components/role-stats-card/role-stats-card.wxss */
+.rsc { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); }
+.rsc-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 12rpx; display: flex; align-items: center; }
+.rsc-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
+.rsc-summary { font-size: 24rpx; color: var(--text-muted); margin-bottom: 12rpx; }
+.rsc-empty { text-align: center; color: var(--gray-400); font-size: 26rpx; padding: 40rpx 0; }
+
+.rsc-swiper { width: 100%; height: 660rpx; }
+.rsc-item { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.rsc-card {
+  width: 400rpx; height: 500rpx; border-radius: 32rpx;
+  background: var(--bg-card-solid);
+  box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.18), inset 0 0 0 2rpx var(--gold, #B8860B);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-sizing: border-box; padding: 40rpx;
+}
+.rsc-card:active { transform: scale(0.97); }
+.rsc-emoji { font-size: 180rpx; line-height: 1.2; }
+.rsc-name { font-size: 28rpx; font-weight: 700; padding: 8rpx 28rpx; border-radius: 28rpx; margin-top: 24rpx; }
+.rsc-name-good { background: rgba(59, 130, 246, 0.16); color: #93C5FD; }
+.rsc-name-evil { background: rgba(239, 68, 68, 0.16); color: #FCA5A5; }
+.rsc-meta { margin-top: 32rpx; }
+.rsc-rate { font-size: 36rpx; font-weight: 800; color: var(--gold, #B8860B); }
+
+/* 角色对局弹窗 */
+.rsc-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.55); z-index: 1200;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.rsc-modal {
+  width: 100%; max-width: 720rpx; box-sizing: border-box;
+  background: var(--bg-card); border-radius: 28rpx 28rpx 0 0;
+  padding: 40rpx 36rpx calc(40rpx + env(safe-area-inset-bottom));
+  position: relative; animation: rsc-up 0.25s ease-out;
+}
+@keyframes rsc-up { from { transform: translateY(40rpx); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.rsc-modal-close { position: absolute; top: 24rpx; right: 28rpx; font-size: 34rpx; color: var(--text-muted); }

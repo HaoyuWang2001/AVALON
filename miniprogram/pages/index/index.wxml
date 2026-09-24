@@ -1,35 +1,44 @@
 <!--pages/index/index.wxml-->
 <view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
-  <view class="logo-section">
-    <view class="logo-icon"><text>🏰</text></view>
-    <view class="logo-title">AVALON</view>
-    <view class="logo-subtitle">瓦协会之练秋湖分部</view>
+  <!-- 1. 头部 -->
+  <view class="brand-bar">
+    <view class="brand-text">瓦协会之练秋湖分部</view>
   </view>
 
-  <view class="card user-card">
-    <view class="user-info-section">
-      <view class="user-left">
-        <button size="mini" class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" binderror="onAvatarError" bindtap="onAvatarTap">
-          <image src="{{userInfo.avatarUrl}}" class="avatar-img"/>
-        </button>
-        <view class="user-details">
-          <view class="user-name-text {{customNickName ? '' : 'name-placeholder'}}" bindtap="showNickNameModal">
-            {{customNickName || '改名撒！'}}<text class="user-edit-emoji">✏️</text>
-          </view>
-          <view class="user-status {{userStatusClass}}">{{userStatusText}}</view>
+  <!-- 2. 胜率冠军（领奖台） -->
+  <view class="card champion-card" wx:if="{{champions.length > 0}}">
+    <view class="champion-title">👑 胜率冠军</view>
+    <view class="podium">
+      <view wx:for="{{podium}}" wx:key="openId"
+        class="podium-item rank-{{item.rank}}"
+        bindtap="onChampionTap"
+        data-openid="{{item.openId}}" data-name="{{item.nickName}}" data-avatar="{{item.avatarUrl}}"
+        data-friend="{{item.isFriend}}">
+        <view class="podium-avatar-wrap">
+          <text wx:if="{{item.rank === 1}}" class="podium-crown">👑</text>
+          <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="podium-avatar"></image>
+          <view class="podium-badge">{{item.rank}}</view>
         </view>
-        <view class="user-emoji-btn" hover-class="user-emoji-hover" hover-stay-time="60" bindtap="showInfoModal">ℹ️</view>
-        <theme-toggle bind:change="onThemeChange" />
+        <text class="podium-name">{{item.nickName}}</text>
+        <text class="podium-rate">{{item.winRate}}%</text>
+        <text class="podium-games">{{item.games}}场</text>
+        <view class="podium-stand">{{item.rank}}</view>
       </view>
     </view>
   </view>
 
-  <!-- 公开胜率开关 -->
-  <view class="card privacy-row">
-    <text class="privacy-label">公开胜率</text>
-    <switch class="privacy-switch" checked="{{publicWinrate}}" bindchange="onPublicWinrateChange" color="#8B5CF6"/>
+  <!-- 3. 个人信息卡 -->
+  <view class="card profile-card">
+    <button size="mini" class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" binderror="onAvatarError" bindtap="onAvatarTap">
+      <image src="{{userInfo.avatarUrl}}" class="avatar-img"/>
+    </button>
+    <view class="profile-info">
+      <view class="user-name-text {{customNickName ? '' : 'name-placeholder'}}" bindtap="showNickNameModal">{{customNickName || '改名撒！'}}</view>
+    </view>
+    <view class="user-emoji-btn" hover-class="user-emoji-hover" hover-stay-time="60" bindtap="showInfoModal">ℹ️</view>
   </view>
 
+  <!-- 4. 房间 / 开始游戏 -->
   <view class="card current-room-card" wx:if="{{currentRoom}}">
     <view class="current-room-top">
       <view class="current-room-label">您当前处于房间</view>
@@ -49,16 +58,12 @@
 
   <view class="card action-card" wx:if="{{!currentRoom}}">
     <view class="action-title">开始游戏</view>
-
-    <!-- 主卡：召开会议（开瓦） -->
     <view class="gacha-card gacha-main" hover-class="card-hover" hover-stay-time="80" bindtap="openConfigs">
       <view class="gacha-main-icon"><image src="/images/sword.png" class="gacha-icon-img-lg" mode="aspectFit"/></view>
       <view class="gacha-main-info">
         <text class="gacha-main-title">召开会议</text>
       </view>
     </view>
-
-    <!-- 加入会议（全宽） -->
     <view class="gacha-card gacha-sub gacha-epic" hover-class="card-hover" hover-stay-time="80" bindtap="joinRoom">
       <view class="gacha-sub-icon"><image src="/images/door.png" class="gacha-icon-img" mode="aspectFit"/></view>
       <view class="gacha-sub-info">
@@ -67,94 +72,49 @@
     </view>
   </view>
 
-  <!-- 社交卡：牛马朋友 + 全局统计（始终显示） -->
-  <view class="card social-card">
-    <view class="gacha-card gacha-sub gacha-egg" hover-class="card-hover" hover-stay-time="80" bindtap="goToFriends">
-      <view class="gacha-sub-icon"><image src="/images/fossa.png" class="gacha-icon-img" mode="aspectFit"/></view>
-      <view class="gacha-sub-info">
-        <text class="gacha-sub-title">牛马朋友</text>
+  <!-- 5. 功能卡 2×2 -->
+  <view class="card func-card">
+    <view class="func-grid">
+      <view class="func-item func-egg" hover-class="func-hover" hover-stay-time="80" bindtap="goToGlobalStats">
+        <image src="/images/medal.png" class="func-icon" mode="aspectFit"/>
+        <text class="func-label">全局统计</text>
       </view>
-      <view class="rarity-badge rarity-rainbow">彩蛋</view>
-    </view>
-
-    <view class="gacha-card gacha-sub gacha-egg" hover-class="card-hover" hover-stay-time="80" bindtap="goToGlobalStats">
-      <view class="gacha-sub-icon"><image src="/images/medal.png" class="gacha-icon-img" mode="aspectFit"/></view>
-      <view class="gacha-sub-info">
-        <text class="gacha-sub-title">全局统计</text>
+      <view class="func-item func-egg" hover-class="func-hover" hover-stay-time="80" bindtap="onChangeTheme">
+        <text class="func-emoji">🎨</text>
+        <text class="func-label">更改主题</text>
       </view>
-      <view class="rarity-badge rarity-rainbow">彩蛋</view>
-    </view>
-  </view>
-
-  <!-- 胜率冠军（领奖台） -->
-  <view class="card champion-card" wx:if="{{champions.length > 0}}">
-    <view class="champion-title">👑 胜率冠军</view>
-    <view class="podium">
-      <view wx:for="{{podium}}" wx:key="openId"
-        class="podium-item rank-{{item.rank}}"
-        bindtap="onChampionTap"
-        data-openid="{{item.openId}}" data-name="{{item.nickName}}" data-avatar="{{item.avatarUrl}}"
-        data-friend="{{item.isFriend}}" data-uniqueid="{{item.uniqueId}}" data-rank="{{item.rank}}">
-        <view class="podium-avatar-wrap">
-          <text wx:if="{{item.rank === 1}}" class="podium-crown">👑</text>
-          <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="podium-avatar"></image>
-          <view class="podium-badge">{{item.rank}}</view>
-        </view>
-        <text class="podium-name">{{item.nickName}}</text>
-        <text class="podium-rate">{{item.winRate}}%</text>
-        <text class="podium-games">{{item.games}}场</text>
-        <view class="podium-stand">{{item.rank}}</view>
+      <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="goToFriends">
+        <image src="/images/fossa.png" class="func-icon" mode="aspectFit"/>
+        <text class="func-label">牛马朋友</text>
+      </view>
+      <view class="func-item func-glass">
+        <text class="func-label">公开胜率</text>
+        <switch class="func-switch" checked="{{publicWinrate}}" bindchange="onPublicWinrateChange" color="#8B5CF6"/>
       </view>
     </view>
   </view>
 
-  <view class="role-stats" wx:if="{{roleStats.length > 0}}">
-    <view class="role-stats-title">角色胜率</view>
-    <view class="role-stats-summary" wx:if="{{totalWinRate}}">{{totalRecord}}·胜率 {{totalWinRate}} · 蓝方 {{goodWinRate}} · 红方 {{evilWinRate}}</view>
-    <swiper class="role-stats-swiper"
-            indicator-dots="{{roleStats.length > 1}}"
-            indicator-color="rgba(139,92,246,0.25)"
-            indicator-active-color="#8B5CF6"
-            duration="300">
-      <swiper-item wx:for="{{roleStats}}" wx:key="role">
-        <view class="stat-role-item">
-          <view class="stat-role-card">
-            <text class="stat-role-emoji">{{item.emoji}}</text>
-            <view class="stat-role-name {{item.side === 'evil' ? 'stat-name-evil' : 'stat-name-good'}}">{{item.roleName}}</view>
-            <view class="stat-role-meta">
-              <text class="stat-role-rate">{{item.wins}}/{{item.games}} ({{item.winRate}})</text>
-            </view>
-          </view>
-        </view>
-      </swiper-item>
-    </swiper>
-  </view>
+  <!-- 6. 角色胜率（公共组件，角色卡可点开对局弹窗） -->
+  <role-stats-card wx:if="{{roleStats.length > 0}}" roles="{{roleStats}}" summary="{{summary}}" games="{{historyList}}" />
 
+  <!-- 7. 历史对局（公共组件） -->
   <view class="card history-card" wx:if="{{historyList.length > 0}}">
-    <view class="history-title">历史对局（{{historyList.length}}）</view>
-    <scroll-view scroll-y class="history-scroll" show-scrollbar="{{false}}">
-      <view class="history-item" wx:for="{{historyList}}" wx:key="gameId"
-            bindtap="openHistoryGame" data-gameid="{{item.gameId}}">
-        <text class="history-role">{{item.roleName}}</text>
-        <text class="history-duration">{{item.durationText}}</text>
-        <text class="history-result {{item.isWin ? 'win' : 'lose'}}">{{item.isWin ? '胜' : '负'}}</text>
-      </view>
-    </scroll-view>
+    <history-card title="历史对局" games="{{historyList}}" />
   </view>
 
   <view class="footer"><view class="footer-version">AVALON v1.0.0</view></view>
 
-  <!-- 游戏说明：全屏覆盖页（置于 .page 内以继承主题变量） -->
+  <!-- 游戏说明：全屏覆盖页 -->
   <view class="rules-page" wx:if="{{showInfo}}">
     <view class="rules-page-header">
       <text class="rules-page-title">游戏说明</text>
       <view class="rules-page-close" bindtap="closeInfo">✕</view>
     </view>
     <scroll-view scroll-y class="rules-page-body">
-      <view class="info-item">• 5-12 人，支持标准板与自定义板子</view>
+      <view class="info-item">• 5-12 人，支持标准局 / 专家局 / 自定义板子</view>
       <view class="info-item">• 支持多样村规，可扩展性拉满</view>
-      <view class="info-item">• 支持线上发牌与线下发牌+小程序发车两种模式</view>
-      <view class="info-item">• 支持查看历史对局和胜率统计</view>
+      <view class="info-item">• 线上发牌与线下发牌+小程序发车两种模式</view>
+      <view class="info-item">• 好友系统、胜率统计、全服对局排行一应俱全</view>
     </scroll-view>
   </view>
 

@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "好友详情",
   "enablePullDownRefresh": false,
-  "usingComponents": {}
+  "usingComponents": {
+    "role-stats-card": "/components/role-stats-card/role-stats-card",
+    "history-card": "/components/history-card/history-card"
+  }
 }

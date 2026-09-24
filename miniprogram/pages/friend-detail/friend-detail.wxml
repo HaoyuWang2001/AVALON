@@ -39,42 +39,12 @@
       </block>
     </view>
 
-    <!-- 角色胜率（主页同款：卡片 + 可滑动） -->
-    <view class="card stats-card">
-      <view class="card-title">角色胜率</view>
-      <view class="stats-summary" wx:if="{{totalWinRate}}">{{totalRecord}}·胜率 {{totalWinRate}} · 蓝方 {{goodWinRate}} · 红方 {{evilWinRate}}</view>
-      <view wx:if="{{roleStats.length === 0}}" class="list-empty">暂无对局数据</view>
-      <swiper wx:else class="role-stats-swiper"
-              indicator-dots="{{roleStats.length > 1}}"
-              indicator-color="rgba(139,92,246,0.25)"
-              indicator-active-color="#8B5CF6"
-              duration="300">
-        <swiper-item wx:for="{{roleStats}}" wx:key="role">
-          <view class="stat-role-item">
-            <view class="stat-role-card">
-              <text class="stat-role-emoji">{{item.emoji}}</text>
-              <view class="stat-role-name {{item.side === 'evil' ? 'stat-name-evil' : 'stat-name-good'}}">{{item.roleName}}</view>
-              <view class="stat-role-meta">
-                <text class="stat-role-rate">{{item.wins}}/{{item.games}} ({{item.winRate}})</text>
-              </view>
-            </view>
-          </view>
-        </swiper-item>
-      </swiper>
-    </view>
+    <!-- 角色胜率（公共组件，角色卡可点开对局弹窗） -->
+    <role-stats-card wx:if="{{roleStats.length > 0}}" roles="{{roleStats}}" summary="{{summary}}" games="{{historyList}}" />
 
-    <!-- 历史对局 -->
-    <view class="card hist-card">
-      <view class="card-title">历史对局（{{historyList.length}}）</view>
-      <view wx:if="{{historyList.length === 0}}" class="list-empty">暂无对局记录</view>
-      <scroll-view wx:else scroll-y class="hist-scroll" show-scrollbar="{{false}}">
-        <view wx:for="{{historyList}}" wx:key="gameId" class="hist-item"
-              bindtap="openHistoryGame" data-gameid="{{item.gameId}}">
-          <text class="hist-role">{{item.roleName}}</text>
-          <text class="hist-duration">{{item.durationText}}</text>
-          <text class="hist-result {{item.isWin ? 'win' : 'lose'}}">{{item.isWin ? '胜' : '负'}}</text>
-        </view>
-      </scroll-view>
+    <!-- 历史对局（公共组件） -->
+    <view class="card history-card" wx:if="{{historyList.length > 0}}">
+      <history-card title="历史对局" games="{{historyList}}" />
     </view>
 
     <view style="height: 40rpx"></view>

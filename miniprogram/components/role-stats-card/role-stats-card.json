@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "history-card": "/components/history-card/history-card"
+  }
+}

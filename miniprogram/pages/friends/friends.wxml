@@ -2,7 +2,7 @@
 <view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
 
   <!-- 首次设置ID遮罩：未设置前好友功能不可用 -->
-  <view class="setup-mask" wx:if="{{needSetupId}}">
+  <view class="setup-mask" wx:if="{{needSetupId}}" catchtouchmove="noop">
     <view class="setup-box">
       <view class="setup-title">设置你的ID</view>
       <view class="setup-sub">好友通过ID找到你 · 1-16位，支持中文/字母/数字/-/_，不区分大小写 · 每天仅可设置/修改一次</view>

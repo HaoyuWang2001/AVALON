@@ -76,7 +76,7 @@
   <view style="height: 40rpx"></view>
 
   <!-- 角色/人数对局弹窗 -->
-  <view class="modal-overlay" wx:if="{{detailModal.show}}" bindtap="closeDetail">
+  <view class="modal-overlay" wx:if="{{detailModal.show}}" bindtap="closeDetail" catchtouchmove="noop">
     <view class="modal-panel" catchtap="noop">
       <view class="modal-head">
         <text class="modal-title">{{detailModal.title}} · {{detailModal.games.length}} 局</text>
@@ -85,7 +85,7 @@
       <view wx:if="{{detailModalLoading}}" class="empty">加载中...</view>
       <block wx:else>
         <view wx:if="{{detailModal.games.length === 0}}" class="empty">暂无对局</view>
-        <scroll-view wx:else scroll-y class="modal-scroll">
+        <scroll-view wx:else scroll-y class="modal-scroll" show-scrollbar="{{false}}">
           <view wx:for="{{detailModal.games}}" wx:key="id" class="game-row" bindtap="openGame" data-id="{{item.id}}">
             <view class="game-main">
               <text class="game-title">{{item.playerCount}}人局 · {{item.durationText}}</text>

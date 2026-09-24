@@ -1,5 +1,5 @@
 <!--components/player-stats/player-stats.wxml-->
-<view class="ps-overlay" wx:if="{{show}}" bindtap="close">
+<view class="ps-overlay" wx:if="{{show}}" bindtap="close" catchtouchmove="noop">
   <view class="ps-modal" catchtap="noop">
     <view class="ps-close" bindtap="close">✕</view>
     <view class="ps-head">

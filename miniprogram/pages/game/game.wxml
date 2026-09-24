@@ -22,7 +22,7 @@
 
   <view class="container">
   <!-- 角色揭示提示蒙版（一次性） -->
-  <view class="role-mask" wx:if="{{showRoleMask}}">
+  <view class="role-mask" wx:if="{{showRoleMask}}" catchtouchmove="noop">
     <view class="role-mask-inner">
       <view class="role-mask-sub">确保您的周围没有坏坏</view>
       <button class="btn btn-primary role-mask-btn" bindtap="dismissRoleMask">查看身份</button>
@@ -267,7 +267,7 @@
   </view>
 
   <!-- 任务结果全屏弹窗 -->
-  <view class="result-overlay" wx:if="{{currentPhase === 'missionResult'}}">
+  <view class="result-overlay" wx:if="{{currentPhase === 'missionResult'}}" catchtouchmove="noop">
     <view class="result-card">
       <view class="result-emoji">{{lastMissionResult ? '👍' : '❌'}}</view>
       <view class="result-title">{{lastMissionResult ? '任务成功' : '任务失败'}}</view>
@@ -276,7 +276,7 @@
   </view>
 
   <!-- 全屏 confirmReveal 页（roleReveal 阶段确认身份） -->
-  <view class="role-page" wx:if="{{showRolePage}}">
+  <view class="role-page" wx:if="{{showRolePage}}" catchtouchmove="noop">
     <view class="role-page-inner">
       <view class="role-card-badge">
         <image wx:if="{{roleCardImg}}" src="{{roleCardImg}}" class="role-card-img" mode="aspectFit"/>
@@ -312,7 +312,7 @@
 
   <!-- 标准查看身份弹窗（非 roleReveal，点"隐藏身份"关闭，不自动消失） -->
   <view class="role-modal" wx:if="{{showRoleModal}}">
-    <view class="modal-mask" bindtap="closeRoleModal"></view>
+    <view class="modal-mask" bindtap="closeRoleModal" catchtouchmove="noop"></view>
     <view class="role-modal-body">
       <view class="role-card-badge">
         <image wx:if="{{roleCardImg}}" src="{{roleCardImg}}" class="role-card-img" mode="aspectFit"/>
@@ -347,7 +347,7 @@
 
   <!-- 历史弹窗 -->
   <view class="info-modal" wx:if="{{showInfoModal}}">
-    <view class="modal-mask" bindtap="closeInfoModal"></view>
+    <view class="modal-mask" bindtap="closeInfoModal" catchtouchmove="noop"></view>
     <view class="info-modal-body">
       <view class="info-modal-title">游戏记录</view>
       <scroll-view scroll-y enable-flex class="info-modal-scroll">
@@ -387,7 +387,7 @@
 
   <!-- 湖仙查验结果弹窗（仅验人者，纯图片蓝方蓝/红方红；"知道了"= 本人确认，不可关闭） -->
   <view class="lake-result-modal" wx:if="{{showLakeResult}}">
-    <view class="modal-mask" catchtap="noop"></view>
+    <view class="modal-mask" catchtap="noop" catchtouchmove="noop"></view>
     <view class="lake-result-body">
       <image src="/images/{{lakeResult === 'evil' ? 'avalon-red.png' : 'avalon-blue.png'}}" class="lake-result-img" mode="aspectFit"/>
       <button class="btn btn-primary" bindtap="confirmLake">知道了</button>
@@ -396,7 +396,7 @@
 
   <!-- 湖仙查验确认弹窗（非验人者，结果保密；仅按钮触发确认提交，不可关闭） -->
   <view class="lake-info-modal" wx:if="{{showLakeInfo}}">
-    <view class="modal-mask" catchtap="noop"></view>
+    <view class="modal-mask" catchtap="noop" catchtouchmove="noop"></view>
     <view class="lake-info-body">
       <view class="lake-info-title">湖仙验人</view>
       <view class="lake-info-text">{{lakeInfoText}}</view>
@@ -406,7 +406,7 @@
 
   <!-- 兰斯洛特抽卡弹窗（全员可见抽卡结果，仅按钮触发确认提交，不可关闭；重连由后端 lancelotConfirmed 恢复） -->
   <view class="lancelot-modal" wx:if="{{currentPhase === 'lancelot' && isInGame && !playerLancelotConfirmed}}">
-    <view class="modal-mask" catchtap="noop"></view>
+    <view class="modal-mask" catchtap="noop" catchtouchmove="noop"></view>
     <view class="lancelot-body">
       <view class="lancelot-title">兰斯洛特抽卡</view>
       <!-- 转换：蓝图 紫色弧形双箭头(上凸→/下凸←) 红图；未转换：文字 -->
@@ -445,7 +445,7 @@
   </view>
 
   <!-- socket 断链重连遮罩（mask 不拦 touchmove，保证下拉刷新可穿透触发） -->
-  <view class="reconnect-overlay" wx:if="{{socketReconnecting}}">
+  <view class="reconnect-overlay" wx:if="{{socketReconnecting}}" catchtouchmove="noop">
     <view class="reconnect-mask" catchtap="noop"></view>
     <view class="reconnect-box">
       <view class="reconnect-spinner"></view>
@@ -487,7 +487,7 @@
   <view class="preteam-fab" wx:if="{{isTeamLeader && currentPhase === 'discussion' && !forcedSend && !preNominateDecided}}" bindtap="openPreteamPicker">预选</view>
 
   <!-- 预选车面板（底部弹层，仅车主） -->
-  <view class="preteam-panel-mask" wx:if="{{showPreteamPicker}}" bindtap="closePreteamPicker"></view>
+  <view class="preteam-panel-mask" wx:if="{{showPreteamPicker}}" bindtap="closePreteamPicker" catchtouchmove="noop"></view>
   <view class="preteam-panel" wx:if="{{showPreteamPicker}}">
     <view class="preteam-panel-title">预选车（可选，0~{{requiredTeamSize}} 人）</view>
     <view class="guide-pick-wrap">
@@ -504,7 +504,7 @@
   </view>
 
   <!-- 只读配置缩略弹窗（右上角"配置"） -->
-  <view class="config-view-overlay" wx:if="{{showConfigView}}" bindtap="closeConfigView">
+  <view class="config-view-overlay" wx:if="{{showConfigView}}" bindtap="closeConfigView" catchtouchmove="noop">
     <view class="config-view-panel" catchtap="noop">
       <view class="config-view-title">版型</view>
       <scroll-view scroll-y class="config-view-scroll">
@@ -520,7 +520,7 @@
   </view>
 
   <!-- 身份标记面板（长按卡片弹出，仅本人可见）：先猜阵营再猜身份 -->
-  <view class="mark-mask" wx:if="{{showMarkPanel}}" bindtap="closeMarkPanel">
+  <view class="mark-mask" wx:if="{{showMarkPanel}}" bindtap="closeMarkPanel" catchtouchmove="noop">
     <view class="mark-panel" catchtap="noop">
       <view class="mark-panel-title">标记 {{markSeat}} 号身份</view>
       <view class="mark-sec-title">阵营</view>

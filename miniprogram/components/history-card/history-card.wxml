@@ -1,0 +1,20 @@
+<!--components/history-card/history-card.wxml-->
+<view class="hc">
+  <view class="hc-title">{{title}}<text wx:if="{{showCount}}">（{{games.length}}）</text></view>
+  <view wx:if="{{games.length === 0}}" class="hc-empty">暂无对局</view>
+  <scroll-view wx:else scroll-y class="hc-scroll" show-scrollbar="{{false}}">
+    <view wx:for="{{games}}" wx:key="gameId" class="hc-item" bindtap="onGameTap" data-id="{{item.gameId}}">
+      <view class="hc-line">
+        <view class="hc-left">
+          <text class="hc-role {{item.side === 'evil' ? 'hc-evil' : 'hc-good'}}">{{item.roleName}}</text>
+          <text class="hc-meta"> · {{item.playerCount}}人局</text>
+        </view>
+        <view class="hc-right">
+          <text class="hc-duration">{{item.durationText}}</text>
+          <text class="hc-result {{item.isWin ? 'win' : 'lose'}}">{{item.isWin ? '胜' : '负'}}</text>
+        </view>
+      </view>
+      <text class="hc-date">{{item.dateText}}</text>
+    </view>
+  </scroll-view>
+</view>

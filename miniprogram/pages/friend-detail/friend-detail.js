@@ -13,16 +13,29 @@ function formatDuration(seconds) {
   return '不足1分钟';
 }
 
+// 后端返回 UTC 字符串，转换为北京时间(+8)
+function formatDate(ts) {
+  if (!ts) return '';
+  let ms;
+  if (typeof ts === 'string') {
+    const m = ts.match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+    ms = m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) : new Date(ts).getTime();
+  } else {
+    ms = new Date(ts).getTime();
+  }
+  if (isNaN(ms)) return '';
+  const bj = new Date(ms + 8 * 3600 * 1000);
+  const p = n => (n < 10 ? '0' + n : '' + n);
+  return `${bj.getUTCFullYear()}-${p(bj.getUTCMonth() + 1)}-${p(bj.getUTCDate())} ${p(bj.getUTCHours())}:${p(bj.getUTCMinutes())}`;
+}
+
 Page({
   data: {
     themeClass: '',
     friendOpenId: '',
     friend: null,           // {openId, nickName, avatarUrl, uniqueId, online, room}
     roleStats: [],
-    totalRecord: '',
-    totalWinRate: '',
-    goodWinRate: '',
-    evilWinRate: '',
+    summary: null,
     historyList: [],
     myInvite: '',           // '' | 'room' | 'game'
     myRoomId: '',
@@ -102,10 +115,6 @@ Page({
       if (res && res.success && res.stats) {
         const s = res.stats;
         this.setData({
-          totalRecord: s.totalGames > 0 ? s.totalWins + '/' + s.totalGames : '',
-          totalWinRate: s.totalGames > 0 ? s.totalWinRate + '%' : '',
-          goodWinRate: s.goodGames > 0 ? s.goodWinRate + '%' : '',
-          evilWinRate: s.evilGames > 0 ? s.evilWinRate + '%' : '',
           roleStats: (s.roles || []).filter(r => r.games > 0).map(r => ({
             role: r.role,
             roleName: ROLE_NAMES[r.role] || r.role,
@@ -114,7 +123,14 @@ Page({
             games: r.games,
             wins: r.wins,
             winRate: r.winRate + '%'
-          }))
+          })),
+          summary: {
+            totalWinRate: s.totalWinRate,
+            totalWins: s.totalWins,
+            totalGames: s.totalGames,
+            goodWinRate: s.goodWinRate + '%',
+            evilWinRate: s.evilWinRate + '%'
+          }
         });
       }
     }).catch(() => {});
@@ -127,9 +143,13 @@ Page({
         this.setData({
           historyList: res.history.map(item => ({
             gameId: item.gameId,
+            role: item.role,
             roleName: ROLE_NAMES[item.role] || item.role,
-            isWin: !!(item.gameResult && item.gameResult.winner === item.side),
-            durationText: formatDuration(item.durationSeconds)
+            side: item.side,
+            playerCount: item.playerCount,
+            durationText: formatDuration(item.durationSeconds),
+            dateText: formatDate(item.createdAt),
+            isWin: !!(item.gameResult && item.gameResult.winner === item.side)
           }))
         });
       }

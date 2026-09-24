@@ -57,6 +57,8 @@ Component({
     summaryLady: ''
   },
   methods: {
+    // 捕捉滑动，禁止穿透到页面
+    noop() {},
     // 打开弹窗：无状态——每次从 properties 重新初始化
     open() {
       // 永远进入第一个配置页

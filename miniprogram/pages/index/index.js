@@ -1,6 +1,6 @@
 // pages/index/index.js
 const api = require('../../services/api.js');
-const { getThemeClass, getThemeBg } = require('../../utils/theme.js');
+const { getThemeClass, getThemeBg, pickTheme, applyTheme } = require('../../utils/theme.js');
 
 const { DEFAULT_AVATAR, ROLE_NAMES, ROLE_EMOJIS, CONFIG_EVIL_ROLES } = require('../../utils/constants.js');
 
@@ -14,6 +14,22 @@ function formatDuration(seconds) {
   if (h > 0) return h + '小时' + (m > 0 ? m + '分钟' : '');
   if (m > 0) return m + '分钟';
   return '不足1分钟';
+}
+
+// 后端返回 UTC 字符串（'YYYY-MM-DD HH:mm:ss'，无时区），转换为北京时间(+8)
+function formatDate(ts) {
+  if (!ts) return '';
+  let ms;
+  if (typeof ts === 'string') {
+    const m = ts.match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+    ms = m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) : new Date(ts).getTime();
+  } else {
+    ms = new Date(ts).getTime();
+  }
+  if (isNaN(ms)) return '';
+  const bj = new Date(ms + 8 * 3600 * 1000);
+  const p = n => (n < 10 ? '0' + n : '' + n);
+  return `${bj.getUTCFullYear()}-${p(bj.getUTCMonth() + 1)}-${p(bj.getUTCDate())} ${p(bj.getUTCHours())}:${p(bj.getUTCMinutes())}`;
 }
 
 Page({
@@ -30,11 +46,8 @@ Page({
     showInfo: false,
     themeClass: '',
     historyList: [],
-    totalRecord: '',
-    totalWinRate: '',
-    goodWinRate: '',
-    evilWinRate: '',
     roleStats: [],
+    summary: null,
     champions: [],
     podium: [],
     publicWinrate: true
@@ -84,9 +97,13 @@ Page({
     wx.setBackgroundColor({ backgroundColor: getThemeBg(tc) });
   },
 
-  // 主题切换（theme-toggle 组件触发）
-  onThemeChange(e) {
-    this.setData({ themeClass: e.detail.themeClass });
+  // 更改主题（功能卡）
+  onChangeTheme() {
+    pickTheme().then(picked => {
+      if (picked === null) return;
+      applyTheme(picked);
+      this.setData({ themeClass: picked });
+    });
   },
 
   dispatchShareJoin(roomId, gameId) {
@@ -374,10 +391,13 @@ Page({
       if (res && res.success && Array.isArray(res.history)) {
         const historyList = res.history.map(item => ({
           gameId: item.gameId,
+          role: item.role,
           roleName: ROLE_NAMES[item.role] || item.role,
           side: item.side,
-          isWin: !!(item.gameResult && item.gameResult.winner === item.side),
-          durationText: formatDuration(item.durationSeconds)
+          playerCount: item.playerCount,
+          durationText: formatDuration(item.durationSeconds),
+          dateText: formatDate(item.createdAt),
+          isWin: !!(item.gameResult && item.gameResult.winner === item.side)
         }));
         this.setData({ historyList });
       }
@@ -395,11 +415,14 @@ Page({
           winRate: r.winRate + '%'
         }));
         this.setData({
-          totalRecord: s.totalGames > 0 ? s.totalWins + '/' + s.totalGames : '',
-          totalWinRate: s.totalGames > 0 ? s.totalWinRate + '%' : '',
-          goodWinRate: s.goodGames > 0 ? s.goodWinRate + '%' : '',
-          evilWinRate: s.evilGames > 0 ? s.evilWinRate + '%' : '',
-          roleStats
+          roleStats,
+          summary: {
+            totalWinRate: s.totalWinRate,
+            totalWins: s.totalWins,
+            totalGames: s.totalGames,
+            goodWinRate: s.goodWinRate + '%',
+            evilWinRate: s.evilWinRate + '%'
+          }
         });
       }
     }).catch(() => {});
