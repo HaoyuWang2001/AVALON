@@ -2174,6 +2174,35 @@ class GameModel {
   }
 
   /**
+   * 胜率上榜阈值 X：
+   * 已注册且玩过 ≥1 局(ended、非000000)的玩家，按局数降序取 1-based 索引 ceil(0.75*n) 处的值，
+   * 再夹取到 [10,50]。n=0 → 10。内存缓存 10 分钟。
+   */
+  static async getWinRateThreshold() {
+    const now = Date.now();
+    const cache = GameModel._winrateThresholdCache;
+    if (cache && (now - cache.at) < 10 * 60 * 1000) return cache.value;
+
+    const rows = await db.query(
+      `SELECT COUNT(DISTINCT g.id) as games
+       FROM game_players gp
+       JOIN games g ON g.id = gp.game_id
+       JOIN users u ON u.open_id = gp.open_id
+       WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
+       GROUP BY gp.open_id`
+    );
+    const counts = rows.map(r => parseInt(r.games, 10) || 0).filter(n => n >= 1).sort((a, b) => b - a);
+    let raw = 10;
+    if (counts.length > 0) {
+      const idx = Math.min(Math.max(Math.ceil(0.75 * counts.length), 1), counts.length);
+      raw = counts[idx - 1];
+    }
+    const value = Math.min(Math.max(raw, 10), 50);
+    GameModel._winrateThresholdCache = { at: now, value };
+    return value;
+  }
+
+  /**
    * 全局统计：对局/房间/玩家/用户计数 + 阵营胜率 + 角色出场/胜率 + 全量已结束对局列表
    */
   static async getGlobalStats() {

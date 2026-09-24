@@ -263,10 +263,13 @@ describe('08 — 好友系统（uniqueId/搜索/申请/同意/删除）', () => 
 
       const res = await apiGet(`/api/friends?openId=${me}`);
       expect(res.body.success).toBe(true);
+      expect(res.body.threshold).toBeGreaterThanOrEqual(10);
       const f = res.body.friends.find(x => x.openId === playerFriend);
       expect(f).toBeTruthy();
       expect(typeof f.games).toBe('number');
       expect(typeof f.winRate).toBe('number');
+      expect(typeof f.publicWinrate).toBe('number');
+      expect(typeof f.qualified).toBe('boolean');
       expect(f.games).toBeGreaterThanOrEqual(1);
 
       // 有对局者（winRate 数值）排在无对局者（winRate=null）之前

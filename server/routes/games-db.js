@@ -39,7 +39,7 @@ function createRouter() {
   // 按用户查历史对局（个人战绩）——必须注册在 /:gameId 之前，避免被参数路由吞掉
   router.get('/history/user', async (req, res) => {
     try {
-      const { openId } = req.query;
+      const openId = req.query.subjectOpenId || req.query.openId;
 
       if (!openId) {
         return res.status(400).json({ success: false, message: '缺少必要参数' });
@@ -86,7 +86,8 @@ function createRouter() {
   // 个人胜率统计——必须注册在 /:gameId 之前
   router.get('/stats', async (req, res) => {
     try {
-      const { openId } = req.query;
+      const openId = req.query.subjectOpenId || req.query.openId;
+      const viewerOpenId = req.query.viewerOpenId || null;
 
       if (!openId) {
         return res.status(400).json({ success: false, message: '缺少必要参数' });
@@ -128,6 +129,15 @@ function createRouter() {
         ...r,
         winRate: r.games > 0 ? Math.round(r.wins / r.games * 1000) / 10 : 0
       }));
+
+      // 公开胜率 + 阈值门控（本人始终可见）
+      const [urow] = await db.query('SELECT public_winrate FROM users WHERE open_id = ?', [openId]);
+      const publicWinrate = urow && urow.public_winrate === 0 ? 0 : 1;
+      const threshold = await GameModel.getWinRateThreshold();
+      const isSelf = !!viewerOpenId && viewerOpenId === openId;
+      stats.publicWinrate = publicWinrate;
+      stats.rateVisible = isSelf || (publicWinrate === 1 && stats.totalGames >= threshold);
+      stats.threshold = threshold;
 
       res.json({ success: true, stats });
     } catch (error) {
@@ -806,7 +816,9 @@ function createRouter() {
     try {
       const db = require('../config/db');
       const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 3, 1), 20);
-      const minGames = Math.max(parseInt(req.query.minGames, 10) || 10, 1);
+      const threshold = await GameModel.getWinRateThreshold();
+      const minGamesRaw = req.query.minGames !== undefined ? Math.max(parseInt(req.query.minGames, 10) || 1, 1) : null;
+      const minGames = minGamesRaw != null ? minGamesRaw : threshold;
       const viewerOpenId = req.query.openId || null;
 
       const rows = await db.query(
@@ -824,6 +836,7 @@ function createRouter() {
            HAVING games >= ?
          ) t
          JOIN users u ON u.open_id = t.openId
+         WHERE u.public_winrate <> 0
          ORDER BY (t.wins / t.games) DESC, t.games DESC
          LIMIT ${limit}`,
         [minGames]

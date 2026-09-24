@@ -52,11 +52,25 @@ function createRouter() {
           customNickName: user.custom_nick_name || '',
           avatarUrl: user.avatar_url || '',
           uniqueId: user.unique_id || '',
+          publicWinrate: user.public_winrate === 0 ? 0 : 1,
           lastSeenAt: user.last_seen_at || null
         }
       });
     } catch (error) {
       console.error('获取用户资料错误:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // 设置公开胜率开关
+  router.post('/:openId/publicWinrate', async (req, res) => {
+    try {
+      const { openId } = req.params;
+      const isPublic = !!(req.body && req.body.public);
+      const user = await UserModel.setPublicWinrate(openId, isPublic);
+      res.json({ success: true, publicWinrate: user.public_winrate === 0 ? 0 : 1 });
+    } catch (error) {
+      console.error('设置公开胜率错误:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   });

@@ -3,6 +3,7 @@
 const express = require('express');
 const db = require('../config/db');
 const socket = require('../config/socket');
+const GameModel = require('../models/GameModel');
 
 const FRIEND_LIMIT = 100;
 const ONLINE_WINDOW_SECONDS = 5 * 60; // last_seen_at 5 分钟内活跃视为在线
@@ -94,9 +95,10 @@ function createRouter() {
         [openId]
       );
 
-      // 批量聚合好友胜率（ended、排除房间000000、按局去重）
+      // 批量聚合好友胜率（ended、排除房间000000、按局去重）+ 公开胜率开关
       const friendIds = friends.map(f => f.openId);
       const statMap = {};
+      const publicMap = {};
       if (friendIds.length > 0) {
         const placeholders = friendIds.map(() => '?').join(',');
         const stats = await db.query(
@@ -111,7 +113,15 @@ function createRouter() {
           friendIds
         );
         stats.forEach(s => { statMap[s.openId] = s; });
+        const pubs = await db.query(
+          `SELECT open_id as openId, public_winrate as publicWinrate FROM users WHERE open_id IN (${placeholders})`,
+          friendIds
+        );
+        pubs.forEach(p => { publicMap[p.openId] = p.publicWinrate; });
       }
+
+      // 胜率上榜阈值 X（公开且 games>=X 才展示胜率）
+      const threshold = await GameModel.getWinRateThreshold();
 
       const list = [];
       for (const f of friends) {
@@ -120,19 +130,25 @@ function createRouter() {
         const st = statMap[f.openId];
         const games = st ? parseInt(st.games, 10) || 0 : 0;
         const wins = st ? parseInt(st.wins, 10) || 0 : 0;
+        const publicWinrate = publicMap[f.openId] === 0 ? 0 : 1;
         view.games = games;
         view.wins = wins;
         view.winRate = games > 0 ? Math.round(wins / games * 1000) / 10 : null;
+        view.publicWinrate = publicWinrate;
+        view.qualified = publicWinrate === 1 && games >= threshold;
         list.push(view);
       }
-      // 按胜率降序（无对局排最后），再按场次降序
+      // 达标记：胜率降序；未达标（未公开 或 局数<X）：局数降序
       list.sort((a, b) => {
-        const ra = a.winRate == null ? -1 : a.winRate;
-        const rb = b.winRate == null ? -1 : b.winRate;
-        if (rb !== ra) return rb - ra;
+        if (a.qualified !== b.qualified) return a.qualified ? -1 : 1;
+        if (a.qualified) {
+          const ra = a.winRate == null ? -1 : a.winRate;
+          const rb = b.winRate == null ? -1 : b.winRate;
+          if (rb !== ra) return rb - ra;
+        }
         return b.games - a.games;
       });
-      res.json({ success: true, friends: list, count: list.length });
+      res.json({ success: true, friends: list, count: list.length, threshold });
     } catch (error) {
       console.error('好友列表API错误:', error);
       res.status(500).json({ success: false, message: error.message });

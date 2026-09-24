@@ -16,7 +16,8 @@ class UserModel {
       open_id: openId,
       wx_nick_name: '',
       custom_nick_name: '',
-      avatar_url: ''
+      avatar_url: '',
+      public_winrate: 1
     };
   }
 
@@ -71,6 +72,15 @@ class UserModel {
     await db.query(
       `UPDATE users SET unique_id = ?, unique_id_updated_at = NOW(), updated_at = NOW() WHERE open_id = ?`,
       [uniqueId, openId]
+    );
+    return UserModel.getByOpenId(openId);
+  }
+
+  // 设置公开胜率开关
+  static async setPublicWinrate(openId, isPublic) {
+    await db.query(
+      'UPDATE users SET public_winrate = ?, updated_at = NOW() WHERE open_id = ?',
+      [isPublic ? 1 : 0, openId]
     );
     return UserModel.getByOpenId(openId);
   }
