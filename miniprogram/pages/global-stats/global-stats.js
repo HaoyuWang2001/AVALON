@@ -20,13 +20,36 @@ function formatDate(ts) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+// 结束方式副行：仅红方胜显示（刀梅林 / 三红车）
+function winnerSubText(gameResult) {
+  const reason = (gameResult && gameResult.reason) || '';
+  if (reason.indexOf('刺杀命中') >= 0) return '刀梅林';
+  if (reason.indexOf('完成3个任务') >= 0) return '三红车';
+  return '';
+}
+
+function mapGame(g) {
+  const winner = g.gameResult && g.gameResult.winner;
+  return {
+    id: g.id,
+    playerCount: g.playerCount,
+    durationText: formatDuration(g.durationSeconds),
+    dateText: formatDate(g.endedAt || g.createdAt),
+    winnerText: winner === 'good' ? '蓝方胜' : winner === 'evil' ? '红方胜' : '—',
+    winnerClass: winner === 'good' ? 'win-good' : winner === 'evil' ? 'win-evil' : '',
+    winnerSub: winner === 'evil' ? winnerSubText(g.gameResult) : ''
+  };
+}
+
 Page({
   data: {
     themeClass: '',
     loading: true,
     stats: null,
     roleStats: [],
-    gameList: []
+    gameList: [],
+    roleModal: { show: false, roleName: '', emoji: '', games: [] },
+    roleModalLoading: false
   },
 
   onLoad() {
@@ -57,18 +80,7 @@ Page({
         wins: r.wins,
         winRate: r.winRate + '%'
       }));
-      const gameList = (res.games || []).map(g => {
-        const winner = g.gameResult && g.gameResult.winner;
-        return {
-          id: g.id,
-          roomId: g.roomId,
-          winnerText: winner === 'good' ? '蓝方胜' : winner === 'evil' ? '红方胜' : '—',
-          winnerClass: winner === 'good' ? 'win-good' : winner === 'evil' ? 'win-evil' : '',
-          playerCount: g.playerCount,
-          durationText: formatDuration(g.durationSeconds),
-          dateText: formatDate(g.endedAt || g.createdAt)
-        };
-      });
+      const gameList = (res.games || []).map(mapGame);
       this.setData({ stats: s, roleStats, gameList });
     }).catch(() => this.setData({ loading: false }));
   },
@@ -77,5 +89,22 @@ Page({
     const gameId = e.currentTarget.dataset.id;
     if (!gameId) return;
     wx.navigateTo({ url: `/pages/game/game?gameId=${gameId}&fromHistory=1` });
-  }
+  },
+
+  // 点击角色行：弹出含该角色的全部对局
+  openRoleGames(e) {
+    const { role, name, emoji } = e.currentTarget.dataset;
+    if (!role) return;
+    this.setData({ roleModal: { show: true, roleName: name || role, emoji: emoji || '🎴', games: [] }, roleModalLoading: true });
+    api.getRoleGames(role).then(res => {
+      const games = (res && res.success && res.games ? res.games : []).map(mapGame);
+      this.setData({ roleModalLoading: false, 'roleModal.games': games });
+    }).catch(() => this.setData({ roleModalLoading: false }));
+  },
+
+  closeRoleGames() {
+    this.setData({ 'roleModal.show': false });
+  },
+
+  noop() {}
 });

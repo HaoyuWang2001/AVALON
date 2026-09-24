@@ -4,10 +4,10 @@
 .card-title { font-size: 30rpx; font-weight: 700; color: var(--text-title); margin-bottom: 20rpx; }
 .empty { text-align: center; color: var(--text-muted); font-size: 26rpx; padding: 30rpx 0; }
 
-/* 基础统计网格 */
+/* 基础统计网格（2×2） */
 .grid { display: flex; flex-wrap: wrap; }
-.grid-item { width: 33.33%; display: flex; flex-direction: column; align-items: center; padding: 18rpx 0; box-sizing: border-box; }
-.gi-num { font-size: 40rpx; font-weight: 800; color: var(--primary); }
+.grid-item { width: 50%; display: flex; flex-direction: column; align-items: center; padding: 20rpx 0; box-sizing: border-box; }
+.gi-num { font-size: 44rpx; font-weight: 800; color: var(--primary); }
 .gi-label { font-size: 22rpx; color: var(--text-muted); margin-top: 6rpx; }
 
 /* 阵营胜率 */
@@ -34,8 +34,26 @@
 .game-row { display: flex; align-items: center; padding: 18rpx 0; border-bottom: 1rpx solid var(--gray-100); }
 .game-row:last-child { border-bottom: none; }
 .game-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.game-room { font-size: 28rpx; font-weight: 600; color: var(--text-title); }
+.game-title { font-size: 28rpx; font-weight: 600; color: var(--text-title); }
 .game-sub { font-size: 22rpx; color: var(--text-muted); margin-top: 4rpx; }
-.game-winner { font-size: 26rpx; font-weight: 700; flex-shrink: 0; margin-left: 16rpx; }
+.game-winner-wrap { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; margin-left: 16rpx; }
+.game-winner { font-size: 26rpx; font-weight: 700; }
+.game-winner-sub { font-size: 20rpx; color: var(--text-muted); margin-top: 4rpx; }
 .win-good { color: #3B82F6; }
 .win-evil { color: #EF4444; }
+
+/* 角色对局弹窗 */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5); z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-panel {
+  width: 84%; max-height: 72vh; box-sizing: border-box;
+  background: var(--bg-card); border-radius: 24rpx; padding: 28rpx;
+  display: flex; flex-direction: column; box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+}
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12rpx; }
+.modal-title { font-size: 30rpx; font-weight: 700; color: var(--text-title); }
+.modal-close { font-size: 34rpx; color: var(--text-muted); padding: 0 8rpx; }
+.modal-scroll { max-height: 52vh; }

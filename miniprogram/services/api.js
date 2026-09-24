@@ -482,6 +482,10 @@ class ApiService {
     return this.request('/games/stats/global');
   }
 
+  async getRoleGames(role) {
+    return this.request(`/games/stats/role-games?role=${encodeURIComponent(role)}`);
+  }
+
   // ─────── 好友系统 ───────
 
   async setUniqueId(openId, uniqueId) {

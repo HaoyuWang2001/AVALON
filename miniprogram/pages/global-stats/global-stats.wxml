@@ -4,17 +4,14 @@
   <view wx:if="{{loading}}" class="page-loading">加载中...</view>
 
   <block wx:if="{{stats}}">
-    <!-- 基础统计 -->
+    <!-- 基础统计（4 项，2×2） -->
     <view class="card">
       <view class="card-title">基础统计</view>
       <view class="grid">
-        <view class="grid-item"><text class="gi-num">{{stats.games.total}}</text><text class="gi-label">总对局</text></view>
-        <view class="grid-item"><text class="gi-num">{{stats.games.active}}</text><text class="gi-label">进行中</text></view>
-        <view class="grid-item"><text class="gi-num">{{stats.games.completed}}</text><text class="gi-label">已完成</text></view>
-        <view class="grid-item"><text class="gi-num">{{stats.rooms.total}}</text><text class="gi-label">总房间</text></view>
-        <view class="grid-item"><text class="gi-num">{{stats.rooms.active}}</text><text class="gi-label">活跃房间</text></view>
+        <view class="grid-item"><text class="gi-num">{{stats.games.completed}}</text><text class="gi-label">已完成对局</text></view>
+        <view class="grid-item"><text class="gi-num">{{stats.games.active}}</text><text class="gi-label">进行中对局</text></view>
         <view class="grid-item"><text class="gi-num">{{stats.players.total}}</text><text class="gi-label">总玩家数</text></view>
-        <view class="grid-item"><text class="gi-num">{{stats.users.total}}</text><text class="gi-label">总用户数</text></view>
+        <view class="grid-item"><text class="gi-num">{{stats.rooms.total}}</text><text class="gi-label">总房间数</text></view>
       </view>
     </view>
 
@@ -33,11 +30,12 @@
       </view>
     </view>
 
-    <!-- 角色统计 -->
+    <!-- 角色统计（点击查看含该角色的全部对局） -->
     <view class="card">
       <view class="card-title">角色统计</view>
       <view wx:if="{{roleStats.length === 0}}" class="empty">暂无数据</view>
-      <view wx:for="{{roleStats}}" wx:key="role" class="role-row">
+      <view wx:for="{{roleStats}}" wx:key="role" class="role-row"
+        bindtap="openRoleGames" data-role="{{item.role}}" data-name="{{item.roleName}}" data-emoji="{{item.emoji}}">
         <text class="role-emoji">{{item.emoji}}</text>
         <text class="role-name {{item.side === 'evil' ? 'name-evil' : 'name-good'}}">{{item.roleName}}</text>
         <text class="role-games">{{item.games}} 场</text>
@@ -51,13 +49,42 @@
       <view wx:if="{{gameList.length === 0}}" class="empty">暂无对局</view>
       <view wx:for="{{gameList}}" wx:key="id" class="game-row" bindtap="openGame" data-id="{{item.id}}">
         <view class="game-main">
-          <text class="game-room">房间 {{item.roomId}}</text>
-          <text class="game-sub">{{item.dateText}} · {{item.playerCount}}人 · {{item.durationText}}</text>
+          <text class="game-title">{{item.playerCount}}人局 · {{item.durationText}}</text>
+          <text class="game-sub">{{item.dateText}}</text>
         </view>
-        <text class="game-winner {{item.winnerClass}}">{{item.winnerText}}</text>
+        <view class="game-winner-wrap">
+          <text class="game-winner {{item.winnerClass}}">{{item.winnerText}}</text>
+          <text wx:if="{{item.winnerSub}}" class="game-winner-sub">{{item.winnerSub}}</text>
+        </view>
       </view>
     </view>
   </block>
 
   <view style="height: 40rpx"></view>
+
+  <!-- 角色对局弹窗 -->
+  <view class="modal-overlay" wx:if="{{roleModal.show}}" bindtap="closeRoleGames">
+    <view class="modal-panel" catchtap="noop">
+      <view class="modal-head">
+        <text class="modal-title">{{roleModal.emoji}} {{roleModal.roleName}} · {{roleModal.games.length}} 局</text>
+        <text class="modal-close" bindtap="closeRoleGames">✕</text>
+      </view>
+      <view wx:if="{{roleModalLoading}}" class="empty">加载中...</view>
+      <block wx:else>
+        <view wx:if="{{roleModal.games.length === 0}}" class="empty">暂无对局</view>
+        <scroll-view wx:else scroll-y class="modal-scroll">
+          <view wx:for="{{roleModal.games}}" wx:key="id" class="game-row" bindtap="openGame" data-id="{{item.id}}">
+            <view class="game-main">
+              <text class="game-title">{{item.playerCount}}人局 · {{item.durationText}}</text>
+              <text class="game-sub">{{item.dateText}}</text>
+            </view>
+            <view class="game-winner-wrap">
+              <text class="game-winner {{item.winnerClass}}">{{item.winnerText}}</text>
+              <text wx:if="{{item.winnerSub}}" class="game-winner-sub">{{item.winnerSub}}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </block>
+    </view>
+  </view>
 </view>
