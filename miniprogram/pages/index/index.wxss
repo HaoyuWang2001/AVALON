@@ -54,34 +54,32 @@
   50% { text-shadow: 0 0 12rpx currentColor, 0 0 30rpx currentColor; }
 }
 
-/* 之：时隐时现(黑/深紫/白) + 间隔较长的随机纵向拉长 */
-.brand-2 { color: var(--brand-2, #4C1D95); transform-origin: center center; animation: zhi-appear 10s steps(1, end) infinite; }
-@keyframes zhi-appear {
-  0%, 100% { color: #000000; opacity: 1; transform: scaleY(1); }
-  8% { color: #2E1065; opacity: 1; transform: scaleY(1); }
-  16% { color: #FFFFFF; opacity: 0; transform: scaleY(1); }
-  19% { color: #000000; opacity: 1; transform: scaleY(2.6); }
-  23% { transform: scaleY(1); }
-  40% { color: #6D28D9; opacity: 1; transform: scaleY(1); }
-  55% { color: #2E1065; opacity: 1; transform: scaleY(1); }
-  63% { color: #FFFFFF; opacity: 0; transform: scaleY(1); }
-  66% { color: #000000; opacity: 1; transform: scaleY(2.0); }
-  70% { transform: scaleY(1); }
-  85% { color: #6D28D9; opacity: 1; transform: scaleY(1); }
+/* 之：保持黑色、字号略小，仅随机纵向拉长（放弃颜色/显现变化） */
+.brand-2 { color: #000000; font-size: 0.86em; transform-origin: center center; animation: zhi-stretch 12s steps(1, end) infinite; }
+@keyframes zhi-stretch {
+  0%, 100% { transform: scaleY(1); }
+  18% { transform: scaleY(2.6); }
+  22% { transform: scaleY(1); }
+  58% { transform: scaleY(1.9); }
+  62% { transform: scaleY(1); }
 }
 
-/* 练秋湖分部：下划线；紫/深紫/黑/深灰；随机撕裂/扭曲 + 突然放大并保持约 5s */
-.brand-3 { color: var(--brand-3, #6D28D9); text-decoration: underline; text-underline-offset: 6rpx; text-decoration-color: currentColor; transform-origin: center bottom; animation: lianqiu-glitch 12s steps(1, end) infinite; }
+/* 练秋湖分部：下划线；紫/深紫/黑/深灰；随机撕裂/抖动/扭曲 + 随机放大(保持~1s，间隔 5~10s) */
+.brand-3 { color: var(--brand-3, #6D28D9); text-decoration: underline; text-underline-offset: 6rpx; text-decoration-color: currentColor; transform-origin: center bottom; animation: lianqiu-glitch 14s steps(1, end) infinite; }
 @keyframes lianqiu-glitch {
   0%, 100% { color: #6D28D9; transform: scale(1) skewX(0deg); clip-path: inset(0 0 0 0); }
-  6% { color: #2E1065; transform: scale(1) skewX(0deg); clip-path: inset(0 0 0 0); }
-  11% { color: #000000; transform: scale(1) skewX(0deg); clip-path: inset(22% 0 34% 0); }
-  13% { clip-path: inset(0 0 0 0); }
-  15% { color: #4B5563; transform: scale(1.6) skewX(-8deg); clip-path: inset(0 0 0 0); }
-  58% { color: #1F2937; transform: scale(1.6) skewX(-8deg); }
-  61% { color: #2E1065; transform: scale(1) skewX(0deg); }
-  72% { color: #4B5563; transform: scale(1.32) skewX(7deg); }
-  80% { color: #6D28D9; transform: scale(1) skewX(0deg); }
+  5% { color: #4B5563; transform: scale(1.6) skewX(-8deg); clip-path: inset(0 0 0 0); }
+  12% { color: #2E1065; transform: scale(1) skewX(0deg); }
+  20% { color: #000000; transform: scale(1) skewX(0deg); clip-path: inset(22% 0 34% 0); }
+  22% { clip-path: inset(0 0 0 0); }
+  30% { color: #1F2937; transform: translate(-4rpx, 2rpx) skewX(7deg); }
+  32% { transform: translate(0, 0) skewX(0deg); }
+  45% { color: #4B5563; transform: scale(1.32) skewX(7deg); clip-path: inset(0 0 0 0); }
+  52% { color: #2E1065; transform: scale(1) skewX(0deg); }
+  62% { color: #000000; transform: scale(1) skewX(0deg); clip-path: inset(30% 0 24% 0); }
+  64% { clip-path: inset(0 0 0 0); }
+  78% { color: #6D28D9; transform: translate(3rpx, -2rpx) skewX(-6deg); }
+  80% { transform: translate(0, 0) skewX(0deg); }
 }
 
 /* 整串故障层：上下带极小 */
