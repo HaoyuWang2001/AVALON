@@ -211,11 +211,11 @@ class GameModel {
         const lakeEnabled = !!(roomConfig && roomConfig.rules && roomConfig.rules.ladyOfTheLake);
         const firstLakeHolderOpenId = lakeEnabled && players[firstLakeHolderIndex] ? players[firstLakeHolderIndex].openId : null;
         await connection.execute(
-          `INSERT INTO games (id, room_id, owner_id, current_phase, current_round, 
+          `INSERT INTO games (id, room_id, room_number, owner_id, current_phase, current_round, 
                               team_leader_index, failed_nominations, lake_holder_open_id,
                               speaking_order, status, created_at, updated_at)
-           VALUES (?, ?, ?, 'roleReveal', 1, ?, 0, ?, 'asc', 'active', NOW(), NOW())`,
-          [gameId, roomId, ownerId, firstLeaderIndex, firstLakeHolderOpenId]
+           VALUES (?, ?, ?, ?, 'roleReveal', 1, ?, 0, ?, 'asc', 'active', NOW(), NOW())`,
+          [gameId, roomId, roomId, ownerId, firstLeaderIndex, firstLakeHolderOpenId]
         );
         
         // 5. 添加游戏玩家角色
@@ -2178,9 +2178,11 @@ class GameModel {
    */
   static async getGlobalStats() {
     try {
-      const [gamesTotal] = await db.query('SELECT COUNT(*) as c FROM games');
-      const [gamesActive] = await db.query("SELECT COUNT(*) as c FROM games WHERE status = 'active'");
-      const [gamesCompleted] = await db.query("SELECT COUNT(*) as c FROM games WHERE status = 'ended'");
+      // 排除测试/机器人房间 000000 触发的对局
+      const notBotRoom = "COALESCE(room_number, room_id, '') <> '000000'";
+      const [gamesTotal] = await db.query(`SELECT COUNT(*) as c FROM games WHERE ${notBotRoom}`);
+      const [gamesActive] = await db.query(`SELECT COUNT(*) as c FROM games WHERE status = 'active' AND ${notBotRoom}`);
+      const [gamesCompleted] = await db.query(`SELECT COUNT(*) as c FROM games WHERE status = 'ended' AND ${notBotRoom}`);
       const [roomsTotal] = await db.query('SELECT COUNT(*) as c FROM rooms');
       const [roomsActive] = await db.query('SELECT COUNT(*) as c FROM rooms WHERE updated_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)');
       const [playersTotal] = await db.query('SELECT COUNT(*) as c FROM room_players');
@@ -2191,7 +2193,7 @@ class GameModel {
       // 阵营胜率（仅已结束对局）
       const factionRows = await db.query(
         `SELECT JSON_UNQUOTE(JSON_EXTRACT(game_result, '$.winner')) as winner, COUNT(*) as c
-         FROM games WHERE status = 'ended' GROUP BY winner`
+         FROM games WHERE status = 'ended' AND ${notBotRoom} GROUP BY winner`
       );
       const goodGames = toNum((factionRows.find(r => r.winner === 'good') || {}).c);
       const evilGames = toNum((factionRows.find(r => r.winner === 'evil') || {}).c);
@@ -2205,7 +2207,7 @@ class GameModel {
                 SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN 1 ELSE 0 END) as wins
          FROM games g
          JOIN game_players gp ON gp.game_id = g.id
-         WHERE g.status = 'ended'
+         WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
          GROUP BY gp.role, gp.side
          ORDER BY games DESC`
       );
@@ -2219,17 +2221,18 @@ class GameModel {
 
       // 全量已结束对局（倒序）
       const gameRows = await db.query(
-        `SELECT g.id, g.room_id as roomId, g.game_result as gameResult,
+        `SELECT g.id, g.room_id as roomId, g.room_number as roomNumber, g.game_result as gameResult,
                 (SELECT COUNT(*) FROM game_players WHERE game_id = g.id) as playerCount,
                 TIMESTAMPDIFF(SECOND, g.created_at, g.ended_at) as durationSeconds,
                 g.created_at as createdAt, g.ended_at as endedAt
          FROM games g
-         WHERE g.status = 'ended'
+         WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
          ORDER BY g.created_at DESC`
       );
       const games = gameRows.map(g => ({
         id: g.id,
         roomId: g.roomId,
+        roomNumber: g.roomNumber,
         gameResult: g.gameResult ? parseJson(g.gameResult) : null,
         playerCount: parseInt(g.playerCount, 10) || 0,
         durationSeconds: g.durationSeconds,

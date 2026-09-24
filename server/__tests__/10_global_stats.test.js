@@ -2,7 +2,7 @@ const { makeUserId, createRoom, joinRoom, toggleReady, startGame, endGame, disba
 
 // 全局统计接口：/games/stats/global 返回基础计数 + 阵营 + 角色 + 全量已结束对局
 describe('10 — 全局统计', () => {
-  // 造 1 局 5 人已结束游戏
+  // 造 1 局 5 人已结束游戏（并解散房间，验证 room_number 快照不随房间删除变化）
   async function createEndedGame() {
     const hostId = makeUserId();
     const createResult = await createRoom(hostId, 'GH' + hostId.slice(-6));
@@ -24,13 +24,13 @@ describe('10 — 全局统计', () => {
     expect(end.success).toBe(true);
     const dis = await disband(roomId, hostId);
     expect(dis.success).toBe(true);
-    return start.gameId;
+    return { gameId: start.gameId, roomId };
   }
 
   it('10-1 返回基础计数/阵营/角色/对局列表，含新造对局', async () => {
-    const gameIds = [];
+    const created = [];
     for (let i = 0; i < 2; i++) {
-      gameIds.push(await createEndedGame());
+      created.push(await createEndedGame());
     }
 
     const res = await apiGet('/api/games/stats/global');
@@ -63,12 +63,14 @@ describe('10 — 全局统计', () => {
     // 全量对局列表包含本次造的对局
     expect(Array.isArray(res.body.games)).toBe(true);
     const ids = res.body.games.map(g => g.id);
-    for (const id of gameIds) {
-      expect(ids).toContain(id);
+    for (const c of created) {
+      expect(ids).toContain(c.gameId);
     }
-    const sample = res.body.games.find(g => g.id === gameIds[0]);
-    expect(sample).toHaveProperty('roomId');
+    const sample = res.body.games.find(g => g.id === created[0].gameId);
     expect(sample).toHaveProperty('playerCount');
     expect(sample).toHaveProperty('durationSeconds');
+    // room_number 快照：房间已解散（room_id 置 NULL），但 room_number 仍保留原房间号
+    expect(sample.roomId).toBeNull();
+    expect(sample.roomNumber).toBe(created[0].roomId);
   });
 });
