@@ -40,4 +40,8 @@ jobs:
           done
           git reset --hard origin/main
       - name: 部署后端
-        run: cd /home/lighthouse/AVALON/AVALON && docker compose up -d --build avalon-server
+        run: |
+          cd /home/lighthouse/AVALON/AVALON
+          export GIT_SHA=$(git rev-parse --short HEAD)
+          export BUILD_TIME=$(date +%Y-%m-%dT%H:%M:%S%z)
+          docker compose up -d --build avalon-server

@@ -33,6 +33,9 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
+        BUILD_TIME: ${BUILD_TIME:-unknown}
     image: avalon-server:prod
     container_name: avalon-server
     restart: always

@@ -163,6 +163,8 @@ app.get('/api/health', async (req, res) => {
     timestamp: Date.now(),
     server: 'avalon-server',
     version: '1.0.0',
+    gitSha: process.env.GIT_SHA || 'unknown',
+    buildTime: process.env.BUILD_TIME || 'unknown',
     database: {
       connected: false,
       initialized: dbInitialized
