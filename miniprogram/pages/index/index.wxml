@@ -1,26 +1,24 @@
 <!--pages/index/index.wxml-->
 <view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
-  <view class="logo-section">
-    <view class="logo-icon"><text>🏰</text></view>
-    <view class="logo-title">AVALON</view>
-    <view class="logo-subtitle">瓦协会之练秋湖分部</view>
+  <!-- 品牌顶栏（透明、不吸顶） -->
+  <view class="topline">
+    <view class="brand">AVALON<text class="brand-sub">· 瓦协会之练秋湖分部</text></view>
+    <view class="topline-actions">
+      <view class="user-emoji-btn" hover-class="user-emoji-hover" hover-stay-time="60" bindtap="showInfoModal">ℹ️</view>
+      <theme-toggle bind:change="onThemeChange" />
+    </view>
   </view>
 
-  <view class="card user-card">
-    <view class="user-info-section">
-      <view class="user-left">
-        <button size="mini" class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" binderror="onAvatarError" bindtap="onAvatarTap">
-          <image src="{{userInfo.avatarUrl}}" class="avatar-img"/>
-        </button>
-        <view class="user-details">
-          <view class="user-name-text {{customNickName ? '' : 'name-placeholder'}}" bindtap="showNickNameModal">
-            {{customNickName || '改名撒！'}}<text class="user-edit-emoji">✏️</text>
-          </view>
-          <view class="user-status {{userStatusClass}}">{{userStatusText}}</view>
-        </view>
-        <view class="user-emoji-btn" hover-class="user-emoji-hover" hover-stay-time="60" bindtap="showInfoModal">ℹ️</view>
-        <theme-toggle bind:change="onThemeChange" />
+  <!-- 用户卡（强调式个人卡：头像/昵称/状态） -->
+  <view class="card profile-card">
+    <button size="mini" class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" binderror="onAvatarError" bindtap="onAvatarTap">
+      <image src="{{userInfo.avatarUrl}}" class="avatar-img"/>
+    </button>
+    <view class="profile-info">
+      <view class="user-name-text {{customNickName ? '' : 'name-placeholder'}}" bindtap="showNickNameModal">
+        {{customNickName || '改名撒！'}}<text class="user-edit-emoji">✏️</text>
       </view>
+      <view class="user-status {{userStatusClass}}">{{userStatusText}}</view>
     </view>
   </view>
 
@@ -102,40 +100,52 @@
     </view>
   </view>
 
-  <view class="role-stats" wx:if="{{roleStats.length > 0}}">
-    <view class="role-stats-title">角色胜率</view>
-    <swiper class="role-stats-swiper"
-            indicator-dots="{{roleStats.length > 1}}"
-            indicator-color="rgba(139,92,246,0.25)"
-            indicator-active-color="#8B5CF6"
-            duration="300">
-      <swiper-item wx:for="{{roleStats}}" wx:key="role">
-        <view class="stat-role-item">
-          <view class="stat-role-card">
-            <text class="stat-role-emoji">{{item.emoji}}</text>
-            <view class="stat-role-name {{item.side === 'evil' ? 'stat-name-evil' : 'stat-name-good'}}">{{item.roleName}}</view>
-            <view class="stat-role-meta">
-              <text class="stat-role-rate">{{item.wins}}/{{item.games}} ({{item.winRate}})</text>
+  <!-- 我的数据（分段：角色胜率 / 历史对局） -->
+  <view class="card data-card">
+    <view class="data-tabs">
+      <view class="data-tab {{dataTab === 'role' ? 'data-tab-on' : ''}}" data-tab="role" bindtap="switchDataTab">角色胜率</view>
+      <view class="data-tab {{dataTab === 'history' ? 'data-tab-on' : ''}}" data-tab="history" bindtap="switchDataTab">历史对局</view>
+    </view>
+
+    <!-- 角色胜率 -->
+    <block wx:if="{{dataTab === 'role'}}">
+      <view wx:if="{{roleStats.length === 0}}" class="data-empty">暂无数据</view>
+      <swiper wx:else class="role-stats-swiper"
+              indicator-dots="{{roleStats.length > 1}}"
+              indicator-color="rgba(139,92,246,0.25)"
+              indicator-active-color="#8B5CF6"
+              duration="300">
+        <swiper-item wx:for="{{roleStats}}" wx:key="role">
+          <view class="stat-role-item">
+            <view class="stat-role-card">
+              <text class="stat-role-emoji">{{item.emoji}}</text>
+              <view class="stat-role-name {{item.side === 'evil' ? 'stat-name-evil' : 'stat-name-good'}}">{{item.roleName}}</view>
+              <view class="stat-role-meta">
+                <text class="stat-role-rate">{{item.wins}}/{{item.games}} ({{item.winRate}})</text>
+              </view>
             </view>
           </view>
-        </view>
-      </swiper-item>
-    </swiper>
-  </view>
+        </swiper-item>
+      </swiper>
+    </block>
 
-  <view class="card history-card" wx:if="{{historyList.length > 0}}">
-    <view class="history-title">历史对局</view>
-    <view class="history-stats" wx:if="{{totalWinRate}}">
-      {{totalRecord}} · 总胜率 {{totalWinRate}} · 蓝方 {{goodWinRate}} · 红方 {{evilWinRate}}
-    </view>
-    <scroll-view scroll-y class="history-scroll" show-scrollbar="{{false}}">
-      <view class="history-item" wx:for="{{historyList}}" wx:key="gameId"
-            bindtap="openHistoryGame" data-gameid="{{item.gameId}}">
-        <text class="history-role">{{item.roleName}}</text>
-        <text class="history-duration">{{item.durationText}}</text>
-        <text class="history-result {{item.isWin ? 'win' : 'lose'}}">{{item.isWin ? '胜' : '负'}}</text>
-      </view>
-    </scroll-view>
+    <!-- 历史对局 -->
+    <block wx:else>
+      <view wx:if="{{historyList.length === 0}}" class="data-empty">暂无对局</view>
+      <block wx:else>
+        <view class="history-stats" wx:if="{{totalWinRate}}">
+          {{totalRecord}} · 总胜率 {{totalWinRate}} · 蓝方 {{goodWinRate}} · 红方 {{evilWinRate}}
+        </view>
+        <scroll-view scroll-y class="history-scroll" show-scrollbar="{{false}}">
+          <view class="history-item" wx:for="{{historyList}}" wx:key="gameId"
+                bindtap="openHistoryGame" data-gameid="{{item.gameId}}">
+            <text class="history-role">{{item.roleName}}</text>
+            <text class="history-duration">{{item.durationText}}</text>
+            <text class="history-result {{item.isWin ? 'win' : 'lose'}}">{{item.isWin ? '胜' : '负'}}</text>
+          </view>
+        </scroll-view>
+      </block>
+    </block>
   </view>
 
   <view class="footer"><view class="footer-version">AVALON v1.0.0</view></view>

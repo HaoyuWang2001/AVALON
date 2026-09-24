@@ -35,6 +35,7 @@ Page({
     goodWinRate: '',
     evilWinRate: '',
     roleStats: [],
+    dataTab: 'role',
     champions: [],
     podium: [],
     championModal: { show: false, openId: '', nickName: '', avatarUrl: '', isFriend: false, uniqueId: '', isSelf: false, loading: false, stats: null, roles: [] }
@@ -477,6 +478,12 @@ Page({
   },
 
   noop() {},
+
+  // 我的数据分段切换（角色胜率 / 历史对局）
+  switchDataTab(e) {
+    const tab = e.currentTarget.dataset.tab;
+    if (tab) this.setData({ dataTab: tab });
+  },
 
   showInfoModal() {
     this.setData({ showInfo: true });

@@ -9,6 +9,8 @@ page {
   --primary-bg: #F5F3FF;
   --gradient-start: #8B5CF6;
   --gradient-end: #6D28D9;
+  --gold: #B8860B; /* 主题强调金（亮色兜底，三暗色主题各自覆盖） */
+  --egg-glow: rgba(245, 158, 11, 0.32); /* 彩蛋卡光晕（随主题覆盖） */
 
   /* 语义色 */
   --danger: #EF4444;

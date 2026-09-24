@@ -36,6 +36,8 @@
   --state-good: #2A3A5C;
   --state-evil: #5E2A1E;
 
+  --egg-glow: rgba(212, 160, 82, 0.34);
+
   --gray-50: #2E281F;
   --gray-100: #3A332A;
   --gray-200: #362F24;
@@ -84,6 +86,8 @@
   --state-good: #26325E;
   --state-evil: #55243E;
 
+  --egg-glow: rgba(167, 139, 250, 0.34);
+
   --gray-50: #29223E;
   --gray-100: #322A4B;
   --gray-200: #322A4B;
@@ -131,6 +135,8 @@
   --state-reject: #5A2424;
   --state-good: #1D3A6B;
   --state-evil: #5A2424;
+
+  --egg-glow: rgba(212, 160, 82, 0.32);
 
   --gray-50: #20252C;
   --gray-100: #292F37;

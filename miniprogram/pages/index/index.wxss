@@ -11,27 +11,32 @@
   overflow-y: auto;
 }
 
-.logo-section { padding: 32rpx 0 20rpx; text-align: center; flex-shrink: 0; }
-.logo-icon { width: 120rpx; height: 120rpx; margin: 0 auto 24rpx; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); border-radius: 32rpx; display: flex; align-items: center; justify-content: center; box-shadow: 0 12rpx 32rpx rgba(124,58,237,0.25); }
-.logo-icon text { font-size: 60rpx; }
-.logo-title { font-size: 48rpx; font-weight: 800; background: linear-gradient(135deg, var(--primary-deep), var(--primary-deeper)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 6rpx; }
-.logo-subtitle { font-size: 26rpx; color: var(--text-muted); margin-top: 8rpx; letter-spacing: 4rpx; }
+/* ─────── 品牌顶栏（透明、不吸顶） ─────── */
+.topline { display: flex; align-items: center; padding: 8rpx 4rpx 16rpx; flex-shrink: 0; }
+.brand { flex: 1; min-width: 0; font-size: 34rpx; font-weight: 800; letter-spacing: 4rpx; color: var(--text-title); }
+.brand-sub { font-size: 22rpx; font-weight: 500; color: var(--text-muted); letter-spacing: 1rpx; margin-left: 10rpx; }
+.topline-actions { display: flex; align-items: center; gap: 16rpx; flex-shrink: 0; }
+.topline-actions .user-emoji-btn { margin-left: 0; margin-right: 0; }
 
-.user-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); display: flex; align-items: center; flex-shrink: 0; }
-.user-info-section { width: 100%; }
-.user-left { display: flex; align-items: center; width: 100%; }
-.avatar-btn { position: relative; width: 100rpx !important; height: 100rpx !important; border: 6rpx solid #C4B5FD; background: var(--bg-card); border-radius: 50%; overflow: hidden; padding: 0 !important; margin: 0 !important; flex-shrink: 0; box-sizing: border-box; display: flex !important; align-items: center; justify-content: center; line-height: normal; }
+/* ─────── 用户卡（强调式个人卡） ─────── */
+.profile-card {
+  position: relative; overflow: hidden;
+  background: var(--bg-card); border-radius: 28rpx; padding: 30rpx 28rpx; margin-bottom: 20rpx;
+  box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.12), inset 0 0 0 2rpx var(--gold, #B8860B);
+  display: flex; align-items: center; flex-shrink: 0;
+}
+.avatar-btn { position: relative; width: 128rpx !important; height: 128rpx !important; border: 6rpx solid var(--gold, #B8860B); background: var(--bg-card); border-radius: 50%; overflow: hidden; padding: 0 !important; margin: 0 !important; flex-shrink: 0; box-sizing: border-box; display: flex !important; align-items: center; justify-content: center; line-height: normal; box-shadow: 0 6rpx 18rpx rgba(184, 134, 11, 0.22); }
 .avatar-btn::after { border: none; display: none; }
-.avatar-img { width: 88rpx; height: 88rpx; border-radius: 50%; display: block; }
-.user-details { margin-left: 24rpx; flex: 1; min-width: 0; }
-.user-name-text { font-size: 34rpx; font-weight: 700; color: var(--text-title); height: 50rpx; line-height: 50rpx; }
+.avatar-img { width: 116rpx; height: 116rpx; border-radius: 50%; display: block; }
+.profile-info { margin-left: 28rpx; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.user-name-text { font-size: 38rpx; font-weight: 800; color: var(--text-title); height: 56rpx; line-height: 56rpx; }
 .name-placeholder { color: var(--text-muted); font-weight: 400; }
 .user-edit-emoji { margin-left: 8rpx; font-size: 30rpx; }
-.user-status { font-size: 28rpx; color: var(--success); margin-top: 4rpx; display: flex; align-items: center; }
+.user-status { display: inline-flex; align-items: center; font-size: 24rpx; color: var(--success); margin-top: 10rpx; padding: 4rpx 18rpx; border-radius: 999rpx; background: rgba(16, 185, 129, 0.12); }
 .user-status::before { content: ''; width: 12rpx; height: 12rpx; background: var(--success); border-radius: 50%; margin-right: 10rpx; }
-.user-status.status-ingame { color: var(--danger); }
+.user-status.status-ingame { color: var(--danger); background: rgba(239, 68, 68, 0.12); }
 .user-status.status-ingame::before { background: var(--danger); }
-.user-status.status-inroom { color: var(--status-inroom, #3B82F6); }
+.user-status.status-inroom { color: var(--status-inroom, #3B82F6); background: rgba(59, 130, 246, 0.12); }
 .user-status.status-inroom::before { background: var(--status-inroom, #3B82F6); }
 
 .login-btn { width: 100%; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; border-radius: 16rpx; font-size: 32rpx; font-weight: 600; padding: 24rpx; box-shadow: 0 6rpx 20rpx rgba(124,58,237,0.3); }
@@ -98,13 +103,12 @@
   background: linear-gradient(120deg, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);
   background-size: 400% 400%;
   animation: rainbow-flow 6s linear infinite;
-  box-shadow: 0 14rpx 40rpx rgba(245,158,11,0.32);
+  box-shadow: 0 14rpx 40rpx var(--egg-glow, rgba(245, 158, 11, 0.32));
 }
 .gacha-egg::after { display: none; }
 .gacha-egg::before {
   content: ''; position: absolute; top: 7rpx; left: 7rpx; right: 7rpx; bottom: 7rpx;
-  border-radius: 15rpx; background: #1F2937;
-  animation: egg-breathe 2.6s ease-in-out infinite;
+  border-radius: 15rpx; background: var(--bg-card-solid);
 }
 .gacha-egg .gacha-sub-icon, .gacha-egg .gacha-sub-info { position: relative; z-index: 1; }
 
@@ -138,7 +142,6 @@
 
 @keyframes card-shimmer { 0% { left: -160%; } 60%, 100% { left: 160%; } }
 @keyframes rainbow-flow { 0% { background-position: 0% 50%; } 100% { background-position: 400% 50%; } }
-@keyframes egg-breathe { 0%, 100% { box-shadow: 0 0 10rpx rgba(245,158,11,0.5); } 50% { box-shadow: 0 0 26rpx rgba(245,158,11,0.9); } }
 @keyframes badge-shake {
   0%, 100% { transform: rotate(-8deg) translate(0, 0); }
   12% { transform: rotate(-5deg) translate(-2rpx, 1rpx); }
@@ -156,10 +159,7 @@
 .footer { text-align: center; padding: 16rpx 0; color: var(--text-muted); font-size: 22rpx; flex-shrink: 0; }
 
 /* ─────── 历史对局 ─────── */
-.history-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
 .history-scroll { max-height: 760rpx; }
-.history-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 12rpx; display: flex; align-items: center; }
-.history-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
 .history-stats { font-size: 24rpx; color: var(--gray-600); margin-bottom: 16rpx; }
 .history-item { display: flex; align-items: center; padding: 18rpx 8rpx; border-bottom: 1rpx solid var(--gray-100); }
 .history-item:last-child { border-bottom: none; }
@@ -170,18 +170,20 @@
 .history-result.lose { color: var(--danger); background: #FEE2E2; }
 .history-duration { font-size: 24rpx; color: var(--gray-600); flex-shrink: 0; }
 
-/* ─────── 角色胜率 ─────── */
-.role-stats { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
-.role-stats-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 16rpx; display: flex; align-items: center; }
-.role-stats-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
+/* ─────── 我的数据（分段：角色胜率 / 历史对局） ─────── */
+.data-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+.data-tabs { display: flex; gap: 12rpx; margin-bottom: 16rpx; }
+.data-tab { flex: 1; text-align: center; padding: 14rpx 0; border-radius: 14rpx; font-size: 28rpx; font-weight: 700; color: var(--text-muted); background: var(--gray-100); }
+.data-tab-on { color: #fff; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); }
+.data-empty { text-align: center; color: var(--text-muted); font-size: 26rpx; padding: 60rpx 0; }
 
 /* 角色胜率单卡轮播（复刻 game 身份卡视觉，一次一张、滑动居中） */
 .role-stats-swiper { width: 100%; height: 660rpx; }
 .stat-role-item { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
 .stat-role-card {
   width: 400rpx; height: 500rpx; border-radius: 32rpx;
-  background: linear-gradient(160deg, #1E1B4B, #312E81);
-  box-shadow: 0 16rpx 40rpx rgba(49, 46, 129, 0.35);
+  background: var(--bg-card-solid);
+  box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.18), inset 0 0 0 2rpx var(--gold, #B8860B);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   box-sizing: border-box; padding: 40rpx;
 }
@@ -192,7 +194,7 @@
 .stat-name-good { background: rgba(59, 130, 246, 0.16); color: #93C5FD; }
 .stat-name-evil { background: rgba(239, 68, 68, 0.16); color: #FCA5A5; }
 .stat-role-meta { margin-top: 32rpx; }
-.stat-role-rate { font-size: 36rpx; font-weight: 800; color: #A78BFA; }
+.stat-role-rate { font-size: 36rpx; font-weight: 800; color: var(--gold, #B8860B); }
 
 /* ─────── 用户卡 emoji 按钮（游戏说明，仅 emoji） ─────── */
 .user-emoji-btn {
@@ -206,7 +208,6 @@
   transition: transform 0.12s ease;
 }
 .user-emoji-hover { transform: scale(0.9); opacity: 0.8; }
-.theme-toggle { margin-left: 24rpx; }
 
 /* ─────── 游戏说明：全屏覆盖页 ─────── */
 .rules-page { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1100; background: var(--bg-card); display: flex; flex-direction: column; }
@@ -223,12 +224,12 @@
 }
 
 /* ─────── 胜率冠军（领奖台） ─────── */
-.champion-card { position: relative; overflow: hidden; background: linear-gradient(160deg, #1F1B2E 0%, #2A2340 60%, #3B2E5A 100%); }
-.champion-title { font-size: 30rpx; font-weight: 800; color: #FFE9A8; text-shadow: 0 2rpx 10rpx rgba(255, 200, 0, 0.4); }
+.champion-card { position: relative; overflow: hidden; background: var(--bg-card); box-shadow: var(--shadow-sm), inset 0 0 0 2rpx var(--gold, #B8860B); }
+.champion-title { font-size: 30rpx; font-weight: 800; color: var(--gold, #B8860B); }
 .podium { display: flex; align-items: flex-end; justify-content: center; gap: 16rpx; padding-top: 34rpx; }
 .podium-item { flex: 1; max-width: 190rpx; display: flex; flex-direction: column; align-items: center; }
 .podium-avatar-wrap { position: relative; margin-bottom: 10rpx; }
-.podium-avatar { width: 112rpx; height: 112rpx; border-radius: 50%; border: 4rpx solid var(--gray-300); background: #222; }
+.podium-avatar { width: 112rpx; height: 112rpx; border-radius: 50%; border: 4rpx solid var(--gray-300); background: var(--gray-100); }
 .rank-1 .podium-avatar { width: 148rpx; height: 148rpx; border-color: #FFD700; animation: champ-glow 2.2s ease-in-out infinite; }
 .rank-2 .podium-avatar { border-color: #C0C0C0; }
 .rank-3 .podium-avatar { border-color: #CD7F32; }
@@ -236,11 +237,11 @@
 .podium-badge { position: absolute; bottom: -8rpx; left: 50%; transform: translateX(-50%); width: 40rpx; height: 40rpx; border-radius: 50%; background: #333; color: #FFD700; font-size: 24rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2rpx solid #FFD700; }
 .rank-2 .podium-badge { color: #ddd; border-color: #C0C0C0; }
 .rank-3 .podium-badge { color: #E8A56A; border-color: #CD7F32; }
-.podium-name { font-size: 24rpx; color: #EDE7FF; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
-.podium-rate { font-size: 38rpx; font-weight: 800; color: #FFD700; }
-.rank-2 .podium-rate { color: #D8D8D8; }
-.rank-3 .podium-rate { color: #E8A56A; }
-.podium-games { font-size: 20rpx; color: rgba(255, 255, 255, 0.55); }
+.podium-name { font-size: 24rpx; color: var(--text-title); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
+.podium-rate { font-size: 38rpx; font-weight: 800; color: #D4A052; }
+.rank-2 .podium-rate { color: #9AA0A6; }
+.rank-3 .podium-rate { color: #C07A3E; }
+.podium-games { font-size: 20rpx; color: var(--text-muted); }
 .podium-stand { width: 100%; margin-top: 10rpx; border-radius: 14rpx 14rpx 0 0; display: flex; align-items: center; justify-content: center; font-size: 40rpx; font-weight: 800; color: rgba(255, 255, 255, 0.85); }
 .rank-1 .podium-stand { height: 96rpx; background: linear-gradient(180deg, #FFD700, #B8860B); }
 .rank-2 .podium-stand { height: 66rpx; background: linear-gradient(180deg, #D8D8D8, #9A9A9A); }
