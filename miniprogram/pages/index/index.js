@@ -52,7 +52,9 @@ Page({
     podium: [],
     hardworking: null,
     publicWinrate: true,
-    meetingPressStyle: ''
+    meetingPressStyle: '',
+    meetingFillClass: '',
+    meetingFillMs: 420
   },
 
   onLoad(options) {
@@ -288,7 +290,34 @@ Page({
   },
 
   onMeetingTouchEnd() {
-    if (this.data.meetingPressStyle) this.setData({ meetingPressStyle: '' });
+    // 松开后短暂保留按压：让快速单击也能看到按压效果
+    clearTimeout(this._meetingResetTimer);
+    this._meetingResetTimer = setTimeout(() => {
+      if (!this._meetingBusy) this.setData({ meetingPressStyle: '' });
+    }, 450);
+  },
+
+  onMeetingTouchCancel() {
+    clearTimeout(this._meetingResetTimer);
+    this._meetingBusy = false;
+    this.setData({ meetingPressStyle: '', meetingFillClass: '' });
+  },
+
+  onMeetingLeadTap() { this._meetingCommit('lead', 'openConfigs'); },
+  onMeetingJoinTap() { this._meetingCommit('join', 'joinRoom'); },
+
+  // 强制先看到按压 + 颜色铺满（随机 360~500ms），再打开组件
+  _meetingCommit(side, action) {
+    if (this._meetingBusy) return;
+    this._meetingBusy = true;
+    clearTimeout(this._meetingResetTimer);
+    const ms = 360 + Math.floor(Math.random() * 141);
+    this.setData({ meetingFillClass: 'filling-' + side, meetingFillMs: ms });
+    setTimeout(() => {
+      this.setData({ meetingFillClass: '', meetingPressStyle: '' });
+      this._meetingBusy = false;
+      this[action]();
+    }, ms);
   },
 
   onPullDownRefresh() {
