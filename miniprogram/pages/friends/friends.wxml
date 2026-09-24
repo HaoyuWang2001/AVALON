@@ -53,16 +53,17 @@
   <!-- 好友列表 -->
   <view class="card list-card" wx:if="{{tab === 'friends'}}">
     <view wx:if="{{friends.length === 0}}" class="list-empty">{{loadingFriends ? '加载中...' : '还没有好友，去搜索添加吧'}}</view>
-    <view wx:for="{{friends}}" wx:key="openId" class="friend-item" bindtap="goFriendDetail" data-id="{{item.openId}}">
+    <view wx:for="{{friends}}" wx:key="openId" class="friend-item" bindtap="onFriendTap"
+      data-id="{{item.openId}}" data-name="{{item.nickName}}" data-avatar="{{item.avatarUrl}}">
       <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="f-avatar"></image>
       <view class="f-info">
         <text class="f-name">{{item.nickName}}</text>
-        <text class="f-sub">
-          <text class="dot {{item.online ? 'dot-on' : ''}}"></text>
-          {{item.online ? '在线' : '离线'}}
-          <text wx:if="{{item.room}}"> · {{item.room.gameStarted ? '对局中' : '房间等待中'}}</text>
-        </text>
-        <text class="f-rate">胜率 {{item.games > 0 ? item.winRate + '%' : '—'}} · {{item.games}} 场</text>
+        <view class="f-status-row">
+          <view class="f-dot {{item.online ? 'st-online' : 'st-offline'}}"></view>
+          <text class="f-status-text {{item.online ? 'st-online' : 'st-offline'}}">{{item.online ? '在线' : '离线'}}</text>
+          <text wx:if="{{item.room}}" class="f-room-text {{item.room.gameStarted ? 'st-ingame' : 'st-inroom'}}">· {{item.room.gameStarted ? '对局中' : '房间等待中'}}</text>
+        </view>
+        <text wx:if="{{item.qualified}}" class="f-rate">胜率 {{item.winRate}}% · {{item.games}} 场</text>
       </view>
       <text class="f-arrow">›</text>
     </view>
@@ -83,4 +84,7 @@
   </view>
 
   <view style="height: 40rpx"></view>
+
+  <!-- 玩家胜率信息弹窗（公共组件） -->
+  <player-stats id="playerStats" />
 </view>

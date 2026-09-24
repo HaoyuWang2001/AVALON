@@ -471,11 +471,12 @@ class ApiService {
   }
 
   async getUserHistory(openId, limit = 0) {
-    return this.request(`/games/history/user?openId=${openId}&limit=${limit}`);
+    return this.request(`/games/history/user?subjectOpenId=${encodeURIComponent(openId)}&limit=${limit}`);
   }
 
-  async getUserStats(openId) {
-    return this.request(`/games/stats?openId=${openId}`);
+  async getUserStats(openId, viewerOpenId) {
+    const v = viewerOpenId ? `&viewerOpenId=${encodeURIComponent(viewerOpenId)}` : '';
+    return this.request(`/games/stats?subjectOpenId=${encodeURIComponent(openId)}${v}`);
   }
 
   async getGlobalStats() {
@@ -495,6 +496,10 @@ class ApiService {
 
   async setUniqueId(openId, uniqueId) {
     return this.request(`/users/${openId}/uniqueId`, { method: 'POST', data: { uniqueId } });
+  }
+
+  async setPublicWinrate(openId, isPublic) {
+    return this.request(`/users/${openId}/publicWinrate`, { method: 'POST', data: { public: !!isPublic } });
   }
 
   async searchUser(openId, uniqueId) {

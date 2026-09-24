@@ -86,7 +86,7 @@
     </view>
     <scroll-view scroll-x class="waiting-scroll" wx:if="{{unseatedPlayers.length > 0}}">
       <view class="waiting-list">
-      <view wx:for="{{unseatedPlayers}}" wx:key="openId" class="waiting-item" bindlongpress="onPlayerAction" data-id="{{item.openId}}">
+      <view wx:for="{{unseatedPlayers}}" wx:key="openId" class="waiting-item" bindtap="onPlayerTap" bindlongpress="onPlayerAction" data-id="{{item.openId}}">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="waiting-avatar"></image>
         <text class="waiting-name">{{item.nickName || item.wxNickName || '玩家'}}</text>
       </view>
@@ -103,7 +103,7 @@
     </view>
     <scroll-view scroll-x class="waiting-scroll" wx:if="{{spectatorPlayers.length > 0}}">
       <view class="waiting-list">
-        <view wx:for="{{spectatorPlayers}}" wx:key="openId" class="waiting-item" bindlongpress="onPlayerAction" data-id="{{item.openId}}">
+        <view wx:for="{{spectatorPlayers}}" wx:key="openId" class="waiting-item" bindtap="onPlayerTap" bindlongpress="onPlayerAction" data-id="{{item.openId}}">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="waiting-avatar"></image>
         <text class="waiting-name">{{item.nickName || '玩家'}}</text>
       </view>
@@ -193,5 +193,8 @@
 
   <!-- Config Overlay -->
   <configs id="configs" mode="update" room-id="{{roomId}}" room-config="{{roomInfo.roomConfig}}" confirm-text="更新配置" bind:success="onUpdated" bind:close="onConfigClosed" />
+
+  <!-- 玩家胜率信息弹窗（公共组件） -->
+  <player-stats id="playerStats" />
 </view>
 </view>

@@ -3,6 +3,7 @@
   "enablePullDownRefresh": true,
   "usingComponents": {
     "configs": "/components/configs/configs",
-    "theme-toggle": "/components/theme-toggle/theme-toggle"
+    "theme-toggle": "/components/theme-toggle/theme-toggle",
+    "player-stats": "/components/player-stats/player-stats"
   }
 }

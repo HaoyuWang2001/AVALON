@@ -1,7 +1,7 @@
 // pages/friend-detail/friend-detail.js
 const api = require('../../services/api.js');
 const { getThemeClass, getThemeBg } = require('../../utils/theme.js');
-const { DEFAULT_AVATAR, ROLE_NAMES } = require('../../utils/constants.js');
+const { DEFAULT_AVATAR, ROLE_NAMES, ROLE_EMOJIS, CONFIG_EVIL_ROLES } = require('../../utils/constants.js');
 
 function formatDuration(seconds) {
   const sec = parseInt(seconds, 10) || 0;
@@ -19,10 +19,14 @@ Page({
     friendOpenId: '',
     friend: null,           // {openId, nickName, avatarUrl, uniqueId, online, room}
     roleStats: [],
+    totalRecord: '',
     totalWinRate: '',
     goodWinRate: '',
     evilWinRate: '',
     historyList: [],
+    myInvite: '',           // '' | 'room' | 'game'
+    myRoomId: '',
+    myGameId: '',
     loading: false
   },
 
@@ -37,7 +41,36 @@ Page({
     this.loadDetail();
     this.loadStats();
     this.loadHistory();
+    this.loadMyRoom();
     wx.setBackgroundColor({ backgroundColor: getThemeBg(this.data.themeClass) });
+  },
+
+  // 我当前状态（用于邀请按钮）
+  loadMyRoom() {
+    if (!this._openId) return;
+    api.getCurrentRoom(this._openId).then(res => {
+      const room = res && res.room;
+      if (room && room.gameStarted && room.activeGameId) {
+        this.setData({ myInvite: 'game', myRoomId: room.roomId, myGameId: room.activeGameId });
+      } else if (room && !room.gameStarted) {
+        this.setData({ myInvite: 'room', myRoomId: room.roomId, myGameId: '' });
+      } else {
+        this.setData({ myInvite: '', myRoomId: '', myGameId: '' });
+      }
+    }).catch(() => {});
+  },
+
+  onShareAppMessage(res) {
+    const f = this.data.friend;
+    const name = (f && f.nickName) || '好友';
+    const ds = res && res.target && res.target.dataset ? res.target.dataset : {};
+    if (ds.invite === 'room' && this.data.myRoomId) {
+      return { title: `${name}，来开瓦！`, path: `/pages/index/index?roomId=${this.data.myRoomId}` };
+    }
+    if (ds.invite === 'game' && this.data.myRoomId && this.data.myGameId) {
+      return { title: `${name}，来看瓦！`, path: `/pages/index/index?roomId=${this.data.myRoomId}&gameId=${this.data.myGameId}` };
+    }
+    return { title: 'AVALON · 瓦协会之练秋湖分部', path: '/pages/index/index' };
   },
 
   loadDetail() {
@@ -69,12 +102,15 @@ Page({
       if (res && res.success && res.stats) {
         const s = res.stats;
         this.setData({
+          totalRecord: s.totalGames > 0 ? s.totalWins + '/' + s.totalGames : '',
           totalWinRate: s.totalGames > 0 ? s.totalWinRate + '%' : '',
           goodWinRate: s.goodGames > 0 ? s.goodWinRate + '%' : '',
           evilWinRate: s.evilGames > 0 ? s.evilWinRate + '%' : '',
           roleStats: (s.roles || []).filter(r => r.games > 0).map(r => ({
             role: r.role,
             roleName: ROLE_NAMES[r.role] || r.role,
+            emoji: ROLE_EMOJIS[r.role] || '🎴',
+            side: CONFIG_EVIL_ROLES.includes(r.role) ? 'evil' : 'good',
             games: r.games,
             wins: r.wins,
             winRate: r.winRate + '%'

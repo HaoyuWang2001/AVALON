@@ -158,10 +158,18 @@ Page({
     }).catch(() => this.setData({ loadingFriends: false }));
   },
 
-  goFriendDetail(e) {
-    const openId = e.currentTarget.dataset.id;
-    if (!openId) return;
-    wx.navigateTo({ url: `/pages/friend-detail/friend-detail?openId=${openId}` });
+  onFriendTap(e) {
+    const { id, name, avatar } = e.currentTarget.dataset;
+    if (!id) return;
+    const comp = this.selectComponent('#playerStats');
+    if (!comp) return;
+    comp.open({
+      openId: id,
+      nickName: name,
+      avatarUrl: avatar,
+      isFriend: true,
+      isSelf: id === this._openId
+    });
   },
 
   // ─── 申请列表 ───

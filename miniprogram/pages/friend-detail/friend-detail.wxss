@@ -2,37 +2,53 @@
 .page { padding: 24rpx 32rpx 0; box-sizing: border-box; position: relative; }
 .page-loading { text-align: center; color: var(--gray-400); padding: 80rpx 0; }
 
-.more-btn {
-  position: absolute; top: 8rpx; right: 32rpx; z-index: 10;
-  font-size: 40rpx; font-weight: 800; color: var(--gray-500);
-  padding: 8rpx 16rpx;
-}
-
 /* 基本信息 */
 .head-card { display: flex; align-items: center; padding: 32rpx 28rpx; }
 .hd-avatar { width: 128rpx; height: 128rpx; border-radius: 50%; flex-shrink: 0; background: var(--gray-100); }
-.hd-info { margin-left: 24rpx; min-width: 0; }
-.hd-name { font-size: 40rpx; font-weight: 800; color: var(--gray-900); display: block; }
-.hd-id { font-size: 26rpx; color: var(--gray-400); display: block; margin-top: 8rpx; }
-.hd-status { font-size: 26rpx; color: var(--gray-400); margin-top: 10rpx; display: flex; align-items: center; }
-.hd-status.st-on { color: var(--success); }
-.dot { display: inline-block; width: 16rpx; height: 16rpx; border-radius: 50%; background: var(--gray-300); margin-right: 8rpx; }
-.dot-on { background: #22C55E; }
+.hd-info { margin-left: 24rpx; min-width: 0; flex: 1; }
+.hd-name-row { display: flex; align-items: baseline; }
+.hd-name { font-size: 40rpx; font-weight: 800; color: var(--gray-900); }
+.hd-id { font-size: 26rpx; color: var(--gray-400); margin-left: 14rpx; }
+.hd-status-row { display: flex; align-items: center; margin-top: 12rpx; }
+.hd-dot { width: 16rpx; height: 16rpx; border-radius: 50%; margin-right: 8rpx; flex-shrink: 0; }
+.hd-status { font-size: 26rpx; }
+.hd-dot.st-online { background: #22C55E; }
+.hd-dot.st-offline { background: var(--gray-300); }
+.st-online { color: #22C55E; }
+.st-offline { color: var(--gray-400); }
+.more-btn { margin-left: 12rpx; flex-shrink: 0; font-size: 40rpx; font-weight: 800; color: var(--gray-500); line-height: 1; padding: 8rpx 8rpx 16rpx 16rpx; }
 
 /* 状态卡 */
 .status-card { display: flex; align-items: center; justify-content: space-between; padding: 28rpx; }
 .status-empty { font-size: 30rpx; color: var(--gray-500); }
 .status-text { font-size: 30rpx; font-weight: 600; color: var(--gray-800); }
+.status-btns { display: flex; gap: 12rpx; }
 .status-btn { flex-shrink: 0; }
 
 /* 统计与历史 */
 .card-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 16rpx; }
 .stats-summary { font-size: 24rpx; color: var(--gray-600); margin-bottom: 16rpx; }
-.role-stats-list { display: flex; flex-wrap: wrap; gap: 12rpx; }
-.role-stat-item { background: var(--gray-50); border-radius: 12rpx; padding: 10rpx 18rpx; display: flex; flex-direction: column; align-items: center; }
-.role-stat-name { font-size: 24rpx; font-weight: 600; color: var(--gray-800); }
-.role-stat-value { font-size: 22rpx; color: var(--gray-500); margin-top: 4rpx; }
 .list-empty { text-align: center; color: var(--gray-400); font-size: 26rpx; padding: 40rpx 0; }
+
+/* 角色胜率（主页同款 swiper） */
+.role-stats-swiper { width: 100%; height: 660rpx; }
+.stat-role-item { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.stat-role-card {
+  width: 400rpx; height: 500rpx; border-radius: 32rpx;
+  background: var(--bg-card-solid);
+  box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.18), inset 0 0 0 2rpx var(--gold, #B8860B);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-sizing: border-box; padding: 40rpx;
+}
+.stat-role-emoji { font-size: 180rpx; line-height: 1.2; }
+.stat-role-name { font-size: 28rpx; font-weight: 700; padding: 8rpx 28rpx; border-radius: 28rpx; margin-top: 24rpx; }
+.stat-name-good { background: rgba(59, 130, 246, 0.16); color: #93C5FD; }
+.stat-name-evil { background: rgba(239, 68, 68, 0.16); color: #FCA5A5; }
+.stat-role-meta { margin-top: 32rpx; }
+.stat-role-rate { font-size: 36rpx; font-weight: 800; color: var(--gold, #B8860B); }
+
+/* 历史对局 */
+.hist-scroll { max-height: 760rpx; }
 .hist-item { display: flex; align-items: center; padding: 18rpx 0; border-bottom: 1rpx solid var(--gray-100); }
 .hist-item:last-child { border-bottom: none; }
 .hist-role { font-size: 28rpx; font-weight: 600; color: var(--gray-800); flex: 1; }

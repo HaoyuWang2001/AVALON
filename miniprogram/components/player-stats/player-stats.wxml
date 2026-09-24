@@ -1,0 +1,38 @@
+<!--components/player-stats/player-stats.wxml-->
+<view class="ps-overlay" wx:if="{{show}}" bindtap="close">
+  <view class="ps-modal" catchtap="noop">
+    <view class="ps-close" bindtap="close">✕</view>
+    <view class="ps-head">
+      <image src="{{avatarUrl || '/images/default-avatar.png'}}" class="ps-avatar"></image>
+      <view class="ps-name">{{nickName}}</view>
+      <view wx:if="{{isSelf}}" class="ps-tag">这是你</view>
+    </view>
+
+    <view wx:if="{{loading}}" class="ps-loading">加载中...</view>
+    <block wx:else>
+      <block wx:if="{{rateVisible && stats}}">
+        <view class="ps-stats">
+          <view class="ps-stat"><text class="ps-num">{{stats.totalWinRate}}</text><text class="ps-label">总胜率</text></view>
+          <view class="ps-stat"><text class="ps-num ps-good">{{stats.goodWinRate}}</text><text class="ps-label">蓝方</text></view>
+          <view class="ps-stat"><text class="ps-num ps-evil">{{stats.evilWinRate}}</text><text class="ps-label">红方</text></view>
+          <view class="ps-stat"><text class="ps-num">{{stats.totalGames}}</text><text class="ps-label">场次</text></view>
+        </view>
+        <view wx:if="{{roles.length > 0}}" class="ps-roles">
+          <text class="ps-roles-title">常用角色</text>
+          <view class="ps-roles-row">
+            <view wx:for="{{roles}}" wx:key="roleName" class="ps-role">
+              <text class="ps-role-emoji">{{item.emoji}}</text>
+              <text class="ps-role-name">{{item.roleName}}</text>
+              <text class="ps-role-rate">{{item.winRate}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+      <view wx:else class="ps-private">该玩家未公开胜率</view>
+    </block>
+
+    <view class="ps-actions" wx:if="{{isFriend && !isSelf}}">
+      <button class="btn btn-primary ps-action-btn" bindtap="goDetail">进入主页</button>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,35 @@
+/* components/player-stats/player-stats.wxss */
+.ps-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.55); z-index: 1200;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.ps-modal {
+  width: 100%; max-width: 720rpx; box-sizing: border-box;
+  background: var(--bg-card); border-radius: 28rpx 28rpx 0 0;
+  padding: 40rpx 36rpx calc(40rpx + env(safe-area-inset-bottom));
+  position: relative; animation: ps-up 0.25s ease-out;
+}
+@keyframes ps-up { from { transform: translateY(60rpx); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.ps-close { position: absolute; top: 24rpx; right: 28rpx; font-size: 34rpx; color: var(--text-muted); }
+.ps-head { display: flex; flex-direction: column; align-items: center; }
+.ps-avatar { width: 140rpx; height: 140rpx; border-radius: 50%; border: 4rpx solid var(--gold, #B8860B); background: var(--gray-100); }
+.ps-name { font-size: 34rpx; font-weight: 800; color: var(--text-title); margin-top: 14rpx; }
+.ps-tag { font-size: 22rpx; color: #fff; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); padding: 4rpx 18rpx; border-radius: 999rpx; margin-top: 8rpx; }
+.ps-loading { text-align: center; color: var(--text-muted); padding: 30rpx 0; }
+.ps-stats { display: flex; margin-top: 24rpx; }
+.ps-stat { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.ps-num { font-size: 36rpx; font-weight: 800; color: var(--primary); }
+.ps-good { color: #3B82F6; }
+.ps-evil { color: #EF4444; }
+.ps-label { font-size: 22rpx; color: var(--text-muted); margin-top: 4rpx; }
+.ps-roles { margin-top: 24rpx; }
+.ps-roles-title { font-size: 26rpx; font-weight: 700; color: var(--text-title); }
+.ps-roles-row { display: flex; gap: 14rpx; margin-top: 12rpx; }
+.ps-role { flex: 1; background: var(--gray-50); border-radius: 14rpx; padding: 14rpx 8rpx; display: flex; flex-direction: column; align-items: center; }
+.ps-role-emoji { font-size: 34rpx; }
+.ps-role-name { font-size: 22rpx; color: var(--text-title); margin-top: 4rpx; }
+.ps-role-rate { font-size: 24rpx; font-weight: 700; color: var(--primary); margin-top: 2rpx; }
+.ps-private { text-align: center; color: var(--text-muted); font-size: 26rpx; padding: 40rpx 0; }
+.ps-actions { display: flex; justify-content: center; margin-top: 30rpx; }
+.ps-action-btn { width: 60%; }

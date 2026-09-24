@@ -344,10 +344,31 @@ Page({
 
   onSeatRowTap(e) {
     const { id, seat } = e.currentTarget.dataset;
+    // 已坐玩家：点击弹出玩家胜率弹窗
+    if (id) { this.openPlayerStats(id); return; }
     // 空座位：点击入座；已坐玩家（有 id）：点击不触发操作，长按才弹操作面板
     if (!id && seat && this.data.currentUser && (this.data.currentUser.seatNumber < 1 || !this.data.currentUserReady)) {
       this.takeSeat({ currentTarget: { dataset: { seat } } });
     }
+  },
+
+  // 等待区/观战区/座位：点击玩家 → 玩家胜率弹窗
+  onPlayerTap(e) {
+    const { id } = e.currentTarget.dataset;
+    if (id) this.openPlayerStats(id);
+  },
+
+  openPlayerStats(openId) {
+    const comp = this.selectComponent('#playerStats');
+    if (!comp || !openId) return;
+    const p = (this.data.players || []).find(x => x.openId === openId) || {};
+    comp.open({
+      openId,
+      nickName: p.nickName || p.wxNickName || '玩家',
+      avatarUrl: p.avatarUrl || '',
+      isFriend: !!(this._friendSet && this._friendSet.has(openId)),
+      isSelf: openId === app.globalData.openId
+    });
   },
 
   onPlayerAction(e) {

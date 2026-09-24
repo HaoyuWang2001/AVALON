@@ -24,6 +24,12 @@
     </view>
   </view>
 
+  <!-- 公开胜率开关 -->
+  <view class="card privacy-row">
+    <text class="privacy-label">公开胜率</text>
+    <switch class="privacy-switch" checked="{{publicWinrate}}" bindchange="onPublicWinrateChange" color="#8B5CF6"/>
+  </view>
+
   <view class="card current-room-card" wx:if="{{currentRoom}}">
     <view class="current-room-top">
       <view class="current-room-label">您当前处于房间</view>
@@ -104,6 +110,7 @@
 
   <view class="role-stats" wx:if="{{roleStats.length > 0}}">
     <view class="role-stats-title">角色胜率</view>
+    <view class="role-stats-summary" wx:if="{{totalWinRate}}">{{totalRecord}}·胜率 {{totalWinRate}} · 蓝方 {{goodWinRate}} · 红方 {{evilWinRate}}</view>
     <swiper class="role-stats-swiper"
             indicator-dots="{{roleStats.length > 1}}"
             indicator-color="rgba(139,92,246,0.25)"
@@ -124,10 +131,7 @@
   </view>
 
   <view class="card history-card" wx:if="{{historyList.length > 0}}">
-    <view class="history-title">历史对局</view>
-    <view class="history-stats" wx:if="{{totalWinRate}}">
-      {{totalRecord}} · 总胜率 {{totalWinRate}} · 蓝方 {{goodWinRate}} · 红方 {{evilWinRate}}
-    </view>
+    <view class="history-title">历史对局（{{historyList.length}}）</view>
     <scroll-view scroll-y class="history-scroll" show-scrollbar="{{false}}">
       <view class="history-item" wx:for="{{historyList}}" wx:key="gameId"
             bindtap="openHistoryGame" data-gameid="{{item.gameId}}">
@@ -154,41 +158,8 @@
     </scroll-view>
   </view>
 
-  <!-- 胜率冠军详情弹窗 -->
-  <view class="champ-overlay" wx:if="{{championModal.show}}" bindtap="closeChampionModal">
-    <view class="champ-modal" catchtap="noop">
-      <view class="champ-modal-close" bindtap="closeChampionModal">✕</view>
-      <view class="champ-modal-head">
-        <image src="{{championModal.avatarUrl || '/images/default-avatar.png'}}" class="champ-modal-avatar"></image>
-        <view class="champ-modal-name">{{championModal.nickName}}</view>
-        <view wx:if="{{championModal.isSelf}}" class="champ-modal-tag">这是你</view>
-        <view wx:elif="{{championModal.rank}}" class="champ-modal-tag champ-modal-tag-rank">胜率榜 #{{championModal.rank}}</view>
-      </view>
-      <view wx:if="{{championModal.loading}}" class="champ-modal-loading">加载中...</view>
-      <block wx:else>
-        <view wx:if="{{championModal.stats}}" class="champ-modal-stats">
-          <view class="cms-item"><text class="cms-num">{{championModal.stats.totalWinRate}}</text><text class="cms-label">总胜率</text></view>
-          <view class="cms-item"><text class="cms-num cms-good">{{championModal.stats.goodWinRate}}</text><text class="cms-label">蓝方</text></view>
-          <view class="cms-item"><text class="cms-num cms-evil">{{championModal.stats.evilWinRate}}</text><text class="cms-label">红方</text></view>
-          <view class="cms-item"><text class="cms-num">{{championModal.stats.totalGames}}</text><text class="cms-label">场次</text></view>
-        </view>
-        <view wx:if="{{championModal.roles.length > 0}}" class="champ-modal-roles">
-          <text class="cmr-title">常用角色</text>
-          <view class="cmr-row">
-            <view wx:for="{{championModal.roles}}" wx:key="roleName" class="cmr-item">
-              <text class="cmr-emoji">{{item.emoji}}</text>
-              <text class="cmr-name">{{item.roleName}}</text>
-              <text class="cmr-rate">{{item.winRate}}</text>
-            </view>
-          </view>
-        </view>
-      </block>
-      <view class="champ-modal-actions" wx:if="{{!championModal.isSelf}}">
-        <button wx:if="{{championModal.isFriend}}" class="btn btn-primary champ-action-btn" bindtap="goChampionDetail">查看主页</button>
-        <button wx:elif="{{championModal.uniqueId}}" class="btn btn-primary champ-action-btn" bindtap="addChampionFriend">加好友</button>
-      </view>
-    </view>
-  </view>
+  <!-- 玩家胜率信息弹窗（公共组件） -->
+  <player-stats id="playerStats" />
 </view>
 
 <!-- ─────────── Config Modal ─────────── -->

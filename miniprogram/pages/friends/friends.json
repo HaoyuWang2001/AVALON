@@ -1,5 +1,7 @@
 {
   "navigationBarTitleText": "牛马朋友",
   "enablePullDownRefresh": true,
-  "usingComponents": {}
+  "usingComponents": {
+    "player-stats": "/components/player-stats/player-stats"
+  }
 }

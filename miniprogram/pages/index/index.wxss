@@ -34,6 +34,11 @@
 .user-status.status-inroom { color: var(--status-inroom, #3B82F6); }
 .user-status.status-inroom::before { background: var(--status-inroom, #3B82F6); }
 
+/* ─────── 公开胜率开关行 ─────── */
+.privacy-row { background: var(--bg-card); border-radius: 20rpx; padding: 18rpx 28rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.privacy-label { font-size: 28rpx; font-weight: 600; color: var(--text-title); }
+.privacy-switch { transform: scale(0.9); }
+
 .login-btn { width: 100%; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; border-radius: 16rpx; font-size: 32rpx; font-weight: 600; padding: 24rpx; box-shadow: 0 6rpx 20rpx rgba(124,58,237,0.3); }
 
 .current-room-card { background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-radius: 28rpx; padding: 40rpx 36rpx; margin-bottom: 20rpx; border-left: 8rpx solid var(--warning); flex-shrink: 0; }
@@ -174,6 +179,7 @@
 .role-stats { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
 .role-stats-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 16rpx; display: flex; align-items: center; }
 .role-stats-title::before { content: ''; width: 6rpx; height: 28rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 14rpx; }
+.role-stats-summary { font-size: 24rpx; color: var(--text-muted); margin-bottom: 12rpx; }
 
 /* 角色胜率单卡轮播（复刻 game 身份卡视觉，一次一张、滑动居中） */
 .role-stats-swiper { width: 100%; height: 660rpx; }
@@ -247,30 +253,3 @@
 .rank-3 .podium-stand { height: 48rpx; background: linear-gradient(180deg, #CD7F32, #8B4513); }
 @keyframes crown-float { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10rpx); } }
 @keyframes champ-glow { 0%, 100% { box-shadow: 0 0 18rpx rgba(255, 215, 0, 0.55); } 50% { box-shadow: 0 0 34rpx rgba(255, 215, 0, 0.95); } }
-
-/* ─────── 冠军详情弹窗 ─────── */
-.champ-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.55); z-index: 120; display: flex; align-items: flex-end; justify-content: center; }
-.champ-modal { width: 100%; max-width: 720rpx; background: var(--bg-card); border-radius: 28rpx 28rpx 0 0; padding: 40rpx 36rpx calc(40rpx + env(safe-area-inset-bottom)); box-sizing: border-box; position: relative; animation: champ-up 0.25s ease-out; }
-@keyframes champ-up { from { transform: translateY(60rpx); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.champ-modal-close { position: absolute; top: 24rpx; right: 28rpx; font-size: 34rpx; color: var(--text-muted); }
-.champ-modal-head { display: flex; flex-direction: column; align-items: center; }
-.champ-modal-avatar { width: 140rpx; height: 140rpx; border-radius: 50%; border: 4rpx solid #FFD700; }
-.champ-modal-name { font-size: 34rpx; font-weight: 800; color: var(--text-title); margin-top: 14rpx; }
-.champ-modal-tag { font-size: 22rpx; color: #fff; background: linear-gradient(135deg, #FFD700, #B8860B); padding: 4rpx 18rpx; border-radius: 999rpx; margin-top: 8rpx; }
-.champ-modal-tag-rank { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); }
-.champ-modal-loading { text-align: center; color: var(--text-muted); padding: 30rpx 0; }
-.champ-modal-stats { display: flex; margin-top: 24rpx; }
-.cms-item { flex: 1; display: flex; flex-direction: column; align-items: center; }
-.cms-num { font-size: 36rpx; font-weight: 800; color: var(--primary); }
-.cms-good { color: #3B82F6; }
-.cms-evil { color: #EF4444; }
-.cms-label { font-size: 22rpx; color: var(--text-muted); margin-top: 4rpx; }
-.champ-modal-roles { margin-top: 24rpx; }
-.cmr-title { font-size: 26rpx; font-weight: 700; color: var(--text-title); }
-.cmr-row { display: flex; gap: 14rpx; margin-top: 12rpx; }
-.cmr-item { flex: 1; background: var(--gray-50); border-radius: 14rpx; padding: 14rpx 8rpx; display: flex; flex-direction: column; align-items: center; }
-.cmr-emoji { font-size: 34rpx; }
-.cmr-name { font-size: 22rpx; color: var(--text-title); margin-top: 4rpx; }
-.cmr-rate { font-size: 24rpx; font-weight: 700; color: var(--primary); margin-top: 2rpx; }
-.champ-modal-actions { margin-top: 30rpx; }
-.champ-action-btn { width: 100%; }

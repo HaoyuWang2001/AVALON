@@ -645,6 +645,7 @@ Page({
           playerLakeConfirmed,
           playerLancelotConfirmed,
           playerRole: myRole,
+          isSpectator: !myRole,
           playerSide: res.player ? res.player.side : null,
           roleName: this.getRoleName(myRole),
           roleEmoji: this.getRoleEmoji(myRole),
@@ -1010,6 +1011,12 @@ Page({
 
   // 长桌玩家点击（按阶段分发）
   onTablePlayerTap(e) {
+    // 观战者：点击玩家弹出玩家胜率弹窗（不参与提名/刺杀等操作）
+    if (this.data.isSpectator) {
+      const id = e.currentTarget.dataset.id;
+      if (id) this.openPlayerStats(id);
+      return;
+    }
     const { currentPhase } = this.data;
     if (currentPhase === 'teamNomination' || (currentPhase === 'discussion' && this.data.showPreteamPicker)) {
       this.nominatePlayer(e);
@@ -1027,6 +1034,26 @@ Page({
         this.assassinate(e);
       }
     }
+  },
+
+  // 观众席点击玩家 → 玩家胜率弹窗
+  onSpectatorTap(e) {
+    const { id } = e.currentTarget.dataset;
+    if (id) this.openPlayerStats(id);
+  },
+
+  // 打开玩家胜率弹窗（公共组件）
+  openPlayerStats(openId) {
+    const comp = this.selectComponent('#playerStats');
+    if (!comp || !openId) return;
+    const p = (this.data.allPlayers || []).find(x => x.openId === openId) || {};
+    comp.open({
+      openId,
+      nickName: p.nickName || p.wxNickName || '玩家',
+      avatarUrl: p.avatarUrl || '',
+      isFriend: !!(this._friendSet && this._friendSet.has(openId)),
+      isSelf: openId === this.data.playerId
+    });
   },
 
   // 长按卡片：进行中→身份标记面板；已结束(gameEnd)→好友申请底部框（不再允许标记身份）

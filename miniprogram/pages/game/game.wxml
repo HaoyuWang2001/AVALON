@@ -107,7 +107,8 @@
       <view class="spectators-title">观众席（{{spectators.length}}）</view>
       <scroll-view scroll-x class="spectators-scroll" show-scrollbar="{{false}}">
         <view class="spectators-row">
-          <view wx:for="{{spectators}}" wx:key="openId" class="spectator-item">
+          <view wx:for="{{spectators}}" wx:key="openId" class="spectator-item"
+            bindtap="onSpectatorTap" data-id="{{item.openId}}" data-name="{{item.nickName}}" data-avatar="{{item.avatarUrl}}">
             <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="spectator-avatar"></image>
             <text class="spectator-name">{{item.nickName}}</text>
           </view>
@@ -540,4 +541,7 @@
     </view>
   </view>
 </view>
+
+<!-- 玩家胜率信息弹窗（公共组件） -->
+<player-stats id="playerStats" />
 </view>

@@ -2,6 +2,7 @@
   "navigationBarTitleText": "游戏进行中",
   "enablePullDownRefresh": true,
   "usingComponents": {
-    "top-bar": "/components/top-bar/top-bar"
+    "top-bar": "/components/top-bar/top-bar",
+    "player-stats": "/components/player-stats/player-stats"
   }
 }
