@@ -161,7 +161,7 @@
 .meeting-btn {
   position: relative; width: 100%; height: 220rpx; margin-bottom: 20rpx;
   border-radius: 24rpx; overflow: hidden; box-sizing: border-box;
-  background: linear-gradient(135deg, #4F46E5 0%, #312E81 40%, #94A3B8 60%, #64748B 100%);
+  background: linear-gradient(135deg, #3730A3 0%, #312E81 40%, #64748B 60%, #475569 100%);
   box-shadow: 0 12rpx 32rpx rgba(30,41,59,0.35), inset 0 2rpx 0 rgba(255,255,255,0.35);
   transition: transform 0.12s ease;
 }
@@ -171,8 +171,8 @@
 .meeting-zone.join { clip-path: polygon(100% 0, 100% 100%, 0 100%); }
 .zone-hover { background: rgba(255,255,255,0.16); }
 .meeting-content { position: absolute; display: flex; flex-direction: row; align-items: center; gap: 14rpx; transform: translate(-50%, -50%); }
-.meeting-zone.lead .meeting-content { left: 33%; top: 33%; }
-.meeting-zone.join .meeting-content { left: 67%; top: 67%; }
+.meeting-zone.lead .meeting-content { left: 25%; top: 33%; }
+.meeting-zone.join .meeting-content { left: 75%; top: 67%; }
 .meeting-icon { width: 56rpx; height: 56rpx; flex-shrink: 0; }
 .meeting-label { font-size: 34rpx; font-weight: 800; color: #fff; text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.35); }
 
