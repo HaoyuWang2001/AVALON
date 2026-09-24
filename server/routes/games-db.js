@@ -800,6 +800,64 @@ function createRouter() {
       res.status(500).json({ success: false, message: error.message || '获取角色对局失败' });
     }
   });
+
+  // 胜率冠军（全局按总胜率排名，最少场次门槛）
+  router.get('/stats/champions', async (req, res) => {
+    try {
+      const db = require('../config/db');
+      const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 3, 1), 20);
+      const minGames = Math.max(parseInt(req.query.minGames, 10) || 10, 1);
+      const viewerOpenId = req.query.openId || null;
+
+      const rows = await db.query(
+        `SELECT t.openId, t.games, t.wins,
+                u.custom_nick_name as customNickName, u.wx_nick_name as wxNickName,
+                u.avatar_url as avatarUrl, u.unique_id as uniqueId
+         FROM (
+           SELECT gp.open_id as openId,
+                  COUNT(DISTINCT g.id) as games,
+                  COUNT(DISTINCT CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN g.id END) as wins
+           FROM game_players gp
+           JOIN games g ON g.id = gp.game_id
+           WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
+           GROUP BY gp.open_id
+           HAVING games >= ?
+         ) t
+         JOIN users u ON u.open_id = t.openId
+         ORDER BY (t.wins / t.games) DESC, t.games DESC
+         LIMIT ${limit}`,
+        [minGames]
+      );
+
+      const champions = [];
+      for (const r of rows) {
+        const games = parseInt(r.games, 10) || 0;
+        const wins = parseInt(r.wins, 10) || 0;
+        let isFriend = false;
+        if (viewerOpenId && viewerOpenId !== r.openId) {
+          const fr = await db.query(
+            'SELECT 1 FROM friendships WHERE user_open_id = ? AND friend_open_id = ? LIMIT 1',
+            [viewerOpenId, r.openId]
+          );
+          isFriend = fr.length > 0;
+        }
+        champions.push({
+          openId: r.openId,
+          nickName: r.customNickName || r.wxNickName || '玩家',
+          avatarUrl: r.avatarUrl || '',
+          uniqueId: r.uniqueId || '',
+          games,
+          wins,
+          winRate: games > 0 ? Math.round(wins / games * 1000) / 10 : 0,
+          isFriend
+        });
+      }
+      res.json({ success: true, champions });
+    } catch (error) {
+      console.error('获取胜率冠军API错误:', error);
+      res.status(500).json({ success: false, message: error.message || '获取胜率冠军失败' });
+    }
+  });
   
   // 获取游戏历史记录（管理接口）
   router.get('/history/:roomId', async (req, res) => {

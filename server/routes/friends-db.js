@@ -94,11 +94,44 @@ function createRouter() {
         [openId]
       );
 
+      // 批量聚合好友胜率（ended、排除房间000000、按局去重）
+      const friendIds = friends.map(f => f.openId);
+      const statMap = {};
+      if (friendIds.length > 0) {
+        const placeholders = friendIds.map(() => '?').join(',');
+        const stats = await db.query(
+          `SELECT gp.open_id as openId,
+                  COUNT(DISTINCT g.id) as games,
+                  COUNT(DISTINCT CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN g.id END) as wins
+           FROM game_players gp
+           JOIN games g ON g.id = gp.game_id
+           WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
+             AND gp.open_id IN (${placeholders})
+           GROUP BY gp.open_id`,
+          friendIds
+        );
+        stats.forEach(s => { statMap[s.openId] = s; });
+      }
+
       const list = [];
       for (const f of friends) {
         const view = await getUserView(f.openId, openId);
-        if (view) list.push(view);
+        if (!view) continue;
+        const st = statMap[f.openId];
+        const games = st ? parseInt(st.games, 10) || 0 : 0;
+        const wins = st ? parseInt(st.wins, 10) || 0 : 0;
+        view.games = games;
+        view.wins = wins;
+        view.winRate = games > 0 ? Math.round(wins / games * 1000) / 10 : null;
+        list.push(view);
       }
+      // 按胜率降序（无对局排最后），再按场次降序
+      list.sort((a, b) => {
+        const ra = a.winRate == null ? -1 : a.winRate;
+        const rb = b.winRate == null ? -1 : b.winRate;
+        if (rb !== ra) return rb - ra;
+        return b.games - a.games;
+      });
       res.json({ success: true, friends: list, count: list.length });
     } catch (error) {
       console.error('好友列表API错误:', error);

@@ -1,4 +1,4 @@
-const { request, makeUserId, apiGet, apiPost } = require('./helpers/testHelper');
+const { request, makeUserId, apiGet, apiPost, createRoomAndStartGame, endGame } = require('./helpers/testHelper');
 
 async function setUniqueId(openId, uniqueId) {
   return apiPost(`/api/users/${openId}/uniqueId`, { uniqueId });
@@ -235,6 +235,45 @@ describe('08 — 好友系统（uniqueId/搜索/申请/同意/删除）', () => 
 
       const forbidden = await apiGet(`/api/friends/${b}/detail?openId=${c}`);
       expect(forbidden.status).toBe(403);
+    });
+  });
+
+  // ─────────── 08.6 好友胜率 ───────────
+  describe('好友胜率', () => {
+    it('08.6-1 好友列表附带胜率/场次，并按胜率降序（无对局排最后）', async () => {
+      const me = makeUserId(); await ensureUser(me);
+      await setUniqueId(me, 'rate_me');
+
+      // 造一局，取一名玩家作为有对局的好友
+      const g = await createRoomAndStartGame(5);
+      await endGame(g.gameId);
+      const playerFriend = g.players[0].openId;
+      await ensureUser(playerFriend);
+      await setUniqueId(playerFriend, 'rate_p1');
+
+      // 再造一名无对局好友
+      const idleFriend = makeUserId(); await ensureUser(idleFriend);
+      await setUniqueId(idleFriend, 'rate_idle');
+
+      for (const fid of [playerFriend, idleFriend]) {
+        const req = await apiPost('/api/friends/request', { fromOpenId: fid, toOpenId: me });
+        expect(req.body.success).toBe(true);
+        await apiPost('/api/friends/respond', { requestId: req.body.requestId, openId: me, accept: true });
+      }
+
+      const res = await apiGet(`/api/friends?openId=${me}`);
+      expect(res.body.success).toBe(true);
+      const f = res.body.friends.find(x => x.openId === playerFriend);
+      expect(f).toBeTruthy();
+      expect(typeof f.games).toBe('number');
+      expect(typeof f.winRate).toBe('number');
+      expect(f.games).toBeGreaterThanOrEqual(1);
+
+      // 有对局者（winRate 数值）排在无对局者（winRate=null）之前
+      const idxPlayer = res.body.friends.findIndex(x => x.openId === playerFriend);
+      const idxIdle = res.body.friends.findIndex(x => x.openId === idleFriend);
+      expect(idxPlayer).toBeLessThan(idxIdle);
+      expect(res.body.friends[idxIdle].winRate).toBeNull();
     });
   });
 });
