@@ -2216,6 +2216,8 @@ class GameModel {
       const [roomsActive] = await db.query('SELECT COUNT(*) as c FROM rooms WHERE updated_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)');
       const [playersTotal] = await db.query('SELECT COUNT(*) as c FROM room_players');
       const [usersTotal] = await db.query('SELECT COUNT(*) as c FROM users');
+      // 去 robot 的注册用户数（测试机器人 open_id 以 bot 开头）
+      const [usersRegistered] = await db.query("SELECT COUNT(*) as c FROM users WHERE open_id NOT LIKE 'bot%'");
 
       const toNum = v => parseInt(v, 10) || 0;
 
@@ -2274,7 +2276,7 @@ class GameModel {
           games: { total: toNum(gamesTotal.c), active: toNum(gamesActive.c), completed: toNum(gamesCompleted.c) },
           rooms: { total: toNum(roomsTotal.c), active: toNum(roomsActive.c) },
           players: { total: toNum(playersTotal.c) },
-          users: { total: toNum(usersTotal.c) },
+          users: { total: toNum(usersTotal.c), registered: toNum(usersRegistered.c) },
           faction: { goodGames, evilGames, goodWinRate: rate(goodGames), evilWinRate: rate(evilGames) },
           roles
         },

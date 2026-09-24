@@ -109,6 +109,21 @@ describe('10 — 全局统计', () => {
     const bad = await apiGet('/api/games/stats/role-games?role=bogus');
     expect(bad.status).toBe(400);
   });
+
+  it('10-4 总玩家数(users.registered) 去除测试 robot', async () => {
+    const before = (await apiGet('/api/games/stats/global')).body.stats.users;
+    expect(typeof before.total).toBe('number');
+    expect(typeof before.registered).toBe('number');
+    expect(before.registered).toBeLessThanOrEqual(before.total);
+
+    // 造一个 bot_* 用户
+    await apiGet(`/api/users/bot_test_${Date.now()}`);
+
+    const after = (await apiGet('/api/games/stats/global')).body.stats.users;
+    // total 计入 bot；registered 不计入
+    expect(after.total).toBeGreaterThanOrEqual(before.total + 1);
+    expect(after.registered).toBe(before.registered);
+  });
 });
 
 async function getRoleGamesCount(role) {
