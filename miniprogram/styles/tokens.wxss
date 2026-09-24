@@ -67,7 +67,7 @@ page {
   --champion-border: #8B5CF6;
   --champion-bg: linear-gradient(160deg, #4C1D95, #2E1065);
   --champion-fg: #FFFFFF;
-  --profile-bg: linear-gradient(135deg, #6D28D9 0%, #5B21B6 45%, #3B0764 100%);
+  --profile-bg: linear-gradient(135deg, #2E1065 0%, #3B0764 45%, #5B21B6 100%);
   --profile-fg: #FFFFFF;
   --profile-name: #C4B5FD;
   --profile-ring: #C4B5FD;

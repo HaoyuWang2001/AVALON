@@ -39,24 +39,6 @@
         </view>
       </view>
     </block>
-
-    <!-- 最勤劳的小蜜蜂：全局完成局数最多 -->
-    <block wx:if="{{hardworking}}">
-      <view class="pstats-longdiv"></view>
-      <view class="bee-award" bindtap="onChampionTap"
-            data-openid="{{hardworking.openId}}" data-name="{{hardworking.nickName}}"
-            data-avatar="{{hardworking.avatarUrl}}" data-friend="{{hardworking.isFriend}}">
-        <view class="bee-avatar-wrap">
-          <image class="bee-avatar" src="{{hardworking.avatarUrl || '/images/default-avatar.png'}}"/>
-          <text class="bee-emoji">🐝</text>
-        </view>
-        <view class="bee-info">
-          <view class="bee-badge">最勤劳的小蜜蜂</view>
-          <text class="bee-name">{{hardworking.nickName}}</text>
-        </view>
-        <text class="bee-games">{{hardworking.games}} 场</text>
-      </view>
-    </block>
   </view>
 
   <!-- 4. 房间 / 开始游戏 -->
