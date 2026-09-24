@@ -113,7 +113,7 @@
 /* ─────── 个人信息卡（头像半嵌 + 三栏数据） ─────── */
 .profile-card {
   position: relative;
-  margin-top: 76rpx; margin-bottom: 20rpx;
+  margin-top: 104rpx; margin-bottom: 20rpx;
   background: var(--profile-bg, var(--bg-card)); border-radius: 28rpx; padding: 84rpx 24rpx 26rpx;
   box-shadow: var(--shadow-sm); flex-shrink: 0;
 }
@@ -127,7 +127,7 @@
 .pstat-num { font-size: 46rpx; font-weight: 800; color: var(--profile-fg, #FFFFFF); }
 .pstat-label { font-size: 24rpx; color: var(--profile-fg, #FFFFFF); margin-top: 6rpx; }
 .pstat-div { width: 6rpx; height: 60rpx; background: var(--profile-ring, #C4B5FD); border-radius: 3rpx; }
-.pstats-longdiv { height: 6rpx; background: var(--profile-ring, #C4B5FD); border-radius: 3rpx; margin: 0 0 64rpx; }
+.pstats-longdiv { height: 6rpx; background: var(--profile-ring, #C4B5FD); border-radius: 3rpx; margin: 0 0 88rpx; }
 
 /* ─────── 用户卡 emoji 按钮（游戏说明） ─────── */
 .user-emoji-btn {
@@ -292,7 +292,7 @@
 }
 
 /* ─────── 胜率冠军（领奖台） ─────── */
-.podium { display: flex; align-items: flex-end; justify-content: center; gap: 16rpx; padding-top: 0; }
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 16rpx; padding-top: 0; margin-bottom: 28rpx; }
 .podium-item { flex: 1; max-width: 190rpx; display: flex; flex-direction: column; align-items: center; }
 .podium-avatar-wrap { position: relative; margin-bottom: 10rpx; }
 .podium-avatar { width: 112rpx; height: 112rpx; border-radius: 50%; border: 4rpx solid var(--gray-300); background: var(--gray-100); }
