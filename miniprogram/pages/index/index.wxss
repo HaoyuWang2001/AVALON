@@ -11,73 +11,80 @@
   overflow-y: auto;
 }
 
-/* ─────── 头部（三段各具故障：霓虹/隐现/放大 + 下划线） ─────── */
+/* ─────── 头部（三段差异化故障：霓虹流光 / 拉长 / 撕裂放大） ─────── */
 .brand-bar { padding: 26rpx 4rpx 44rpx; text-align: center; flex-shrink: 0; }
 .brand-text {
   position: relative; display: inline-block;
   font-size: 68rpx; font-weight: 900; letter-spacing: 5rpx; font-style: italic;
   font-family: 'ZCOOL QingKe HuangYou', 'Smiley Sans', 'PingFang SC', 'Heiti SC', 'Microsoft YaHei', sans-serif;
 }
-.brand-1, .brand-2, .brand-3 { -webkit-text-fill-color: currentColor; }
-/* 瓦协会：专注霓虹颜色变化（全色域，速率同前）；故障带极小 */
-.brand-1 { color: var(--brand-1, #2E1065); animation: brand-flicker 4s steps(1, end) infinite, brand-neon 2s ease-in-out infinite; }
-/* 之：时隐时现；黑/深紫/白(消失) 有限色；周期延长 */
-.brand-2 { color: var(--brand-2, #4C1D95); display: inline-block; animation: zhi-appear 7s steps(1, end) infinite; }
-/* 练秋湖分部：下划线；紫/深紫/黑/深灰 有限色；突然放大故障 */
-.brand-3 { color: var(--brand-3, #6D28D9); display: inline-block; text-decoration: underline; text-underline-offset: 6rpx; text-decoration-color: currentColor; transform-origin: center bottom; animation: lianqiu-glitch 5.6s steps(1, end) infinite; }
+.brand-1, .brand-2, .brand-3 { position: relative; display: inline-block; -webkit-text-fill-color: currentColor; }
 
-/* 瓦协会：全色域霓虹跳变（steps 无过渡） */
-@keyframes brand-flicker {
+/* 瓦协会：原字体；慢速霓虹(无白) + 彩色流光滑过；故障带极小 */
+.brand-1 { font-family: 'PingFang SC', 'Heiti SC', 'Microsoft YaHei', sans-serif; font-style: normal; color: var(--brand-1, #2E1065); animation: brand-neon-flicker 7s steps(1, end) infinite, brand-neon 2.4s ease-in-out infinite; }
+.brand-1::after {
+  content: '瓦协会'; position: absolute; left: 0; top: 0; width: 100%; pointer-events: none;
+  background: linear-gradient(100deg, transparent 35%, #22D3EE 46%, #A855F7 50%, #F472B6 54%, transparent 65%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: brand-sweep 3.6s linear infinite;
+}
+@keyframes brand-sweep { 0% { background-position: 170% 0; } 100% { background-position: -70% 0; } }
+@keyframes brand-neon-flicker {
   0% { color: #FF3B30; }
-  5% { color: #FF9500; }
-  10% { color: #FFCC00; }
-  15% { color: #34C759; }
-  20% { color: #00C7BE; }
-  25% { color: #30B0C7; }
-  30% { color: #007AFF; }
-  35% { color: #5856D6; }
-  40% { color: #AF52DE; }
-  45% { color: #FF2D55; }
-  50% { color: #000000; }
-  55% { color: #FFFFFF; }
-  60% { color: #C4B5FD; }
-  65% { color: #2E1065; }
-  70% { color: #A855F7; }
-  75% { color: #E9D5FF; }
-  80% { color: #10B981; }
-  85% { color: #F43F5E; }
-  90% { color: #3B82F6; }
-  95% { color: #FACC15; }
+  6% { color: #FF9500; }
+  12% { color: #FFCC00; }
+  18% { color: #34C759; }
+  24% { color: #00C7BE; }
+  30% { color: #30B0C7; }
+  36% { color: #007AFF; }
+  42% { color: #5856D6; }
+  48% { color: #AF52DE; }
+  54% { color: #FF2D55; }
+  60% { color: #000000; }
+  68% { color: #C4B5FD; }
+  76% { color: #2E1065; }
+  84% { color: #A855F7; }
+  92% { color: #FF3B30; }
   100% { color: #FF3B30; }
 }
-/* 瓦协会霓虹辉光（跟随当前色 currentColor） */
 @keyframes brand-neon {
   0%, 100% { text-shadow: 0 0 6rpx currentColor, 0 0 16rpx currentColor; }
   50% { text-shadow: 0 0 12rpx currentColor, 0 0 30rpx currentColor; }
 }
-/* 之：黑/深紫/白(消失) 随机，时隐时现，周期长 */
+
+/* 之：时隐时现(黑/深紫/白) + 间隔较长的随机纵向拉长 */
+.brand-2 { color: var(--brand-2, #4C1D95); transform-origin: center center; animation: zhi-appear 10s steps(1, end) infinite; }
 @keyframes zhi-appear {
-  0%, 100% { color: #000000; opacity: 1; }
-  16% { color: #2E1065; opacity: 1; }
-  32% { color: #FFFFFF; opacity: 0; }
-  44% { color: #000000; opacity: 1; }
-  60% { color: #6D28D9; opacity: 1; }
-  74% { color: #FFFFFF; opacity: 0; }
-  86% { color: #2E1065; opacity: 1; }
+  0%, 100% { color: #000000; opacity: 1; transform: scaleY(1); }
+  8% { color: #2E1065; opacity: 1; transform: scaleY(1); }
+  16% { color: #FFFFFF; opacity: 0; transform: scaleY(1); }
+  19% { color: #000000; opacity: 1; transform: scaleY(2.6); }
+  23% { transform: scaleY(1); }
+  40% { color: #6D28D9; opacity: 1; transform: scaleY(1); }
+  55% { color: #2E1065; opacity: 1; transform: scaleY(1); }
+  63% { color: #FFFFFF; opacity: 0; transform: scaleY(1); }
+  66% { color: #000000; opacity: 1; transform: scaleY(2.0); }
+  70% { transform: scaleY(1); }
+  85% { color: #6D28D9; opacity: 1; transform: scaleY(1); }
 }
-/* 练秋湖分部：紫/深紫/黑/深灰，突然放大故障 */
+
+/* 练秋湖分部：下划线；紫/深紫/黑/深灰；随机撕裂/扭曲 + 突然放大并保持约 5s */
+.brand-3 { color: var(--brand-3, #6D28D9); text-decoration: underline; text-underline-offset: 6rpx; text-decoration-color: currentColor; transform-origin: center bottom; animation: lianqiu-glitch 12s steps(1, end) infinite; }
 @keyframes lianqiu-glitch {
-  0%, 100% { color: #6D28D9; transform: scale(1); }
-  15% { color: #2E1065; transform: scale(1); }
-  28% { color: #000000; transform: scale(1); }
-  35% { color: #4B5563; transform: scale(1.30); }
-  41% { color: #2E1065; transform: scale(1); }
-  56% { color: #6D28D9; transform: scale(1); }
-  70% { color: #1F2937; transform: scale(1); }
-  77% { color: #6D28D9; transform: scale(1.24); }
-  83% { color: #2E1065; transform: scale(1); }
+  0%, 100% { color: #6D28D9; transform: scale(1) skewX(0deg); clip-path: inset(0 0 0 0); }
+  6% { color: #2E1065; transform: scale(1) skewX(0deg); clip-path: inset(0 0 0 0); }
+  11% { color: #000000; transform: scale(1) skewX(0deg); clip-path: inset(22% 0 34% 0); }
+  13% { clip-path: inset(0 0 0 0); }
+  15% { color: #4B5563; transform: scale(1.6) skewX(-8deg); clip-path: inset(0 0 0 0); }
+  58% { color: #1F2937; transform: scale(1.6) skewX(-8deg); }
+  61% { color: #2E1065; transform: scale(1) skewX(0deg); }
+  72% { color: #4B5563; transform: scale(1.32) skewX(7deg); }
+  80% { color: #6D28D9; transform: scale(1) skewX(0deg); }
 }
-/* 整串故障层：上下带极小（几乎不可见） */
+
+/* 整串故障层：上下带极小 */
 .brand-text::before, .brand-text::after {
   content: '瓦协会之练秋湖分部';
   position: absolute; left: 0; top: 0; width: 100%;

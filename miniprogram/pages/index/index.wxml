@@ -2,7 +2,7 @@
 <view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
   <!-- 1. 头部 -->
   <view class="brand-bar">
-    <view class="brand-text"><text class="brand-1">瓦协会</text><text class="brand-2">之</text><text class="brand-3">练秋湖分部</text></view>
+    <view class="brand-text"><view class="brand-1">瓦协会</view><view class="brand-2">之</view><view class="brand-3">练秋湖分部</view></view>
   </view>
 
   <!-- 2. 个人信息 + 胜率冠军（合并卡） -->
