@@ -15,6 +15,17 @@
         <swiper-item>
           <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
             <view class="config-section">
+              <view class="section-title">🎯 板子类型</view>
+              <view class="board-toggle">
+                <view class="board-item {{boardType === 'standard' ? 'board-active' : ''}}"
+                  data-val="standard" bindtap="onBoardTypeChange">标准局</view>
+                <view wx:if="{{playerCount === 8}}"
+                  class="board-item {{boardType === 'expert' ? 'board-active' : ''}}"
+                  data-val="expert" bindtap="onBoardTypeChange">专家局</view>
+              </view>
+            </view>
+
+            <view class="config-section">
               <view class="section-title">🙋 玩家总数</view>
               <scroll-view class="count-row" scroll-x show-scrollbar="{{false}}">
                 <view wx:for="{{[5,6,7,8,9,10,11,12]}}" wx:key="*this"

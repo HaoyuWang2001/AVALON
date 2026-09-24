@@ -164,6 +164,7 @@ Page({
     themeClass: '',
     roomId: '',
     gameId: '',
+    isHistory: false,
     gameState: null,
     playerRole: null,
     spectators: [],
@@ -281,7 +282,7 @@ Page({
   },
 
   onLoad(options) {
-    const { roomId, gameId } = options;
+    const { roomId, gameId, fromHistory } = options;
     if (!gameId) {
       // 无有效 gameId（如游戏已结束/房间重置后误入），回退到房间页
       wx.showToast({ title: '游戏不存在或已结束', icon: 'none' });
@@ -298,6 +299,7 @@ Page({
       themeClass: getThemeClass(),
       roomId: roomId || '',
       gameId: gameId || '',
+      isHistory: fromHistory === '1' || fromHistory === 'true',
       playerId: app.globalData.openId || '',
       userInfo: app.globalData.userInfo,
     });
@@ -888,6 +890,16 @@ Page({
       wx.navigateBack();
     } else {
       wx.reLaunch({ url: '/pages/index/index' });
+    }
+  },
+
+  // 结束页（非历史）：回到本局所在房间
+  goRoom() {
+    const { roomId } = this.data;
+    if (roomId) {
+      wx.redirectTo({ url: `/pages/room/room?roomId=${roomId}` });
+    } else {
+      this.goHome();
     }
   },
 

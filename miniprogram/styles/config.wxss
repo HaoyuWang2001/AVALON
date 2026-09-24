@@ -23,6 +23,15 @@
 .section-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 20rpx; display: flex; align-items: center; }
 .section-title::before { content: ''; width: 6rpx; height: 24rpx; background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end)); border-radius: 3rpx; margin-right: 12rpx; }
 
+/* ─────── Board type toggle ─────── */
+.board-toggle { display: flex; gap: 16rpx; }
+.board-item {
+  flex: 1; text-align: center; padding: 18rpx 0; border-radius: 18rpx;
+  background: var(--gray-100); font-size: 30rpx; font-weight: 700; color: var(--gray-500);
+  transition: all 0.2s;
+}
+.board-active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; box-shadow: 0 6rpx 16rpx rgba(124, 58, 237, 0.3); }
+
 /* ─────── Count selector ─────── */
 .count-row { white-space: nowrap; padding: 8rpx 0; }
 .count-item {

@@ -6,7 +6,7 @@ const { getThemeClass } = require('../../utils/theme.js');
 const {
   CONFIG_GOOD_ROLES, CONFIG_EVIL_ROLES, CONFIG_FORCED_ROLES,
   DEFAULT_CONFIGS, SPEECH_OPTIONS, ROUND_OPTIONS, VOTE_OPTIONS, VOTE_REVEAL_OPTIONS,
-  TEAM_SIZES, buildDefaultRule
+  TEAM_SIZES, buildDefaultRule, BOARD_TYPES, EXPERT_CONFIG, isExpertBoard
 } = require('../../utils/constants.js');
 
 Component({
@@ -21,6 +21,7 @@ Component({
   data: {
     showConfig: false,
     themeClass: '',
+    boardType: 'standard',
     selectedRoles: {},
     rules: {},
     loyalCount: 0,
@@ -59,7 +60,7 @@ Component({
     // 打开弹窗：无状态——每次从 properties 重新初始化
     open() {
       // 永远进入第一个配置页
-      this.setData({ logicalPage: 0, swiperPage: 0, themeClass: getThemeClass() });
+      this.setData({ logicalPage: 0, swiperPage: 0, themeClass: getThemeClass(), boardType: BOARD_TYPES.STANDARD });
       if (this.data.mode === 'update') {
         try {
           this._applyConfig(this.data.roomConfig);
@@ -130,6 +131,7 @@ Component({
       CONFIG_FORCED_ROLES.forEach(r => { selected[r] = true; });
 
       const patch = { selectedRoles: selected, playerCount: n };
+      patch.boardType = isExpertBoard(rc.roles, rc.rules, n) ? BOARD_TYPES.EXPERT : BOARD_TYPES.STANDARD;
       patch.rules = { ...rc.rules };
       patch.ladyOfTheLake = !!rc.rules.ladyOfTheLake;
       patch.ladyOfTheLakeRound = rc.rules.ladyOfTheLakeRound;
@@ -163,6 +165,7 @@ Component({
       rules.oberonMustFailMission = !hasLancelot;
 
       this.setData({
+        boardType: BOARD_TYPES.STANDARD,
         selectedRoles: selected,
         rules: rules,
         ladyOfTheLake: n >= 10,
@@ -175,6 +178,46 @@ Component({
         evilCount: def.evil.length
       });
       this.computeAll();
+    },
+    // 套用专家局（8人固定板）：梅林/派西 + 3忠臣；莫甘娜/刺客/莫德雷德；湖仙第2轮；流车上限4
+    applyExpertConfig() {
+      const selected = {};
+      CONFIG_GOOD_ROLES.forEach(r => { selected[r] = false; });
+      CONFIG_EVIL_ROLES.forEach(r => { selected[r] = false; });
+      EXPERT_CONFIG.good.forEach(r => { selected[r] = true; });
+      EXPERT_CONFIG.evil.forEach(r => { selected[r] = true; });
+      CONFIG_FORCED_ROLES.forEach(r => { selected[r] = true; });
+
+      const rules = buildDefaultRule();
+      rules.ladyOfTheLake = true;
+      rules.ladyOfTheLakeRound = EXPERT_CONFIG.ladyOfTheLakeRound;
+      rules.maxFailedNominations = EXPERT_CONFIG.maxFailedNominations;
+      rules.lancelotMustFail = false;
+      rules.oberonMustFailMission = true;
+
+      this.setData({
+        boardType: BOARD_TYPES.EXPERT,
+        playerCount: EXPERT_CONFIG.playerCount,
+        selectedRoles: selected,
+        rules: rules,
+        ladyOfTheLake: true,
+        ladyOfTheLakeRound: EXPERT_CONFIG.ladyOfTheLakeRound,
+        speechTimeoutIndex: 0,
+        roundTimeoutIndex: 0,
+        voteTimeoutIndex: 0,
+        voteRevealDurationIndex: 2,
+        goodCount: EXPERT_CONFIG.good.length,
+        evilCount: EXPERT_CONFIG.evil.length
+      });
+      this.computeAll();
+    },
+    onBoardTypeChange(e) {
+      const val = e.currentTarget.dataset.val;
+      if (val === BOARD_TYPES.EXPERT) {
+        this.applyExpertConfig();
+      } else {
+        this.applyDefaultConfig(this.data.playerCount);
+      }
     },
     onPlayerCountChange(e) {
       const n = parseInt(e.currentTarget.dataset.count);

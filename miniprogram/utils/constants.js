@@ -149,6 +149,31 @@ const DEFAULT_CONFIGS = {
   12: { good: ['merlin', 'percival'], evil: ['morgana', 'assassin', 'mordred', 'oberon', 'lancelotBlue', 'lancelotRed'] }
 };
 
+// ── 板子类型：标准局 / 专家局（专家局仅 8 人可用） ──
+const BOARD_TYPES = { STANDARD: 'standard', EXPERT: 'expert' };
+
+// 专家局（8人）：梅林/派西 + 3忠臣；莫甘娜/刺客/莫德雷德；湖仙第2轮；流车上限4（第5车强制）
+const EXPERT_CONFIG = {
+  playerCount: 8,
+  good: ['merlin', 'percival'],
+  evil: ['morgana', 'assassin', 'mordred'],
+  ladyOfTheLake: true,
+  ladyOfTheLakeRound: 2,
+  maxFailedNominations: 4
+};
+
+// 判定某套配置是否为专家局（供配置页反推板子类型）
+function isExpertBoard(roles, rules, playerCount) {
+  if (playerCount !== EXPERT_CONFIG.playerCount) return false;
+  const good = [...((roles && roles.good) || [])].sort().join(',');
+  const evil = [...((roles && roles.evil) || [])].sort().join(',');
+  const expertGood = [...EXPERT_CONFIG.good, 'loyal', 'loyal', 'loyal'].sort().join(',');
+  const expertEvil = [...EXPERT_CONFIG.evil].sort().join(',');
+  return good === expertGood && evil === expertEvil
+    && !!rules && rules.ladyOfTheLake === true
+    && rules.maxFailedNominations === EXPERT_CONFIG.maxFailedNominations;
+}
+
 const SPEECH_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒', '150秒', '180秒'];
 const ROUND_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒'];
 const VOTE_OPTIONS = ['不限', '15秒', '30秒', '45秒', '60秒'];
@@ -187,6 +212,9 @@ module.exports = {
   CONFIG_FORCED_ROLES,
   ROLE_NAMES_SHORT,
   DEFAULT_CONFIGS,
+  BOARD_TYPES,
+  EXPERT_CONFIG,
+  isExpertBoard,
   SPEECH_OPTIONS,
   ROUND_OPTIONS,
   VOTE_OPTIONS,
