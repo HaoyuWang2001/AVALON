@@ -284,7 +284,7 @@ Page({
     clearTimeout(this._meetingCommitTimer);
     const t = e.touches && e.touches[0];
     const side = (e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.side) || 'lead';
-    const ms = 360 + Math.floor(Math.random() * 141);
+    const ms = 700 + Math.floor(Math.random() * 301);
     this._meetingStartAt = Date.now();
     this._meetingStartX = t ? t.clientX : 0;
     this._meetingStartY = t ? t.clientY : 0;
