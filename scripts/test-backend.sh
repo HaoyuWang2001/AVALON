@@ -70,10 +70,6 @@ fi
 
 # ---------- 前置检查 ----------
 if [[ "$DRY" -eq 0 ]]; then
-  if [[ -e "$LOCK_FILE" ]]; then
-    echo "❌ 已有测试在运行（锁文件 $LOCK_FILE 存在），请等待完成或手动删除。"
-    exit 2
-  fi
   if [[ ! -f "$COMPOSE_FILE" ]]; then
     echo "❌ 找不到 $COMPOSE_FILE"
     exit 2
@@ -82,6 +78,12 @@ if [[ "$DRY" -eq 0 ]]; then
     echo "❌ 本机无 docker 命令。请确认在服务器本机运行（haoyu-wang141.top）。"
     exit 2
   fi
+  # 立即原子占锁：构建/运行窗口内阻止并发（CI 与手动测试会覆盖同一测试库 avalon_db_test）
+  if ! ( set -o noclobber; : > "$LOCK_FILE" ) 2>/dev/null; then
+    echo "❌ 已有测试在运行（锁文件 $LOCK_FILE 存在），请等待完成或手动删除。"
+    exit 2
+  fi
+  trap 'rm -f "$LOCK_FILE"' EXIT
 fi
 
 # ---------- 构建测试镜像（强制，保证用最新代码；记录耗时写入 baseline） ----------
@@ -197,8 +199,6 @@ write_baseline() {
 LOG_FILE="/tmp/test-backend-$(date +%s).log"
 
 if [[ "$BACKGROUND" -eq 0 ]]; then
-  touch "$LOCK_FILE"
-  trap 'rm -f "$LOCK_FILE"' EXIT
   "${CMD[@]}" 2>&1 | tee "$LOG_FILE"
   code=${PIPESTATUS[0]}
   echo ""
