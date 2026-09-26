@@ -53,6 +53,7 @@ Page({
     championsLoaded: false,
     hardworking: null,
     publicWinrate: true,
+    compactGame: false,
     meetingPressStyle: '',
     meetingFillClass: '',
     meetingFillMs: 420
@@ -256,6 +257,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ compactGame: !!wx.getStorageSync('avalon_compact_game') });
     if (getApp().globalData.openId) {
       this.checkCurrentRoom();
       this.loadHistoryAndStats();
@@ -586,6 +588,14 @@ Page({
   },
 
   noop() {},
+
+  // 松弛压缩版开关（本地存储，按设备）
+  onCompactGameChange(e) {
+    const val = !!e.detail.value;
+    this.setData({ compactGame: val });
+    try { wx.setStorageSync('avalon_compact_game', val ? 1 : 0); } catch (err) {}
+    wx.showToast({ title: val ? '已开启松弛压缩版' : '已关闭松弛压缩版', icon: 'none' });
+  },
 
   showInfoModal() {
     this.setData({ showInfo: true });

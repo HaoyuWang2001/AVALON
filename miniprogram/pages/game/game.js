@@ -166,6 +166,11 @@ Page({
     gameId: '',
     isHistory: false,
     gameState: null,
+    compactGame: false,
+    compactLeft: [],
+    compactRight: [],
+    carSeatsText: '',
+    showSpectatorPopup: false,
     playerRole: null,
     spectators: [],
     playerSide: null,
@@ -300,6 +305,7 @@ Page({
       roomId: roomId || '',
       gameId: gameId || '',
       isHistory: fromHistory === '1' || fromHistory === 'true',
+      compactGame: !!wx.getStorageSync('avalon_compact_game'),
       playerId: app.globalData.openId || '',
       userInfo: app.globalData.userInfo,
     });
@@ -331,6 +337,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ compactGame: !!wx.getStorageSync('avalon_compact_game') });
     this.fetchGameState();
     // 轮询兜底：仅当 socket 未连接（closed/connecting/idle）时启动，避免与实时推送重复
     this.syncGamePolling();
@@ -521,6 +528,15 @@ Page({
           currentPhase: phase
         }));
 
+        // 松弛压缩版：左右两列（围绕牌桌：左 1..⌈n/2⌉ 自上而下，右 n..⌈n/2⌉+1）+ 车型文字
+        const colSorted = tablePlayers.slice().sort((a, b) => (a.seatNumber || 0) - (b.seatNumber || 0));
+        const colHalf = Math.ceil(colSorted.length / 2);
+        const compactLeft = colSorted.slice(0, colHalf);
+        const compactRight = colSorted.slice(colHalf).reverse();
+        const carSeatsText = (res.current.nominatedTeam || [])
+          .map(oid => { const pl = (res.players || []).find(x => x.openId === oid); return pl ? pl.seatNumber : null; })
+          .filter(n => n != null).sort((a, b) => a - b).join('、');
+
         // 历史记录预计算（全部用座位号，避免 wxml 函数调用）
         const nameSeat = id => {
           const p = (res.players || []).find(x => x.openId === id);
@@ -682,6 +698,9 @@ Page({
           visionList: visionList,
           allPlayers: res.players || [],
           tablePlayers: tablePlayers,
+          compactLeft: compactLeft,
+          compactRight: compactRight,
+          carSeatsText: carSeatsText,
           guideSortedPlayers: tablePlayers.slice().sort((a, b) => a.seatNumber - b.seatNumber),
           teamVoteStatus: res.current.teamVoteStatus || null,
           missionVoteStatus: res.current.missionVoteStatus || null,
@@ -797,6 +816,15 @@ Page({
   },
 
   noop() {},
+
+  // 松弛压缩版：观战区底部弹窗
+  toggleSpectatorPopup() {
+    this.setData({ showSpectatorPopup: !this.data.showSpectatorPopup });
+  },
+
+  closeSpectatorPopup() {
+    this.setData({ showSpectatorPopup: false });
+  },
 
   measureBottomBar() {
     const windowWidth = (wx.getWindowInfo && wx.getWindowInfo().windowWidth) || wx.getSystemInfoSync().windowWidth || 375;

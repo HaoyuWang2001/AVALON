@@ -1,4 +1,22 @@
 <!--pages/game/game.wxml-->
+<!-- 松弛压缩版：玩家小卡模板（item + currentPhase 由调用处传入） -->
+<template name="compactPlayer">
+  <view class="table-player c-player {{item.cardState}}"
+        bindtap="onTablePlayerTap" bindlongpress="onPlayerLongPress" data-id="{{item.openId}}">
+    <text class="c-seat">{{item.seatNumber}}</text>
+    <view class="c-av-wrap">
+      <image class="c-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
+      <text wx:if="{{item.isCrownHolder}}" class="c-crown">👑</text>
+    </view>
+    <view class="c-info">
+      <text class="c-name">{{item.nickName}}</text>
+      <view class="c-tags" wx:if="{{item.tags.length || (currentPhase === 'gameEnd' && item.roleName)}}">
+        <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag c-tag {{tag.cls}}">{{tag.text}}</text>
+        <text wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="c-role">{{item.roleName}}</text>
+      </view>
+    </view>
+  </view>
+</template>
 <view class="game-page {{themeClass ? 'theme-' + themeClass : ''}}">
   <!-- 顶部操作栏（内联①，与引导页②重复——template is 动态绑定失效故手抄两份，改动需同步两处） -->
   <top-bar>
@@ -29,6 +47,72 @@
     </view>
   </view>
 
+  <!-- ===== 松弛压缩版布局：顶部状态条 + 左/中/右三列 + 观战区底部弹窗 ===== -->
+  <view class="compact" wx:if="{{compactGame}}" style="bottom:{{bottomBarHeight ? bottomBarHeight + 'px' : ''}}">
+    <view class="c-status">
+      <text class="c-status-phase">{{phaseText}}</text>
+      <view class="c-status-timer" wx:if="{{currentPhase === 'discussion' && hasSpeechTimeout}}">
+        <image src="/images/stopwatch.png" class="c-status-icon"></image>
+        <text class="c-status-num">{{timerSeconds}}s</text>
+        <text wx:if="{{isHost}}" class="c-status-btn" bindtap="{{timerRunning ? 'pauseTimer' : 'startTimer'}}">{{timerRunning ? '暂停' : '启动'}}</text>
+        <text wx:if="{{isHost}}" class="c-status-btn" bindtap="resetTimer">重置</text>
+      </view>
+    </view>
+
+    <view class="c-main">
+      <scroll-view scroll-y class="c-col" show-scrollbar="{{false}}">
+        <template is="compactPlayer" wx:for="{{compactLeft}}" wx:key="openId" data="{{item: item, currentPhase: currentPhase}}"/>
+      </scroll-view>
+
+      <scroll-view scroll-y class="c-mid" show-scrollbar="{{false}}">
+        <view class="rounds c-rounds">
+          <block wx:for="{{roundList}}" wx:key="round">
+            <view class="round-connector" wx:if="{{index > 0}}"></view>
+            <view class="round-circle {{item.status}} {{item.isCurrent ? 'current' : ''}}">
+              <text class="round-size">{{item.size}}</text>
+            </view>
+          </block>
+        </view>
+        <view class="c-flow">
+          <view class="flow-reason" wx:if="{{currentPhase === 'gameEnd'}}">
+            <view class="flow-reason-chain" wx:if="{{gameAssassination}}">刺客刺杀 {{gameAssassination.targetSeat}}号 · {{gameAssassination.correct ? '刺杀成功' : '刺杀失败'}}</view>
+            <view class="flow-reason-result" wx:if="{{!gameAssassination}}">{{gameResult && gameResult.abandoned ? '游戏已放弃：' : (gameWinner === 'good' ? '蓝方获胜：' : '红方获胜：')}}{{gameResult && gameResult.reason}}</view>
+          </view>
+          <view class="c-flow-list" wx:else>
+            <block wx:for="{{flowCars}}" wx:key="index">
+              <view class="flow-car {{item.state}} {{item.isLast ? 'last' : ''}} {{item.isForced ? 'is-forced' : ''}}">
+                <text class="flow-car-icon">{{item.state === 'failed' ? '🚫' : (item.isLast ? '⚡' : '')}}</text>
+              </view>
+            </block>
+          </view>
+        </view>
+      </scroll-view>
+
+      <scroll-view scroll-y class="c-col" show-scrollbar="{{false}}">
+        <template is="compactPlayer" wx:for="{{compactRight}}" wx:key="openId" data="{{item: item, currentPhase: currentPhase}}"/>
+      </scroll-view>
+    </view>
+
+    <!-- 观战区：默认收起，点按钮弹出底部面板 -->
+    <block wx:if="{{spectators.length > 0}}">
+      <view class="c-spec-fab" bindtap="toggleSpectatorPopup">👥 观众 {{spectators.length}}</view>
+      <view class="c-spec-mask" wx:if="{{showSpectatorPopup}}" bindtap="closeSpectatorPopup" catchtouchmove="noop"></view>
+      <view class="c-spec-popup" wx:if="{{showSpectatorPopup}}">
+        <view class="c-spec-title">观众席（{{spectators.length}}）</view>
+        <scroll-view scroll-x class="c-spec-scroll" show-scrollbar="{{false}}">
+          <view class="c-spec-row">
+            <view wx:for="{{spectators}}" wx:key="openId" class="c-spec-item" bindtap="onSpectatorTap" data-id="{{item.openId}}">
+              <image class="c-spec-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
+              <text class="c-spec-name">{{item.nickName}}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+    </block>
+  </view>
+
+  <!-- ===== 标准布局 ===== -->
+  <block wx:else>
   <!-- 任务进度卡 -->
   <view class="card mission-card">
     <view class="mission-head">
@@ -115,6 +199,7 @@
         </view>
       </scroll-view>
     </view>
+  </block>
   </view>
 
   <!-- 底部按钮框（fixed 常驻） -->
@@ -125,7 +210,8 @@
         <image src="/images/stopwatch.png" class="timer-icon"></image>
         <text class="vote-countdown-num">{{voteRevealRemaining}}s</text>
       </view>
-      <view class="bar-info vote-reveal-line">
+      <view class="bar-info bar-car">{{isForcedCar ? '强制车 · ' : ''}}车型：{{carSeatsText}}</view>
+      <view wx:if="{{!isForcedCar}}" class="bar-info vote-reveal-line">
         <text class="txt-approve">同意：{{teamVoteResult.approveSeats}}</text>
         <text class="vote-line-sep"> / </text>
         <text class="txt-reject">反对：{{teamVoteResult.rejectSeats}}</text>
@@ -206,6 +292,7 @@
 
     <!-- teamVote -->
     <block wx:if="{{currentPhase === 'teamVote'}}">
+      <view class="bar-info bar-car">车型：{{carSeatsText}}</view>
       <block wx:if="{{isInGame && !hasTeamVoted}}">
         <view class="bar-row">
           <button class="btn vote-approve" bindtap="castVote" data-vote="approve">同意</button>
@@ -220,11 +307,11 @@
 
     <!-- missionVote -->
     <block wx:if="{{currentPhase === 'missionVote'}}">
+      <view class="bar-info bar-car">{{isForcedCar ? '强制车 · ' : ''}}车型：{{carSeatsText}}</view>
       <view wx:if="{{!isMissionTeamMember}}" class="vote-waiting">
         <view class="vote-waiting-spinner"></view>
       </view>
-      <view wx:if="{{isForcedCar}}" class="bar-info bar-waiting">本轮是强制车</view>
-      <view wx:elif="{{teamVoteResult.approveSeats || teamVoteResult.rejectSeats}}" class="bar-info vote-reveal-line">
+      <view wx:if="{{!isForcedCar && (teamVoteResult.approveSeats || teamVoteResult.rejectSeats)}}" class="bar-info vote-reveal-line">
         <text class="txt-approve">同意：{{teamVoteResult.approveSeats}}</text>
         <text class="vote-line-sep"> / </text>
         <text class="txt-reject">反对：{{teamVoteResult.rejectSeats}}</text>

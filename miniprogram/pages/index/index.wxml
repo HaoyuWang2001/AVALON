@@ -98,6 +98,10 @@
       <switch class="func-switch" checked="{{publicWinrate}}" bindchange="onPublicWinrateChange" color="#8B5CF6"/>
       <text class="func-label">公开胜率</text>
     </view>
+    <view class="func-item func-glass">
+      <switch class="func-switch" checked="{{compactGame}}" bindchange="onCompactGameChange" color="#8B5CF6"/>
+      <text class="func-label">松弛压缩版</text>
+    </view>
   </view>
 
   <!-- 6. 角色胜率（公共组件，角色卡可点开对局弹窗） -->

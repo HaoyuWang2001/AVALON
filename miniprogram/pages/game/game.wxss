@@ -1044,3 +1044,51 @@ progress { border-radius: 12rpx; }
   flex: 1; font-size: 28rpx; color: var(--text-title); font-weight: 600;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+
+/* ─────── 底部栏：车型文字（投票/展示/任务投票全程） ─────── */
+.bar-car { color: var(--c-violet); font-weight: 700; }
+
+/* ─────── 松弛压缩版（游戏页）：无需滚动即可查看全部玩家 ─────── */
+.compact {
+  position: fixed; left: 0; right: 0; top: 100rpx;
+  bottom: calc(200rpx + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column;
+  padding: 12rpx 12rpx 0; box-sizing: border-box; z-index: 1;
+}
+.c-status { display: flex; align-items: center; justify-content: center; gap: 20rpx; padding: 4rpx 0 12rpx; flex-shrink: 0; }
+.c-status-phase { font-size: 32rpx; font-weight: 800; color: var(--c-violet); }
+.c-status-timer { display: flex; align-items: center; gap: 10rpx; }
+.c-status-icon { width: 34rpx; height: 34rpx; }
+.c-status-num { font-size: 30rpx; font-weight: 800; color: var(--text-title); }
+.c-status-btn { font-size: 22rpx; color: var(--primary); padding: 2rpx 12rpx; border: 2rpx solid var(--primary); border-radius: 10rpx; }
+
+.c-main { flex: 1; display: flex; flex-direction: row; gap: 10rpx; min-height: 0; }
+.c-col { width: 26%; height: 100%; box-sizing: border-box; }
+.c-mid { flex: 1; height: 100%; box-sizing: border-box; background: var(--bg-card); border-radius: 18rpx; padding: 14rpx 12rpx; box-shadow: var(--shadow-sm); }
+
+/* 压缩版玩家小卡：横向 [座位·头像(+皇冠)·昵称+角标]；状态底色沿用 .table-player.state-* */
+.c-player { min-height: 0; padding: 8rpx 10rpx; border-radius: 14rpx; margin-bottom: 8rpx; gap: 8rpx; }
+.c-seat { flex-shrink: 0; width: 34rpx; height: 34rpx; line-height: 34rpx; text-align: center; border-radius: 8rpx; background: var(--gray-100); font-size: 22rpx; font-weight: 800; color: var(--text-body); }
+.c-av-wrap { position: relative; flex-shrink: 0; }
+.c-avatar { width: 56rpx; height: 56rpx; border-radius: 50%; display: block; background: var(--gray-100); }
+.c-crown { position: absolute; top: -16rpx; left: 50%; transform: translateX(-50%); font-size: 26rpx; }
+.c-info { flex: 1; min-width: 0; }
+.c-name { display: block; font-size: 26rpx; font-weight: 700; color: var(--text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.c-tags { display: flex; flex-wrap: wrap; gap: 4rpx; margin-top: 4rpx; }
+.c-tag { font-size: 18rpx; line-height: 1.5; padding: 0 6rpx; border-radius: 6rpx; }
+.c-role { font-size: 18rpx; font-weight: 800; color: var(--c-violet); }
+
+/* 中间：任务进度圈 + 发车历史（过长整体滚动） */
+.c-rounds { margin: 8rpx 0 16rpx; }
+.c-flow-list { display: flex; flex-wrap: wrap; gap: 8rpx; }
+
+/* 观战区底部弹窗 */
+.c-spec-fab { position: absolute; right: 16rpx; bottom: 16rpx; z-index: 5; font-size: 24rpx; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); padding: 10rpx 20rpx; border-radius: 999rpx; box-shadow: var(--shadow-md); }
+.c-spec-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; background: rgba(0, 0, 0, 0.45); z-index: 950; }
+.c-spec-popup { position: fixed; left: 0; right: 0; bottom: 0; z-index: 960; background: var(--bg-card); border-radius: 26rpx 26rpx 0 0; padding: 24rpx 24rpx calc(24rpx + env(safe-area-inset-bottom)); box-shadow: 0 -6rpx 24rpx rgba(0, 0, 0, 0.18); }
+.c-spec-title { font-size: 28rpx; font-weight: 700; color: var(--text-title); margin-bottom: 14rpx; }
+.c-spec-scroll { width: 100%; white-space: nowrap; }
+.c-spec-row { display: inline-flex; gap: 24rpx; padding: 0 4rpx 8rpx; }
+.c-spec-item { display: flex; flex-direction: column; align-items: center; width: 96rpx; }
+.c-spec-avatar { width: 72rpx; height: 72rpx; border-radius: 50%; background: var(--gray-100); }
+.c-spec-name { font-size: 20rpx; color: var(--text-muted); margin-top: 6rpx; max-width: 92rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
