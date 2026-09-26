@@ -545,6 +545,36 @@ describe('02 — Room Management', () => {
       const badRes = await apiPutRaw(roomId, bad, hostId);
       expect(badRes.status).toBe(400);
     });
+
+    it('02.38b 缩容：溢出玩家按座位升序填入空位', async () => {
+      const hostId = makeUserId();
+      const result = await createRoomWithConfig(hostId, 'Host', buildStandardRoomConfig(5));
+      const roomId = result.roomId;
+      const p2 = makeUserId(), p3 = makeUserId(), p4 = makeUserId(), p5 = makeUserId();
+      await joinRoom(roomId, p2, 2, 'P2');
+      await joinRoom(roomId, p3, 3, 'P3');
+      await joinRoom(roomId, p4, 4, 'P4');
+      await joinRoom(roomId, p5, 5, 'P5');
+      await toggleReady(roomId, p5, true);
+
+      // 造空洞：P2 离开入座区 → 座位 2 空；P5 仍在 5
+      await updateSeatNumber(roomId, p2, 0);
+
+      // 缩容 5 → 4：溢出=座位5(P5)，空位=座位2 → P5 填入 2（且取消准备），其余不变
+      const shrink = JSON.parse(JSON.stringify(buildStandardRoomConfig(5)));
+      shrink.roles = { good: ['merlin', 'percival'], evil: ['morgana', 'assassin'] };
+      const res = await updateRoomConfig(roomId, shrink, hostId);
+      expect(res.success).toBe(true);
+
+      const room = await getRoom(roomId);
+      const seatOf = (uid) => room.room.players.find(p => p.openId === uid).seatNumber;
+      expect(seatOf(hostId)).toBe(1);
+      expect(seatOf(p2)).toBe(0);
+      expect(seatOf(p3)).toBe(3);
+      expect(seatOf(p4)).toBe(4);
+      expect(seatOf(p5)).toBe(2);
+      expect(room.room.players.find(p => p.openId === p5).isReady).toBe(false);
+    });
   });
 
   // ─────────────── 12. 随机座位（房主） ───────────────

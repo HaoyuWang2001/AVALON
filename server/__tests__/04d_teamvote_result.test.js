@@ -137,4 +137,49 @@ describe('04d — 队伍投票结果 teamVoteResult（后端权威票型，座�
     const lastDetail = lastCar.details[lastCar.details.length - 1];
     expect(lastDetail.isForcedCar).toBe(true);
   });
+
+  it('强制车：进入 teamVoteReveal 展示车型（endAt 存在），isForcedCar=true', async () => {
+    const n = 10;
+    const cfg = withConfigOverrides(buildCustomBoard10(), { rules: { maxFailedNominations: 1 } });
+    cfg.limits = { ...cfg.limits, voteRevealDuration: 3 };
+    const { gameId, players } = await createRoomAndStartGame(n, cfg);
+    await confirmRevealAll(gameId, players);
+
+    let state = await getGameState(gameId);
+    if (state.current.phase !== 'discussion') {
+      await driveToDiscussion(gameId, players);
+      state = await getGameState(gameId);
+    }
+    let leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
+    const team = players.slice(0, 3).map(p => p.openId);
+    state = await driveToTeamNomination(gameId, players);
+    await submitNomination(gameId, leader.openId, team);
+    for (const p of players) {
+      await castVote(gameId, p.openId, 'reject');
+    }
+    // 全否决 → teamVoteReveal(3s)，等其推进到强制车 teamNomination
+    const deadline = Date.now() + 9000;
+    while (Date.now() < deadline) {
+      state = await getGameState(gameId);
+      if (state.current.phase === 'teamNomination') break;
+      await new Promise(r => setTimeout(r, 300));
+    }
+    expect(state.current.phase).toBe('teamNomination');
+    expect(state.current.forcedSend).toBe(true);
+
+    leader = players.find(p => p.openId === state.current.teamLeaderOpenId);
+    const forcedTeam = players.slice(0, 3).map(p => p.openId);
+    const fNom = await submitNomination(gameId, leader.openId, forcedTeam, true);
+    expect(fNom.success).toBe(true);
+    state = await getGameState(gameId);
+
+    // 强制车也进入车型展示阶段（供全体玩家查看车型 nominatedTeam），而非直跳 missionVote
+    expect(state.current.phase).toBe('teamVoteReveal');
+    expect(state.current.isForcedCar).toBe(true);
+    expect(typeof state.current.voteRevealEndAt).toBe('number');
+    expect(state.current.voteRevealEndAt).toBeGreaterThan(0);
+    expect((state.current.nominatedTeam || []).length).toBe(3);
+    expect(state.current.teamVoteResult.approveSeats).toBe('');
+    expect(state.current.teamVoteResult.rejectSeats).toBe('');
+  });
 });

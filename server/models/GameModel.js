@@ -970,7 +970,7 @@ class GameModel {
         // 本车次索引 = 失败提名数 + 1
         const carIndex = game[0].failed_nominations + 1;
 
-        // 强制车：跳过 teamVote，直接进入 missionVote
+        // 强制车：跳过 teamVote，经车型展示阶段(teamVoteReveal)后直接发车
         if (isForced) {
           if (!forcedCar) {
             throw new Error('本局为强制车，车长必须显式携带 forcedCar=true');
@@ -981,14 +981,23 @@ class GameModel {
              VALUES (?, ?, ?, ?, ?, '{}', 'send', TRUE, NOW())`,
             [gameId, game[0].current_round, carIndex, openId, JSON.stringify(nominatedTeam)]
           );
+          // 车型展示秒数（复用 limits.voteRevealDuration，必配）
+          const fdLimits = (roomConfig && roomConfig.limits) || {};
+          const fdRevealDur = fdLimits.voteRevealDuration;
+          if (typeof fdRevealDur !== 'number' || fdRevealDur < 0) {
+            throw new Error('未配置 voteRevealDuration');
+          }
+          // 进入车型展示阶段（teamVoteReveal）：供全体玩家查看本车车型，到点由
+          // maybeAdvanceTeamVoteReveal 依据 outcome=send 推进到 missionVote
           await connection.execute(
             `UPDATE games 
-             SET current_phase = 'missionVote', 
+             SET current_phase = 'teamVoteReveal', 
                  nominated_team = ?,
                  forced_car = TRUE,
+                 vote_reveal_end_at = DATE_ADD(NOW(), INTERVAL ? SECOND),
                  updated_at = NOW()
              WHERE id = ?`,
-            [JSON.stringify(nominatedTeam), gameId]
+            [JSON.stringify(nominatedTeam), fdRevealDur, gameId]
           );
         } else {
           if (forcedCar) {

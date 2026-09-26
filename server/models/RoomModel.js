@@ -171,10 +171,41 @@ class RoomModel {
       const newCount = (newRoles.good?.length || 0) + (newRoles.evil?.length || 0);
 
       if (newCount < oldCount) {
-        await db.query(
-          'UPDATE room_players SET seat_number = 0, is_ready = FALSE WHERE room_id = ? AND seat_number >= 1 AND seat_number > ?',
-          [roomId, newCount]
-        );
+        // 缩容：溢出玩家（座位 > 新人数）按座位号升序依次填入 1..newCount 的最小空位；
+        // 空位不足的再退回等待区（seat 0）。被移动/退回者均取消准备。
+        await db.transaction(async (connection) => {
+          const [seatedRows] = await connection.execute(
+            `SELECT open_id as openId, seat_number as seatNumber
+             FROM room_players
+             WHERE room_id = ? AND seat_number >= 1
+             ORDER BY seat_number ASC`,
+            [roomId]
+          );
+          const occupied = new Set();
+          const overflow = [];
+          for (const p of seatedRows) {
+            if (p.seatNumber <= newCount) occupied.add(p.seatNumber);
+            else overflow.push(p);
+          }
+          const empties = [];
+          for (let s = 1; s <= newCount; s++) {
+            if (!occupied.has(s)) empties.push(s);
+          }
+          for (const p of overflow) {
+            if (empties.length > 0) {
+              const seat = empties.shift();
+              await connection.execute(
+                'UPDATE room_players SET seat_number = ?, is_ready = FALSE WHERE room_id = ? AND open_id = ?',
+                [seat, roomId, p.openId]
+              );
+            } else {
+              await connection.execute(
+                'UPDATE room_players SET seat_number = 0, is_ready = FALSE WHERE room_id = ? AND open_id = ?',
+                [roomId, p.openId]
+              );
+            }
+          }
+        });
       }
 
       await db.query(
