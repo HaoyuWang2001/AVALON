@@ -444,11 +444,12 @@
           <!-- 发车轮次：连续发车信息+任务信息 -->
           <block wx:if="{{item.type === 'car'}}">
             <view wx:for="{{item.details}}" wx:for-item="car" wx:key="index" class="info-car">
-              <view class="info-car-line">{{car.forced ? '【强制车】' : ''}}第{{car.round}}轮 · 第{{car.index}}车 · 车主<text class="{{car.leaderSeat.isMe ? 'seat-me' : ''}}"> {{car.leaderSeat.seat}}</text>号</view>
+              <view class="info-car-line" wx:if="{{car.forced}}">【强制车】</view>
+              <view class="info-car-line">第{{car.round}}轮 · 第{{car.index}}车 · 车主<text class="{{car.leaderSeat.isMe ? 'seat-me' : ''}}">{{car.leaderSeat.seat}}</text>号</view>
               <view class="info-car-line">发车：<text wx:for="{{car.sendSeats}}" wx:key="seat" wx:for-item="s" wx:for-index="si" class="{{s.isMe ? 'seat-me' : ''}}">{{si > 0 ? ' ' : ''}}{{s.seat}}</text></view>
               <view class="info-car-line" wx:if="{{car.approveSeats.length}}">同意：<text wx:for="{{car.approveSeats}}" wx:key="seat" wx:for-item="s" wx:for-index="si" class="{{s.isMe ? 'seat-me' : ''}}">{{si > 0 ? ' ' : ''}}{{s.seat}}</text></view>
               <view class="info-car-line" wx:if="{{car.rejectSeats.length}}">反对：<text wx:for="{{car.rejectSeats}}" wx:key="seat" wx:for-item="s" wx:for-index="si" class="{{s.isMe ? 'seat-me' : ''}}">{{si > 0 ? ' ' : ''}}{{s.seat}}</text></view>
-              <view class="info-car-line info-car-result">结果：{{car.outcomeText}}</view>
+              <view class="info-car-line info-car-result">结果：<text class="{{car.outcomeClass}}">{{car.outcomeLabel}}</text><text wx:if="{{car.failText}}" class="info-fail-count">·{{car.failText}}</text></view>
             </view>
           </block>
           <!-- 湖仙验人 -->
@@ -557,8 +558,8 @@
     </view>
   </view>
 
-  <!-- 任务结果全屏动画（全员）：成功蓝图 / 失败红图 -->
-  <view class="mission-anim" wx:if="{{showMissionAnim}}">
+  <!-- 任务结果全屏动画（全员）：成功蓝图 / 失败红图；仅「已感知」按钮可点 -->
+  <view class="mission-anim" wx:if="{{showMissionAnim}}" style="bottom:{{bottomBarHeight ? bottomBarHeight + 'px' : ''}}">
     <view class="mission-anim-bg {{missionAnimSuccess ? 'anim-mission-success' : 'anim-mission-fail'}}"></view>
     <view class="mission-anim-ring r1"></view>
     <view class="mission-anim-ring r2"></view>
@@ -566,7 +567,8 @@
     <view class="mission-anim-center">
       <image src="/images/{{missionAnimSuccess ? 'avalon-blue.png' : 'avalon-red.png'}}" class="mission-anim-img" mode="aspectFit"/>
       <text class="mission-anim-text">{{missionAnimSuccess ? '任务成功' : '任务失败'}}</text>
-      <text wx:if="{{!missionAnimSuccess && showFailDetail}}" class="mission-anim-failcount">失败票数：{{lastMissionFailCount}}</text>
+      <text wx:if="{{showFailDetail && lastMissionFailCount > 0}}" class="mission-anim-failcount">失败票数：{{lastMissionFailCount}}</text>
+      <button class="btn btn-primary mission-anim-btn" bindtap="closeMissionAnim">已感知</button>
     </view>
   </view>
 

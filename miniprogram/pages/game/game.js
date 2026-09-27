@@ -555,12 +555,19 @@ Page({
         const buildCar = (car) => {
           const tv = car.teamVotes || {};
           const bySeat = (a, b) => (Number(a.seat) || 999) - (Number(b.seat) || 999);
-          let outcomeText = car.outcome === 'reject' ? '流车'
-            : (car.missionSuccess == null ? '未进行任务'
-            : (car.missionSuccess ? '任务成功' : '任务失败'));
-          if (car.outcome === 'send' && car.missionSuccess === false && showFailDetail) {
+          let outcomeLabel = '未进行任务';
+          let outcomeClass = '';
+          if (car.outcome === 'reject') {
+            outcomeLabel = '流车';
+          } else if (car.missionSuccess === true) {
+            outcomeLabel = '任务成功'; outcomeClass = 'oc-good';
+          } else if (car.missionSuccess === false) {
+            outcomeLabel = '任务失败'; outcomeClass = 'oc-evil';
+          }
+          let failText = '';
+          if (car.outcome === 'send' && car.missionSuccess != null && showFailDetail) {
             const failN = car.missionVotes ? Object.values(car.missionVotes).filter(v => v === 'fail').length : 0;
-            outcomeText += '·' + failN + '票反对';
+            if (failN > 0) failText = failN + '票失败';
           }
           return {
             ...car,
@@ -569,7 +576,9 @@ Page({
             sendSeats: (car.nominatedTeam || []).map(seatInfo).sort(bySeat),
             approveSeats: Object.keys(tv).filter(id => tv[id] === 'approve').map(seatInfo).sort(bySeat),
             rejectSeats: Object.keys(tv).filter(id => tv[id] === 'reject').map(seatInfo).sort(bySeat),
-            outcomeText
+            outcomeLabel,
+            outcomeClass,
+            failText
           };
         };
         const carsHistory = (res.history ? res.history.cars || [] : []).map(r => ({ ...r, details: (r.details || []).map(buildCar) }));
@@ -1238,13 +1247,13 @@ Page({
     this.setData({ voteRevealRemaining: 0 });
   },
 
-  // 任务结果全屏动画（全员）：成功蓝图/失败红图，约 5s 自动关闭
-  playMissionAnim(success) {    this.setData({ showMissionAnim: true, missionAnimSuccess: !!success });
-    if (this._missionAnimTimer) clearTimeout(this._missionAnimTimer);
-    this._missionAnimTimer = setTimeout(() => {
-      this.setData({ showMissionAnim: false });
-      this._missionAnimTimer = null;
-    }, 5000);
+  // 任务结果全屏动画（全员）：停留至玩家点击「已感知」确认（仅 UI，不影响主流程）
+  playMissionAnim(success) {
+    this.setData({ showMissionAnim: true, missionAnimSuccess: !!success });
+  },
+
+  closeMissionAnim() {
+    this.setData({ showMissionAnim: false });
   },
 
   // lancelot 阶段：确认抽卡结果（全员确认后进入下一轮）
