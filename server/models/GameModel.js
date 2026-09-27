@@ -2216,6 +2216,52 @@ class GameModel {
   }
 
   /**
+   * 总胜率排名（与 champions 同口径）：已结束且非机器人房(000000)的对局、场次达阈值、公开胜率者，
+   * 按 胜率 desc → 场次 desc 排序；胜率与场次都相同者并列同名次。
+   * 不在榜（未公开胜率 / 场次不足）返回 null。
+   */
+  static async getWinRateRank(openId) {
+    if (!openId) return null;
+    const threshold = await GameModel.getWinRateThreshold();
+    const rows = await db.query(
+      `SELECT t.openId, t.games, t.wins
+       FROM (
+         SELECT gp.open_id as openId,
+                COUNT(DISTINCT g.id) as games,
+                COUNT(DISTINCT CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN g.id END) as wins
+         FROM game_players gp
+         JOIN games g ON g.id = gp.game_id
+         WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
+         GROUP BY gp.open_id
+         HAVING games >= ?
+       ) t
+       JOIN users u ON u.open_id = t.openId
+       WHERE u.public_winrate <> 0`,
+      [threshold]
+    );
+    const list = rows
+      .map(r => ({ openId: r.openId, games: parseInt(r.games, 10) || 0, wins: parseInt(r.wins, 10) || 0 }))
+      .filter(r => r.games > 0);
+    return GameModel._computeWinRateRank(list, openId);
+  }
+
+  /**
+   * 纯计算名次：并列同名次（competition ranking）。名次 = 严格优于者人数 + 1。
+   * 比较用交叉相乘避免浮点误差；胜率与场次均相同 → 并列同名次。
+   */
+  static _computeWinRateRank(list, openId) {
+    const me = list.find(r => r.openId === openId);
+    if (!me) return null;
+    let better = 0;
+    for (const r of list) {
+      if (r.openId === openId) continue;
+      const diff = r.wins * me.games - me.wins * r.games; // >0 表示对方胜率更高
+      if (diff > 0 || (diff === 0 && r.games > me.games)) better++;
+    }
+    return better + 1;
+  }
+
+  /**
    * 全局统计：对局/房间/玩家/用户计数 + 阵营胜率 + 角色出场/胜率 + 全量已结束对局列表
    */
   static async getGlobalStats() {

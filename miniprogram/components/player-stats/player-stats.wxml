@@ -4,7 +4,10 @@
     <view class="ps-close" bindtap="close">✕</view>
     <view class="ps-head">
       <image src="{{avatarUrl || '/images/default-avatar.png'}}" class="ps-avatar"></image>
-      <view class="ps-name">{{nickName}}</view>
+      <view class="ps-name-row">
+        <view class="ps-name">{{nickName}}</view>
+        <text wx:if="{{rateVisible && rank}}" class="ps-rank">#{{rank}}</text>
+      </view>
       <view wx:if="{{isSelf}}" class="ps-tag">这是你</view>
     </view>
 

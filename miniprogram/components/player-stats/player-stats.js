@@ -17,6 +17,7 @@ Component({
     rateVisible: false,
     privateReason: '',
     requested: false,
+    rank: 0,
     stats: null,
     roles: []
   },
@@ -34,6 +35,7 @@ Component({
         rateVisible: false,
         privateReason: '',
         requested: false,
+        rank: 0,
         stats: null,
         roles: []
       });
@@ -60,6 +62,7 @@ Component({
           rateVisible: !!(s && s.rateVisible),
           privateReason,
           requested: !!(s && s.friendRequestPending),
+          rank: (s && s.rank) || 0,
           stats: s ? {
             totalGames: s.totalGames,
             totalWinRate: s.totalGames > 0 ? s.totalWinRate + '%' : '—',

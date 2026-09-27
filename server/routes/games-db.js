@@ -99,7 +99,7 @@ function createRouter() {
                 CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN 1 ELSE 0 END as isWin
          FROM games g
          JOIN game_players gp ON gp.game_id = g.id AND gp.open_id = ?
-         WHERE g.status = 'ended'`,
+         WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'`,
         [openId]
       );
 
@@ -138,6 +138,8 @@ function createRouter() {
       stats.publicWinrate = publicWinrate;
       stats.rateVisible = isSelf || (publicWinrate === 1 && stats.totalGames >= threshold);
       stats.threshold = threshold;
+      // 总胜率排名（与 champions 同口径；不在榜 = null）
+      stats.rank = await GameModel.getWinRateRank(openId);
 
       // 是否已存在（viewer → subject）待处理的好友申请（供"申请好友"按钮禁用判断）
       stats.friendRequestPending = false;
