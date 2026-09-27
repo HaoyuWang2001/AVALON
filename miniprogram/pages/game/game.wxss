@@ -881,15 +881,6 @@ progress { border-radius: 12rpx; }
 .mission-anim-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
 .mission-anim-bg.anim-mission-success { background: radial-gradient(circle, #FFFFFF 0%, rgba(125,211,252,0.95) 30%, rgba(0,0,0,0.92) 100%); }
 .mission-anim-bg.anim-mission-fail { background: radial-gradient(circle, #FFFFFF 0%, rgba(220,38,38,0.92) 30%, rgba(0,0,0,0.92) 100%); }
-.mission-anim-ring {
-  position: absolute;
-  width: 200rpx; height: 200rpx;
-  border-radius: 50%;
-  border: 6rpx solid rgba(255,255,255,0.65);
-  animation: ring-expand 1.2s ease-out infinite;
-}
-.mission-anim-ring.r2 { animation-delay: 0.4s; }
-.mission-anim-ring.r3 { animation-delay: 0.8s; }
 .mission-anim-center {
   position: relative;
   display: flex; flex-direction: column; align-items: center;

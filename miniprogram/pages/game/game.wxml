@@ -563,9 +563,6 @@
   <!-- 任务结果全屏动画（全员）：成功蓝图 / 失败红图；仅「已感知」按钮可点 -->
   <view class="mission-anim" wx:if="{{showMissionAnim}}" style="bottom:{{bottomBarRawHeight ? bottomBarRawHeight + 'px' : ''}}">
     <view class="mission-anim-bg {{missionAnimSuccess ? 'anim-mission-success' : 'anim-mission-fail'}}"></view>
-    <view class="mission-anim-ring r1"></view>
-    <view class="mission-anim-ring r2"></view>
-    <view class="mission-anim-ring r3"></view>
     <view class="mission-anim-center">
       <image src="/images/{{missionAnimSuccess ? 'avalon-blue.png' : 'avalon-red.png'}}" class="mission-anim-img" mode="aspectFit"/>
       <text class="mission-anim-text">{{missionAnimSuccess ? '任务成功' : '任务失败'}}</text>

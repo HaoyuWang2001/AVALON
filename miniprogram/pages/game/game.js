@@ -414,18 +414,33 @@ Page({
         const playerLancelotConfirmed = !!(res.player && res.player.lancelotConfirmed);
         const isInGame = !!(res.player && res.player.role);
 
-        // 任务结果强制动画：新任务结算时全员播放（首次拉取只记录基准，避免进入进行中对局误播）
+        // 任务结果动画：本会话内新结算 → 播放；首次拉取时若本机参与过本局且最新结果未确认 → 补弹一次
+        // （未参与过则补弹；已确认的 key 不重复弹；历史/已结束不弹；只补最新一轮）
+        const _mKey = m => `${m.round}:${m.success ? '1' : '0'}`;
         if (!this._missionKeyInit) {
           this._missionKeyInit = true;
           if (missions.length > 0) {
-            this._lastMissionKey = `${missions[missions.length - 1].round}:${missions[missions.length - 1].success ? '1' : '0'}`;
+            const lastM = missions[missions.length - 1];
+            const mKey = _mKey(lastM);
+            this._lastMissionKey = mKey;
+            let acked = '';
+            let hasPending = false;
+            try {
+              acked = wx.getStorageSync('avalon_mission_ack_' + this.data.gameId) || '';
+              hasPending = !!wx.getStorageSync('avalon_mission_pending_' + this.data.gameId);
+            } catch (e) {}
+            if (hasPending && mKey !== acked && !this.data.isHistory
+                && res.basic && res.basic.status !== 'ended'
+                && res.current && res.current.phase !== 'gameEnd') {
+              this.playMissionAnim(!!lastM.success, mKey);
+            }
           }
         } else if (missions.length > 0) {
           const lastM = missions[missions.length - 1];
-          const mKey = `${lastM.round}:${lastM.success ? '1' : '0'}`;
+          const mKey = _mKey(lastM);
           if (this._lastMissionKey !== mKey) {
             this._lastMissionKey = mKey;
-            this.playMissionAnim(!!lastM.success);
+            this.playMissionAnim(!!lastM.success, mKey);
           }
         }
         const roundList = [];
@@ -1254,11 +1269,20 @@ Page({
   },
 
   // 任务结果全屏动画（全员）：停留至玩家点击「已感知」确认（仅 UI，不影响主流程）
-  playMissionAnim(success) {
+  // key = "轮次:成败"：写 pending 标记（本机参与过本局）；确认时写 ack 去重
+  playMissionAnim(success, key) {
+    this._animMissionKey = key || '';
+    try {
+      if (this.data.gameId) wx.setStorageSync('avalon_mission_pending_' + this.data.gameId, 1);
+    } catch (e) {}
     this.setData({ showMissionAnim: true, missionAnimSuccess: !!success });
   },
 
   closeMissionAnim() {
+    try {
+      const gid = this.data.gameId;
+      if (gid && this._animMissionKey) wx.setStorageSync('avalon_mission_ack_' + gid, this._animMissionKey);
+    } catch (e) {}
     this.setData({ showMissionAnim: false });
   },
 
