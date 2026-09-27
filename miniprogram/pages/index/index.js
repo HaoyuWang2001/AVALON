@@ -36,7 +36,6 @@ Page({
   data: {
     userInfo: { avatarUrl: '', nickName: '' },
     customNickName: '',
-    configsUserInfo: null,
     currentRoom: null,
     currentSeat: null,
     isCurrentRoomHost: false,
@@ -685,22 +684,13 @@ Page({
     });
   },
 
-  // ─────────── 配置弹窗（configs 公共组件） ───────────
+  // ─────────── 配置页（pages/configs/configs） ───────────
   openConfigs() {
-    const name = this.data.customNickName || (this.data.userInfo && this.data.userInfo.nickName) || '房主';
     const ui = { ...(this.data.userInfo || {}), customNickName: this.data.customNickName };
-    this.setData({ configsUserInfo: ui });
-    this.selectComponent('#configs').open();
-  },
-
-  // 组件创建成功 → 跳转房间
-  onCreated(e) {
-    const roomId = e.detail.roomId;
-    if (roomId) {
-      const app = getApp();
-      app.globalData.roomId = roomId;
-      wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}&isHost=true` });
-    }
+    wx.navigateTo({
+      url: '/pages/configs/configs?mode=create',
+      success: (res) => { res.eventChannel.emit('init', { userInfo: ui }); }
+    });
   },
 
   joinRoom() {

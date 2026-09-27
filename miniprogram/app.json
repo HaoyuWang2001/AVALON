@@ -5,7 +5,8 @@
     "pages/game/game",
     "pages/friends/friends",
     "pages/friend-detail/friend-detail",
-    "pages/global-stats/global-stats"
+    "pages/global-stats/global-stats",
+    "pages/configs/configs"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -20,9 +21,7 @@
   "useExtendedLib": {
     "weui": true
   },
-  "usingComponents": {
-    "configs": "/components/configs/configs"
-  },
+  "usingComponents": {},
   "permission": {},
   "requiredPrivateInfos": [],
   "cloud": true

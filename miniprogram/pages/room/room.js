@@ -477,22 +477,29 @@ Page({
     wx.reLaunch({ url: '/pages/index/index' });
   },
 
-  // 修改配置：打开 configs 公共组件（无状态，每次从 roomConfig 初始化）
+  // 修改配置：跳转独立配置页（无状态，每次从 roomConfig 初始化）
   modifyConfig() {
-    if (this.roomPolling) clearInterval(this.roomPolling);
-    this.selectComponent('#configs').open();
-  },
-
-  // 组件关闭（丢弃修改）→ 恢复轮询
-  onConfigClosed() {
-    this.initRoomPolling();
-  },
-
-  // 组件保存成功 → 恢复轮询 + 刷新房间
-  onUpdated() {
-    this.initRoomPolling();
-    this.fetchRoomInfo();
-    wx.showToast({ title: '已保存', icon: 'success' });
+    const rc = this.data.roomInfo && this.data.roomInfo.roomConfig;
+    if (!rc) { wx.showToast({ title: '房间信息未就绪', icon: 'none' }); return; }
+    if (this.roomPolling) { clearInterval(this.roomPolling); this.roomPolling = null; }
+    wx.navigateTo({
+      url: '/pages/configs/configs?mode=update&roomId=' + this.data.roomId,
+      events: {
+        // 保存成功 → 恢复轮询 + 刷新房间
+        submit: () => {
+          this.initRoomPolling();
+          this.fetchRoomInfo();
+          wx.showToast({ title: '已保存', icon: 'success' });
+        },
+        // 取消（返回/手势返回）→ 恢复轮询
+        cancel: () => {
+          this.initRoomPolling();
+        }
+      },
+      success: (res) => {
+        res.eventChannel.emit('init', { roomConfig: rc });
+      }
+    });
   },
 
 });

@@ -145,5 +145,4 @@
   <player-stats id="playerStats" />
 </view>
 
-<!-- ─────────── Config Modal ─────────── -->
-<configs id="configs" mode="create" confirm-text="召开会议" user-info="{{configsUserInfo}}" bind:success="onCreated" />
+<!-- ─────────── Config 已改为独立页面 pages/configs/configs ─────────── -->

@@ -3,7 +3,6 @@
   "enablePullDownRefresh": false,
   "usingComponents": {
     "top-bar": "/components/top-bar/top-bar",
-    "configs": "/components/configs/configs",
     "player-stats": "/components/player-stats/player-stats"
   }
 }

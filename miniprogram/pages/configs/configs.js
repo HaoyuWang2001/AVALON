@@ -1,6 +1,6 @@
-// components/configs/configs.js
-// 配置弹窗公共组件（index 创建房间 / room 配置房间 共用）
-// 无状态：每次 open() 从 properties 重新初始化（默认值或传入 roomConfig 覆盖），不保留上次修改
+// pages/configs/configs.js
+// 配置页（index 创建房间 / room 配置房间 共用）
+// 无状态：onLoad 时从事件通道/参数初始化（默认值或传入 roomConfig 覆盖），不保留上次修改
 const api = require('../../services/api.js');
 const { getThemeClass } = require('../../utils/theme.js');
 const {
@@ -9,17 +9,15 @@ const {
   TEAM_SIZES, buildDefaultRule, BOARD_TYPES, EXPERT_CONFIG, isExpertBoard
 } = require('../../utils/constants.js');
 
-Component({
-  options: { addGlobalClass: true },
-  properties: {
-    mode: { type: String, value: 'create' },          // 'create' | 'update'
-    roomId: { type: String, value: '' },              // update 模式需要
-    roomConfig: { type: Object, value: null },        // null → 用默认配置
-    confirmText: { type: String, value: '完成' },     // 底部按钮文案
-    userInfo: { type: Object, value: null }           // 主动传入完整用户信息（create 用）
-  },
+const CONFIG_TITLE = { create: '召开会议', update: '更新配置' };
+
+Page({
   data: {
-    showConfig: false,
+    mode: 'create',        // 'create' | 'update'
+    roomId: '',            // update 模式需要
+    roomConfig: null,      // null → 用默认配置
+    userInfo: null,        // create 用：完整用户信息
+    confirmText: '完成',
     themeClass: '',
     boardType: 'standard',
     selectedRoles: {},
@@ -56,35 +54,62 @@ Component({
     summarySpec: '',
     summaryLady: ''
   },
-  methods: {
-    // 捕捉滑动，禁止穿透到页面
-    noop() {},
-    // 打开弹窗：无状态——每次从 properties 重新初始化
-    open() {
-      // 永远进入第一个配置页
-      this.setData({ logicalPage: 0, swiperPage: 0, themeClass: getThemeClass(), boardType: BOARD_TYPES.STANDARD });
-      if (this.data.mode === 'update') {
-        try {
-          this._applyConfig(this.data.roomConfig);
-        } catch (e) {
-          wx.showModal({ title: '配置错误', content: '这是bug，请联系开发者', showCancel: false });
-          return;
-        }
-      } else {
-        this.applyDefaultConfig(this.data.playerCount);
-        // create 模式：默认会议名（"昵称的会议"）
-        if (!this.data.roomName) {
+  onLoad(options) {
+    const { mode = 'create', roomId = '' } = options || {};
+    const confirmText = CONFIG_TITLE[mode] || '完成';
+    this.setData({ mode, roomId, confirmText, themeClass: getThemeClass() });
+    wx.setNavigationBarTitle({ title: confirmText });
+    const ch = this.getOpenerEventChannel && this.getOpenerEventChannel();
+    if (ch) {
+      this._ch = ch;
+      ch.on('init', (payload = {}) => {
+        const patch = {};
+        if (payload.userInfo) patch.userInfo = payload.userInfo;
+        if (payload.roomConfig) patch.roomConfig = payload.roomConfig;
+        if (Object.keys(patch).length) this.setData(patch);
+        // create：init 到达后用真实昵称重算会议名
+        if (this.data.mode === 'create') {
           const ui = this.data.userInfo || {};
           this.setData({ roomName: (ui.customNickName || ui.nickName || '房主') + '的会议' });
         }
+        this._init();
+      });
+    }
+    this._init();
+  },
+  onUnload() {
+    // 未提交就离开（系统返回/手势返回）→ 通知打开方（room 恢复轮询）
+    if (!this._submitted && this._ch) this._ch.emit('cancel');
+  },
+  // 捕捉滑动，禁止穿透到页面
+  noop() {},
+  // 初始化：无状态——每次进入重新初始化
+  _init() {
+    // update 模式：必须等 init 事件带来 roomConfig 后再初始化（避免误报配置错误）
+    if (this.data.mode === 'update' && !this.data.roomConfig) return;
+    // 永远进入第一个配置页
+    this.setData({ logicalPage: 0, swiperPage: 0, themeClass: getThemeClass(), boardType: BOARD_TYPES.STANDARD });
+    if (this.data.mode === 'update') {
+      try {
+        this._applyConfig(this.data.roomConfig);
+      } catch (e) {
+        wx.showModal({ title: '配置错误', content: '这是bug，请联系开发者', showCancel: false, success: () => wx.navigateBack() });
+        return;
       }
-      this.setData({ showConfig: true, spectatorLimitInvalid: false });
-    },
-    // 关闭弹窗：丢弃所有修改（下次 open 重新初始化）
-    close() {
-      this.setData({ showConfig: false, spectatorLimitInvalid: false });
-      this.triggerEvent('close');
-    },
+    } else {
+      this.applyDefaultConfig(this.data.playerCount);
+      // create 模式：默认会议名（"昵称的会议"）
+      if (!this.data.roomName) {
+        const ui = this.data.userInfo || {};
+        this.setData({ roomName: (ui.customNickName || ui.nickName || '房主') + '的会议' });
+      }
+    }
+    this.setData({ spectatorLimitInvalid: false });
+  },
+  // 关闭：丢弃所有修改（返回上一页）
+  close() {
+    wx.navigateBack();
+  },
     // 从现有房间配置初始化（room 编辑模式）——必须全量传入，缺任何部分直接报错
     _applyConfig(rc) {
       const req = (cond, msg) => { if (!cond) throw new Error(msg); };
@@ -419,8 +444,9 @@ Component({
         wx.showLoading({ title: '保存中...', mask: true });
         api.updateRoomConfig(this.data.roomId, config).then(() => {
           wx.hideLoading();
-          this.setData({ showConfig: false });
-          this.triggerEvent('success');
+          this._submitted = true;
+          if (this._ch) this._ch.emit('submit');
+          wx.navigateBack();
         }).catch((err) => {
           wx.hideLoading();
           wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' });
@@ -441,8 +467,10 @@ Component({
         }).then((res) => {
           wx.hideLoading();
           if (res.success) {
-            this.setData({ showConfig: false });
-            this.triggerEvent('success', { roomId: res.roomId });
+            this._submitted = true;
+            app.globalData.roomId = res.roomId;
+            if (this._ch) this._ch.emit('submit', { roomId: res.roomId });
+            wx.redirectTo({ url: `/pages/room/room?roomId=${res.roomId}&isHost=true` });
           } else {
             wx.showToast({ title: (res && res.message) || '创建失败', icon: 'none' });
           }
@@ -452,5 +480,4 @@ Component({
         });
       }
     }
-  }
 });

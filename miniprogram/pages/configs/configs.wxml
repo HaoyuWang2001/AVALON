@@ -1,12 +1,5 @@
-<view class="config-overlay {{themeClass ? 'theme-' + themeClass : ''}}" wx:if="{{showConfig}}" catchtouchmove="noop">
+<view class="config-overlay {{themeClass ? 'theme-' + themeClass : ''}}" catchtouchmove="noop">
     <view class="config-panel">
-
-      <!-- Top bar -->
-      <view class="config-top-bar">
-        <view class="config-close" bindtap="close">
-          <text class="close-text">✕</text>
-        </view>
-      </view>
 
       <!-- Swiper -->
       <swiper class="config-swiper" current="{{swiperPage}}" bindchange="onSwiperChange" duration="300">

@@ -2,7 +2,6 @@
   "navigationBarTitleText": "AVALON",
   "enablePullDownRefresh": true,
   "usingComponents": {
-    "configs": "/components/configs/configs",
     "player-stats": "/components/player-stats/player-stats",
     "role-stats-card": "/components/role-stats-card/role-stats-card",
     "history-card": "/components/history-card/history-card"
