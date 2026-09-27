@@ -860,10 +860,22 @@ Page({
     this.setData({ cInfoPlayer: null });
   },
 
-  // 松弛压缩版：点击玩家 → 浮层小卡展示其完整信息（头像/姓名/座位/标签/身份），并保留按阶段选择操作
+  // 松弛压缩版：点击玩家 → 选人环节仅执行选择（不弹信息卡），否则弹浮层小卡
   onCompactPlayerTap(e) {
     const id = e.currentTarget.dataset.id;
     if (!id) return;
+    const { currentPhase } = this.data;
+    // 选人环节：车主选车 / 湖仙验人 / 刺客选目标 —— 只做选择，选中卡片渲染右半金
+    const isTeamSelect = currentPhase === 'teamNomination' || (currentPhase === 'discussion' && this.data.showPreteamPicker);
+    const isLakeSelect = currentPhase === 'lake' && this.data.isLakeHolder
+      && id !== this.data.playerId && !(this.data.oldLakeOpenIds || []).includes(id);
+    const isAssassinate = currentPhase === 'assassination' && this.data.canAssassinateVar;
+    if (isTeamSelect || isLakeSelect || isAssassinate) {
+      if (isTeamSelect) this.nominatePlayer(e);
+      else if (isLakeSelect) this.setData({ lakeTargetOpenId: id }, () => this._applyLocalSelectionCards());
+      else this.assassinate(e);
+      return;
+    }
     const ap = (this.data.allPlayers || []).find(x => x.openId === id) || {};
     const tp = (this.data.tablePlayers || []).find(x => x.openId === id) || {};
     this.setData({
@@ -876,17 +888,24 @@ Page({
         roleName: tp.roleName || ''
       }
     });
-    const { currentPhase } = this.data;
-    if (this.data.isSpectator || currentPhase === 'gameEnd') return;
-    if (currentPhase === 'teamNomination' || (currentPhase === 'discussion' && this.data.showPreteamPicker)) {
-      this.nominatePlayer(e);
-    } else if (currentPhase === 'lake') {
-      if (this.data.isLakeHolder && id !== this.data.playerId && !this.data.oldLakeOpenIds.includes(id)) {
-        this.setData({ lakeTargetOpenId: id });
-      }
-    } else if (currentPhase === 'assassination') {
-      if (this.data.canAssassinateVar) this.assassinate(e);
-    }
+  },
+
+  // 压缩版选人高亮：按阶段把本地选中/湖仙目标渲染为右半金（state-team，与真实车队同款）
+  // 仅在"车主选车/湖仙验人"阶段调用（这两阶段基础 cardState 为空，覆盖安全；取消选择则复位）
+  _applyLocalSelectionCards() {
+    const { currentPhase, localSelected, lakeTargetOpenId } = this.data;
+    const isLake = currentPhase === 'lake';
+    const sel = localSelected || [];
+    const mark = (arr) => arr.map(p => {
+      const on = isLake
+        ? (!!lakeTargetOpenId && p.openId === lakeTargetOpenId)
+        : sel.includes(p.openId);
+      return { ...p, cardState: on ? 'state-team' : '' };
+    });
+    this.setData({
+      compactLeft: mark(this.data.compactLeft),
+      compactRight: mark(this.data.compactRight)
+    });
   },
 
   measureBottomBar() {
@@ -1021,6 +1040,7 @@ Page({
       tablePlayers,
       guideSortedPlayers: tablePlayers.slice().sort((a, b) => a.seatNumber - b.seatNumber)
     });
+    this._applyLocalSelectionCards();
   },
 
   // discussion 阶段：打开预选车面板（仅车主；预选后可关，FAB 消失前不可再开）

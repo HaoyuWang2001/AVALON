@@ -1095,7 +1095,7 @@ progress { border-radius: 12rpx; }
 .c-player { flex: 1; min-height: 0; padding: 14rpx; border-radius: 16rpx; row-gap: 6rpx; column-gap: 8rpx; flex-wrap: wrap; align-items: center; align-content: center; justify-content: flex-start; }
 /* 右列：内容靠右、座位号贴最右（row-reverse 下 flex-start 主起点在右） */
 .c-col-right .c-player { flex-direction: row-reverse; }
-.c-seat { flex-shrink: 0; width: 44rpx; height: 44rpx; line-height: 44rpx; text-align: center; border-radius: 10rpx; background: var(--gray-100); font-size: 28rpx; font-weight: 800; color: var(--text-body); }
+.c-seat { flex-shrink: 0; width: 44rpx; height: 44rpx; line-height: 44rpx; text-align: center; border-radius: 10rpx; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); font-size: 28rpx; font-weight: 800; color: #fff; }
 .c-crown-mini { font-size: 26rpx; line-height: 1; }
 .c-tag { font-size: 22rpx; line-height: 1.5; padding: 2rpx 10rpx; border-radius: 8rpx; white-space: nowrap; }
 .c-role { font-size: 22rpx; font-weight: 800; color: var(--c-violet); }
