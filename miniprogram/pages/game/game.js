@@ -284,7 +284,6 @@ Page({
     voteRevealRemaining: 0,
     showMissionAnim: false,
     missionAnimSuccess: false,
-    cInfoPlayer: null,
     missionHoldSide: '',
     missionFillStyle: '',
     bottomBarRawHeight: 0,
@@ -856,43 +855,9 @@ Page({
     this.setData({ showSpectatorPopup: false });
   },
 
-  closeCompactInfo() {
-    this.setData({ cInfoPlayer: null });
-  },
-
-  // 松弛压缩版：点击玩家 → 选人者本人只做选择（不弹信息卡），其余人弹浮层小卡
+  // 松弛压缩版：点击玩家 → 与标准版分发逻辑一致（选人者只做选择，其余人弹底部胜率框）
   onCompactPlayerTap(e) {
-    const id = e.currentTarget.dataset.id;
-    if (!id) return;
-    const { currentPhase } = this.data;
-    // 选人者 = 车主（选车）/ 湖仙持有者（验人）/ 刺客·莫甘娜（开刀）；无效目标静默忽略
-    const isTeamSelect = currentPhase === 'teamNomination' || (currentPhase === 'discussion' && this.data.showPreteamPicker);
-    const isSelector = isTeamSelect
-      || (currentPhase === 'lake' && this.data.isLakeHolder)
-      || (currentPhase === 'assassination' && this.data.canAssassinateVar);
-    if (isSelector) {
-      if (isTeamSelect) this.nominatePlayer(e);
-      else if (currentPhase === 'lake') {
-        if (id !== this.data.playerId && !(this.data.oldLakeOpenIds || []).includes(id)) {
-          this.setData({ lakeTargetOpenId: id }, () => this._applyLocalSelectionCards());
-        }
-      } else if (this.isValidAssassinTarget(id)) {
-        this.setData({ assassinTargetOpenId: id }, () => this._applyLocalSelectionCards());
-      }
-      return;
-    }
-    const ap = (this.data.allPlayers || []).find(x => x.openId === id) || {};
-    const tp = (this.data.tablePlayers || []).find(x => x.openId === id) || {};
-    this.setData({
-      cInfoPlayer: {
-        openId: id,
-        nickName: ap.nickName || ap.wxNickName || '玩家',
-        avatarUrl: ap.avatarUrl || '',
-        seatNumber: ap.seatNumber,
-        tags: tp.tags || [],
-        roleName: tp.roleName || ''
-      }
-    });
+    this.onTablePlayerTap(e);
   },
 
   // 选人高亮（压缩版/标准版共用）：把本地选中渲染为右半渐变

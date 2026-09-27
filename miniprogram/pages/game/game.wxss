@@ -1046,25 +1046,6 @@ progress { border-radius: 12rpx; }
 .c-main { flex: 1; display: flex; flex-direction: row; gap: 10rpx; min-height: 0; }
 .c-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }
 
-/* 点击玩家 → 浮层小卡展示完整信息 */
-.c-info-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 1100; background: rgba(0, 0, 0, 0.35); }
-.c-info-pop {
-  position: fixed; left: 50%; top: 45%; transform: translate(-50%, -50%); z-index: 1101;
-  width: 460rpx; box-sizing: border-box; background: var(--bg-card); border-radius: 24rpx;
-  padding: 36rpx 28rpx; display: flex; flex-direction: column; align-items: center; gap: 8rpx;
-  box-shadow: var(--shadow-lg);
-}
-.c-info-avatar { width: 160rpx; height: 160rpx; border-radius: 50%; background: var(--gray-100); }
-.c-info-line { display: flex; align-items: center; gap: 12rpx; margin-top: 8rpx; }
-.c-info-seat-badge {
-  width: 48rpx; height: 48rpx; border-radius: 8rpx; flex-shrink: 0;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  color: #fff; font-size: 26rpx; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-}
-.c-info-name { font-size: 34rpx; font-weight: 700; color: var(--text-title); }
-.c-info-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 6rpx; margin-top: 6rpx; }
-
 /* 压缩版玩家小卡：仅座位号 + 角标；状态底色沿用 .table-player.state-* */
 .c-player { flex: 1; min-height: 0; padding: 14rpx; border-radius: 16rpx; row-gap: 6rpx; column-gap: 8rpx; flex-wrap: wrap; align-items: center; align-content: center; justify-content: flex-start; }
 /* 右列：内容靠右、座位号贴最右（row-reverse 下 flex-start 主起点在右） */
