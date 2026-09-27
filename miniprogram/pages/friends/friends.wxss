@@ -60,7 +60,7 @@
 .st-ingame { color: var(--label-red); }
 .f-rate { font-size: 22rpx; color: var(--primary); margin-top: 4rpx; display: block; font-weight: 600; }
 .f-sub { font-size: 24rpx; color: var(--gray-400); margin-top: 6rpx; display: block; }
-.f-arrow { font-size: 36rpx; color: var(--gray-300); }
+.f-arrow { font-size: 36rpx; color: var(--text-muted); }
 .req-item { display: flex; align-items: center; padding: 20rpx 0; border-bottom: 1rpx solid var(--divider); }
 .req-item:last-child { border-bottom: none; }
 .req-btn { flex-shrink: 0; margin-left: 12rpx; }

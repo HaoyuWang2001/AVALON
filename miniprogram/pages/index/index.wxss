@@ -144,7 +144,7 @@
   width: 64rpx; height: 64rpx; border-radius: 16rpx;
   display: flex; align-items: center; justify-content: center;
   font-size: 34rpx; font-weight: 700; color: var(--text-title);
-  background: var(--btn-emoji-bg, #F3F4F6);
+  background: var(--btn-emoji-bg);
   transition: transform 0.12s ease;
 }
 .profile-card .user-info-btn { position: absolute; margin: 0; top: 18rpx; right: 22rpx; z-index: 3; }
@@ -239,14 +239,14 @@
 }
 .func-egg::before {
   content: ''; position: absolute; top: 7rpx; left: 7rpx; right: 7rpx; bottom: 7rpx;
-  border-radius: 15rpx; background: var(--func-face, #1F2937);
+  border-radius: 15rpx; background: var(--func-face);
 }
 .func-egg .func-icon-box, .func-egg .func-icon, .func-egg .func-emoji, .func-egg .func-label { position: relative; z-index: 1; }
 @keyframes rainbow-flow { 0% { background-position: 0% 50%; } 100% { background-position: 400% 50%; } }
 
 /* 第二行：玻璃色系（更强玻璃质感：多层渐变 + 顶部高光 + 对角光泽 + 内描边） */
 .func-glass {
-  background: var(--func-face, #1F2937);
+  background: var(--func-face);
   border: 2rpx solid rgba(255, 255, 255, 0.30);
   box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.32), inset 0 0 26rpx rgba(255, 255, 255, 0.10), 0 4rpx 14rpx rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(18rpx);

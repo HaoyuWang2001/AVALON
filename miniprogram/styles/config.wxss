@@ -106,6 +106,7 @@
 .rule-picker-fill { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: flex-end; }
 .rule-col { flex: 1; margin-right: 20rpx; }
 .rule-label { font-size: 28rpx; font-weight: 600; color: var(--text-body); }
+.rule-disabled { color: var(--text-muted); }
 .rule-desc { font-size: 22rpx; color: var(--gray-400); margin-top: 4rpx; display: block; }
 .rule-picker { font-size: 28rpx; color: var(--primary); font-weight: 600; }
 .rule-hint {
