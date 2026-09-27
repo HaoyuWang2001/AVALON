@@ -13,6 +13,7 @@
   min-height: 100vh;
   box-sizing: border-box;
   background-color: var(--bg-page);
+  color: var(--text-body);
 }
 
 /* ─────────── 主题 1：烛光殿堂（暖炭墨 + 纹章金 + 羊皮纸） ─────────── */
