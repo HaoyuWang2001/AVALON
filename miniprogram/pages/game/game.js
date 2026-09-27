@@ -284,6 +284,9 @@ Page({
     voteRevealRemaining: 0,
     showMissionAnim: false,
     missionAnimSuccess: false,
+    missionHoldSide: '',
+    missionFillStyle: '',
+    bottomBarRawHeight: 0,
   },
 
   onLoad(options) {
@@ -357,6 +360,7 @@ Page({
   onHide() {
     if (this._gamePollingTimer) { clearInterval(this._gamePollingTimer); this._gamePollingTimer = null; }
     this.onKnifeTouchEnd();
+    this._stopMissionHold();
   },
 
   onUnload() {
@@ -367,6 +371,7 @@ Page({
     if (this._assnAnimTimer2) clearTimeout(this._assnAnimTimer2);
     if (this._missionAnimTimer) clearTimeout(this._missionAnimTimer);
     this.onKnifeTouchEnd();
+    this._stopMissionHold();
     api.disconnectSocket();
   },
 
@@ -840,8 +845,9 @@ Page({
     const rpxToPx = windowWidth / 750;
     wx.createSelectorQuery().select('.bottom-bar').boundingClientRect(rect => {
       if (rect && rect.height) {
-        // bottomBarHeight = 底部栏实际高度 + 固定 16rpx 间距（均转 px）
-        this.setData({ bottomBarHeight: rect.height + 16 * rpxToPx });
+        // bottomBarHeight = 底部栏实际高度 + 固定 16rpx 间距（用于玩家区/压缩版留白）
+        // bottomBarRawHeight = 实际高度（弹窗/动画贴底用，避免露缝）
+        this.setData({ bottomBarHeight: rect.height + 16 * rpxToPx, bottomBarRawHeight: rect.height });
       }
     }).exec();
   },
@@ -1394,37 +1400,85 @@ Page({
   },
 
   // 任务投票弹窗：点击成功/失败半屏 → 确认弹窗 → 提交
-  confirmMissionVote(e) {
-    const vote = e.currentTarget.dataset.vote;
-    const { gameId, playerRole, playerSide } = this.data;
+  // 任务票长按读条：1.5s 填满即触发（无二次确认）；松手未满则回退
+  _missionFillStyle(side, p) {
+    if (side === 'success') {
+      return `background: linear-gradient(135deg, #99A4BC 0%, #99A4BC ${p}%, rgba(153,164,188,0) ${p}%);`;
+    }
+    return `background: linear-gradient(315deg, #986460 0%, #986460 ${p}%, rgba(152,100,96,0) ${p}%);`;
+  },
 
+  onMissionHoldStart(e) {
+    if (this._missionHoldTimer || this._missionHoldRetreatTimer) return;
+    const vote = e.currentTarget.dataset.vote;
+    if (!vote) return;
     if (vote === 'fail') {
       // 以当前阵营为准（兰斯洛特转换可能改变 side）；后端为最终裁决
+      const { playerRole, playerSide } = this.data;
       const isEvil = playerSide === 'evil' || ['mordred', 'morgana', 'assassin', 'minion', 'oberon', 'lancelotRed'].includes(playerRole);
       if (!isEvil) {
         wx.showToast({ title: '只有红方才能破坏任务', icon: 'error' });
         return;
       }
     }
-
-    wx.showModal({
-      title: vote === 'success' ? '完成任务' : '破坏任务',
-      content: vote === 'success' ? '确认任务成功？' : '确认任务失败？',
-      confirmText: '确认',
-      cancelText: '取消',
-      success: (res) => {
-        if (res.confirm) {
-          wx.showLoading({ title: '提交中...', mask: true });
-          api.castMissionVote(gameId, vote, playerRole).then(() => {
-            wx.hideLoading();
-            this.fetchGameState();
-          }).catch(err => {
-            wx.hideLoading();
-            wx.showToast({ title: (err && err.message) || '任务投票失败', icon: 'none' });
-          });
-        }
+    const side = vote === 'success' ? 'success' : 'fail';
+    this._missionHoldP = 0;
+    this.setData({ missionHoldSide: side, missionFillStyle: this._missionFillStyle(side, 0) });
+    this._missionHoldTimer = setInterval(() => {
+      this._missionHoldP += 1;
+      if (this._missionHoldP >= 100) {
+        clearInterval(this._missionHoldTimer);
+        this._missionHoldTimer = null;
+        this.setData({ missionFillStyle: this._missionFillStyle(side, 100) });
+        this._submitMissionVote(vote);
+      } else {
+        this.setData({ missionFillStyle: this._missionFillStyle(side, this._missionHoldP) });
       }
+    }, 15);
+  },
+
+  onMissionHoldEnd() {
+    if (this._missionHoldTimer) { clearInterval(this._missionHoldTimer); this._missionHoldTimer = null; }
+    const side = this.data.missionHoldSide;
+    if (!side || this._missionHoldRetreatTimer) return;
+    let p = this._missionHoldP || 0;
+    if (p <= 0) { this.setData({ missionFillStyle: '', missionHoldSide: '' }); return; }
+    this._missionHoldRetreatTimer = setInterval(() => {
+      p -= 8;
+      if (p <= 0) {
+        clearInterval(this._missionHoldRetreatTimer);
+        this._missionHoldRetreatTimer = null;
+        this._missionHoldP = 0;
+        this.setData({ missionFillStyle: '', missionHoldSide: '' });
+      } else {
+        this._missionHoldP = p;
+        this.setData({ missionFillStyle: this._missionFillStyle(side, p) });
+      }
+    }, 15);
+  },
+
+  _submitMissionVote(vote) {
+    const { gameId, playerRole } = this.data;
+    this._missionHoldP = 0;
+    wx.showLoading({ title: '提交中...', mask: true });
+    api.castMissionVote(gameId, vote, playerRole).then(() => {
+      wx.hideLoading();
+      this.setData({ missionFillStyle: '', missionHoldSide: '' });
+      this.fetchGameState();
+    }).catch(err => {
+      wx.hideLoading();
+      this.setData({ missionFillStyle: '', missionHoldSide: '' });
+      wx.showToast({ title: (err && err.message) || '任务投票失败', icon: 'none' });
     });
+  },
+
+  _stopMissionHold() {
+    if (this._missionHoldTimer) { clearInterval(this._missionHoldTimer); this._missionHoldTimer = null; }
+    if (this._missionHoldRetreatTimer) { clearInterval(this._missionHoldRetreatTimer); this._missionHoldRetreatTimer = null; }
+    this._missionHoldP = 0;
+    if (this.data.missionHoldSide || this.data.missionFillStyle) {
+      this.setData({ missionHoldSide: '', missionFillStyle: '' });
+    }
   },
 
   getLeaderName(openId) {

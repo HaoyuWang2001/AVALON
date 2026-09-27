@@ -398,7 +398,7 @@
   </view>
 
   <!-- 标准查看身份弹窗（非 roleReveal，点"隐藏身份"关闭，不自动消失） -->
-  <view class="role-modal" wx:if="{{showRoleModal}}">
+  <view class="role-modal" wx:if="{{showRoleModal}}" catchtouchmove="noop">
     <view class="modal-mask" bindtap="closeRoleModal" catchtouchmove="noop"></view>
     <view class="role-modal-body">
       <view class="role-card-badge">
@@ -433,7 +433,7 @@
   </view>
 
   <!-- 历史弹窗 -->
-  <view class="info-modal" wx:if="{{showInfoModal}}">
+  <view class="info-modal" wx:if="{{showInfoModal}}" catchtouchmove="noop">
     <view class="modal-mask" bindtap="closeInfoModal" catchtouchmove="noop"></view>
     <view class="info-modal-body">
       <view class="info-modal-title">游戏记录</view>
@@ -474,7 +474,7 @@
   </view>
 
   <!-- 湖仙查验结果弹窗（仅验人者，纯图片蓝方蓝/红方红；"知道了"= 本人确认，不可关闭） -->
-  <view class="lake-result-modal" wx:if="{{showLakeResult}}">
+  <view class="lake-result-modal" wx:if="{{showLakeResult}}" catchtouchmove="noop">
     <view class="modal-mask" catchtap="noop" catchtouchmove="noop"></view>
     <view class="lake-result-body">
       <image src="/images/{{lakeResult === 'evil' ? 'avalon-red.png' : 'avalon-blue.png'}}" class="lake-result-img" mode="aspectFit"/>
@@ -483,7 +483,7 @@
   </view>
 
   <!-- 湖仙查验确认弹窗（非验人者，结果保密；仅按钮触发确认提交，不可关闭） -->
-  <view class="lake-info-modal" wx:if="{{showLakeInfo}}">
+  <view class="lake-info-modal" wx:if="{{showLakeInfo}}" catchtouchmove="noop">
     <view class="modal-mask" catchtap="noop" catchtouchmove="noop"></view>
     <view class="lake-info-body">
       <view class="lake-info-title">湖仙验人</view>
@@ -493,7 +493,7 @@
   </view>
 
   <!-- 兰斯洛特抽卡弹窗（全员可见抽卡结果，仅按钮触发确认提交，不可关闭；重连由后端 lancelotConfirmed 恢复） -->
-  <view class="lancelot-modal" wx:if="{{currentPhase === 'lancelot' && isInGame && !playerLancelotConfirmed}}">
+  <view class="lancelot-modal" wx:if="{{currentPhase === 'lancelot' && isInGame && !playerLancelotConfirmed}}" catchtouchmove="noop">
     <view class="modal-mask" catchtap="noop" catchtouchmove="noop"></view>
     <view class="lancelot-body">
       <view class="lancelot-title">兰斯洛特抽卡</view>
@@ -514,15 +514,17 @@
   </view>
 
   <!-- 任务投票弹窗（仅任务队成员，不可关闭；投票前有 5s 票型倒计时） -->
-  <view class="mission-modal" wx:if="{{currentPhase === 'missionVote' && isMissionTeamMember && missionVoteReady}}" style="bottom:{{bottomBarHeight ? bottomBarHeight + 'px' : ''}}">
-    <view class="mission-mask" catchtap="noop" catchtouchmove="noop"></view>
+  <view class="mission-modal" wx:if="{{currentPhase === 'missionVote' && isMissionTeamMember && missionVoteReady}}" style="bottom:{{bottomBarRawHeight ? bottomBarRawHeight + 'px' : ''}}" catchtouchmove="noop">
     <block wx:if="{{!hasMissionVoted}}">
-      <view class="mission-split">
-        <view class="mission-half mission-half-success" data-vote="success" bindtap="confirmMissionVote">
-          <text class="mission-half-emoji">✨</text>
+      <view class="mv" catchtouchmove="noop">
+        <view class="mv-fill" style="{{missionFillStyle}}"></view>
+        <view class="mv-corner mv-corner-blue {{missionHoldSide === 'success' ? 'mv-corner-on' : ''}}"
+              data-vote="success" bindtouchstart="onMissionHoldStart" bindtouchend="onMissionHoldEnd" bindtouchcancel="onMissionHoldEnd">
+          <image class="mv-img" src="/images/avalon-blue.png" mode="aspectFit"/>
         </view>
-        <view class="mission-half mission-half-fail" data-vote="fail" bindtap="confirmMissionVote">
-          <text class="mission-half-emoji">💣</text>
+        <view class="mv-corner mv-corner-red {{missionHoldSide === 'fail' ? 'mv-corner-on' : ''}}"
+              data-vote="fail" bindtouchstart="onMissionHoldStart" bindtouchend="onMissionHoldEnd" bindtouchcancel="onMissionHoldEnd">
+          <image class="mv-img" src="/images/avalon-red.png" mode="aspectFit"/>
         </view>
       </view>
     </block>
@@ -559,7 +561,7 @@
   </view>
 
   <!-- 任务结果全屏动画（全员）：成功蓝图 / 失败红图；仅「已感知」按钮可点 -->
-  <view class="mission-anim" wx:if="{{showMissionAnim}}" style="bottom:{{bottomBarHeight ? bottomBarHeight + 'px' : ''}}">
+  <view class="mission-anim" wx:if="{{showMissionAnim}}" style="bottom:{{bottomBarRawHeight ? bottomBarRawHeight + 'px' : ''}}">
     <view class="mission-anim-bg {{missionAnimSuccess ? 'anim-mission-success' : 'anim-mission-fail'}}"></view>
     <view class="mission-anim-ring r1"></view>
     <view class="mission-anim-ring r2"></view>
@@ -577,7 +579,7 @@
 
   <!-- 预选车面板（底部弹层，仅车主） -->
   <view class="preteam-panel-mask" wx:if="{{showPreteamPicker}}" bindtap="closePreteamPicker" catchtouchmove="noop"></view>
-  <view class="preteam-panel" wx:if="{{showPreteamPicker}}">
+  <view class="preteam-panel" wx:if="{{showPreteamPicker}}" catchtouchmove="noop">
     <view class="preteam-panel-title">预选车（可选，0~{{requiredTeamSize}} 人）</view>
     <view class="guide-pick-wrap">
       <view wx:for="{{guideSortedPlayers}}" wx:key="openId" class="guide-pick {{item.checked ? 'guide-pick-on' : ''}} {{item.disabled ? 'guide-pick-dis' : ''}}"

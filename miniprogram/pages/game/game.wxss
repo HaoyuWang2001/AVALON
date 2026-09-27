@@ -769,27 +769,22 @@ progress { border-radius: 12rpx; }
   z-index: 800;
   display: flex;
 }
-.mission-mask {
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--bg-card);
+/* 任务投票：左上蓝图 / 右下红图；对角渐变底 + 长按读条填充 */
+.mv {
+  position: relative; flex: 1; overflow: hidden;
+  background: linear-gradient(135deg, #99A4BC 0%, #E6EAED 50%, #986460 100%);
 }
-.mission-split {
-  position: relative; z-index: 1;
-  flex: 1; display: flex;
-}
-.mission-half {
-  flex: 1;
+.mv-fill { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; }
+.mv-corner {
+  position: absolute; width: 340rpx; height: 340rpx;
   display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s ease;
 }
-.mission-half-success {
-  background: linear-gradient(180deg, #8398A1 0%, #99A4BC 50%, #8398A1 100%);
-}
-.mission-half-fail {
-  background: linear-gradient(180deg, #A0605B 0%, #986460 50%, #A0605B 100%);
-}
-.mission-half-success:active { background: #556B76; }
-.mission-half-fail:active { background: #7A403C; }
-.mission-half-emoji { font-size: 120rpx; line-height: 1; }
+.mv-corner-blue { left: 16rpx; top: 16rpx; }
+.mv-corner-red { right: 16rpx; bottom: 16rpx; }
+.mv-corner-on { transform: scale(1.12); }
+.mv-img { width: 240rpx; height: 240rpx; transition: filter 0.15s ease; }
+.mv-corner-on .mv-img { filter: drop-shadow(0 0 28rpx rgba(255, 255, 255, 0.9)) brightness(1.08); }
 .mission-waiting {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
