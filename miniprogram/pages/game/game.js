@@ -285,7 +285,7 @@ Page({
     showMissionAnim: false,
     missionAnimSuccess: false,
     missionHoldSide: '',
-    missionFillStyle: '',
+    missionBgStyle: '',
     bottomBarRawHeight: 0,
   },
 
@@ -1401,15 +1401,19 @@ Page({
 
   // 任务投票弹窗：点击成功/失败半屏 → 确认弹窗 → 提交
   // 任务票长按读条：1.5s 填满即触发（无二次确认）；松手未满则回退
-  _missionFillStyle(side, p) {
-    const e = p * 1.3;              // 前缘位置（p=100 → 130%，确保对角全覆盖）
-    const s = Math.max(0, e - 16);  // 渐变实色终点（柔边带宽 16%）
+  // 任务票长按：移动“白线”位置（非覆盖）——按住蓝白线移向红(50→100)、按住红白线移向蓝(50→0)
+  _missionBgStyle(side, p) {
+    const t = (p / 100) * 50;   // 0→50
     if (side === 'success') {
-      // 近角深蓝 → 浅蓝 → 渐隐
-      return `background: linear-gradient(135deg, #8398A1 0%, #99A4BC ${s}%, rgba(153,164,188,0) ${e}%);`;
+      // 白线 50→100，红端同步后移(100→150)保证红完全消失
+      const w = (50 + t).toFixed(1);
+      const r = (100 + t).toFixed(1);
+      return `background: linear-gradient(135deg, #99A4BC 0%, #E6EAED ${w}%, #986460 ${r}%);`;
     }
-    // 近角深红 → 浅红 → 渐隐（自右下 315°）
-    return `background: linear-gradient(315deg, #A0605B 0%, #986460 ${s}%, rgba(152,100,96,0) ${e}%);`;
+    // 白线 50→0，蓝端同步前移(0→-50)保证蓝完全消失
+    const b = (0 - t).toFixed(1);
+    const w = (50 - t).toFixed(1);
+    return `background: linear-gradient(135deg, #99A4BC ${b}%, #E6EAED ${w}%, #986460 100%);`;
   },
 
   onMissionHoldStart(e) {
@@ -1427,16 +1431,16 @@ Page({
     }
     const side = vote === 'success' ? 'success' : 'fail';
     this._missionHoldP = 0;
-    this.setData({ missionHoldSide: side, missionFillStyle: this._missionFillStyle(side, 0) });
+    this.setData({ missionHoldSide: side, missionBgStyle: this._missionBgStyle(side, 0) });
     this._missionHoldTimer = setInterval(() => {
       this._missionHoldP += 1;
       if (this._missionHoldP >= 100) {
         clearInterval(this._missionHoldTimer);
         this._missionHoldTimer = null;
-        this.setData({ missionFillStyle: this._missionFillStyle(side, 100) });
+        this.setData({ missionBgStyle: this._missionBgStyle(side, 100) });
         this._submitMissionVote(vote);
       } else {
-        this.setData({ missionFillStyle: this._missionFillStyle(side, this._missionHoldP) });
+        this.setData({ missionBgStyle: this._missionBgStyle(side, this._missionHoldP) });
       }
     }, 15);
   },
@@ -1446,17 +1450,17 @@ Page({
     const side = this.data.missionHoldSide;
     if (!side || this._missionHoldRetreatTimer) return;
     let p = this._missionHoldP || 0;
-    if (p <= 0) { this.setData({ missionFillStyle: '', missionHoldSide: '' }); return; }
+    if (p <= 0) { this.setData({ missionBgStyle: '', missionHoldSide: '' }); return; }
     this._missionHoldRetreatTimer = setInterval(() => {
       p -= 8;
       if (p <= 0) {
         clearInterval(this._missionHoldRetreatTimer);
         this._missionHoldRetreatTimer = null;
         this._missionHoldP = 0;
-        this.setData({ missionFillStyle: '', missionHoldSide: '' });
+        this.setData({ missionBgStyle: '', missionHoldSide: '' });
       } else {
         this._missionHoldP = p;
-        this.setData({ missionFillStyle: this._missionFillStyle(side, p) });
+        this.setData({ missionBgStyle: this._missionBgStyle(side, p) });
       }
     }, 15);
   },
@@ -1467,11 +1471,11 @@ Page({
     wx.showLoading({ title: '提交中...', mask: true });
     api.castMissionVote(gameId, vote, playerRole).then(() => {
       wx.hideLoading();
-      this.setData({ missionFillStyle: '', missionHoldSide: '' });
+      this.setData({ missionBgStyle: '', missionHoldSide: '' });
       this.fetchGameState();
     }).catch(err => {
       wx.hideLoading();
-      this.setData({ missionFillStyle: '', missionHoldSide: '' });
+      this.setData({ missionBgStyle: '', missionHoldSide: '' });
       wx.showToast({ title: (err && err.message) || '任务投票失败', icon: 'none' });
     });
   },
@@ -1480,8 +1484,8 @@ Page({
     if (this._missionHoldTimer) { clearInterval(this._missionHoldTimer); this._missionHoldTimer = null; }
     if (this._missionHoldRetreatTimer) { clearInterval(this._missionHoldRetreatTimer); this._missionHoldRetreatTimer = null; }
     this._missionHoldP = 0;
-    if (this.data.missionHoldSide || this.data.missionFillStyle) {
-      this.setData({ missionHoldSide: '', missionFillStyle: '' });
+    if (this.data.missionHoldSide || this.data.missionBgStyle) {
+      this.setData({ missionHoldSide: '', missionBgStyle: '' });
     }
   },
 

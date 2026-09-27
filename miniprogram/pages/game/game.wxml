@@ -516,8 +516,7 @@
   <!-- 任务投票弹窗（仅任务队成员，不可关闭；投票前有 5s 票型倒计时） -->
   <view class="mission-modal" wx:if="{{currentPhase === 'missionVote' && isMissionTeamMember && missionVoteReady}}" style="bottom:{{bottomBarRawHeight ? bottomBarRawHeight + 'px' : ''}}" catchtouchmove="noop">
     <block wx:if="{{!hasMissionVoted}}">
-      <view class="mv" catchtouchmove="noop">
-        <view class="mv-fill" style="{{missionFillStyle}}"></view>
+      <view class="mv" style="{{missionBgStyle}}" catchtouchmove="noop">
         <view class="mv-corner mv-corner-blue {{missionHoldSide === 'success' ? 'mv-corner-on' : ''}}"
               data-vote="success" bindtouchstart="onMissionHoldStart" bindtouchend="onMissionHoldEnd" bindtouchcancel="onMissionHoldEnd">
           <image class="mv-img" src="/images/avalon-blue.png" mode="aspectFit"/>

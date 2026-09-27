@@ -769,12 +769,11 @@ progress { border-radius: 12rpx; }
   z-index: 800;
   display: flex;
 }
-/* 任务投票：左上蓝图 / 右下红图；对角渐变底 + 长按读条填充 */
+/* 任务投票：左上蓝图 / 右下红图；对角渐变（白线可移动） */
 .mv {
   position: relative; flex: 1; overflow: hidden;
   background: linear-gradient(135deg, #99A4BC 0%, #E6EAED 50%, #986460 100%);
 }
-.mv-fill { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; }
 .mv-corner {
   position: absolute; width: 340rpx; height: 340rpx;
   display: flex; align-items: center; justify-content: center;
