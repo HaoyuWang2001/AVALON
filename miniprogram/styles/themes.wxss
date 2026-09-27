@@ -39,10 +39,12 @@
 
   /* 领域语义色（非标签） */
   --c-violet: #B49CE0;
-  /* label 系列（good/evil 随主题独立配色） */
-  --label-good: #8FB4E8;
+  /* 领域前景色（非标签）：阵营 good/evil；label 与之一致 */
+  --good: #8FB4E8;
+  --evil: #E89A86;
+  --label-good: var(--good);
   --label-good-bg: #2B3A57;
-  --label-evil: #E89A86;
+  --label-evil: var(--evil);
   --label-evil-bg: #573026;
   /* 通用语义色（随主题） */
   --agree: #7FC8A0;
@@ -131,10 +133,12 @@
 
   /* 领域语义色（非标签） */
   --c-violet: #B4A6F0;
-  /* label 系列（good/evil 随主题独立配色） */
-  --label-good: #93B4F5;
+  /* 领域前景色（非标签）：阵营 good/evil；label 与之一致 */
+  --good: #93B4F5;
+  --evil: #F09AA8;
+  --label-good: var(--good);
   --label-good-bg: #26325E;
-  --label-evil: #F09AA8;
+  --label-evil: var(--evil);
   --label-evil-bg: #55243E;
   /* 通用语义色（随主题） */
   --agree: #6FD3C7;
@@ -223,10 +227,12 @@
 
   /* 领域语义色（非标签） */
   --c-violet: #9C90D8;
-  /* label 系列（good/evil 随主题独立配色） */
-  --label-good: #8FB6E0;
+  /* 领域前景色（非标签）：阵营 good/evil；label 与之一致 */
+  --good: #8FB6E0;
+  --evil: #E08A8A;
+  --label-good: var(--good);
   --label-good-bg: #1D3A6B;
-  --label-evil: #E08A8A;
+  --label-evil: var(--evil);
   --label-evil-bg: #572828;
   /* 通用语义色（随主题） */
   --agree: #6FC79A;

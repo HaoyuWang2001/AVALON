@@ -9,8 +9,8 @@
 .hc-item:active { opacity: 0.7; }
 .hc-line { display: flex; align-items: center; justify-content: space-between; }
 .hc-role { font-size: 28rpx; font-weight: 700; flex-shrink: 0; }
-.hc-good { color: var(--label-good); }
-.hc-evil { color: var(--label-evil); }
+.hc-good { color: var(--good); }
+.hc-evil { color: var(--evil); }
 .hc-right { display: flex; align-items: center; flex-shrink: 0; margin-left: 16rpx; }
 .hc-duration { font-size: 24rpx; color: var(--text-muted); margin-right: 16rpx; }
 .hc-result { font-size: 24rpx; font-weight: 700; padding: 2rpx 18rpx; border-radius: 8rpx; }

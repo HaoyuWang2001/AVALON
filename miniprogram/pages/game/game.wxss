@@ -5,7 +5,6 @@
 .mission-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8rpx; }
 .mission-head-info { display: flex; align-items: center; gap: 16rpx; }
 .mission-phase { font-size: 32rpx; color: var(--gray-500); font-weight: 600; }
-.mission-lake { font-size: 24rpx; color: var(--label-pink); }
 
 /* 顶栏图标按钮（方形）样式已移至 styles/buttons.wxss 共享 */
 .top-mini-actions { display: flex; align-items: center; gap: 12rpx; }
@@ -27,13 +26,11 @@
   display: flex; align-items: center; justify-content: center;
 }
 .round-size {
-  font-size: 30rpx; font-weight: 800; color: var(--primary);
+  font-size: 30rpx; font-weight: 800; color: var(--text-body);
   line-height: 1;
 }
-.round-circle.succ { background: var(--success); }
-.round-circle.fail { background: var(--fail); }
-.round-circle.succ .round-size,
-.round-circle.fail .round-size { color: #FFFFFF; }
+.round-circle.succ { background: var(--mission-ok); }
+.round-circle.fail { background: var(--mission-fail); }
 .round-circle.current {
   width: 96rpx; height: 96rpx;
   border: 6rpx solid var(--primary);
@@ -50,7 +47,7 @@
   gap: 12rpx;
   padding-bottom: 20rpx;
 }
-.flow-reason-chain { font-size: 30rpx; font-weight: 600; color: var(--label-evil); }
+.flow-reason-chain { font-size: 30rpx; font-weight: 600; color: var(--evil); }
 .flow-reason-result { font-size: 28rpx; font-weight: 600; color: var(--text-body); text-align: center; }
 .flow-car {
   position: relative;
@@ -59,18 +56,12 @@
   display: flex; align-items: center; justify-content: center;
 }
 .flow-car-icon { font-size: 34rpx; line-height: 1; }
-.flow-car.failed { background: var(--state-reject); border: 2rpx solid var(--label-evil); }
-.flow-car.failed .flow-car-icon { color: var(--label-evil); }
+.flow-car.failed { background: var(--state-reject); border: 2rpx solid var(--mission-fail); }
+.flow-car.failed .flow-car-icon { color: var(--mission-fail); }
 .flow-car.current { border: 5rpx solid var(--primary); }
-.flow-car.is-forced { border-color: var(--label-evil); box-shadow: 0 0 0 6rpx rgba(239, 68, 68, 0.2); }
+.flow-car.is-forced { border-color: var(--warning); box-shadow: 0 0 0 6rpx rgba(245, 158, 11, 0.2); }
 .flow-car.last { width: 64rpx; height: 96rpx; flex-direction: column; }
 .flow-car.last .flow-car-icon { font-size: 44rpx; }
-.flow-car-label {
-  position: absolute; bottom: -30rpx; left: 50%;
-  transform: translateX(-50%);
-  font-size: 20rpx; color: var(--label-evil); font-weight: 600;
-  white-space: nowrap;
-}
 
 /* ─────── 讨论阶段 ─────── */
 .disc-setup { background: var(--gray-100); border-radius: 12rpx; padding: 20rpx; margin-bottom: 20rpx; }
@@ -90,26 +81,7 @@
   background: var(--gray-100); border-radius: 8rpx; padding: 12rpx 16rpx;
 }
 
-/* 玩家列表（预选车型 / 队长 / 选中 标记） */
-.player-item { position: relative; }
-.player-item.pre-selected { background: var(--label-orange-bg); border: 2rpx solid var(--label-orange); }
-.player-item.selected { background: var(--label-blue-bg); border: 2rpx solid var(--label-blue); }
-.badge {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 4rpx 14rpx; border-radius: 20rpx;
-  font-size: 22rpx; font-weight: 700; color: #fff; margin-right: 8rpx;
-}
-.badge-pre { background: var(--label-orange); }
-.badge-final { background: var(--label-blue); }
-.badge-leader { background: var(--label-gold); }
-
-/* 讨论阶段：队长标识 + 两步流程 */
-.leader-badge {
-  display: inline-flex; align-items: center;
-  font-size: 30rpx; font-weight: 800; color: var(--label-gold);
-  background: var(--label-gold-bg); border: 2rpx solid var(--label-gold);
-  padding: 10rpx 28rpx; border-radius: 30rpx;
-}
+/* 讨论阶段：两步流程 */
 .disc-step { margin-bottom: 24rpx; }
 .disc-step-title { font-size: 28rpx; font-weight: 700; color: var(--text-body); margin-bottom: 12rpx; }
 .disc-step-done { display: flex; align-items: center; gap: 12rpx; margin-top: 14rpx; }
@@ -342,11 +314,11 @@
 /* 刺杀阶段等待动画：红色 */
 .assassin-waiting-spinner {
   border-color: rgba(239, 68, 68, 0.2);
-  border-top-color: var(--label-evil);
+  border-top-color: var(--evil);
 }
-.assassin-waiting-text, .bar-assassin-wait { color: var(--label-evil); }
+.bar-assassin-wait { color: var(--evil); }
 /* 睁眼狼提问文字：红色加粗强调 */
-.bar-assassin-q { color: var(--label-evil); font-weight: 700; }
+.bar-assassin-q { color: var(--evil); font-weight: 700; }
 @keyframes vote-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -394,7 +366,6 @@
 
 /* 队伍成员样式 */
 .team-member { display: flex; flex-direction: column; align-items: center; margin: 20rpx; }
-.team-member-avatar { width: 120rpx; height: 120rpx; border-radius: 50%; margin-bottom: 12rpx; border: 4rpx solid var(--label-good); }
 .team-member-name { font-size: 28rpx; text-align: center; }
 
 /* 投票按钮样式 */
@@ -534,18 +505,18 @@
   overflow: hidden;
   padding: 12rpx 0;
   border-radius: 22rpx;
-  background: var(--label-evil-bg);
+  background: var(--state-evil);
   display: flex; align-items: center; justify-content: center;
 }
 .role-vision-knife-progress {
   position: absolute;
   left: 0; top: 0; bottom: 0;
-  background: var(--label-evil);
+  background: var(--evil);
   z-index: 1;
 }
 .role-vision-knife-text {
   position: relative; z-index: 2;
-  color: var(--label-evil); font-size: 28rpx; font-weight: 700; letter-spacing: 6rpx;
+  color: var(--evil); font-size: 28rpx; font-weight: 700; letter-spacing: 6rpx;
 }
 
 /* ─────── 历史弹窗 ─────── */
@@ -570,22 +541,22 @@
 }
 .info-section { margin-bottom: 24rpx; }
 .info-section-title { font-size: 28rpx; font-weight: 700; color: var(--c-violet); margin-bottom: 12rpx; }
-.info-section-title.rec-red { color: var(--label-evil); }
+.info-section-title.rec-red { color: var(--evil); }
 .info-round { margin-bottom: 16rpx; }
 .info-round-title { font-size: 26rpx; font-weight: 700; color: var(--text-body); margin-bottom: 8rpx; }
 .info-car { background: var(--gray-100); border-radius: 10rpx; padding: 14rpx 16rpx; margin-bottom: 8rpx; }
 .info-car-line { font-size: 26rpx; color: var(--text-body); line-height: 1.5; }
 .info-car-result { font-weight: 600; }
-.oc-good { color: var(--label-good); font-weight: 700; }
-.oc-evil { color: var(--label-evil); font-weight: 700; }
-.info-fail-count { color: var(--label-evil); font-weight: 700; }
+.oc-good { color: var(--good); font-weight: 700; }
+.oc-evil { color: var(--evil); font-weight: 700; }
+.info-fail-count { color: var(--evil); font-weight: 700; }
 .info-row {
   display: flex; justify-content: space-between; align-items: center;
   font-size: 26rpx; color: var(--text-body);
   background: var(--gray-100); border-radius: 8rpx; padding: 12rpx 16rpx; margin-bottom: 8rpx;
 }
-.txt-good { color: var(--label-good); font-weight: 700; }
-.txt-evil { color: var(--label-evil); font-weight: 700; }
+.txt-good { color: var(--good); font-weight: 700; }
+.txt-evil { color: var(--evil); font-weight: 700; }
 .txt-muted { color: var(--text-muted); }
 .info-modal-close { margin-top: 16rpx; }
 
@@ -996,7 +967,7 @@ progress { border-radius: 12rpx; }
 }
 
 /* ─────── 底部栏：车型文字（投票/展示/任务投票全程） ─────── */
-.bar-car { color: var(--label-gold); font-weight: 700; }
+.bar-car { color: var(--gold); font-weight: 700; }
 
 /* ─────── 松弛压缩版（游戏页）：无需滚动即可查看全部玩家 ─────── */
 .compact {
@@ -1027,7 +998,7 @@ progress { border-radius: 12rpx; }
 .c-topinfo .flow-area { margin: 12rpx 20rpx 0 10rpx; padding: 12rpx 12rpx 4rpx; }
 .c-topinfo .flow-car { width: 36rpx; height: 54rpx; border-radius: 10rpx; }
 .c-topinfo .flow-car.last { width: 48rpx; height: 72rpx; }
-.c-topinfo .flow-car.is-forced { box-shadow: 0 0 0 4rpx rgba(239, 68, 68, 0.2); }
+.c-topinfo .flow-car.is-forced { box-shadow: 0 0 0 4rpx rgba(245, 158, 11, 0.2); }
 .c-topinfo .flow-car-icon { font-size: 26rpx; }
 .c-main { flex: 1; display: flex; flex-direction: row; gap: 10rpx; min-height: 0; }
 .c-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }

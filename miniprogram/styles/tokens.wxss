@@ -39,11 +39,17 @@ page {
   /* 领域语义色（非标签）：仅保留紫，用于信息标题/座位号等强调文字 */
   --c-violet: #6D28D9;
 
+  /* 领域语义前景色（非标签）：阵营 good/evil、荣誉 gold */
+  --good: #3B82F6;
+  --evil: #EF4444;
+  --gold: #B8860B;
+  --gold-bg: #FEF3C7;
+
   /* label 系列（标签：浅色底 + 同色系文字） */
-  /* 语义色（随主题） */
-  --label-good: #3B82F6;
+  /* 语义色（随主题，与 --good/--evil 同值） */
+  --label-good: var(--good);
   --label-good-bg: #DBEAFE;
-  --label-evil: #EF4444;
+  --label-evil: var(--evil);
   --label-evil-bg: #FEE2E2;
   /* 固定色 */
   --label-blue: #2563EB;
