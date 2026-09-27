@@ -75,7 +75,7 @@
   --hc-evil: #E89A86;
   --mission-mid: #2E281F;
   --mission-ok: #8FB4E8;
-  --mission-fail: #E89A86;
+  --mission-fail: #EEB0A0;
   --champion-fg: #F7F1E8;
   --profile-fg: #F7F1E8;
   --profile-name: #B49CE0;
@@ -171,7 +171,7 @@
   --hc-evil: #F09AA8;
   --mission-mid: #29223E;
   --mission-ok: #93B4F5;
-  --mission-fail: #F09AA8;
+  --mission-fail: #F4B2BE;
   --champion-fg: #D8D2EE;
   --profile-fg: #D8D2EE;
   --profile-name: #B4A6F0;
@@ -267,7 +267,7 @@
   --hc-evil: #E08A8A;
   --mission-mid: #262B33;
   --mission-ok: #8FB6E0;
-  --mission-fail: #E08A8A;
+  --mission-fail: #E8A4A4;
   --champion-fg: #C7D2DD;
   --profile-fg: #C7D2DD;
   --profile-name: #9C90D8;

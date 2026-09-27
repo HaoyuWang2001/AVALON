@@ -82,7 +82,7 @@ page {
   /* 任务成功蒙版中心蓝（比 --hc-good 更浅） */
   --mission-ok: #2563EB;
   /* 任务失败蒙版中心红（比 --hc-evil 更浅） */
-  --mission-fail: #DC2626;
+  --mission-fail: #EF4444;
   /* 小节竖线（角色胜率 / 历史对局 / 配置弹窗） */
   --section-bar-from: #8B5CF6;
   --section-bar-to: #6D28D9;
