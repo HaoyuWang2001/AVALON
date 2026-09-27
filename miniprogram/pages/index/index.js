@@ -48,6 +48,7 @@ Page({
     historyList: [],
     roleStats: [],
     summary: null,
+    myRank: 0,
     champions: [],
     podium: [],
     championsLoaded: false,
@@ -491,6 +492,7 @@ Page({
         }));
         this.setData({
           roleStats,
+          myRank: s.rank || 0,
           summary: {
             totalWinRate: s.totalWinRate,
             totalWins: s.totalWins,

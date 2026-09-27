@@ -10,7 +10,10 @@
     <button size="mini" class="profile-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" binderror="onAvatarError" bindtap="onAvatarTap">
       <image src="{{userInfo.avatarUrl}}" class="profile-avatar-img"/>
     </button>
-    <view class="profile-name {{customNickName ? '' : 'name-placeholder'}}" bindtap="showNickNameModal">{{customNickName || '改名撒！'}}</view>
+    <view class="profile-name-row">
+      <view class="profile-name {{customNickName ? '' : 'name-placeholder'}}" bindtap="showNickNameModal">{{customNickName || '改名撒！'}}</view>
+      <text wx:if="{{myRank}}" class="profile-rank">#{{myRank}}</text>
+    </view>
     <view class="user-emoji-btn" hover-class="user-emoji-hover" hover-stay-time="60" bindtap="showInfoModal">ℹ️</view>
     <view class="pstats">
       <view class="pstat"><text class="pstat-num">{{summary ? summary.totalGames : 0}}</text><text class="pstat-label">对局数</text></view>
