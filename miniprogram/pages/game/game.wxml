@@ -199,8 +199,8 @@
         </view>
       </scroll-view>
     </view>
-  </block>
   </view>
+  </block>
 
   <!-- 底部按钮框（fixed 常驻） -->
   <view class="bottom-bar">
