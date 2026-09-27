@@ -41,6 +41,7 @@
   --c-evil: #E89A86;
   --c-win: #7FC8A0;
   --c-team: #DDB56A;
+  --c-leader: #DDB56A;
   --c-violet: #B49CE0;
   --c-online: #7FC8A0;
   --c-offline: #8F8475;
@@ -133,6 +134,7 @@
   --c-evil: #F09AA8;
   --c-win: #6FD3C7;
   --c-team: #C9B27A;
+  --c-leader: #C9B27A;
   --c-violet: #B4A6F0;
   --c-online: #6FD3C7;
   --c-offline: #8B85A7;
@@ -225,6 +227,7 @@
   --c-evil: #E08A8A;
   --c-win: #6FC79A;
   --c-team: #D4B060;
+  --c-leader: #D4B060;
   --c-violet: #9C90D8;
   --c-online: #6FC79A;
   --c-offline: #8A959F;

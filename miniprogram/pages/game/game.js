@@ -535,7 +535,7 @@ Page({
         const compactRight = colSorted.slice(colHalf).reverse();
         const carSeatsText = (res.current.nominatedTeam || [])
           .map(oid => { const pl = (res.players || []).find(x => x.openId === oid); return pl ? pl.seatNumber : null; })
-          .filter(n => n != null).sort((a, b) => a - b).join('、');
+          .filter(n => n != null).sort((a, b) => a - b).join(' ');
 
         // 历史记录预计算（全部用座位号，避免 wxml 函数调用）
         const nameSeat = id => {

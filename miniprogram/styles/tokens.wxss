@@ -37,6 +37,7 @@ page {
   --c-evil: #EF4444;
   --c-win: #10B981;
   --c-team: #B8860B;
+  --c-leader: #B45309;
   --c-violet: #6D28D9;
   --c-online: #22C55E;
   --c-offline: #9CA3AF;

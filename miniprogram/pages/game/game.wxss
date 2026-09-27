@@ -1046,7 +1046,7 @@ progress { border-radius: 12rpx; }
 }
 
 /* ─────── 底部栏：车型文字（投票/展示/任务投票全程） ─────── */
-.bar-car { color: var(--c-violet); font-weight: 700; }
+.bar-car { color: var(--c-leader); font-weight: 700; }
 
 /* ─────── 松弛压缩版（游戏页）：无需滚动即可查看全部玩家 ─────── */
 .compact {
