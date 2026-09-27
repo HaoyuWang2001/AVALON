@@ -1081,12 +1081,20 @@ progress { border-radius: 12rpx; }
   box-shadow: var(--shadow-lg);
 }
 .c-info-avatar { width: 160rpx; height: 160rpx; border-radius: 50%; background: var(--gray-100); }
+.c-info-line { display: flex; align-items: center; gap: 12rpx; margin-top: 8rpx; }
+.c-info-seat-badge {
+  width: 48rpx; height: 48rpx; border-radius: 8rpx; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: #fff; font-size: 26rpx; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
 .c-info-name { font-size: 34rpx; font-weight: 700; color: var(--text-title); }
-.c-info-seat { font-size: 24rpx; color: var(--text-muted); }
 .c-info-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 6rpx; margin-top: 6rpx; }
 
 /* 压缩版玩家小卡：仅座位号 + 角标；状态底色沿用 .table-player.state-* */
-.c-player { flex: 1; min-height: 0; padding: 14rpx; border-radius: 16rpx; gap: 8rpx; flex-wrap: wrap; align-items: center; justify-content: center; }
+.c-player { flex: 1; min-height: 0; padding: 14rpx; border-radius: 16rpx; gap: 8rpx; flex-wrap: wrap; align-items: center; justify-content: flex-start; }
+/* 右列：内容靠右、座位号贴最右（row-reverse 下 flex-start 主起点在右） */
+.c-col-right .c-player { flex-direction: row-reverse; }
 .c-seat { flex-shrink: 0; width: 44rpx; height: 44rpx; line-height: 44rpx; text-align: center; border-radius: 10rpx; background: var(--gray-100); font-size: 28rpx; font-weight: 800; color: var(--text-body); }
 .c-crown-mini { font-size: 26rpx; line-height: 1; }
 .c-tags { display: flex; flex-wrap: wrap; gap: 6rpx; }

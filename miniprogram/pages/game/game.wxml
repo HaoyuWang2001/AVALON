@@ -87,7 +87,7 @@
       <view class="c-col">
         <template is="compactPlayer" wx:for="{{compactLeft}}" wx:key="openId" data="{{item: item, currentPhase: currentPhase}}"/>
       </view>
-      <view class="c-col">
+      <view class="c-col c-col-right">
         <template is="compactPlayer" wx:for="{{compactRight}}" wx:key="openId" data="{{item: item, currentPhase: currentPhase}}"/>
       </view>
     </view>
@@ -96,8 +96,10 @@
     <view class="c-info-mask" wx:if="{{cInfoPlayer}}" bindtap="closeCompactInfo" catchtouchmove="noop"></view>
     <view class="c-info-pop" wx:if="{{cInfoPlayer}}" catchtap="noop">
       <image class="c-info-avatar" src="{{cInfoPlayer.avatarUrl || '/images/default-avatar.png'}}"/>
-      <text class="c-info-name">{{cInfoPlayer.nickName}}</text>
-      <text class="c-info-seat">{{cInfoPlayer.seatNumber}} 号</text>
+      <view class="c-info-line">
+        <text class="c-info-seat-badge">{{cInfoPlayer.seatNumber}}</text>
+        <text class="c-info-name">{{cInfoPlayer.nickName}}</text>
+      </view>
       <view class="c-info-tags">
         <text wx:for="{{cInfoPlayer.tags}}" wx:for-item="tag" wx:key="text" class="ptag c-tag {{tag.cls}}">{{tag.text}}</text>
         <text wx:if="{{cInfoPlayer.roleName}}" class="c-role">{{cInfoPlayer.roleName}}</text>
