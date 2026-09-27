@@ -258,6 +258,7 @@
     <!-- lake：湖仙验人（必验，单选目标后底部确认） -->
     <block wx:if="{{currentPhase === 'lake'}}">
       <block wx:if="{{isLakeHolder}}">
+        <view class="bar-info bar-lake-hint">湖仙，请选择查验对象</view>
         <view class="bar-row">
           <button size="mini" class="btn btn-primary" bindtap="confirmLakeInspect" disabled="{{!lakeTargetOpenId}}">确认查验</button>
         </view>

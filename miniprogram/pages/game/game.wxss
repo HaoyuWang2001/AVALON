@@ -340,6 +340,7 @@
 }
 /* 等待动画下方文字：紫色 */
 .bar-waiting { color: #8B5CF6; }
+.bar-lake-hint { color: var(--c-violet); font-weight: 700; }
 .bar-row { display: flex; align-items: center; justify-content: center; gap: 16rpx; }
 .bar-row button { flex: 1; }
 /* 队伍投票：同意/反对 深色实底、白字、更明显圆角 */
