@@ -49,37 +49,46 @@
 
   <!-- ===== 松弛压缩版布局：顶部状态条 + 左/中/右三列 + 观战区底部弹窗 ===== -->
   <view class="compact" wx:if="{{compactGame}}" style="bottom:{{bottomBarHeight ? bottomBarHeight + 'px' : ''}}">
-    <view class="c-status">
-      <text class="c-status-phase">{{phaseText}}</text>
-      <view class="c-status-timer" wx:if="{{currentPhase === 'discussion' && hasSpeechTimeout}}">
-        <image src="/images/stopwatch.png" class="c-status-icon"></image>
-        <text class="c-status-num">{{timerSeconds}}s</text>
-        <text wx:if="{{isHost}}" class="c-status-btn" bindtap="{{timerRunning ? 'pauseTimer' : 'startTimer'}}">{{timerRunning ? '暂停' : '启动'}}</text>
-        <text wx:if="{{isHost}}" class="c-status-btn" bindtap="resetTimer">重置</text>
-      </view>
-    </view>
-
-    <!-- 任务进度圈 + 发车信息（与标准版同位置：上方） -->
+    <!-- 顶部：与标准版完全一致的任务进度卡 + 计时器卡片 -->
     <view class="c-topinfo">
-      <view class="rounds c-rounds">
-        <block wx:for="{{roundList}}" wx:key="round">
-          <view class="round-connector" wx:if="{{index > 0}}"></view>
-          <view class="round-circle {{item.status}} {{item.isCurrent ? 'current' : ''}}">
-            <text class="round-size">{{item.size}}</text>
+      <view class="card mission-card">
+        <view class="mission-head">
+          <view class="mission-head-info">
+            <text class="mission-phase">{{phaseText}}</text>
           </view>
-        </block>
-      </view>
-      <view class="c-flow">
-        <view class="flow-reason" wx:if="{{currentPhase === 'gameEnd'}}">
-          <view class="flow-reason-chain" wx:if="{{gameAssassination}}">刺客刺杀 {{gameAssassination.targetSeat}}号 · {{gameAssassination.correct ? '刺杀成功' : '刺杀失败'}}</view>
-          <view class="flow-reason-result" wx:if="{{!gameAssassination}}">{{gameResult && gameResult.abandoned ? '游戏已放弃：' : (gameWinner === 'good' ? '蓝方获胜：' : '红方获胜：')}}{{gameResult && gameResult.reason}}</view>
         </view>
-        <view class="c-flow-list" wx:else>
-          <block wx:for="{{flowCars}}" wx:key="index">
-            <view class="flow-car {{item.state}} {{item.isLast ? 'last' : ''}} {{item.isForced ? 'is-forced' : ''}}">
-              <text class="flow-car-icon">{{item.state === 'failed' ? '🚫' : (item.isLast ? '⚡' : '')}}</text>
+
+        <view class="rounds">
+          <block wx:for="{{roundList}}" wx:key="round">
+            <view class="round-connector" wx:if="{{index > 0}}"></view>
+            <view class="round-circle {{item.status}} {{item.isCurrent ? 'current' : ''}}">
+              <text class="round-size">{{item.size}}</text>
             </view>
           </block>
+        </view>
+
+        <view class="flow-area">
+          <view class="flow-reason" wx:if="{{currentPhase === 'gameEnd'}}">
+            <view class="flow-reason-chain" wx:if="{{gameAssassination}}">刺客刺杀 {{gameAssassination.targetSeat}}号 · {{gameAssassination.correct ? '刺杀成功' : '刺杀失败'}}</view>
+            <view class="flow-reason-result" wx:if="{{!gameAssassination}}">{{gameResult && gameResult.abandoned ? '游戏已放弃：' : (gameWinner === 'good' ? '蓝方获胜：' : '红方获胜：')}}{{gameResult && gameResult.reason}}</view>
+          </view>
+          <view class="flow-cars" wx:else>
+            <block wx:for="{{flowCars}}" wx:key="index">
+              <view class="flow-car {{item.state}} {{item.isLast ? 'last' : ''}} {{item.isForced ? 'is-forced' : ''}}">
+                <text class="flow-car-icon">{{item.state === 'failed' ? '🚫' : (item.isLast ? '⚡' : '')}}</text>
+              </view>
+            </block>
+          </view>
+        </view>
+      </view>
+
+      <view class="card timer-card" wx:if="{{currentPhase === 'discussion' && hasSpeechTimeout}}">
+        <image src="/images/stopwatch.png" class="timer-icon"></image>
+        <text class="timer-num">{{timerSeconds}}s</text>
+        <view wx:if="{{isHost}}" class="timer-btns">
+          <text wx:if="{{!timerRunning}}" class="timer-btn" bindtap="startTimer">启动</text>
+          <text wx:else class="timer-btn" bindtap="pauseTimer">暂停</text>
+          <text class="timer-btn" bindtap="resetTimer">重置</text>
         </view>
       </view>
     </view>
