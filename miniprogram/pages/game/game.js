@@ -34,7 +34,7 @@ const TAG_STYLES = {
   gold: 'ptag-gold',
   orange: 'ptag-orange',
   red: 'ptag-red',
-  grey: 'ptag-pink-deep'
+  pinkDeep: 'ptag-pink-deep'
 };
 
 // 为玩家卡片富化字段（checked/cardState/disabled/isLeader/tags[]）
@@ -109,7 +109,7 @@ function enrichTablePlayer(p, ctx) {
   // 老湖仙：已被查验过（曾持有湖仙令牌）的玩家，非当前持有者；整局持续，且不可再被查验
   const isOldLake = !!(oldLakeOpenIds && oldLakeOpenIds.has(p.openId));
   if (isOldLake && p.openId !== lakeHolderOpenId) {
-    tags.push({ text: '老湖仙', cls: TAG_STYLES.grey });
+    tags.push({ text: '老湖仙', cls: TAG_STYLES.pinkDeep });
   }
   // 车主预选后（discussion 阶段）展示预选队伍成员
   if (currentPhase === 'discussion'

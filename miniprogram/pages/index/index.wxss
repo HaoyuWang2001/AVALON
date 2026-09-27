@@ -99,7 +99,7 @@
   pointer-events: none;
 }
 .brand-text::before { color: var(--brand-g1, #A855F7); animation: brand-tear-a 3s steps(1, end) infinite; }
-.brand-text::after { color: var(--brand-g2, #000000); animation: brand-tear-b 3.4s steps(1, end) infinite; }
+.brand-text::after { color: var(--brand-g2, #4C1D95); animation: brand-tear-b 3.4s steps(1, end) infinite; }
 @keyframes brand-tear-a {
   0%, 90%, 100% { clip-path: inset(96% 0 0 0); transform: translate(0, 0); opacity: 0; }
   92% { clip-path: inset(40% 0 34% 0); transform: translate(-5rpx, -1rpx); opacity: 0.5; }
@@ -135,8 +135,8 @@
 .pstat { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .pstat-num { font-size: 46rpx; font-weight: 800; color: var(--profile-fg, #FFFFFF); }
 .pstat-label { font-size: 24rpx; color: var(--profile-fg, #FFFFFF); margin-top: 6rpx; }
-.pstat-div { width: 6rpx; height: 60rpx; background: var(--profile-divider); border-radius: 3rpx; }
-.pstats-longdiv { height: 6rpx; background: var(--profile-divider); border-radius: 3rpx; margin: 0 0 88rpx; }
+.pstat-div { width: 6rpx; height: 60rpx; background: var(--divider-strong); border-radius: 3rpx; }
+.pstats-longdiv { height: 6rpx; background: var(--divider-strong); border-radius: 3rpx; margin: 0 0 88rpx; }
 
 /* ─────── 用户卡 emoji 按钮（游戏说明） ─────── */
 .user-info-btn {
@@ -145,23 +145,23 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 34rpx; font-weight: 700; color: var(--text-title);
   background: var(--btn-emoji-bg, #F3F4F6);
-  border: 2rpx solid var(--border-color, #E5E7EB);
+  border: 2rpx solid var(--card-border);
   transition: transform 0.12s ease;
 }
 .profile-card .user-info-btn { position: absolute; margin: 0; top: 18rpx; right: 22rpx; z-index: 3; }
 .user-info-hover { transform: scale(0.9); opacity: 0.8; }
 
-.login-btn { width: 100%; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; border-radius: 16rpx; font-size: 32rpx; font-weight: 600; padding: 24rpx; box-shadow: 0 6rpx 20rpx rgba(124,58,237,0.3); }
+.login-btn { width: 100%; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; border-radius: 16rpx; font-size: 32rpx; font-weight: 600; padding: 24rpx; box-shadow: var(--shadow-primary); }
 
-.current-room-card { background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-radius: 28rpx; padding: 40rpx 36rpx; margin-bottom: 20rpx; border-left: 8rpx solid var(--warning); flex-shrink: 0; }
+.current-room-card { background: var(--label-gold-bg); border-radius: 28rpx; padding: 40rpx 36rpx; margin-bottom: 20rpx; border-left: 8rpx solid var(--label-gold); flex-shrink: 0; }
 .current-room-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16rpx; }
-.current-room-label { font-size: 32rpx; color: #92400E; font-weight: 600; }
-.current-room-id { display: block; text-align: center; font-size: 52rpx; font-weight: 800; color: #B45309; letter-spacing: 8rpx; padding: 16rpx 0; margin-bottom: 12rpx; }
+.current-room-label { font-size: 32rpx; color: var(--label-gold); font-weight: 600; }
+.current-room-id { display: block; text-align: center; font-size: 52rpx; font-weight: 800; color: var(--label-gold); letter-spacing: 8rpx; padding: 16rpx 0; margin-bottom: 12rpx; }
 .current-room-tags { display: flex; gap: 14rpx; flex-wrap: wrap; justify-content: flex-end; }
-.current-room-tag { font-size: 24rpx; color: #fff; padding: 6rpx 18rpx; border-radius: 8rpx; }
-.current-room-tag-ingame { background: #EF4444; }
-.current-room-tag-wait { background: #3B82F6; }
-.current-room-tag-host { background: #D97706; }
+.current-room-tag { font-size: 24rpx; padding: 6rpx 18rpx; border-radius: 8rpx; }
+.current-room-tag-ingame { background: var(--label-red-bg); color: var(--label-red); }
+.current-room-tag-wait { background: var(--label-blue-bg); color: var(--label-blue); }
+.current-room-tag-host { background: var(--label-orange-bg); color: var(--label-orange); }
 .current-room-btns { display: flex; gap: 20rpx; }
 .room-btn { font-size: 30rpx !important; padding: 20rpx 16rpx !important; }
 
@@ -268,24 +268,18 @@
 
 /* ─────── 游戏说明：全屏覆盖页 ─────── */
 .rules-page { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1100; background: var(--bg-card); display: flex; flex-direction: column; }
-.rules-page-header { height: 100rpx; display: flex; align-items: center; justify-content: space-between; padding: 0 32rpx; border-bottom: 1rpx solid var(--gray-100); flex-shrink: 0; }
-.rules-page-title { font-size: 34rpx; font-weight: 800; color: var(--gray-900); }
-.rules-page-close { width: 56rpx; height: 56rpx; border-radius: 12rpx; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 32rpx; color: var(--gray-600); }
+.rules-page-header { height: 100rpx; display: flex; align-items: center; justify-content: space-between; padding: 0 32rpx; border-bottom: 1rpx solid var(--card-border); flex-shrink: 0; }
+.rules-page-title { font-size: 34rpx; font-weight: 800; color: var(--text-title); }
+.rules-page-close { width: 56rpx; height: 56rpx; border-radius: 12rpx; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 32rpx; color: var(--text-muted); }
 .rules-page-body { flex: 1; padding: 32rpx; }
-.rules-page-body .info-item { font-size: 28rpx; color: var(--gray-600); line-height: 1.9; margin-bottom: 12rpx; }
+.rules-page-body .info-item { font-size: 28rpx; color: var(--text-body); line-height: 1.9; margin-bottom: 12rpx; }
 
 /* 奇奇怪怪的设置们：中部弹窗（点遮罩关闭） */
 .weird-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1150; background: rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; }
 .weird-modal { width: 560rpx; box-sizing: border-box; background: var(--bg-card); border-radius: 24rpx; padding: 36rpx 32rpx 24rpx; box-shadow: var(--shadow-lg); }
 .weird-title { font-size: 32rpx; font-weight: 800; color: var(--text-title); text-align: center; margin-bottom: 20rpx; }
 .weird-row { display: flex; align-items: center; gap: 16rpx; padding: 18rpx 4rpx; }
-.weird-row + .weird-row { border-top: 1rpx solid var(--gray-100); }
-
-/* 按钮禁用态 */
-.btn-disabled {
-  background: #d1d5db !important;
-  color: #9ca3af !important;
-}
+.weird-row + .weird-row { border-top: 1rpx solid var(--divider); }
 
 /* ─────── 胜率冠军（领奖台） ─────── */
 .podium { display: flex; align-items: flex-end; justify-content: center; gap: 16rpx; padding-top: 0; margin-bottom: 28rpx; }

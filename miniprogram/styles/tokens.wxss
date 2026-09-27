@@ -10,16 +10,18 @@ page {
   --gradient-start: #8B5CF6;
   --gradient-end: #6D28D9;
 
-  /* 语义色 */
+  /* 语义色（随主题；颜色可相同，按语义取用） */
   --danger: #EF4444;
-  --danger-deep: #DC2626;
   --danger-soft-bg: #FEE2E2;
   --danger-soft-text: #DC2626;
   --success: #10B981;
+  --fail: #EF4444;
+  --agree: #10B981;
+  --disagree: #EF4444;
+  --confirm: #8B5CF6;
   --warning: #F59E0B;
   --info: #17A2B8;
   --link: #2563EB;
-  --status-inroom: #3B82F6;
   --btn-emoji-bg: #F3F4F6;
 
   /* 玩家卡片状态标识（车队/已投/确认/赞成/反对）渐变端色 */
@@ -34,21 +36,32 @@ page {
   /* 状态渐变中间停靠实色（--bg-card 可能为渐变，作停靠点需实色防嵌套失效） */
   --bg-card-solid: #FFFFFF;
 
-  /* 统一语义文字色（记录/荣誉/状态）；三暗色主题在 themes.wxss 覆盖；亮色沿用现值 */
-  --c-good: #3B82F6;
-  --c-evil: #EF4444;
-  --c-win: #10B981;
-  --c-team: #B8860B;
-  --c-leader: #B45309;
+  /* 领域语义色（非标签）：仅保留紫，用于信息标题/座位号等强调文字 */
   --c-violet: #6D28D9;
-  --c-online: #22C55E;
-  --c-offline: #9CA3AF;
-  --c-inroom: #3B82F6;
-  --c-ingame: #EF4444;
-  --c-good-pill: #93C5FD;
-  --c-evil-pill: #FCA5A5;
-  --c-good-bg: rgba(59, 130, 246, 0.16);
-  --c-evil-bg: rgba(239, 68, 68, 0.16);
+
+  /* label 系列（标签：浅色底 + 同色系文字） */
+  /* 语义色（随主题） */
+  --label-good: #3B82F6;
+  --label-good-bg: #DBEAFE;
+  --label-evil: #EF4444;
+  --label-evil-bg: #FEE2E2;
+  /* 固定色 */
+  --label-blue: #2563EB;
+  --label-blue-bg: #DBEAFE;
+  --label-red: #EF4444;
+  --label-red-bg: #FEE2E2;
+  --label-gold: #B8860B;
+  --label-gold-bg: #FEF3C7;
+  --label-violet: #6D28D9;
+  --label-violet-bg: #EDE9FE;
+  --label-pink: #BE185D;
+  --label-pink-bg: #FCE7F3;
+  --label-orange: #C2410C;
+  --label-orange-bg: #FFEDD5;
+  --label-grey: #6B7280;
+  --label-grey-bg: #F3F4F6;
+  --label-green: #22C55E;
+  --label-green-bg: #DCFCE7;
 
   /* 主页头部：三段三色 + 辉光 + 故障分层色（黎明初现：深紫·皇家） */
   --brand-1: #2E1065;
@@ -66,7 +79,7 @@ page {
   --glass-glow: rgba(139, 92, 246, 0.35);
   --glass-sheen: rgba(255, 255, 255, 0.45);
   /* 角色胜率卡牌 + 胜率冠军卡 + 个人信息卡 + 历史角色名 */
-  --role-card-border: #8B5CF6;
+  --card-border: #8B5CF6;
   --role-card-bg: linear-gradient(160deg, #4C1D95, #1E1B4B);
   --role-card-rate: #C4B5FD;
   --champion-border: #8B5CF6;
@@ -75,10 +88,9 @@ page {
   --profile-bg: linear-gradient(135deg, #2E1065 0%, #3B0764 45%, #5B21B6 100%);
   --profile-fg: #FFFFFF;
   --profile-name: #C4B5FD;
-  --profile-divider: #C4B5FD;
+  --divider-strong: #C4B5FD;
+  --divider: rgba(196, 181, 253, 0.45);
   --profile-ring-glow: rgba(196, 181, 253, 0.35);
-  --hc-good: #1E40AF;
-  --hc-evil: #B91C1C;
   /* 任务投票页渐变中间过渡色（各主题中性色） */
   --mission-mid: #E6EAED;
   /* 任务成功蒙版中心蓝（比 --hc-good 更浅） */
@@ -104,7 +116,6 @@ page {
   /* 页面/卡片背景 */
   --bg-page: #F5F5F5;
   --bg-card: #FFFFFF;
-  --border-color: #E5E7EB;
 
   /* 文字色（兼容历史命名） */
   --text-title: #111827;

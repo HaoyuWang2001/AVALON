@@ -27,7 +27,6 @@
   --text-body: #E0D5C7;
   --text-muted: #B0A493;
   --link: #60A5FA;
-  --status-inroom: #7C8FB8;
   --btn-emoji-bg: #40382D;
   --state-team: #5A4720;
   --state-voted: #493056;
@@ -37,21 +36,19 @@
   --state-good: #2B3A57;
   --state-evil: #573026;
 
-  /* 统一语义文字色（记录/荣誉/状态）——烛光(暖) */
-  --c-good: #8FB4E8;
-  --c-evil: #E89A86;
-  --c-win: #7FC8A0;
-  --c-team: #DDB56A;
-  --c-leader: #DDB56A;
+  /* 领域语义色（非标签） */
   --c-violet: #B49CE0;
-  --c-online: #7FC8A0;
-  --c-offline: #8F8475;
-  --c-inroom: #8FB4E8;
-  --c-ingame: #E89A86;
-  --c-good-pill: #A6C6F0;
-  --c-evil-pill: #EEB0A0;
-  --c-good-bg: rgba(143, 180, 232, 0.16);
-  --c-evil-bg: rgba(232, 154, 134, 0.16);
+  /* label 系列（good/evil 随主题独立配色） */
+  --label-good: #8FB4E8;
+  --label-good-bg: #2B3A57;
+  --label-evil: #E89A86;
+  --label-evil-bg: #573026;
+  /* 通用语义色（随主题） */
+  --agree: #7FC8A0;
+  --disagree: #E89A86;
+  --success: #7FC8A0;
+  --fail: #EEB0A0;
+  --danger: #E89A86;
 
   /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 烛光(暖) */
   --brand-1: #D4A052;
@@ -66,21 +63,20 @@
   --glass-border: rgba(212, 160, 82, 0.5);
   --glass-glow: rgba(212, 160, 82, 0.26);
   --glass-sheen: rgba(255, 255, 255, 0.22);
-  --role-card-border: #D4A052;
+  --card-border: #D4A052;
   --role-card-bg: #2E281F;
   --role-card-rate: #DDB56A;
   --champion-border: #D4A052;
   --champion-bg: #2E281F;
   --profile-bg: #2E281F;
-  --hc-good: #8FB4E8;
-  --hc-evil: #E89A86;
   --mission-mid: #2E281F;
   --mission-ok: #8FB4E8;
   --mission-fail: #EEB0A0;
   --champion-fg: #F7F1E8;
   --profile-fg: #F7F1E8;
   --profile-name: #B49CE0;
-  --profile-divider: #D4A052;
+  --divider-strong: #D4A052;
+  --divider: rgba(212, 160, 82, 0.40);
   --profile-ring-glow: rgba(212, 160, 82, 0.35);
   --section-bar-from: #E0B45A;
   --section-bar-to: #B45309;
@@ -96,7 +92,6 @@
   --gray-800: #EAE2D6;
   --gray-900: #F7F1E8;
 
-  --border-color: rgba(212, 160, 82, 0.12);
   --danger-soft-bg: rgba(239, 68, 68, 0.12);
   --danger-soft-text: #F87171;
 
@@ -124,7 +119,6 @@
   --text-body: #B6B0D9;
   --text-muted: #A29BC0;
   --link: #93C5FD;
-  --status-inroom: #7C8FB8;
   --btn-emoji-bg: #2E2745;
   --state-team: #55492E;
   --state-voted: #3E2E6E;
@@ -134,21 +128,19 @@
   --state-good: #26325E;
   --state-evil: #55243E;
 
-  /* 统一语义文字色（记录/荣誉/状态）——暗夜(冷) */
-  --c-good: #93B4F5;
-  --c-evil: #F09AA8;
-  --c-win: #6FD3C7;
-  --c-team: #C9B27A;
-  --c-leader: #C9B27A;
+  /* 领域语义色（非标签） */
   --c-violet: #B4A6F0;
-  --c-online: #6FD3C7;
-  --c-offline: #8B85A7;
-  --c-inroom: #93B4F5;
-  --c-ingame: #F09AA8;
-  --c-good-pill: #ABC6F8;
-  --c-evil-pill: #F4B2BE;
-  --c-good-bg: rgba(147, 180, 245, 0.16);
-  --c-evil-bg: rgba(240, 154, 168, 0.16);
+  /* label 系列（good/evil 随主题独立配色） */
+  --label-good: #93B4F5;
+  --label-good-bg: #26325E;
+  --label-evil: #F09AA8;
+  --label-evil-bg: #55243E;
+  /* 通用语义色（随主题） */
+  --agree: #6FD3C7;
+  --disagree: #F09AA8;
+  --success: #6FD3C7;
+  --fail: #F4B2BE;
+  --danger: #F09AA8;
 
   /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 暗夜(冷) */
   --brand-1: #A78BFA;
@@ -163,21 +155,20 @@
   --glass-border: rgba(167, 139, 250, 0.55);
   --glass-glow: rgba(167, 139, 250, 0.3);
   --glass-sheen: rgba(255, 255, 255, 0.26);
-  --role-card-border: #A78BFA;
+  --card-border: #A78BFA;
   --role-card-bg: #29223E;
   --role-card-rate: #B4A6F0;
   --champion-border: #A78BFA;
   --champion-bg: #29223E;
   --profile-bg: #29223E;
-  --hc-good: #93B4F5;
-  --hc-evil: #F09AA8;
   --mission-mid: #29223E;
   --mission-ok: #93B4F5;
   --mission-fail: #F4B2BE;
   --champion-fg: #D8D2EE;
   --profile-fg: #D8D2EE;
   --profile-name: #B4A6F0;
-  --profile-divider: #A78BFA;
+  --divider-strong: #A78BFA;
+  --divider: rgba(167, 139, 250, 0.40);
   --profile-ring-glow: rgba(167, 139, 250, 0.35);
   --section-bar-from: #A78BFA;
   --section-bar-to: #22D3EE;
@@ -193,7 +184,6 @@
   --gray-800: #C9C3E4;
   --gray-900: #D8D2EE;
 
-  --border-color: rgba(167, 139, 250, 0.14);
   --danger-soft-bg: rgba(239, 68, 68, 0.14);
   --danger-soft-text: #F87171;
 
@@ -221,7 +211,6 @@
   --text-body: #A7B4C0;
   --text-muted: #9EA9B5;
   --link: #93C5FD;
-  --status-inroom: #7C8FB8;
   --btn-emoji-bg: #3B444E;
   --state-team: #574826;
   --state-voted: #43336B;
@@ -231,21 +220,19 @@
   --state-good: #1D3A6B;
   --state-evil: #572828;
 
-  /* 统一语义文字色（记录/荣誉/状态）——锻造钢铁 */
-  --c-good: #8FB6E0;
-  --c-evil: #E08A8A;
-  --c-win: #6FC79A;
-  --c-team: #D4B060;
-  --c-leader: #D4B060;
+  /* 领域语义色（非标签） */
   --c-violet: #9C90D8;
-  --c-online: #6FC79A;
-  --c-offline: #8A959F;
-  --c-inroom: #8FB6E0;
-  --c-ingame: #E08A8A;
-  --c-good-pill: #A6C4EA;
-  --c-evil-pill: #E8A4A4;
-  --c-good-bg: rgba(143, 182, 224, 0.16);
-  --c-evil-bg: rgba(224, 138, 138, 0.16);
+  /* label 系列（good/evil 随主题独立配色） */
+  --label-good: #8FB6E0;
+  --label-good-bg: #1D3A6B;
+  --label-evil: #E08A8A;
+  --label-evil-bg: #572828;
+  /* 通用语义色（随主题） */
+  --agree: #6FC79A;
+  --disagree: #E08A8A;
+  --success: #6FC79A;
+  --fail: #E8A4A4;
+  --danger: #E08A8A;
 
   /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 锻造钢铁 */
   --brand-1: #C7D2DD;
@@ -260,21 +247,20 @@
   --glass-border: rgba(159, 180, 200, 0.5);
   --glass-glow: rgba(159, 180, 200, 0.24);
   --glass-sheen: rgba(255, 255, 255, 0.22);
-  --role-card-border: #AFC0D0;
+  --card-border: #AFC0D0;
   --role-card-bg: #262B33;
   --role-card-rate: #C7D2DD;
   --champion-border: #D4A052;
   --champion-bg: #262B33;
   --profile-bg: #262B33;
-  --hc-good: #8FB6E0;
-  --hc-evil: #E08A8A;
   --mission-mid: #262B33;
   --mission-ok: #8FB6E0;
   --mission-fail: #E8A4A4;
   --champion-fg: #C7D2DD;
   --profile-fg: #C7D2DD;
   --profile-name: #9C90D8;
-  --profile-divider: #94A3B8;
+  --divider-strong: #94A3B8;
+  --divider: rgba(148, 163, 184, 0.40);
   --profile-ring-glow: rgba(148, 163, 184, 0.35);
   --section-bar-from: #94A3B8;
   --section-bar-to: #64748B;
@@ -290,7 +276,6 @@
   --gray-800: #B9C5CF;
   --gray-900: #C7D2DD;
 
-  --border-color: rgba(226, 232, 240, 0.08);
   --danger-soft-bg: rgba(239, 68, 68, 0.12);
   --danger-soft-text: #F87171;
 
@@ -310,56 +295,4 @@
 .page.theme-aurora, .room-page.theme-aurora, .game-page.theme-aurora { background-color: #0F0B1A; }
 .page.theme-steel, .room-page.theme-steel, .game-page.theme-steel { background-color: #171A1F; }
 
-/* ─────────── configs 阵营角色卡暗色适配（浅蓝/浅红 → 深色调） ─────────── */
-.theme-torch .role-good, .theme-torch .role-loyal { background: rgba(59,130,246,0.16); border-color: rgba(59,130,246,0.4); }
-.theme-torch .role-evil { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.4); }
-.theme-torch .role-img-placeholder { background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(109,40,217,0.16)); }
-.theme-torch .role-loyal .role-img-placeholder, .theme-torch .role-good .role-img-placeholder { background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(37,99,235,0.16)); }
-.theme-torch .role-evil .role-img-placeholder { background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.14)); }
 
-.theme-aurora .role-good, .theme-aurora .role-loyal { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.38); }
-.theme-aurora .role-evil { background: rgba(239,68,68,0.13); border-color: rgba(239,68,68,0.38); }
-.theme-aurora .role-img-placeholder { background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(109,40,217,0.16)); }
-.theme-aurora .role-loyal .role-img-placeholder, .theme-aurora .role-good .role-img-placeholder { background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(37,99,235,0.16)); }
-.theme-aurora .role-evil .role-img-placeholder { background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.14)); }
-
-.theme-steel .role-good, .theme-steel .role-loyal { background: rgba(59,130,246,0.16); border-color: rgba(59,130,246,0.4); }
-.theme-steel .role-evil { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.4); }
-.theme-steel .role-img-placeholder { background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(109,40,217,0.16)); }
-.theme-steel .role-loyal .role-img-placeholder, .theme-steel .role-good .role-img-placeholder { background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(37,99,235,0.16)); }
-.theme-steel .role-evil .role-img-placeholder { background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.14)); }
-
-/* ─────────── 主页"您当前处于房间"卡片暗色适配（浅琥珀 → 深琥珀） ─────────── */
-.theme-torch .current-room-card { background: var(--bg-card); }
-.theme-torch .current-room-label,
-.theme-torch .current-room-id { color: #D97706; }
-
-.theme-aurora .current-room-card { background: var(--bg-card); border-left-color: #A78BFA; }
-.theme-aurora .current-room-label,
-.theme-aurora .current-room-id { color: #D8D2EE; }
-
-.theme-steel .current-room-card { background: var(--bg-card); border-left-color: #D4A052; }
-.theme-steel .current-room-label,
-.theme-steel .current-room-id { color: #C7D2DD; }
-
-/* ─────────── 当前房间卡片按钮（暗色下：回到房间 紫→琥珀；禁用态 灰→琥珀可辨禁用） ─────────── */
-.theme-torch .current-room-card .btn-primary { background: linear-gradient(135deg, #D97706, #92400E); box-shadow: 0 4rpx 16rpx rgba(146, 64, 14, 0.35); }
-.theme-torch .current-room-card .btn-primary::after { border: none; }
-.theme-torch .current-room-card .btn-danger { background: linear-gradient(135deg, #DC2626, #991B1B); box-shadow: 0 4rpx 16rpx rgba(153, 27, 27, 0.35); }
-.theme-torch .current-room-card .btn-danger::after { border: none; }
-.theme-torch .current-room-card .btn-danger.btn-disabled,
-.theme-torch .current-room-card .btn-danger[disabled] { background: rgba(245, 158, 11, 0.15); color: rgba(251, 191, 36, 0.45); box-shadow: none; }
-
-.theme-aurora .current-room-card .btn-primary { background: linear-gradient(135deg, #5C5485, #433C68); color: #D8D2EE; box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.3); }
-.theme-aurora .current-room-card .btn-primary::after { border: none; }
-.theme-aurora .current-room-card .btn-danger { background: linear-gradient(135deg, #DC2626, #991B1B); box-shadow: 0 4rpx 16rpx rgba(153, 27, 27, 0.35); }
-.theme-aurora .current-room-card .btn-danger::after { border: none; }
-.theme-aurora .current-room-card .btn-danger.btn-disabled,
-.theme-aurora .current-room-card .btn-danger[disabled] { background: rgba(245, 158, 11, 0.15); color: rgba(251, 191, 36, 0.45); box-shadow: none; }
-
-.theme-steel .current-room-card .btn-primary { background: linear-gradient(135deg, #4A535E, #333A43); color: #C7D2DD; box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.3); }
-.theme-steel .current-room-card .btn-primary::after { border: none; }
-.theme-steel .current-room-card .btn-danger { background: linear-gradient(135deg, #DC2626, #991B1B); box-shadow: 0 4rpx 16rpx rgba(153, 27, 27, 0.35); }
-.theme-steel .current-room-card .btn-danger::after { border: none; }
-.theme-steel .current-room-card .btn-danger.btn-disabled,
-.theme-steel .current-room-card .btn-danger[disabled] { background: rgba(245, 158, 11, 0.15); color: rgba(251, 191, 36, 0.45); box-shadow: none; }

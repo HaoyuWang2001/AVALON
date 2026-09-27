@@ -13,7 +13,7 @@
 @keyframes ps-up { from { transform: translateY(60rpx); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .ps-close { position: absolute; top: 24rpx; right: 28rpx; font-size: 34rpx; color: var(--text-muted); }
 .ps-head { display: flex; flex-direction: column; align-items: center; }
-.ps-avatar { width: 140rpx; height: 140rpx; border-radius: 50%; border: 4rpx solid var(--gold, #B8860B); background: var(--gray-100); }
+.ps-avatar { width: 140rpx; height: 140rpx; border-radius: 50%; border: 4rpx solid var(--card-border); background: var(--gray-100); }
 .ps-name-row { display: flex; align-items: center; gap: 10rpx; margin-top: 14rpx; }
 .ps-name { font-size: 34rpx; font-weight: 800; color: var(--text-title); }
 .ps-rank { font-size: 28rpx; font-weight: 800; color: var(--primary); }
@@ -22,8 +22,8 @@
 .ps-stats { display: flex; margin-top: 24rpx; }
 .ps-stat { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .ps-num { font-size: 36rpx; font-weight: 800; color: var(--primary); }
-.ps-good { color: var(--c-good); }
-.ps-evil { color: var(--c-evil); }
+.ps-good { color: var(--label-good); }
+.ps-evil { color: var(--label-evil); }
 .ps-label { font-size: 22rpx; color: var(--text-muted); margin-top: 4rpx; }
 .ps-roles { margin-top: 24rpx; }
 .ps-roles-title { font-size: 26rpx; font-weight: 700; color: var(--text-title); }

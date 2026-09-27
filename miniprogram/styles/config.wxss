@@ -9,7 +9,7 @@
 .config-top-bar {
   height: 100rpx; background: var(--bg-card);
   display: flex; align-items: center; padding: 0 24rpx;
-  flex-shrink: 0; border-bottom: 1rpx solid var(--gray-100);
+  flex-shrink: 0; border-bottom: 1rpx solid var(--card-border);
 }
 .config-close {
   width: 56rpx; height: 56rpx; border-radius: 12rpx;
@@ -19,7 +19,7 @@
 .config-swiper { flex: 1; overflow: hidden; }
 .config-scroll { height: 100%; padding: 24rpx 32rpx 0; box-sizing: border-box; overflow-x: hidden; }
 .config-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
-.config-section { background: var(--bg-card); border-radius: 24rpx; padding: 28rpx; margin-bottom: 20rpx; box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04); }
+.config-section { background: var(--bg-card); border-radius: 24rpx; padding: 28rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); }
 .section-title { font-size: 30rpx; font-weight: 700; color: var(--gray-900); margin-bottom: 20rpx; display: flex; align-items: center; }
 .section-title::before { content: ''; width: 8rpx; height: 24rpx; background: linear-gradient(180deg, var(--section-bar-from), var(--section-bar-to)); border-radius: 4rpx; margin-right: 12rpx; }
 
@@ -30,7 +30,7 @@
   background: var(--gray-100); font-size: 30rpx; font-weight: 700; color: var(--gray-500);
   transition: all 0.2s;
 }
-.board-active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; box-shadow: 0 6rpx 16rpx rgba(124, 58, 237, 0.3); }
+.board-active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; box-shadow: var(--shadow-primary); }
 
 /* ─────── Count selector ─────── */
 .count-row { white-space: nowrap; padding: 8rpx 8rpx; margin: 0 -8rpx; }
@@ -41,7 +41,7 @@
   font-size: 32rpx; font-weight: 700; color: var(--gray-500);
   transition: all 0.2s;
 }
-.count-active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; transform: scale(1.1); box-shadow: 0 6rpx 16rpx rgba(124, 58, 237, 0.3); }
+.count-active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; transform: scale(1.1); box-shadow: var(--shadow-primary); }
 
 /* ─────── Team sizes badge ─────── */
 .team-sizes { padding: 12rpx 0 0; }
@@ -65,18 +65,18 @@
   transition: all 0.2s;
 }
 /* 选中态：好人卡浅蓝 / 坏人卡浅红；未选中保持灰色 */
-.role-good { background: #DBEAFE; border-color: #93C5FD; }
-.role-evil { background: #FEE2E2; border-color: #FCA5A5; }
-.role-loyal { background: #DBEAFE; border-color: #93C5FD; }
+.role-good { background: var(--label-good-bg); border-color: var(--label-good); }
+.role-evil { background: var(--label-evil-bg); border-color: var(--label-evil); }
+.role-loyal { background: var(--label-good-bg); border-color: var(--label-good); }
 .role-img-placeholder {
   width: 80rpx; height: 80rpx; border-radius: 16rpx;
-  background: linear-gradient(135deg, #EDE9FE, #DDD6FE);
+  background: var(--label-violet-bg);
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 10rpx;
 }
-.role-loyal .role-img-placeholder { background: linear-gradient(135deg, #BFDBFE, #93C5FD); }
-.role-good .role-img-placeholder { background: linear-gradient(135deg, #BFDBFE, #93C5FD); }
-.role-evil .role-img-placeholder { background: linear-gradient(135deg, #FECACA, #FCA5A5); }
+.role-loyal .role-img-placeholder { background: var(--label-good-bg); }
+.role-good .role-img-placeholder { background: var(--label-good-bg); }
+.role-evil .role-img-placeholder { background: var(--label-evil-bg); }
 .role-img-text { font-size: 36rpx; }
 .role-name { font-size: 24rpx; font-weight: 600; color: var(--gray-700); margin-bottom: 4rpx; }
 .role-check {
@@ -86,10 +86,10 @@
 }
 .check-on { background: var(--primary); border-color: var(--primary); color: white; }
 /* 选中框随阵营配色：好人蓝 / 坏人红 */
-.role-good .check-on { background: #2563EB; border-color: #2563EB; color: white; }
-.role-evil .check-on { background: #DC2626; border-color: #DC2626; color: white; }
-.loyal-count { font-size: 28rpx; font-weight: 800; color: #2563EB; margin-top: 2rpx; }
-.role-count-evil { font-size: 28rpx; font-weight: 800; color: #DC2626; margin-top: 2rpx; }
+.role-good .check-on { background: var(--label-good); border-color: var(--label-good); color: white; }
+.role-evil .check-on { background: var(--label-evil); border-color: var(--label-evil); color: white; }
+.loyal-count { font-size: 28rpx; font-weight: 800; color: var(--label-good); margin-top: 2rpx; }
+.role-count-evil { font-size: 28rpx; font-weight: 800; color: var(--label-evil); margin-top: 2rpx; }
 
 /* ─────── Role summary ─────── */
 .role-summary { padding: 12rpx 28rpx; text-align: center; }
@@ -98,19 +98,19 @@
 /* ─────── Rules ─────── */
 .rule-row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 20rpx 0; border-bottom: 1rpx solid var(--gray-100);
+  padding: 20rpx 0; border-bottom: 1rpx solid var(--divider);
   position: relative;
 }
 .rule-row:last-child { border-bottom: none; }
 .rule-picker-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
 .rule-picker-fill { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: flex-end; }
 .rule-col { flex: 1; margin-right: 20rpx; }
-.rule-label { font-size: 28rpx; font-weight: 600; color: var(--gray-800); }
+.rule-label { font-size: 28rpx; font-weight: 600; color: var(--text-body); }
 .rule-desc { font-size: 22rpx; color: var(--gray-400); margin-top: 4rpx; display: block; }
 .rule-picker { font-size: 28rpx; color: var(--primary); font-weight: 600; }
 .rule-hint {
   margin-top: 20rpx; padding: 20rpx; background: rgba(245, 158, 11, 0.12); border-radius: 16rpx;
-  font-size: 24rpx; color: var(--warning, #B45309); line-height: 1.6;
+  font-size: 24rpx; color: var(--warning); line-height: 1.6;
 }
 
 /* ─────── Segment control ─────── */
@@ -122,11 +122,11 @@
 .segment-active { background: var(--primary); color: white; }
 
 /* ─────── Meta ─────── */
-.meta-row { display: flex; align-items: center; padding: 20rpx 0; border-bottom: 1rpx solid var(--gray-100); }
+.meta-row { display: flex; align-items: center; padding: 20rpx 0; border-bottom: 1rpx solid var(--divider); }
 .meta-row:last-child { border-bottom: none; }
 .meta-input { flex: 1; margin-left: 20rpx; font-size: 28rpx; color: var(--gray-800); }
 .spectator-input { width: 120rpx; margin-left: 20rpx; font-size: 28rpx; color: var(--gray-800); text-align: center; }
-.spectator-input.input-invalid { border-color: #EF4444; color: #EF4444; }
+.spectator-input.input-invalid { border-color: var(--danger); color: var(--danger); }
 .section-icon { width: 36rpx; height: 36rpx; margin-right: 10rpx; vertical-align: middle; }
 .role-img { width: 60rpx; height: 60rpx; }
 
@@ -136,7 +136,7 @@
 }
 .summary-row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14rpx 0; border-bottom: 1rpx solid var(--gray-200);
+  padding: 14rpx 0; border-bottom: 1rpx solid var(--divider);
 }
 .summary-row:last-child { border-bottom: none; }
 .summary-label { font-size: 26rpx; color: var(--gray-500); flex-shrink: 0; }
@@ -148,14 +148,14 @@
   width: 100%; padding: 28rpx; border-radius: 20rpx;
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white;
   font-size: 34rpx; font-weight: 700; text-align: center;
-  box-shadow: 0 8rpx 24rpx rgba(124, 58, 237, 0.35);
+  box-shadow: var(--shadow-primary);
 }
 .create-btn::after { border: none; }
 .create-btn-disabled { background: var(--gray-300); color: var(--gray-400); box-shadow: none; }
 
 /* ─────── Nav bar ─────── */
 .nav-bar {
-  height: 100rpx; background: var(--bg-card); border-top: 1rpx solid var(--gray-100);
+  height: 100rpx; background: var(--bg-card); border-top: 1rpx solid var(--card-border);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 32rpx; flex-shrink: 0;
 }
