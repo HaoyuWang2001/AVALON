@@ -44,6 +44,7 @@ Page({
     userStatusClass: 'status-online',
 
     showInfo: false,
+    showWeirdSettings: false,
     themeClass: '',
     historyList: [],
     roleStats: [],
@@ -604,6 +605,12 @@ Page({
   },
   closeInfo() {
     this.setData({ showInfo: false });
+  },
+  showWeirdSettings() {
+    this.setData({ showWeirdSettings: true });
+  },
+  closeWeirdSettings() {
+    this.setData({ showWeirdSettings: false });
   },
 
   openHistoryGame(e) {

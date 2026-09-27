@@ -97,13 +97,8 @@
       <view class="func-icon-box"><image src="/images/themes.png" class="func-icon" mode="aspectFit"/></view>
       <text class="func-label">更改主题</text>
     </view>
-    <view class="func-item func-glass">
-      <switch class="func-switch" checked="{{publicWinrate}}" bindchange="onPublicWinrateChange" color="#8B5CF6"/>
-      <text class="func-label">公开胜率</text>
-    </view>
-    <view class="func-item func-glass">
-      <switch class="func-switch" checked="{{compactGame}}" bindchange="onCompactGameChange" color="#8B5CF6"/>
-      <text class="func-label">松弛压缩版</text>
+    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="showWeirdSettings">
+      <text class="func-label">奇奇怪怪的设置们</text>
     </view>
   </view>
 
@@ -129,6 +124,21 @@
       <view class="info-item">• 线上发牌与线下发牌+小程序发车两种模式</view>
       <view class="info-item">• 好友系统、胜率统计、全服对局排行一应俱全</view>
     </scroll-view>
+  </view>
+
+  <!-- 奇奇怪怪的设置们：中部弹窗（点遮罩关闭） -->
+  <view class="weird-mask" wx:if="{{showWeirdSettings}}" bindtap="closeWeirdSettings" catchtouchmove="noop">
+    <view class="weird-modal" catchtap="noop">
+      <view class="weird-title">奇奇怪怪的设置们</view>
+      <view class="weird-row">
+        <switch class="func-switch" checked="{{publicWinrate}}" bindchange="onPublicWinrateChange" color="#8B5CF6"/>
+        <text class="func-label">公开胜率</text>
+      </view>
+      <view class="weird-row">
+        <switch class="func-switch" checked="{{compactGame}}" bindchange="onCompactGameChange" color="#8B5CF6"/>
+        <text class="func-label">松弛压缩版</text>
+      </view>
+    </view>
   </view>
 
   <!-- 玩家胜率信息弹窗（公共组件） -->
