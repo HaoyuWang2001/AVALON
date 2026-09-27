@@ -33,15 +33,15 @@
 .board-active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; box-shadow: var(--shadow-primary); }
 
 /* ─────── Count selector ─────── */
-.count-row { white-space: nowrap; padding: 8rpx 8rpx; margin: 0 -8rpx; }
+.count-row { display: flex; flex-wrap: wrap; gap: 12rpx; }
 .count-item {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 72rpx; height: 72rpx; border-radius: 20rpx;
-  background: var(--bg-page); margin-right: 12rpx;
+  display: flex; align-items: center; justify-content: center;
+  flex: 1 1 calc(25% - 9rpx); height: 72rpx; border-radius: 20rpx;
+  background: var(--bg-page);
   font-size: 32rpx; font-weight: 700; color: var(--gray-500);
   transition: all 0.2s;
 }
-.count-active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; transform: scale(1.1); box-shadow: var(--shadow-primary); }
+.count-active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; box-shadow: var(--shadow-primary); }
 
 /* ─────── Team sizes badge ─────── */
 .team-sizes { padding: 12rpx 0 0; }

@@ -9,11 +9,11 @@
           <scroll-view scroll-y class="config-scroll" show-scrollbar="{{false}}">
             <view class="config-section">
               <view class="section-title">🙋 玩家总数</view>
-              <scroll-view class="count-row" scroll-x show-scrollbar="{{false}}">
+              <view class="count-row">
                 <view wx:for="{{[5,6,7,8,9,10,11,12]}}" wx:key="*this"
                   class="count-item {{playerCount === item ? 'count-active' : ''}}"
                   data-count="{{item}}" bindtap="onPlayerCountChange">{{item}}</view>
-              </scroll-view>
+              </view>
 
               <view class="team-sizes">
                 <text class="team-sizes-label">每轮发车人数（固定）</text>
