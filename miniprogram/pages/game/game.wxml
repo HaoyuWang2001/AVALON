@@ -514,7 +514,7 @@
   </view>
 
   <!-- 任务投票弹窗（仅任务队成员，不可关闭；投票前有 5s 票型倒计时） -->
-  <view class="mission-modal" wx:if="{{currentPhase === 'missionVote' && isMissionTeamMember && missionVoteReady}}">
+  <view class="mission-modal" wx:if="{{currentPhase === 'missionVote' && isMissionTeamMember && missionVoteReady}}" style="bottom:{{bottomBarHeight ? bottomBarHeight + 'px' : ''}}">
     <view class="mission-mask" catchtap="noop" catchtouchmove="noop"></view>
     <block wx:if="{{!hasMissionVoted}}">
       <view class="mission-split">
