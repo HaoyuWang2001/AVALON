@@ -42,7 +42,7 @@
   </view>
 
   <!-- ===== 松弛压缩版布局：顶部状态条 + 左/中/右三列 + 观战区底部弹窗 ===== -->
-  <view class="compact" wx:if="{{compactGame}}" style="height:calc(100vh - 100rpx - {{bottomBarHeight ? bottomBarHeight : 200}}px)">
+  <view class="compact" wx:if="{{compactGame}}" style="height:calc(100vh - 100rpx - {{bottomBarRawHeight ? bottomBarRawHeight : 200}}px)">
     <!-- 顶部：与标准版完全一致的任务进度卡 + 计时器卡片 -->
     <view class="c-topinfo">
       <view class="card mission-card">
