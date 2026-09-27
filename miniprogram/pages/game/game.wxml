@@ -59,34 +59,37 @@
       </view>
     </view>
 
+    <!-- 任务进度圈 + 发车信息（与标准版同位置：上方） -->
+    <view class="c-topinfo">
+      <view class="rounds c-rounds">
+        <block wx:for="{{roundList}}" wx:key="round">
+          <view class="round-connector" wx:if="{{index > 0}}"></view>
+          <view class="round-circle {{item.status}} {{item.isCurrent ? 'current' : ''}}">
+            <text class="round-size">{{item.size}}</text>
+          </view>
+        </block>
+      </view>
+      <view class="c-flow">
+        <view class="flow-reason" wx:if="{{currentPhase === 'gameEnd'}}">
+          <view class="flow-reason-chain" wx:if="{{gameAssassination}}">刺客刺杀 {{gameAssassination.targetSeat}}号 · {{gameAssassination.correct ? '刺杀成功' : '刺杀失败'}}</view>
+          <view class="flow-reason-result" wx:if="{{!gameAssassination}}">{{gameResult && gameResult.abandoned ? '游戏已放弃：' : (gameWinner === 'good' ? '蓝方获胜：' : '红方获胜：')}}{{gameResult && gameResult.reason}}</view>
+        </view>
+        <view class="c-flow-list" wx:else>
+          <block wx:for="{{flowCars}}" wx:key="index">
+            <view class="flow-car {{item.state}} {{item.isLast ? 'last' : ''}} {{item.isForced ? 'is-forced' : ''}}">
+              <text class="flow-car-icon">{{item.state === 'failed' ? '🚫' : (item.isLast ? '⚡' : '')}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+    </view>
+
     <view class="c-main">
       <scroll-view scroll-y class="c-col" show-scrollbar="{{false}}">
         <template is="compactPlayer" wx:for="{{compactLeft}}" wx:key="openId" data="{{item: item, currentPhase: currentPhase}}"/>
       </scroll-view>
 
-      <scroll-view scroll-y class="c-mid" show-scrollbar="{{false}}">
-        <view class="rounds c-rounds">
-          <block wx:for="{{roundList}}" wx:key="round">
-            <view class="round-connector" wx:if="{{index > 0}}"></view>
-            <view class="round-circle {{item.status}} {{item.isCurrent ? 'current' : ''}}">
-              <text class="round-size">{{item.size}}</text>
-            </view>
-          </block>
-        </view>
-        <view class="c-flow">
-          <view class="flow-reason" wx:if="{{currentPhase === 'gameEnd'}}">
-            <view class="flow-reason-chain" wx:if="{{gameAssassination}}">刺客刺杀 {{gameAssassination.targetSeat}}号 · {{gameAssassination.correct ? '刺杀成功' : '刺杀失败'}}</view>
-            <view class="flow-reason-result" wx:if="{{!gameAssassination}}">{{gameResult && gameResult.abandoned ? '游戏已放弃：' : (gameWinner === 'good' ? '蓝方获胜：' : '红方获胜：')}}{{gameResult && gameResult.reason}}</view>
-          </view>
-          <view class="c-flow-list" wx:else>
-            <block wx:for="{{flowCars}}" wx:key="index">
-              <view class="flow-car {{item.state}} {{item.isLast ? 'last' : ''}} {{item.isForced ? 'is-forced' : ''}}">
-                <text class="flow-car-icon">{{item.state === 'failed' ? '🚫' : (item.isLast ? '⚡' : '')}}</text>
-              </view>
-            </block>
-          </view>
-        </view>
-      </scroll-view>
+      <view class="c-mid-gap"></view>
 
       <scroll-view scroll-y class="c-col" show-scrollbar="{{false}}">
         <template is="compactPlayer" wx:for="{{compactRight}}" wx:key="openId" data="{{item: item, currentPhase: currentPhase}}"/>
