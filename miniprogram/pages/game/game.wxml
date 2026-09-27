@@ -40,7 +40,7 @@
   </view>
 
   <!-- ===== 松弛压缩版布局：顶部状态条 + 左/中/右三列 + 观战区底部弹窗 ===== -->
-  <view class="compact" wx:if="{{compactGame}}" style="height:calc(100vh - 100rpx - {{bottomBarRawHeight ? bottomBarRawHeight : 200}}px)">
+  <view class="compact" wx:if="{{compactGame}}" style="height:calc(100vh - 100rpx - {{bottomBarHeight ? bottomBarHeight : 200}}px)">
     <!-- 顶部：与标准版完全一致的任务进度卡 + 计时器卡片 -->
     <view class="c-topinfo">
       <view class="card mission-card">
@@ -87,20 +87,6 @@
       </view>
       <view class="c-col c-col-right">
         <template is="compactPlayer" wx:for="{{compactRight}}" wx:key="openId" data="{{item: item, currentPhase: currentPhase}}"/>
-      </view>
-    </view>
-
-    <!-- 点击玩家 → 浮层小卡展示其完整信息（头像/姓名/座位/标签/身份） -->
-    <view class="c-info-mask" wx:if="{{cInfoPlayer}}" bindtap="closeCompactInfo" catchtouchmove="noop"></view>
-    <view class="c-info-pop" wx:if="{{cInfoPlayer}}" catchtap="noop">
-      <image class="c-info-avatar" src="{{cInfoPlayer.avatarUrl || '/images/default-avatar.png'}}"/>
-      <view class="c-info-line">
-        <text class="c-info-seat-badge">{{cInfoPlayer.seatNumber}}</text>
-        <text class="c-info-name">{{cInfoPlayer.nickName}}</text>
-      </view>
-      <view class="c-info-tags">
-        <text wx:for="{{cInfoPlayer.tags}}" wx:for-item="tag" wx:key="text" class="ptag c-tag {{tag.cls}}">{{tag.text}}</text>
-        <text wx:if="{{cInfoPlayer.roleName}}" class="c-role">{{cInfoPlayer.roleName}}</text>
       </view>
     </view>
 
