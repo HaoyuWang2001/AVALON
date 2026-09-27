@@ -565,7 +565,7 @@
     <view class="mission-anim-bg {{missionAnimSuccess ? 'anim-mission-success' : 'anim-mission-fail'}}"></view>
     <view class="mission-anim-center">
       <image src="/images/{{missionAnimSuccess ? 'avalon-blue.png' : 'avalon-red.png'}}" class="mission-anim-img" mode="aspectFit"/>
-      <text wx:if="{{showFailDetail && lastMissionFailCount > 0}}" class="mission-anim-failcount">失败票数：{{lastMissionFailCount}}</text>
+      <text wx:if="{{showFailDetail && lastMissionFailCount > 0}}" class="mission-anim-failcount {{missionAnimSuccess ? 'is-success' : 'is-fail'}}">失败票数：{{lastMissionFailCount}}</text>
     </view>
   </view>
 
