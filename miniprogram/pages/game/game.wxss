@@ -1045,21 +1045,30 @@ progress { border-radius: 12rpx; }
   display: flex; flex-direction: column;
   padding: 12rpx 12rpx 0; box-sizing: border-box; z-index: 1;
 }
+/* 讨论阶段 60s 计时（并入阶段文字右侧） */
+.c-head-timer { display: flex; align-items: center; gap: 8rpx; }
+.c-head-timer-icon { width: 40rpx; height: 40rpx; }
+.c-head-timer-num { font-size: 32rpx; font-weight: 800; color: var(--text-title); }
+.c-head-timer-btn { font-size: 22rpx; color: var(--primary); padding: 2rpx 12rpx; border: 2rpx solid var(--primary); border-radius: 10rpx; }
+
 /* 顶部卡片组（与标准版一致：卡片样式来自 .card/.mission-card/.timer-card） */
 .c-topinfo { flex-shrink: 0; }
 .c-main { flex: 1; display: flex; flex-direction: row; gap: 10rpx; min-height: 0; }
 .c-col { width: 26%; height: 100%; box-sizing: border-box; }
-.c-mid-gap { flex: 1; min-width: 0; }
 
-/* 压缩版玩家小卡：横向 [座位·头像(+皇冠)·昵称+角标]；状态底色沿用 .table-player.state-* */
-.c-player { min-height: 0; padding: 8rpx 10rpx; border-radius: 14rpx; margin-bottom: 8rpx; gap: 8rpx; }
+/* 中间空位：点击玩家后展示其完整信息（头像/姓名/座位/标签/身份） */
+.c-mid { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 0 10rpx; }
+.c-info { display: flex; flex-direction: column; align-items: center; gap: 6rpx; text-align: center; }
+.c-info-avatar { width: 140rpx; height: 140rpx; border-radius: 50%; background: var(--gray-100); }
+.c-info-name { font-size: 28rpx; font-weight: 700; color: var(--text-title); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.c-info-seat { font-size: 22rpx; color: var(--text-muted); }
+.c-info-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 4rpx; margin-top: 4rpx; }
+
+/* 压缩版玩家小卡：仅座位号 + 角标；状态底色沿用 .table-player.state-* */
+.c-player { min-height: 0; padding: 8rpx 10rpx; border-radius: 14rpx; margin-bottom: 8rpx; gap: 6rpx; flex-wrap: wrap; align-items: center; }
 .c-seat { flex-shrink: 0; width: 34rpx; height: 34rpx; line-height: 34rpx; text-align: center; border-radius: 8rpx; background: var(--gray-100); font-size: 22rpx; font-weight: 800; color: var(--text-body); }
-.c-av-wrap { position: relative; flex-shrink: 0; }
-.c-avatar { width: 56rpx; height: 56rpx; border-radius: 50%; display: block; background: var(--gray-100); }
-.c-crown { position: absolute; top: -16rpx; left: 50%; transform: translateX(-50%); font-size: 26rpx; }
-.c-info { flex: 1; min-width: 0; }
-.c-name { display: block; font-size: 26rpx; font-weight: 700; color: var(--text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.c-tags { display: flex; flex-wrap: wrap; gap: 4rpx; margin-top: 4rpx; }
+.c-crown-mini { font-size: 22rpx; line-height: 1; }
+.c-tags { display: flex; flex-wrap: wrap; gap: 4rpx; }
 .c-tag { font-size: 18rpx; line-height: 1.5; padding: 0 6rpx; border-radius: 6rpx; }
 .c-role { font-size: 18rpx; font-weight: 800; color: var(--c-violet); }
 

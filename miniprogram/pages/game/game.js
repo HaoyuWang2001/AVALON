@@ -284,6 +284,7 @@ Page({
     voteRevealRemaining: 0,
     showMissionAnim: false,
     missionAnimSuccess: false,
+    cInfoPlayer: null,
     missionHoldSide: '',
     missionFillStyle: '',
     bottomBarRawHeight: 0,
@@ -853,6 +854,39 @@ Page({
 
   closeSpectatorPopup() {
     this.setData({ showSpectatorPopup: false });
+  },
+
+  // 松弛压缩版：点击玩家 → 中间区展示其完整信息（头像/姓名/座位/标签/身份），并保留按阶段选择操作
+  onCompactPlayerTap(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!id) return;
+    const ap = (this.data.allPlayers || []).find(x => x.openId === id) || {};
+    const tp = (this.data.tablePlayers || []).find(x => x.openId === id) || {};
+    if (this.data.cInfoPlayer && this.data.cInfoPlayer.openId === id) {
+      this.setData({ cInfoPlayer: null });
+    } else {
+      this.setData({
+        cInfoPlayer: {
+          openId: id,
+          nickName: ap.nickName || ap.wxNickName || '玩家',
+          avatarUrl: ap.avatarUrl || '',
+          seatNumber: ap.seatNumber,
+          tags: tp.tags || [],
+          roleName: tp.roleName || ''
+        }
+      });
+    }
+    const { currentPhase } = this.data;
+    if (this.data.isSpectator || currentPhase === 'gameEnd') return;
+    if (currentPhase === 'teamNomination' || (currentPhase === 'discussion' && this.data.showPreteamPicker)) {
+      this.nominatePlayer(e);
+    } else if (currentPhase === 'lake') {
+      if (this.data.isLakeHolder && id !== this.data.playerId && !this.data.oldLakeOpenIds.includes(id)) {
+        this.setData({ lakeTargetOpenId: id });
+      }
+    } else if (currentPhase === 'assassination') {
+      if (this.data.canAssassinateVar) this.assassinate(e);
+    }
   },
 
   measureBottomBar() {

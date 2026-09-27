@@ -2,18 +2,12 @@
 <!-- 松弛压缩版：玩家小卡模板（item + currentPhase 由调用处传入） -->
 <template name="compactPlayer">
   <view class="table-player c-player {{item.cardState}}"
-        bindtap="onTablePlayerTap" bindlongpress="onPlayerLongPress" data-id="{{item.openId}}">
+        bindtap="onCompactPlayerTap" bindlongpress="onPlayerLongPress" data-id="{{item.openId}}">
     <text class="c-seat">{{item.seatNumber}}</text>
-    <view class="c-av-wrap">
-      <image class="c-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
-      <text wx:if="{{item.isCrownHolder}}" class="c-crown">👑</text>
-    </view>
-    <view class="c-info">
-      <text class="c-name">{{item.nickName}}</text>
-      <view class="c-tags" wx:if="{{item.tags.length || (currentPhase === 'gameEnd' && item.roleName)}}">
-        <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag c-tag {{tag.cls}}">{{tag.text}}</text>
-        <text wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="c-role">{{item.roleName}}</text>
-      </view>
+    <text wx:if="{{item.isCrownHolder}}" class="c-crown-mini">👑</text>
+    <view class="c-tags" wx:if="{{item.tags.length || (currentPhase === 'gameEnd' && item.roleName)}}">
+      <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag c-tag {{tag.cls}}">{{tag.text}}</text>
+      <text wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="c-role">{{item.roleName}}</text>
     </view>
   </view>
 </template>
@@ -56,6 +50,12 @@
           <view class="mission-head-info">
             <text class="mission-phase">{{phaseText}}</text>
           </view>
+          <view class="c-head-timer" wx:if="{{currentPhase === 'discussion' && hasSpeechTimeout}}">
+            <image src="/images/stopwatch.png" class="c-head-timer-icon"></image>
+            <text class="c-head-timer-num">{{timerSeconds}}s</text>
+            <text wx:if="{{isHost}}" class="c-head-timer-btn" bindtap="{{timerRunning ? 'pauseTimer' : 'startTimer'}}">{{timerRunning ? '暂停' : '启动'}}</text>
+            <text wx:if="{{isHost}}" class="c-head-timer-btn" bindtap="resetTimer">重置</text>
+          </view>
         </view>
 
         <view class="rounds">
@@ -81,16 +81,6 @@
           </view>
         </view>
       </view>
-
-      <view class="card timer-card" wx:if="{{currentPhase === 'discussion' && hasSpeechTimeout}}">
-        <image src="/images/stopwatch.png" class="timer-icon"></image>
-        <text class="timer-num">{{timerSeconds}}s</text>
-        <view wx:if="{{isHost}}" class="timer-btns">
-          <text wx:if="{{!timerRunning}}" class="timer-btn" bindtap="startTimer">启动</text>
-          <text wx:else class="timer-btn" bindtap="pauseTimer">暂停</text>
-          <text class="timer-btn" bindtap="resetTimer">重置</text>
-        </view>
-      </view>
     </view>
 
     <view class="c-main">
@@ -98,7 +88,17 @@
         <template is="compactPlayer" wx:for="{{compactLeft}}" wx:key="openId" data="{{item: item, currentPhase: currentPhase}}"/>
       </scroll-view>
 
-      <view class="c-mid-gap"></view>
+      <view class="c-mid">
+        <view class="c-info" wx:if="{{cInfoPlayer}}">
+          <image class="c-info-avatar" src="{{cInfoPlayer.avatarUrl || '/images/default-avatar.png'}}"/>
+          <text class="c-info-name">{{cInfoPlayer.nickName}}</text>
+          <text class="c-info-seat">{{cInfoPlayer.seatNumber}} 号</text>
+          <view class="c-info-tags">
+            <text wx:for="{{cInfoPlayer.tags}}" wx:for-item="tag" wx:key="text" class="ptag c-tag {{tag.cls}}">{{tag.text}}</text>
+            <text wx:if="{{cInfoPlayer.roleName}}" class="c-role">{{cInfoPlayer.roleName}}</text>
+          </view>
+        </view>
+      </view>
 
       <scroll-view scroll-y class="c-col" show-scrollbar="{{false}}">
         <template is="compactPlayer" wx:for="{{compactRight}}" wx:key="openId" data="{{item: item, currentPhase: currentPhase}}"/>
