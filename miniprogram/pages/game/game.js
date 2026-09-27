@@ -1402,10 +1402,14 @@ Page({
   // 任务投票弹窗：点击成功/失败半屏 → 确认弹窗 → 提交
   // 任务票长按读条：1.5s 填满即触发（无二次确认）；松手未满则回退
   _missionFillStyle(side, p) {
+    const e = p * 1.3;              // 前缘位置（p=100 → 130%，确保对角全覆盖）
+    const s = Math.max(0, e - 16);  // 渐变实色终点（柔边带宽 16%）
     if (side === 'success') {
-      return `background: linear-gradient(135deg, #99A4BC 0%, #99A4BC ${p}%, rgba(153,164,188,0) ${p}%);`;
+      // 近角深蓝 → 浅蓝 → 渐隐
+      return `background: linear-gradient(135deg, #8398A1 0%, #99A4BC ${s}%, rgba(153,164,188,0) ${e}%);`;
     }
-    return `background: linear-gradient(315deg, #986460 0%, #986460 ${p}%, rgba(152,100,96,0) ${p}%);`;
+    // 近角深红 → 浅红 → 渐隐（自右下 315°）
+    return `background: linear-gradient(315deg, #A0605B 0%, #986460 ${s}%, rgba(152,100,96,0) ${e}%);`;
   },
 
   onMissionHoldStart(e) {
