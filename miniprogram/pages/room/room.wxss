@@ -234,10 +234,9 @@ button::after { border: none; }
 .btn-icon-share::after { border: none; }
 .room-id-display {
   display: block; text-align: center; font-size: 56rpx; font-weight: 800;
-  color: var(--primary); letter-spacing: 8rpx; margin: 20rpx 0;
-  padding-bottom: 24rpx;
-  border-bottom: 1rpx solid var(--divider-strong);
+  color: var(--primary); letter-spacing: 8rpx; margin: 20rpx 0 16rpx;
 }
+.room-id-divider { height: 6rpx; background: var(--divider-strong); border-radius: 3rpx; margin: 0 0 24rpx; }
 .info-stats-row {
   display: flex; align-items: center; justify-content: center; gap: 32rpx;
 }
@@ -246,7 +245,7 @@ button::after { border: none; }
 }
 .stat-label { font-size: 24rpx; color: var(--gray-400); }
 .stat-value { font-size: 30rpx; color: var(--gray-900); font-weight: 700; }
-.stat-divider { width: 1rpx; height: 48rpx; background: var(--gray-200); }
+.stat-divider { width: 6rpx; height: 60rpx; background: var(--divider-strong); border-radius: 3rpx; }
 
 /* ─── Start hint (host bottom bar 上方) ─── */
 

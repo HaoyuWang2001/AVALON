@@ -33,6 +33,7 @@
       </view>
     </view>
     <text class="room-id-display">{{roomId}}</text>
+    <view class="room-id-divider"></view>
     <view class="info-stats-row">
       <view class="info-stat-item">
         <text class="stat-label">入座</text>

@@ -295,4 +295,17 @@
 .page.theme-aurora, .room-page.theme-aurora, .game-page.theme-aurora { background-color: #0F0B1A; }
 .page.theme-steel, .room-page.theme-steel, .game-page.theme-steel { background-color: #171A1F; }
 
+/* ─────────── 主页"您当前处于房间"卡片：暗色下改主题卡底 + 主题强调色 ─────────── */
+.theme-torch .current-room-card { background: var(--bg-card); border-left-color: var(--warning); }
+.theme-torch .current-room-label,
+.theme-torch .current-room-id { color: var(--warning); }
+
+.theme-aurora .current-room-card { background: var(--bg-card); border-left-color: var(--card-border); }
+.theme-aurora .current-room-label,
+.theme-aurora .current-room-id { color: var(--text-title); }
+
+.theme-steel .current-room-card { background: var(--bg-card); border-left-color: var(--card-border); }
+.theme-steel .current-room-label,
+.theme-steel .current-room-id { color: var(--text-title); }
+
 
