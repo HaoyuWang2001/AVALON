@@ -5,10 +5,8 @@
         bindtap="onCompactPlayerTap" bindlongpress="onPlayerLongPress" data-id="{{item.openId}}">
     <text class="c-seat">{{item.seatNumber}}</text>
     <text wx:if="{{item.isCrownHolder}}" class="c-crown-mini">👑</text>
-    <view class="c-tags" wx:if="{{item.tags.length || (currentPhase === 'gameEnd' && item.roleName)}}">
-      <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag c-tag {{tag.cls}}">{{tag.text}}</text>
-      <text wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="c-role">{{item.roleName}}</text>
-    </view>
+    <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag c-tag {{tag.cls}}">{{tag.text}}</text>
+    <text wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="c-role">{{item.roleName}}</text>
   </view>
 </template>
 <view class="game-page {{themeClass ? 'theme-' + themeClass : ''}}">
