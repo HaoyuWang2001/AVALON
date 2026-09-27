@@ -1,14 +1,14 @@
 /* pages/friend-detail/friend-detail.wxss */
 .page { padding: 24rpx 32rpx 0; box-sizing: border-box; position: relative; }
-.page-loading { text-align: center; color: var(--gray-400); padding: 80rpx 0; }
+.page-loading { text-align: center; color: var(--text-muted); padding: 80rpx 0; }
 
 /* 基本信息 */
 .head-card { display: flex; align-items: center; padding: 32rpx 28rpx; }
 .hd-avatar { width: 128rpx; height: 128rpx; border-radius: 50%; flex-shrink: 0; background: var(--gray-100); }
 .hd-info { margin-left: 24rpx; min-width: 0; flex: 1; }
 .hd-name-row { display: flex; align-items: baseline; }
-.hd-name { font-size: 40rpx; font-weight: 800; color: var(--gray-900); }
-.hd-id { font-size: 26rpx; color: var(--gray-400); margin-left: 14rpx; }
+.hd-name { font-size: 40rpx; font-weight: 800; color: var(--text-title); }
+.hd-id { font-size: 26rpx; color: var(--text-muted); margin-left: 14rpx; }
 .hd-status-row { display: flex; align-items: center; margin-top: 12rpx; }
 .hd-dot { width: 16rpx; height: 16rpx; border-radius: 50%; margin-right: 8rpx; flex-shrink: 0; }
 .hd-status { font-size: 26rpx; }
@@ -16,11 +16,11 @@
 .hd-dot.st-offline { background: var(--label-grey); }
 .st-online { color: var(--label-green); }
 .st-offline { color: var(--label-grey); }
-.more-btn { margin-left: 12rpx; flex-shrink: 0; font-size: 40rpx; font-weight: 800; color: var(--gray-500); line-height: 1; padding: 8rpx 8rpx 16rpx 16rpx; }
+.more-btn { margin-left: 12rpx; flex-shrink: 0; font-size: 40rpx; font-weight: 800; color: var(--text-muted); line-height: 1; padding: 8rpx 8rpx 16rpx 16rpx; }
 
 /* 状态卡 */
 .status-card { display: flex; align-items: center; justify-content: space-between; padding: 28rpx; }
-.status-text { font-size: 30rpx; font-weight: 600; color: var(--gray-800); }
+.status-text { font-size: 30rpx; font-weight: 600; color: var(--text-title); }
 .status-btns { display: flex; gap: 12rpx; }
 .status-btn { flex-shrink: 0; }
 

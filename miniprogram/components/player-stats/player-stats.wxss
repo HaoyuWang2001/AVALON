@@ -1,7 +1,7 @@
 /* components/player-stats/player-stats.wxss */
 .ps-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.55); z-index: 1200;
+  background: var(--mask); z-index: 1200;
   display: flex; align-items: flex-end; justify-content: center;
 }
 .ps-modal {
@@ -17,7 +17,7 @@
 .ps-name-row { display: flex; align-items: center; gap: 10rpx; margin-top: 14rpx; }
 .ps-name { font-size: 34rpx; font-weight: 800; color: var(--text-title); }
 .ps-rank { font-size: 28rpx; font-weight: 800; color: var(--primary); }
-.ps-tag { font-size: 22rpx; color: #fff; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); padding: 4rpx 18rpx; border-radius: 999rpx; margin-top: 8rpx; }
+.ps-tag { font-size: 22rpx; color: var(--on-primary); background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); padding: 4rpx 18rpx; border-radius: 999rpx; margin-top: 8rpx; }
 .ps-loading { text-align: center; color: var(--text-muted); padding: 30rpx 0; }
 .ps-stats { display: flex; margin-top: 24rpx; }
 .ps-stat { flex: 1; display: flex; flex-direction: column; align-items: center; }

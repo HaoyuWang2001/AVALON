@@ -10,17 +10,17 @@
   transition: all 0.2s ease;
 }
 .btn::after { border: none; }
-.btn-primary { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: #fff; box-shadow: var(--shadow-primary); }
+.btn-primary { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: var(--on-primary); box-shadow: var(--shadow-primary); }
 .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
-.btn-danger { background: var(--danger); color: #fff; box-shadow: 0 4rpx 16rpx rgba(239, 68, 68, 0.3); }
-.btn-success { background: var(--success); color: #fff; box-shadow: 0 4rpx 16rpx rgba(16, 185, 129, 0.3); }
+.btn-danger { background: var(--danger); color: var(--on-primary); box-shadow: 0 4rpx 16rpx rgba(239, 68, 68, 0.3); }
+.btn-success { background: var(--success); color: var(--on-primary); box-shadow: 0 4rpx 16rpx rgba(16, 185, 129, 0.3); }
 .btn-ghost { background: transparent; color: var(--primary); border: 2rpx solid var(--primary); }
-.btn-secondary { background: var(--gray-100); color: var(--gray-700); }
+.btn-secondary { background: var(--gray-100); color: var(--text-body); }
 .btn-soft-danger { background: var(--danger-soft-bg); color: var(--danger-soft-text); }
 .btn-soft-primary { background: var(--primary-bg); color: var(--primary-dark); }
 .btn-sm { padding: 12rpx 24rpx; font-size: 26rpx; border-radius: var(--radius-sm); }
 .btn-lg { padding: 26rpx 48rpx; font-size: 34rpx; }
-.btn[disabled], .btn-disabled { background: var(--gray-200); color: var(--gray-400); box-shadow: none; }
+.btn[disabled], .btn-disabled { background: var(--disabled-bg); color: var(--disabled-fg); box-shadow: none; }
 
 /* ─────── 小胶囊 / 方形按钮（兼容历史类名） ─────── */
 .btn-round {
@@ -34,19 +34,19 @@
 .btn-square {
   display: inline-flex; align-items: center; justify-content: center;
   box-sizing: border-box; margin: 0; border: none;
-  font-size: 26rpx; font-weight: 600; color: #fff; background: var(--primary);
+  font-size: 26rpx; font-weight: 600; color: var(--on-primary); background: var(--primary);
   border-radius: 12rpx; padding: 14rpx 28rpx;
 }
-.btn-square[disabled] { background: var(--gray-200); color: var(--gray-400); }
+.btn-square[disabled] { background: var(--disabled-bg); color: var(--disabled-fg); }
 
 /* ─────── 颜色变体（配合 btn-round / btn-square / bar-btn 使用） ─────── */
-.btn-purple { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: #fff; }
+.btn-purple { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: var(--on-primary); }
 .btn-disband { background: var(--danger-soft-bg); color: var(--danger-soft-text); }
 .btn-exit { background: var(--danger-soft-bg); color: var(--danger-soft-text); }
-.btn-copy { background: var(--gray-200); color: var(--gray-700); }
+.btn-copy { background: var(--gray-200); color: var(--text-body); }
 .btn-share { background: var(--gray-100); color: var(--link); }
-.btn-cancel { background: var(--gray-200); color: var(--gray-500); }
-.btn-ready { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: #fff; }
+.btn-cancel { background: var(--gray-200); color: var(--text-muted); }
+.btn-ready { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: var(--on-primary); }
 
 /* ─────── 底部操作栏按钮 ─────── */
 .bar-btn {
@@ -54,17 +54,17 @@
   box-sizing: border-box;
   width: 176rpx; height: 88rpx; border-radius: 12rpx;
   font-size: 28rpx; font-weight: 600;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: #fff;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: var(--on-primary);
 }
-.bar-btn-primary { background: linear-gradient(135deg, var(--primary-deep), var(--primary-deeper)); box-shadow: 0 4rpx 16rpx rgba(124, 58, 237, 0.35); }
-.bar-btn.btn-disabled, .bar-btn[disabled] { background: var(--gray-200); color: var(--gray-400); box-shadow: none; }
+.bar-btn-primary { background: linear-gradient(135deg, var(--primary-deep), var(--primary-deeper)); box-shadow: var(--shadow-primary); }
+.bar-btn.btn-disabled, .bar-btn[disabled] { background: var(--disabled-bg); color: var(--disabled-fg); box-shadow: none; }
 
 /* ─────── 顶栏图标按钮 ─────── */
 .top-icons { display: flex; align-items: center; gap: 16rpx; }
 .top-icon {
   width: 60rpx; height: 60rpx; border-radius: 12rpx;
   display: flex; align-items: center; justify-content: center;
-  font-size: 32rpx; font-weight: 700; color: #fff; flex-shrink: 0;
+  font-size: 32rpx; font-weight: 700; color: var(--on-primary); flex-shrink: 0;
 }
 .top-icon-home { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); }
 .top-icon-danger { background: var(--danger); }

@@ -28,14 +28,14 @@
   --text-body: #E0D5C7;
   --text-muted: #B0A493;
   --link: #60A5FA;
-  --btn-emoji-bg: #40382D;
+  --btn-icon-bg: #40382D;
   --state-team: #5A4720;
   --state-voted: #493056;
   --state-approve: #2B4530;
   --state-reject: #573026;
   --state-lake: #5A2A45;
   --state-good: #2B3A57;
-  --state-evil: #573026;
+  --state-evil: var(--state-reject);
 
   /* 领域语义色（非标签） */
   --c-violet: #B49CE0;
@@ -55,29 +55,19 @@
 
   /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 烛光(暖) */
   --brand-1: #D4A052;
-  --brand-2: #E0B45A;
   --brand-3: #F0C060;
-  --brand-glow-a: #D4A052;
-  --brand-glow-b: #B45309;
   --brand-g1: #F0C060;
   --brand-g2: #E0533B;
   --func-face: #2E281F;
-  --glass-bg: linear-gradient(135deg, rgba(58, 51, 42, 0.94), rgba(28, 24, 19, 0.94));
-  --glass-border: rgba(212, 160, 82, 0.5);
-  --glass-glow: rgba(212, 160, 82, 0.26);
-  --glass-sheen: rgba(255, 255, 255, 0.22);
   --card-border: #D4A052;
   --role-card-bg: #2E281F;
   --role-card-rate: #DDB56A;
-  --champion-border: #D4A052;
-  --champion-bg: #2E281F;
   --profile-bg: #2E281F;
   --mission-mid: #2E281F;
   --mission-ok: #8FB4E8;
   --mission-fail: #EEB0A0;
   --champion-fg: #F7F1E8;
   --profile-fg: #F7F1E8;
-  --profile-name: #B49CE0;
   --divider-strong: #D4A052;
   --divider: rgba(212, 160, 82, 0.40);
   --profile-ring-glow: rgba(212, 160, 82, 0.35);
@@ -122,14 +112,14 @@
   --text-body: #B6B0D9;
   --text-muted: #A29BC0;
   --link: #93C5FD;
-  --btn-emoji-bg: #2E2745;
+  --btn-icon-bg: #2E2745;
   --state-team: #55492E;
   --state-voted: #3E2E6E;
   --state-approve: #1E4A46;
   --state-reject: #55243E;
   --state-lake: #48265A;
   --state-good: #26325E;
-  --state-evil: #55243E;
+  --state-evil: var(--state-reject);
 
   /* 领域语义色（非标签） */
   --c-violet: #B4A6F0;
@@ -149,29 +139,19 @@
 
   /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 暗夜(冷) */
   --brand-1: #A78BFA;
-  --brand-2: #818CF8;
   --brand-3: #22D3EE;
-  --brand-glow-a: #A78BFA;
-  --brand-glow-b: #22D3EE;
   --brand-g1: #22D3EE;
   --brand-g2: #F43F5E;
   --func-face: #29223E;
-  --glass-bg: linear-gradient(135deg, rgba(46, 39, 69, 0.94), rgba(22, 18, 34, 0.94));
-  --glass-border: rgba(167, 139, 250, 0.55);
-  --glass-glow: rgba(167, 139, 250, 0.3);
-  --glass-sheen: rgba(255, 255, 255, 0.26);
   --card-border: #A78BFA;
   --role-card-bg: #29223E;
   --role-card-rate: #B4A6F0;
-  --champion-border: #A78BFA;
-  --champion-bg: #29223E;
   --profile-bg: #29223E;
   --mission-mid: #29223E;
   --mission-ok: #93B4F5;
   --mission-fail: #F4B2BE;
   --champion-fg: #D8D2EE;
   --profile-fg: #D8D2EE;
-  --profile-name: #B4A6F0;
   --divider-strong: #A78BFA;
   --divider: rgba(167, 139, 250, 0.40);
   --profile-ring-glow: rgba(167, 139, 250, 0.35);
@@ -216,14 +196,14 @@
   --text-body: #A7B4C0;
   --text-muted: #9EA9B5;
   --link: #93C5FD;
-  --btn-emoji-bg: #3B444E;
+  --btn-icon-bg: #3B444E;
   --state-team: #574826;
   --state-voted: #43336B;
   --state-approve: #1D4A37;
   --state-reject: #572828;
   --state-lake: #542F49;
   --state-good: #1D3A6B;
-  --state-evil: #572828;
+  --state-evil: var(--state-reject);
 
   /* 领域语义色（非标签） */
   --c-violet: #9C90D8;
@@ -243,29 +223,19 @@
 
   /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 锻造钢铁 */
   --brand-1: #C7D2DD;
-  --brand-2: #94A3B8;
   --brand-3: #64748B;
-  --brand-glow-a: #C7D2DD;
-  --brand-glow-b: #64748B;
   --brand-g1: #7DD3FC;
   --brand-g2: #F87171;
   --func-face: #262B33;
-  --glass-bg: linear-gradient(135deg, rgba(44, 51, 59, 0.94), rgba(26, 31, 37, 0.94));
-  --glass-border: rgba(159, 180, 200, 0.5);
-  --glass-glow: rgba(159, 180, 200, 0.24);
-  --glass-sheen: rgba(255, 255, 255, 0.22);
   --card-border: #AFC0D0;
   --role-card-bg: #262B33;
   --role-card-rate: #C7D2DD;
-  --champion-border: #D4A052;
-  --champion-bg: #262B33;
   --profile-bg: #262B33;
   --mission-mid: #262B33;
   --mission-ok: #8FB6E0;
   --mission-fail: #E8A4A4;
   --champion-fg: #C7D2DD;
   --profile-fg: #C7D2DD;
-  --profile-name: #9C90D8;
   --divider-strong: #94A3B8;
   --divider: rgba(148, 163, 184, 0.40);
   --profile-ring-glow: rgba(148, 163, 184, 0.35);

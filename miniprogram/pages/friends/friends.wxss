@@ -2,19 +2,19 @@
 .page { padding: 24rpx 32rpx; box-sizing: border-box; }
 
 /* ─── 首次设置ID遮罩 ─── */
-.setup-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1200; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; }
+.setup-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1200; background: var(--mask); display: flex; align-items: center; justify-content: center; }
 .setup-box { width: 620rpx; background: var(--bg-card); border-radius: 28rpx; padding: 48rpx 40rpx; display: flex; flex-direction: column; align-items: center; }
-.setup-title { font-size: 38rpx; font-weight: 800; color: var(--gray-900); }
-.setup-sub { font-size: 24rpx; color: var(--gray-500); margin: 16rpx 0 32rpx; line-height: 1.7; text-align: center; }
+.setup-title { font-size: 38rpx; font-weight: 800; color: var(--text-title); }
+.setup-sub { font-size: 24rpx; color: var(--text-muted); margin: 16rpx 0 32rpx; line-height: 1.7; text-align: center; }
 .setup-input { width: 100%; height: 88rpx; border: 2rpx solid var(--gray-200); border-radius: 16rpx; padding: 0 24rpx; font-size: 32rpx; box-sizing: border-box; text-align: center; }
 .setup-btn { margin-top: 32rpx; }
-.setup-tip { margin-top: 24rpx; font-size: 24rpx; color: var(--gray-400); }
+.setup-tip { margin-top: 24rpx; font-size: 24rpx; color: var(--text-muted); }
 
 /* ─── 我的ID条 ─── */
 .my-id-bar { display: flex; align-items: center; background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); }
 .my-avatar { width: 88rpx; height: 88rpx; border-radius: 50%; flex-shrink: 0; }
 .my-info { margin-left: 20rpx; min-width: 0; }
-.my-nick { font-size: 32rpx; font-weight: 700; color: var(--gray-900); display: block; }
+.my-nick { font-size: 32rpx; font-weight: 700; color: var(--text-title); display: block; }
 .my-id { font-size: 24rpx; color: var(--primary); margin-top: 6rpx; display: block; }
 
 /* ─── 搜索 ─── */
@@ -26,28 +26,28 @@
 .search-result { display: flex; align-items: center; margin-top: 20rpx; padding-top: 20rpx; border-top: 1rpx solid var(--divider); }
 .sr-avatar { width: 72rpx; height: 72rpx; border-radius: 50%; flex-shrink: 0; }
 .sr-info { flex: 1; margin-left: 16rpx; min-width: 0; }
-.sr-name { font-size: 28rpx; font-weight: 600; color: var(--gray-800); display: block; }
-.sr-id { font-size: 24rpx; color: var(--gray-400); display: block; margin-top: 4rpx; }
+.sr-name { font-size: 28rpx; font-weight: 600; color: var(--text-title); display: block; }
+.sr-id { font-size: 24rpx; color: var(--text-muted); display: block; margin-top: 4rpx; }
 .sr-btn { flex-shrink: 0; }
-.sr-state { flex-shrink: 0; font-size: 26rpx; color: var(--gray-400); }
+.sr-state { flex-shrink: 0; font-size: 26rpx; color: var(--text-muted); }
 .sr-state-ok { color: var(--success); }
 
 /* ─── Tab ─── */
 .tabs { display: flex; margin-bottom: 20rpx; }
-.tab-item { flex: 1; text-align: center; padding: 20rpx 0; font-size: 30rpx; font-weight: 600; color: var(--gray-400); position: relative; }
+.tab-item { flex: 1; text-align: center; padding: 20rpx 0; font-size: 30rpx; font-weight: 600; color: var(--text-muted); position: relative; }
 .tab-item.tab-on { color: var(--primary); }
 .tab-item.tab-on::after { content: ''; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 48rpx; height: 6rpx; border-radius: 3rpx; background: var(--primary); }
-.tab-count { margin-left: 8rpx; background: var(--gray-100); color: var(--gray-500); font-size: 20rpx; padding: 2rpx 10rpx; border-radius: 20rpx; }
+.tab-count { margin-left: 8rpx; background: var(--gray-100); color: var(--text-muted); font-size: 20rpx; padding: 2rpx 10rpx; border-radius: 20rpx; }
 .tab-count-red { background: var(--danger-soft-bg); color: var(--danger-soft-text); }
 
 /* ─── 列表 ─── */
 .list-card { padding: 12rpx 24rpx; }
-.list-empty { text-align: center; color: var(--gray-400); font-size: 26rpx; padding: 48rpx 0; }
+.list-empty { text-align: center; color: var(--text-muted); font-size: 26rpx; padding: 48rpx 0; }
 .friend-item { display: flex; align-items: center; padding: 20rpx 0; border-bottom: 1rpx solid var(--divider); }
 .friend-item:last-child { border-bottom: none; }
 .f-avatar { width: 80rpx; height: 80rpx; border-radius: 50%; flex-shrink: 0; background: var(--gray-100); }
 .f-info { flex: 1; margin-left: 18rpx; min-width: 0; }
-.f-name { font-size: 30rpx; font-weight: 600; color: var(--gray-800); display: block; }
+.f-name { font-size: 30rpx; font-weight: 600; color: var(--text-title); display: block; }
 .f-status-row { display: flex; align-items: center; margin-top: 6rpx; }
 .f-dot { width: 14rpx; height: 14rpx; border-radius: 50%; margin-right: 8rpx; flex-shrink: 0; }
 .f-status-text { font-size: 24rpx; }
@@ -59,10 +59,10 @@
 .st-inroom { color: var(--label-blue); }
 .st-ingame { color: var(--label-red); }
 .f-rate { font-size: 22rpx; color: var(--primary); margin-top: 4rpx; display: block; font-weight: 600; }
-.f-sub { font-size: 24rpx; color: var(--gray-400); margin-top: 6rpx; display: block; }
+.f-sub { font-size: 24rpx; color: var(--text-muted); margin-top: 6rpx; display: block; }
 .f-arrow { font-size: 36rpx; color: var(--text-muted); }
 .req-item { display: flex; align-items: center; padding: 20rpx 0; border-bottom: 1rpx solid var(--divider); }
 .req-item:last-child { border-bottom: none; }
 .req-btn { flex-shrink: 0; margin-left: 12rpx; }
-.req-ok { background: var(--success); color: white; }
-.req-no { background: var(--gray-100); color: var(--gray-600); }
+.req-ok { background: var(--success); color: var(--on-primary); }
+.req-no { background: var(--gray-100); color: var(--text-body); }

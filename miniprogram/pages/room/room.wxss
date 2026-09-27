@@ -20,7 +20,7 @@ button::after { border: none; }
   width: 100%; height: 88rpx; border-radius: 12rpx;
   display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, var(--primary-deep), var(--primary-deeper));
-  box-shadow: 0 4rpx 16rpx rgba(124, 58, 237, 0.35);
+  box-shadow: var(--shadow-primary);
 }
 .start-game-btn.start-game-disabled { background: var(--gray-200); box-shadow: none; }
 .start-game-btn.charging { transform: scale(0.97); filter: brightness(1.15); }
@@ -41,13 +41,13 @@ button::after { border: none; }
   background: rgba(255, 255, 255, 0.35); z-index: 1;
 }
 .start-game-content { position: relative; z-index: 2; display: flex; align-items: center; gap: 24rpx; }
-.start-game-text { color: #fff; font-size: 28rpx; font-weight: 700; letter-spacing: 4rpx; }
-.start-game-btn.start-game-disabled .start-game-text { color: var(--gray-400); }
+.start-game-text { color: var(--on-primary); font-size: 28rpx; font-weight: 700; letter-spacing: 4rpx; }
+.start-game-btn.start-game-disabled .start-game-text { color: var(--disabled-fg); }
 .start-game-arrow {
-  color: #fff; font-size: 28rpx; font-weight: 700; letter-spacing: 2rpx;
+  color: var(--on-primary); font-size: 28rpx; font-weight: 700; letter-spacing: 2rpx;
   animation: sg-blink 0.4s steps(2) infinite;
 }
-.start-game-btn.start-game-disabled .start-game-arrow { color: var(--gray-400); }
+.start-game-btn.start-game-disabled .start-game-arrow { color: var(--disabled-fg); }
 @keyframes sg-blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.15; }
@@ -62,7 +62,7 @@ button::after { border: none; }
   animation: sl-fadein 0.4s ease-out;
 }
 @keyframes sl-fadein { from { opacity: 0; } to { opacity: 1; } }
-.launch-title { font-size: 56rpx; font-weight: 800; color: #fff; letter-spacing: 12rpx; z-index: 5; }
+.launch-title { font-size: 56rpx; font-weight: 800; color: var(--on-primary); letter-spacing: 12rpx; z-index: 5; }
 
 /* A：能量聚能 → 爆裂 */
 .launch-a-orb {
@@ -110,7 +110,7 @@ button::after { border: none; }
   50% { transform: translateX(-20rpx); opacity: 1; }
 }
 .launch-b-emblem {
-  position: relative; z-index: 3; font-size: 72rpx; font-weight: 800; color: #fff;
+  position: relative; z-index: 3; font-size: 72rpx; font-weight: 800; color: var(--on-primary);
   letter-spacing: 10rpx; text-shadow: 0 0 40rpx var(--primary-light);
   animation: la-emblem 5s ease-in-out infinite;
 }
@@ -177,7 +177,7 @@ button::after { border: none; }
   80% { transform: scale(2.6); opacity: 0.1; }
   100% { transform: scale(3); opacity: 0; }
 }
-.launch-e-title { position: relative; font-size: 64rpx; font-weight: 800; color: #fff; letter-spacing: 10rpx; animation: la-etitle 5s ease-in-out infinite; }
+.launch-e-title { position: relative; font-size: 64rpx; font-weight: 800; color: var(--on-primary); letter-spacing: 10rpx; animation: la-etitle 5s ease-in-out infinite; }
 @keyframes la-etitle {
   0%,100% { transform: scale(1); opacity: 0.75; }
   50% { transform: scale(1.12); opacity: 1; }
@@ -190,33 +190,33 @@ button::after { border: none; }
 }
 .launch-modal-mask {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--mask);
 }
 .launch-modal-panel {
   position: relative; width: 560rpx; border-radius: 24rpx;
   background: var(--bg-card); padding: 40rpx 32rpx 28rpx;
   display: flex; flex-direction: column; align-items: center;
 }
-.launch-modal-title { font-size: 30rpx; font-weight: 700; color: var(--gray-800); margin-bottom: 28rpx; text-align: center; }
+.launch-modal-title { font-size: 30rpx; font-weight: 700; color: var(--text-title); margin-bottom: 28rpx; text-align: center; }
 .launch-modal-options { display: flex; flex-wrap: wrap; justify-content: center; gap: 20rpx; margin-bottom: 32rpx; }
 .launch-modal-opt {
   width: 88rpx; height: 88rpx; border-radius: 16rpx;
-  background: var(--gray-100); color: var(--gray-600);
+  background: var(--gray-100); color: var(--text-body);
   display: flex; align-items: center; justify-content: center;
   font-size: 40rpx; font-weight: 700;
   border: 2rpx solid transparent;
 }
-.launch-modal-opt.opt-active { background: var(--primary); color: #fff; border-color: var(--primary-dark); }
+.launch-modal-opt.opt-active { background: var(--primary); color: var(--on-primary); border-color: var(--primary-dark); }
 .launch-modal-confirm {
   width: 100%; padding: 22rpx 0; border-radius: 16rpx; text-align: center;
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  color: #fff; font-size: 32rpx; font-weight: 700;
+  color: var(--on-primary); font-size: 32rpx; font-weight: 700;
 }
 
 /* ─── Card 1: Room Info ─── */
 .room-info-card { background: var(--bg-card); }
 .info-top-row { display: flex; align-items: center; justify-content: space-between; }
-.info-label { font-size: 26rpx; color: var(--gray-500); margin-left: 4rpx; }
+.info-label { font-size: 26rpx; color: var(--text-muted); margin-left: 4rpx; }
 .info-btns { display: flex; gap: 12rpx; align-items: center; }
 
 /* 复制/分享图标按钮（白图标 + 紫色底） */
@@ -243,8 +243,8 @@ button::after { border: none; }
 .info-stat-item {
   display: flex; flex-direction: column; align-items: center; gap: 4rpx;
 }
-.stat-label { font-size: 24rpx; color: var(--gray-400); }
-.stat-value { font-size: 30rpx; color: var(--gray-900); font-weight: 700; }
+.stat-label { font-size: 24rpx; color: var(--text-muted); }
+.stat-value { font-size: 30rpx; color: var(--text-title); font-weight: 700; }
 .stat-divider { width: 6rpx; height: 60rpx; background: var(--divider-strong); border-radius: 3rpx; }
 
 /* ─── Start hint (host bottom bar 上方) ─── */
@@ -256,14 +256,14 @@ button::after { border: none; }
   border-radius: 12rpx; gap: 12rpx;
 }
 .seat-filled { background: var(--gray-50); }
-.seat-self { padding: 24rpx 16rpx; margin: 0 -4rpx; box-shadow: 0 2rpx 12rpx rgba(139, 92, 246, 0.1); border-radius: 12rpx; background: var(--primary-bg); }
+.seat-self { padding: 24rpx 16rpx; margin: 0 -4rpx; box-shadow: var(--shadow-primary); border-radius: 12rpx; background: var(--primary-bg); }
 .seat-self .seat-action { gap: 16rpx; }
 .seat-empty { background: var(--gray-50); border: 2rpx dashed var(--gray-200); }
 
 .seat-num {
   width: 52rpx; height: 52rpx; border-radius: 12rpx;
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  color: #fff; font-size: 22rpx; font-weight: 700;
+  color: var(--on-primary); font-size: 22rpx; font-weight: 700;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .seat-empty .seat-num { opacity: 0.5; }
@@ -272,7 +272,7 @@ button::after { border: none; }
 .seat-avatar-empty { border: 2rpx dashed var(--text-muted); background: transparent; }
 
 .seat-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
-.seat-name { font-size: 28rpx; font-weight: 600; color: var(--gray-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seat-name { font-size: 28rpx; font-weight: 600; color: var(--text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .seat-name-empty { font-size: 26rpx; color: var(--text-muted); }
 .seat-tags { display: flex; flex-wrap: wrap; gap: 6rpx; }
 .tag { font-size: 20rpx; padding: 2rpx 8rpx; border-radius: 4rpx; }
@@ -295,7 +295,7 @@ button::after { border: none; }
   background: var(--gray-50); padding: 14rpx 16rpx; border-radius: 10rpx; flex-shrink: 0;
 }
 .waiting-avatar { width: 60rpx; height: 60rpx; border-radius: 50%; background: var(--gray-100); }
-.waiting-name { font-size: 22rpx; color: var(--gray-700); text-align: center; max-width: 120rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.waiting-name { font-size: 22rpx; color: var(--text-body); text-align: center; max-width: 120rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ─── Card 5: Spectator ─── */
 .empty-hint { text-align: center; font-size: 24rpx; color: var(--text-muted); padding: 30rpx 0; }
@@ -303,7 +303,7 @@ button::after { border: none; }
 /* ─── 只读配置缩略弹窗 ─── */
 .config-view-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--mask);
   z-index: 999;
   display: flex; align-items: center; justify-content: center;
 }
@@ -332,3 +332,12 @@ button::after { border: none; }
   line-height: 1.7;
 }
 .cv-strong { font-weight: 700; color: var(--text-title); }
+
+/* ─────────────────────────────────────────────────────────
+ * 有意保留的硬编码（豁免，不做 token 化）：
+ *   - 品牌霓虹/故障彩虹、彩蛋卡彩虹、召开会议按钮对角渐变（装饰性）
+ *   - 启动动画光效（白色光核、紫色辉光）
+ *   - 固定深色全屏底组件（看身份/结果/发言顺序/启动）内部配色
+ *   - 全屏结果动画的径向渐变（刺杀/任务成功失败）
+ * 这些颜色属于一次性装饰/固定深色组件，不参与主题与语义体系。
+ * ───────────────────────────────────────────────────────── */
