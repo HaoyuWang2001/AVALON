@@ -880,7 +880,7 @@ progress { border-radius: 12rpx; }
 }
 .mission-anim-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
 .mission-anim-bg.anim-mission-success { background: radial-gradient(circle, var(--mission-ok) 0%, var(--mission-ok) 30%, rgba(0,0,0,0.92) 100%); }
-.mission-anim-bg.anim-mission-fail { background: radial-gradient(circle, var(--hc-evil) 0%, var(--hc-evil) 30%, rgba(0,0,0,0.92) 100%); }
+.mission-anim-bg.anim-mission-fail { background: radial-gradient(circle, var(--mission-fail) 0%, var(--mission-fail) 30%, rgba(0,0,0,0.92) 100%); }
 .mission-anim-center {
   position: relative;
   display: flex; flex-direction: column; align-items: center;
