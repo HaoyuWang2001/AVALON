@@ -135,7 +135,6 @@
   padding: 16rpx 20rpx;
   border-radius: 18rpx;
   background: var(--bg-card);
-  border: 2rpx solid var(--card-border);
   transition: all 0.2s ease;
   min-height: 130rpx;
 }
@@ -272,7 +271,6 @@
   left: 0; right: 0; bottom: 0;
   z-index: 900;
   background: var(--bg-card);
-  border-top: 2rpx solid var(--card-border);
   box-shadow: 0 -6rpx 20rpx rgba(0,0,0,0.06);
   padding: 28rpx 32rpx 44rpx;
   display: flex;

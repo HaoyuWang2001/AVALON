@@ -236,7 +236,7 @@ button::after { border: none; }
   display: block; text-align: center; font-size: 56rpx; font-weight: 800;
   color: var(--primary); letter-spacing: 8rpx; margin: 20rpx 0;
   padding-bottom: 24rpx;
-  border-bottom: 1rpx dashed var(--gray-300);
+  border-bottom: 1rpx solid var(--divider-strong);
 }
 .info-stats-row {
   display: flex; align-items: center; justify-content: center; gap: 32rpx;

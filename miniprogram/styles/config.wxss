@@ -3,13 +3,13 @@
 /* ─────── Config Modal ─────── */
 .config-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--primary-bg); z-index: 1000;
+  background: var(--bg-page); z-index: 1000;
 }
 .config-panel { display: flex; flex-direction: column; height: 100%; }
 .config-top-bar {
   height: 100rpx; background: var(--bg-card);
   display: flex; align-items: center; padding: 0 24rpx;
-  flex-shrink: 0; border-bottom: 1rpx solid var(--card-border);
+  flex-shrink: 0; box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
 }
 .config-close {
   width: 56rpx; height: 56rpx; border-radius: 12rpx;
@@ -155,7 +155,7 @@
 
 /* ─────── Nav bar ─────── */
 .nav-bar {
-  height: 100rpx; background: var(--bg-card); border-top: 1rpx solid var(--card-border);
+  height: 100rpx; background: var(--bg-card); box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 32rpx; flex-shrink: 0;
 }
