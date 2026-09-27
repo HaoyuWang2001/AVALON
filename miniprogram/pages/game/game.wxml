@@ -561,13 +561,11 @@
   </view>
 
   <!-- 任务结果全屏动画（全员）：成功蓝图 / 失败红图；仅「已感知」按钮可点 -->
-  <view class="mission-anim" wx:if="{{showMissionAnim}}">
+  <view class="mission-anim" wx:if="{{showMissionAnim}}" bindtap="closeMissionAnim" catchtouchmove="noop">
     <view class="mission-anim-bg {{missionAnimSuccess ? 'anim-mission-success' : 'anim-mission-fail'}}"></view>
     <view class="mission-anim-center">
       <image src="/images/{{missionAnimSuccess ? 'avalon-blue.png' : 'avalon-red.png'}}" class="mission-anim-img" mode="aspectFit"/>
-      <text class="mission-anim-text {{missionAnimSuccess ? 'is-success' : 'is-fail'}}">{{missionAnimSuccess ? '任务成功' : '任务失败'}}</text>
       <text wx:if="{{showFailDetail && lastMissionFailCount > 0}}" class="mission-anim-failcount">失败票数：{{lastMissionFailCount}}</text>
-      <button class="btn btn-primary mission-anim-btn" bindtap="closeMissionAnim">已感知</button>
     </view>
   </view>
 
