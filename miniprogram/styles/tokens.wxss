@@ -77,6 +77,8 @@ page {
   --profile-ring-glow: rgba(196, 181, 253, 0.35);
   --hc-good: #1E40AF;
   --hc-evil: #B91C1C;
+  /* 任务投票页渐变中间过渡色（各主题中性色） */
+  --mission-mid: #E6EAED;
   /* 小节竖线（角色胜率 / 历史对局 / 配置弹窗） */
   --section-bar-from: #8B5CF6;
   --section-bar-to: #6D28D9;
