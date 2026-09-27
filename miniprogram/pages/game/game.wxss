@@ -145,6 +145,10 @@
 .table-player.state-team {
   background: linear-gradient(to left, var(--state-team) 0%, var(--bg-card-solid) 50%);
 }
+/* 湖仙验人本地选中：右半粉渐变（同款结构，色取自 --state-lake） */
+.table-player.state-lake {
+  background: linear-gradient(to left, var(--state-lake) 0%, var(--bg-card-solid) 50%);
+}
 /* 已投票（仅 teamVote）：左半紫渐变 → 中间50%卡片色 */
 .table-player.state-voted {
   background: linear-gradient(to right, var(--state-voted) 0%, var(--bg-card-solid) 50%);

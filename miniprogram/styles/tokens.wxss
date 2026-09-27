@@ -27,6 +27,8 @@ page {
   --state-voted: #DDD6FE;
   --state-approve: #D1FAE5;
   --state-reject: #FEE2E2;
+  /* 湖仙验人本地选中（右半渐变），亮色同湖仙标签底色 */
+  --state-lake: #FCE7F3;
   --state-good: #DBEAFE;
   --state-evil: #FEE2E2;
   /* 状态渐变中间停靠实色（--bg-card 可能为渐变，作停靠点需实色防嵌套失效） */

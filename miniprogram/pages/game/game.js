@@ -890,17 +890,18 @@ Page({
     });
   },
 
-  // 压缩版选人高亮：按阶段把本地选中/湖仙目标渲染为右半金（state-team，与真实车队同款）
+  // 压缩版选人高亮：按阶段把本地选中/湖仙目标渲染为右半渐变（车主=金 state-team；湖仙=粉 state-lake）
   // 仅在"车主选车/湖仙验人"阶段调用（这两阶段基础 cardState 为空，覆盖安全；取消选择则复位）
   _applyLocalSelectionCards() {
     const { currentPhase, localSelected, lakeTargetOpenId } = this.data;
     const isLake = currentPhase === 'lake';
     const sel = localSelected || [];
+    const cls = isLake ? 'state-lake' : 'state-team';
     const mark = (arr) => arr.map(p => {
       const on = isLake
         ? (!!lakeTargetOpenId && p.openId === lakeTargetOpenId)
         : sel.includes(p.openId);
-      return { ...p, cardState: on ? 'state-team' : '' };
+      return { ...p, cardState: on ? cls : '' };
     });
     this.setData({
       compactLeft: mark(this.data.compactLeft),

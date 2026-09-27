@@ -33,6 +33,7 @@
   --state-voted: #493056;
   --state-approve: #2B4530;
   --state-reject: #573026;
+  --state-lake: #5A2A45;
   --state-good: #2B3A57;
   --state-evil: #573026;
 
@@ -129,6 +130,7 @@
   --state-voted: #3E2E6E;
   --state-approve: #1E4A46;
   --state-reject: #55243E;
+  --state-lake: #48265A;
   --state-good: #26325E;
   --state-evil: #55243E;
 
@@ -225,6 +227,7 @@
   --state-voted: #43336B;
   --state-approve: #1D4A37;
   --state-reject: #572828;
+  --state-lake: #542F49;
   --state-good: #1D3A6B;
   --state-evil: #572828;
 
