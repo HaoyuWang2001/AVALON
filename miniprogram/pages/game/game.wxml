@@ -32,7 +32,7 @@
     </view>
   </top-bar>
 
-  <view class="container">
+  <view class="container {{compactGame ? 'container-compact' : ''}}">
   <!-- 角色揭示提示蒙版（一次性） -->
   <view class="role-mask" wx:if="{{showRoleMask}}" catchtouchmove="noop">
     <view class="role-mask-inner">
@@ -42,7 +42,7 @@
   </view>
 
   <!-- ===== 松弛压缩版布局：顶部状态条 + 左/中/右三列 + 观战区底部弹窗 ===== -->
-  <view class="compact" wx:if="{{compactGame}}" style="bottom:{{bottomBarHeight ? bottomBarHeight + 'px' : ''}}">
+  <view class="compact" wx:if="{{compactGame}}" style="height:calc(100vh - 100rpx - {{bottomBarHeight ? bottomBarHeight : 200}}px)">
     <!-- 顶部：与标准版完全一致的任务进度卡 + 计时器卡片 -->
     <view class="c-topinfo">
       <view class="card mission-card">
@@ -84,25 +84,24 @@
     </view>
 
     <view class="c-main">
-      <scroll-view scroll-y class="c-col" show-scrollbar="{{false}}">
+      <view class="c-col">
         <template is="compactPlayer" wx:for="{{compactLeft}}" wx:key="openId" data="{{item: item, currentPhase: currentPhase}}"/>
-      </scroll-view>
-
-      <view class="c-mid">
-        <view class="c-info" wx:if="{{cInfoPlayer}}">
-          <image class="c-info-avatar" src="{{cInfoPlayer.avatarUrl || '/images/default-avatar.png'}}"/>
-          <text class="c-info-name">{{cInfoPlayer.nickName}}</text>
-          <text class="c-info-seat">{{cInfoPlayer.seatNumber}} 号</text>
-          <view class="c-info-tags">
-            <text wx:for="{{cInfoPlayer.tags}}" wx:for-item="tag" wx:key="text" class="ptag c-tag {{tag.cls}}">{{tag.text}}</text>
-            <text wx:if="{{cInfoPlayer.roleName}}" class="c-role">{{cInfoPlayer.roleName}}</text>
-          </view>
-        </view>
       </view>
-
-      <scroll-view scroll-y class="c-col" show-scrollbar="{{false}}">
+      <view class="c-col">
         <template is="compactPlayer" wx:for="{{compactRight}}" wx:key="openId" data="{{item: item, currentPhase: currentPhase}}"/>
-      </scroll-view>
+      </view>
+    </view>
+
+    <!-- 点击玩家 → 浮层小卡展示其完整信息（头像/姓名/座位/标签/身份） -->
+    <view class="c-info-mask" wx:if="{{cInfoPlayer}}" bindtap="closeCompactInfo" catchtouchmove="noop"></view>
+    <view class="c-info-pop" wx:if="{{cInfoPlayer}}" catchtap="noop">
+      <image class="c-info-avatar" src="{{cInfoPlayer.avatarUrl || '/images/default-avatar.png'}}"/>
+      <text class="c-info-name">{{cInfoPlayer.nickName}}</text>
+      <text class="c-info-seat">{{cInfoPlayer.seatNumber}} 号</text>
+      <view class="c-info-tags">
+        <text wx:for="{{cInfoPlayer.tags}}" wx:for-item="tag" wx:key="text" class="ptag c-tag {{tag.cls}}">{{tag.text}}</text>
+        <text wx:if="{{cInfoPlayer.roleName}}" class="c-role">{{cInfoPlayer.roleName}}</text>
+      </view>
     </view>
 
     <!-- 观战区：默认收起，点按钮弹出底部面板 -->

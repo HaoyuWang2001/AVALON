@@ -856,26 +856,26 @@ Page({
     this.setData({ showSpectatorPopup: false });
   },
 
-  // 松弛压缩版：点击玩家 → 中间区展示其完整信息（头像/姓名/座位/标签/身份），并保留按阶段选择操作
+  closeCompactInfo() {
+    this.setData({ cInfoPlayer: null });
+  },
+
+  // 松弛压缩版：点击玩家 → 浮层小卡展示其完整信息（头像/姓名/座位/标签/身份），并保留按阶段选择操作
   onCompactPlayerTap(e) {
     const id = e.currentTarget.dataset.id;
     if (!id) return;
     const ap = (this.data.allPlayers || []).find(x => x.openId === id) || {};
     const tp = (this.data.tablePlayers || []).find(x => x.openId === id) || {};
-    if (this.data.cInfoPlayer && this.data.cInfoPlayer.openId === id) {
-      this.setData({ cInfoPlayer: null });
-    } else {
-      this.setData({
-        cInfoPlayer: {
-          openId: id,
-          nickName: ap.nickName || ap.wxNickName || '玩家',
-          avatarUrl: ap.avatarUrl || '',
-          seatNumber: ap.seatNumber,
-          tags: tp.tags || [],
-          roleName: tp.roleName || ''
-        }
-      });
-    }
+    this.setData({
+      cInfoPlayer: {
+        openId: id,
+        nickName: ap.nickName || ap.wxNickName || '玩家',
+        avatarUrl: ap.avatarUrl || '',
+        seatNumber: ap.seatNumber,
+        tags: tp.tags || [],
+        roleName: tp.roleName || ''
+      }
+    });
     const { currentPhase } = this.data;
     if (this.data.isSpectator || currentPhase === 'gameEnd') return;
     if (currentPhase === 'teamNomination' || (currentPhase === 'discussion' && this.data.showPreteamPicker)) {

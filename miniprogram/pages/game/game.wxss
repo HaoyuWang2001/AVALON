@@ -1040,11 +1040,13 @@ progress { border-radius: 12rpx; }
 
 /* ─────── 松弛压缩版（游戏页）：无需滚动即可查看全部玩家 ─────── */
 .compact {
-  position: fixed; left: 0; right: 0; top: 100rpx;
-  bottom: calc(200rpx + env(safe-area-inset-bottom));
+  position: relative;
+  height: calc(100vh - 100rpx - 200rpx);
   display: flex; flex-direction: column;
   padding: 12rpx 12rpx 0; box-sizing: border-box; z-index: 1;
 }
+/* 压缩版下取消 .container 的 24rpx padding（避免叠加） */
+.container-compact { padding: 0; }
 /* 讨论阶段 60s 计时（并入阶段文字右侧） */
 .c-head-timer { display: flex; align-items: center; gap: 8rpx; }
 .c-head-timer-icon { width: 40rpx; height: 40rpx; }
@@ -1068,18 +1070,23 @@ progress { border-radius: 12rpx; }
 .c-topinfo .flow-car.is-forced { box-shadow: 0 0 0 4rpx rgba(239, 68, 68, 0.2); }
 .c-topinfo .flow-car-icon { font-size: 26rpx; }
 .c-main { flex: 1; display: flex; flex-direction: row; gap: 10rpx; min-height: 0; }
-.c-col { width: 28%; height: 100%; box-sizing: border-box; }
+.c-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }
 
-/* 中间空位：点击玩家后展示其完整信息（头像/姓名/座位/标签/身份） */
-.c-mid { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 0 10rpx; }
-.c-info { display: flex; flex-direction: column; align-items: center; gap: 6rpx; text-align: center; }
-.c-info-avatar { width: 140rpx; height: 140rpx; border-radius: 50%; background: var(--gray-100); }
-.c-info-name { font-size: 28rpx; font-weight: 700; color: var(--text-title); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.c-info-seat { font-size: 22rpx; color: var(--text-muted); }
-.c-info-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 4rpx; margin-top: 4rpx; }
+/* 点击玩家 → 浮层小卡展示完整信息 */
+.c-info-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 1100; background: rgba(0, 0, 0, 0.35); }
+.c-info-pop {
+  position: fixed; left: 50%; top: 45%; transform: translate(-50%, -50%); z-index: 1101;
+  width: 460rpx; box-sizing: border-box; background: var(--bg-card); border-radius: 24rpx;
+  padding: 36rpx 28rpx; display: flex; flex-direction: column; align-items: center; gap: 8rpx;
+  box-shadow: var(--shadow-lg);
+}
+.c-info-avatar { width: 160rpx; height: 160rpx; border-radius: 50%; background: var(--gray-100); }
+.c-info-name { font-size: 34rpx; font-weight: 700; color: var(--text-title); }
+.c-info-seat { font-size: 24rpx; color: var(--text-muted); }
+.c-info-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 6rpx; margin-top: 6rpx; }
 
 /* 压缩版玩家小卡：仅座位号 + 角标；状态底色沿用 .table-player.state-* */
-.c-player { min-height: 96rpx; padding: 14rpx; border-radius: 16rpx; margin-bottom: 10rpx; gap: 8rpx; flex-wrap: wrap; align-items: center; }
+.c-player { flex: 1; min-height: 0; padding: 14rpx; border-radius: 16rpx; gap: 8rpx; flex-wrap: wrap; align-items: center; justify-content: center; }
 .c-seat { flex-shrink: 0; width: 44rpx; height: 44rpx; line-height: 44rpx; text-align: center; border-radius: 10rpx; background: var(--gray-100); font-size: 28rpx; font-weight: 800; color: var(--text-body); }
 .c-crown-mini { font-size: 26rpx; line-height: 1; }
 .c-tags { display: flex; flex-wrap: wrap; gap: 6rpx; }
