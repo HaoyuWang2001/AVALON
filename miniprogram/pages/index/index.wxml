@@ -14,7 +14,7 @@
       <view class="profile-name {{customNickName ? '' : 'name-placeholder'}}" bindtap="showNickNameModal">{{customNickName || '改名撒！'}}</view>
       <text wx:if="{{myRank}}" class="profile-rank">#{{myRank}}</text>
     </view>
-    <view class="user-emoji-btn" hover-class="user-emoji-hover" hover-stay-time="60" bindtap="showInfoModal">ℹ️</view>
+    <view class="user-info-btn" hover-class="user-info-hover" hover-stay-time="60" bindtap="showInfoModal">i</view>
     <view class="pstats">
       <view class="pstat"><text class="pstat-num">{{summary ? summary.totalGames : 0}}</text><text class="pstat-label">对局数</text></view>
       <view class="pstat-div"></view>
