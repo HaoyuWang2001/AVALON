@@ -149,6 +149,10 @@
 .table-player.state-lake {
   background: linear-gradient(to left, var(--state-lake) 0%, var(--bg-card-solid) 50%);
 }
+/* 刺客开刀本地选中：右半红渐变（同款结构，色取自 --state-evil） */
+.table-player.state-assassin-target {
+  background: linear-gradient(to left, var(--state-evil) 0%, var(--bg-card-solid) 50%);
+}
 /* 已投票（仅 teamVote）：左半紫渐变 → 中间50%卡片色 */
 .table-player.state-voted {
   background: linear-gradient(to right, var(--state-voted) 0%, var(--bg-card-solid) 50%);
@@ -207,40 +211,6 @@
   font-size: 34rpx;
   font-weight: 700;
 }
-
-/* 右侧选人复选框（仅车主选人期显示）：未选=空心灰圈，选中=紫底白勾 */
-.table-check {
-  flex-shrink: 0;
-  width: 44rpx; height: 44rpx;
-  border-radius: 50%;
-  border: 3rpx solid #D1D5DB;
-  background: var(--bg-card);
-  margin-left: 20rpx;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28rpx; font-weight: 800; color: #FFFFFF;
-}
-.table-check.checked {
-  background: #8B5CF6;
-  border-color: #8B5CF6;
-}
-.table-check.disabled {
-  background: var(--gray-100);
-  border-color: var(--gray-200);
-}
-
-/* 湖仙验人单选圈：未选=白底灰圈，选中=紫圈+紫点（仅湖仙持有者显示） */
-.table-radio {
-  flex-shrink: 0;
-  width: 44rpx; height: 44rpx;
-  border-radius: 50%;
-  border: 3rpx solid #D1D5DB;
-  background: var(--bg-card);
-  margin-left: 20rpx;
-  display: flex; align-items: center; justify-content: center;
-}
-.table-radio-dot { width: 24rpx; height: 24rpx; border-radius: 50%; background: transparent; }
-.table-radio.radio-on { border-color: #8B5CF6; }
-.table-radio.radio-on .table-radio-dot { background: #8B5CF6; }
 
 /* 座位号徽章：内联，位于头像左侧并排 */
 .seat-no {

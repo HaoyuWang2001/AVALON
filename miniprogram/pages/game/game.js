@@ -243,9 +243,9 @@ Page({
     flowCars: [],
     visionList: [],
     nominateMode: 'final',
-    showSelectCheck: false,
     bottomBarHeight: 0,
     lakeTargetOpenId: '',
+    assassinTargetOpenId: '',
     isLakeHolder: false,
     showLakeResult: false,
     lakeResult: '',
@@ -718,6 +718,7 @@ Page({
           lakeHolderOpenId: res.current.lakeHolderOpenId || '',
           isLakeHolder: !!res.current.lakeHolderOpenId && res.current.lakeHolderOpenId === myOpenId,
           lakeTargetOpenId: phase === 'lake' ? this.data.lakeTargetOpenId : '',
+          assassinTargetOpenId: phase === 'assassination' ? this.data.assassinTargetOpenId : '',
           oldLakeOpenIds: [...oldLakeOpenIds],
           revealConfirmed: res.player ? !!res.player.revealConfirmed : false,
           revealConfirmedCount: res.current.revealConfirmedCount || 0,
@@ -755,7 +756,6 @@ Page({
           preNominateDecided: !!res.current.preNominateDecided,
           showPreteamPicker: (phase === 'discussion' && !res.current.preNominateDecided) ? this.data.showPreteamPicker : false,
           requiredTeamSize: teamSize,
-          showSelectCheck: (phase === 'teamNomination' || (phase === 'discussion' && this.data.showPreteamPicker)) && !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId,
           voteCount: Object.keys(res.current.teamVotes || {}).length,
           playerTotal: (res.players || []).length,
           isMissionTeamMember: !!((res.current.nominatedTeam || []).includes(myOpenId)),
@@ -860,20 +860,25 @@ Page({
     this.setData({ cInfoPlayer: null });
   },
 
-  // 松弛压缩版：点击玩家 → 选人环节仅执行选择（不弹信息卡），否则弹浮层小卡
+  // 松弛压缩版：点击玩家 → 选人者本人只做选择（不弹信息卡），其余人弹浮层小卡
   onCompactPlayerTap(e) {
     const id = e.currentTarget.dataset.id;
     if (!id) return;
     const { currentPhase } = this.data;
-    // 选人环节：车主选车 / 湖仙验人 / 刺客选目标 —— 只做选择，选中卡片渲染右半金
+    // 选人者 = 车主（选车）/ 湖仙持有者（验人）/ 刺客·莫甘娜（开刀）；无效目标静默忽略
     const isTeamSelect = currentPhase === 'teamNomination' || (currentPhase === 'discussion' && this.data.showPreteamPicker);
-    const isLakeSelect = currentPhase === 'lake' && this.data.isLakeHolder
-      && id !== this.data.playerId && !(this.data.oldLakeOpenIds || []).includes(id);
-    const isAssassinate = currentPhase === 'assassination' && this.data.canAssassinateVar;
-    if (isTeamSelect || isLakeSelect || isAssassinate) {
+    const isSelector = isTeamSelect
+      || (currentPhase === 'lake' && this.data.isLakeHolder)
+      || (currentPhase === 'assassination' && this.data.canAssassinateVar);
+    if (isSelector) {
       if (isTeamSelect) this.nominatePlayer(e);
-      else if (isLakeSelect) this.setData({ lakeTargetOpenId: id }, () => this._applyLocalSelectionCards());
-      else this.assassinate(e);
+      else if (currentPhase === 'lake') {
+        if (id !== this.data.playerId && !(this.data.oldLakeOpenIds || []).includes(id)) {
+          this.setData({ lakeTargetOpenId: id }, () => this._applyLocalSelectionCards());
+        }
+      } else if (this.isValidAssassinTarget(id)) {
+        this.setData({ assassinTargetOpenId: id }, () => this._applyLocalSelectionCards());
+      }
       return;
     }
     const ap = (this.data.allPlayers || []).find(x => x.openId === id) || {};
@@ -890,20 +895,23 @@ Page({
     });
   },
 
-  // 压缩版选人高亮：按阶段把本地选中/湖仙目标渲染为右半渐变（车主=金 state-team；湖仙=粉 state-lake）
-  // 仅在"车主选车/湖仙验人"阶段调用（这两阶段基础 cardState 为空，覆盖安全；取消选择则复位）
+  // 选人高亮（压缩版/标准版共用）：把本地选中渲染为右半渐变
+  //  车主选车=金 state-team / 湖仙验人=粉 state-lake / 刺客选目标=红 state-assassin-target
+  // 复位只清掉本函数写入的类，保留服务器下发的状态（如刺杀睁眼狼 state-evil）
   _applyLocalSelectionCards() {
-    const { currentPhase, localSelected, lakeTargetOpenId } = this.data;
+    const { currentPhase, localSelected, lakeTargetOpenId, assassinTargetOpenId } = this.data;
     const isLake = currentPhase === 'lake';
+    const isKnife = currentPhase === 'assassination';
     const sel = localSelected || [];
-    const cls = isLake ? 'state-lake' : 'state-team';
+    const cls = isKnife ? 'state-assassin-target' : (isLake ? 'state-lake' : 'state-team');
     const mark = (arr) => arr.map(p => {
-      const on = isLake
-        ? (!!lakeTargetOpenId && p.openId === lakeTargetOpenId)
-        : sel.includes(p.openId);
-      return { ...p, cardState: on ? cls : '' };
+      const on = isKnife
+        ? (!!assassinTargetOpenId && p.openId === assassinTargetOpenId)
+        : (isLake ? (!!lakeTargetOpenId && p.openId === lakeTargetOpenId) : sel.includes(p.openId));
+      return { ...p, cardState: on ? cls : (p.cardState === cls ? '' : p.cardState) };
     });
     this.setData({
+      tablePlayers: mark(this.data.tablePlayers),
       compactLeft: mark(this.data.compactLeft),
       compactRight: mark(this.data.compactRight)
     });
@@ -1048,12 +1056,12 @@ Page({
   openPreteamPicker() {
     if (!this.checkIfTeamLeader()) return;
     if (this.data.currentPhase !== 'discussion' || this.data.preNominateDecided) return;
-    this.setData({ showPreteamPicker: true, showSelectCheck: true });
+    this.setData({ showPreteamPicker: true });
   },
 
   // 暂时跳过：仅关闭面板（不提交，FAB 保留，可再次打开）
   closePreteamPicker() {
-    this.setData({ showPreteamPicker: false, showSelectCheck: false });
+    this.setData({ showPreteamPicker: false });
   },
 
   // 确认预选：提交 localSelected（可空=确认空预选）→ 关闭面板 + 刷新（preNominateDecided=true → FAB 消失）
@@ -1137,22 +1145,25 @@ Page({
       return;
     }
     const { currentPhase } = this.data;
-    if (currentPhase === 'teamNomination' || (currentPhase === 'discussion' && this.data.showPreteamPicker)) {
-      this.nominatePlayer(e);
-    } else if (currentPhase === 'lake') {
-      // 湖仙验人：持有者点击卡片单选目标（不可选自己/老湖仙），底部按钮确认
-      if (this.data.isLakeHolder) {
-        const targetOpenId = e.currentTarget.dataset.id;
-        if (targetOpenId && targetOpenId !== this.data.playerId && !this.data.oldLakeOpenIds.includes(targetOpenId)) {
-          this.setData({ lakeTargetOpenId: targetOpenId });
+    const id = e.currentTarget.dataset.id;
+    // 选人者 = 车主（选车）/ 湖仙持有者（验人）/ 刺客·莫甘娜（开刀）：只做选择，无效目标静默
+    const isTeamSelect = currentPhase === 'teamNomination' || (currentPhase === 'discussion' && this.data.showPreteamPicker);
+    const isSelector = isTeamSelect
+      || (currentPhase === 'lake' && this.data.isLakeHolder)
+      || (currentPhase === 'assassination' && this.data.canAssassinateVar);
+    if (isSelector) {
+      if (isTeamSelect) this.nominatePlayer(e);
+      else if (currentPhase === 'lake') {
+        if (id && id !== this.data.playerId && !this.data.oldLakeOpenIds.includes(id)) {
+          this.setData({ lakeTargetOpenId: id }, () => this._applyLocalSelectionCards());
         }
+      } else if (this.isValidAssassinTarget(id)) {
+        this.setData({ assassinTargetOpenId: id }, () => this._applyLocalSelectionCards());
       }
-    } else if (currentPhase === 'assassination') {
-      // 仅刺客/莫甘娜（canAssassinateVar）可点击卡片刺杀；非刺客点击无反应
-      if (this.data.canAssassinateVar) {
-        this.assassinate(e);
-      }
+      return;
     }
+    // 其余人：默认动作 = 打开玩家胜率底部弹窗
+    if (id) this.openPlayerStats(id);
   },
 
   // 观众席点击玩家 → 玩家胜率弹窗
@@ -1646,24 +1657,26 @@ Page({
     this.onKnifeTouchEnd();
   },
 
-  assassinate(e) {
-    const targetOpenId = e.currentTarget.dataset.id;
-    const { gameId } = this.data;
-    const tp = (this.data.allPlayers || []).find(x => x.openId === targetOpenId);
-    const seat = tp && tp.seatNumber != null ? tp.seatNumber : '?';
-    const name = tp && tp.nickName ? tp.nickName : '';
-    wx.showModal({
-      title: '刺杀梅林',
-      content: `确认刺杀${seat}号${name}？`,
-      success: (res) => {
-        if (res.confirm) {
-          api.assassinate(gameId, targetOpenId).then(() => {
-            this.fetchGameState();
-          }).catch(err => {
-            wx.showToast({ title: (err && err.message) || '刺杀失败', icon: 'none' });
-          });
-        }
-      }
+  // 刺客可选目标：非自己，且不是自己已知的盟友（visionList 含红兰；oberon 互隐不在内，可点）
+  isValidAssassinTarget(openId) {
+    if (!openId || openId === this.data.playerId) return false;
+    const isAlly = (this.data.visionList || []).some(v => v.openId === openId)
+      || (this.data.evilOpenEyes || []).some(e => e.openId === openId);
+    return !isAlly;
+  },
+
+  // 底部「确认刺杀」：直接对已选目标开刀（无确认框）
+  confirmAssassinate() {
+    const { gameId, assassinTargetOpenId } = this.data;
+    if (!assassinTargetOpenId) return;
+    wx.showLoading({ title: '刺杀中...', mask: true });
+    api.assassinate(gameId, assassinTargetOpenId).then(() => {
+      wx.hideLoading();
+      this.setData({ assassinTargetOpenId: '' });
+      this.fetchGameState();
+    }).catch(err => {
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '刺杀失败', icon: 'none' });
     });
   },
 

@@ -186,14 +186,6 @@
           </view>
         </view>
         <view wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="tplayer-gameend-role">{{item.roleName}}</view>
-        <view wx:if="{{showSelectCheck}}" class="table-check {{item.checked ? 'checked' : ''}} {{item.disabled ? 'disabled' : ''}}"
-          catchtap="onTablePlayerTap" data-id="{{item.openId}}">
-          <text wx:if="{{item.checked}}">✓</text>
-        </view>
-        <view wx:if="{{currentPhase === 'lake' && isLakeHolder && item.openId !== playerId && !item.isOldLake}}"
-          class="table-radio {{item.openId === lakeTargetOpenId ? 'radio-on' : ''}}">
-          <view class="table-radio-dot"></view>
-        </view>
       </view>
     </view>
 
@@ -332,9 +324,19 @@
 
     <!-- assassination -->
     <block wx:if="{{currentPhase === 'assassination'}}">
-      <!-- 睁眼狼：提问 -->
-      <view wx:if="{{isEvilEyesUser}}" class="bar-info bar-assassin-q">问：谁是梅林？</view>
-      <!-- 非睁眼狼：红色等待动画 + 开刀文字 -->
+      <!-- 刺客/莫甘娜：提问 + 选好目标后确认开刀 -->
+      <block wx:if="{{canAssassinateVar}}">
+        <view class="bar-info bar-assassin-q">问：谁是梅林？</view>
+        <view class="bar-row">
+          <button size="mini" class="btn btn-danger" bindtap="confirmAssassinate"
+            disabled="{{!assassinTargetOpenId}}">确认刺杀</button>
+        </view>
+      </block>
+      <!-- 其他睁眼狼：提问 -->
+      <block wx:elif="{{isEvilEyesUser}}">
+        <view class="bar-info bar-assassin-q">问：谁是梅林？</view>
+      </block>
+      <!-- 其余：红色等待动画 + 开刀文字 -->
       <block wx:else>
         <view class="vote-waiting">
           <view class="vote-waiting-spinner assassin-waiting-spinner"></view>
