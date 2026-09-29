@@ -26,11 +26,16 @@
   display: flex; align-items: center; justify-content: center;
 }
 .round-size {
-  font-size: 30rpx; font-weight: 800; color: var(--text-body);
+  font-size: 30rpx; font-weight: 800; color: var(--primary);
   line-height: 1;
 }
-.round-circle.succ { background: var(--mission-ok); }
-.round-circle.fail { background: var(--mission-fail); }
+/* 暗色主题：发车轮次圆点字体暂保持原色（后续如仍不清晰再调整） */
+.theme-torch .round-size,
+.theme-aurora .round-size,
+.theme-steel .round-size { color: var(--text-body); }
+/* 发车成功/失败底色沿用游戏结束页蓝方/红方底色（--state-good/--state-evil） */
+.round-circle.succ { background: var(--state-good); }
+.round-circle.fail { background: var(--state-evil); }
 .round-circle.current {
   width: 96rpx; height: 96rpx;
   border: 6rpx solid var(--primary);
