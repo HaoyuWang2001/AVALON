@@ -229,13 +229,6 @@
 
 
 /* ─────── 观众席（游戏中观战者） ─────── */
-.spectators { margin: 20rpx 0; }
-.spectators-title { font-size: 24rpx; color: var(--text-muted); margin-bottom: 12rpx; padding: 0 4rpx; }
-.spectators-scroll { width: 100%; white-space: nowrap; }
-.spectators-row { display: inline-flex; gap: 24rpx; padding: 0 4rpx 8rpx; }
-.spectator-item { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; width: 88rpx; }
-.spectator-avatar { width: 72rpx; height: 72rpx; border-radius: 50%; background: var(--gray-100); border: 2rpx solid var(--gray-200); }
-.spectator-name { font-size: 20rpx; color: var(--text-muted); margin-top: 6rpx; max-width: 88rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ─────── 底部按钮框（fixed 常驻） ─────── */
 .bottom-bar {
@@ -1025,14 +1018,6 @@ progress { border-radius: 12rpx; }
 .c-role { font-size: 22rpx; font-weight: 800; color: var(--c-violet); }
 
 /* 观战区底部弹窗 */
-.c-spec-fab { position: absolute; right: 16rpx; bottom: 16rpx; z-index: 970; font-size: 24rpx; font-weight: 700; color: var(--on-primary); background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); padding: 10rpx 20rpx; border-radius: 999rpx; box-shadow: var(--shadow-md); }
-.c-spec-popup { position: fixed; left: 0; right: 0; bottom: 0; z-index: 960; background: var(--bg-card); border-radius: 26rpx 26rpx 0 0; padding: 24rpx 24rpx calc(24rpx + env(safe-area-inset-bottom)); box-shadow: 0 -6rpx 24rpx rgba(0, 0, 0, 0.18); }
-.c-spec-title { font-size: 28rpx; font-weight: 700; color: var(--text-title); margin-bottom: 14rpx; }
-.c-spec-scroll { width: 100%; white-space: nowrap; }
-.c-spec-row { display: inline-flex; gap: 24rpx; padding: 0 4rpx 8rpx; }
-.c-spec-item { display: flex; flex-direction: column; align-items: center; width: 96rpx; }
-.c-spec-avatar { width: 72rpx; height: 72rpx; border-radius: 50%; background: var(--gray-100); }
-.c-spec-name { font-size: 20rpx; color: var(--text-muted); margin-top: 6rpx; max-width: 92rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ─────────────────────────────────────────────────────────
  * 有意保留的硬编码（豁免，不做 token 化）：
@@ -1042,3 +1027,21 @@ progress { border-radius: 12rpx; }
  *   - 全屏结果动画的径向渐变（刺杀/任务成功失败）
  * 这些颜色属于一次性装饰/固定深色组件，不参与主题与语义体系。
  * ───────────────────────────────────────────────────────── */
+/* ─────── 观众席：可拖动 FAB + 横向观众条（两版共用） ─────── */
+.spec-fab {
+  position: fixed; z-index: 970;
+  font-size: 24rpx; font-weight: 700; color: var(--on-primary);
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  padding: 10rpx 20rpx; border-radius: 999rpx;
+  box-shadow: var(--shadow-md);
+}
+.spec-bar {
+  position: fixed; z-index: 960;
+  background: var(--bg-card); border-radius: 16rpx;
+  padding: 10rpx 16rpx; box-shadow: var(--shadow-md);
+}
+.spec-bar-scroll { width: 100%; white-space: nowrap; }
+.spec-bar-row { display: inline-flex; gap: 24rpx; padding: 0 4rpx; }
+.spec-item { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; width: 96rpx; }
+.spec-avatar { width: 72rpx; height: 72rpx; border-radius: 50%; background: var(--gray-100); }
+.spec-name { font-size: 20rpx; color: var(--text-muted); margin-top: 6rpx; max-width: 92rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

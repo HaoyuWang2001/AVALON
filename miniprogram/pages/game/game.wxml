@@ -89,22 +89,6 @@
         <template is="compactPlayer" wx:for="{{compactRight}}" wx:key="openId" data="{{item: item, currentPhase: currentPhase}}"/>
       </view>
     </view>
-
-    <!-- 观战区：默认收起，点按钮弹出底部面板 -->
-    <block wx:if="{{spectators.length > 0}}">
-      <view class="c-spec-fab" bindtap="toggleSpectatorPopup">👥 观众 {{spectators.length}}</view>
-      <view class="c-spec-popup" wx:if="{{showSpectatorPopup}}">
-        <view class="c-spec-title">观众席（{{spectators.length}}）</view>
-        <scroll-view scroll-x class="c-spec-scroll" show-scrollbar="{{false}}">
-          <view class="c-spec-row">
-            <view wx:for="{{spectators}}" wx:key="openId" class="c-spec-item" bindtap="onSpectatorTap" data-id="{{item.openId}}">
-              <image class="c-spec-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
-              <text class="c-spec-name">{{item.nickName}}</text>
-            </view>
-          </view>
-        </scroll-view>
-      </view>
-    </block>
   </view>
 
   <!-- ===== 标准布局 ===== -->
@@ -172,20 +156,6 @@
         </view>
         <view wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="tplayer-gameend-role">{{item.roleName}}</view>
       </view>
-    </view>
-
-    <!-- 观众席 -->
-    <view class="spectators" wx:if="{{spectators.length > 0}}">
-      <view class="spectators-title">观众席（{{spectators.length}}）</view>
-      <scroll-view scroll-x class="spectators-scroll" show-scrollbar="{{false}}">
-        <view class="spectators-row">
-          <view wx:for="{{spectators}}" wx:key="openId" class="spectator-item"
-            bindtap="onSpectatorTap" data-id="{{item.openId}}" data-name="{{item.nickName}}" data-avatar="{{item.avatarUrl}}">
-            <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="spectator-avatar"></image>
-            <text class="spectator-name">{{item.nickName}}</text>
-          </view>
-        </view>
-      </scroll-view>
     </view>
   </view>
   </block>
@@ -351,6 +321,25 @@
     </block>
     </block>
   </view>
+
+  <!-- 观众席：可拖动 FAB + 横向观众条（两版共用） -->
+  <block wx:if="{{spectators.length > 0}}">
+    <view class="spec-fab" style="left:{{specFabX}}px; top:{{specFabY}}px"
+          bindtouchstart="onSpecFabStart" catchtouchmove="onSpecFabMove"
+          bindtouchend="onSpecFabEnd" bindtouchcancel="onSpecFabEnd">👥 {{spectators.length}}</view>
+    <view class="spec-bar" wx:if="{{showSpectatorPopup}}"
+          style="top:{{specBarTop}}px; max-width:{{specBarMaxW}}px; {{specBarSide === 'right' ? 'right' : 'left'}}:{{specBarPos}}px">
+      <scroll-view scroll-x class="spec-bar-scroll" show-scrollbar="{{false}}">
+        <view class="spec-bar-row">
+          <view wx:for="{{spectators}}" wx:key="openId" class="spec-item"
+                bindtap="onSpectatorTap" data-id="{{item.openId}}">
+            <image class="spec-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
+            <text class="spec-name">{{item.nickName}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </block>
 
   <!-- 任务结果全屏弹窗 -->
   <view class="result-overlay" wx:if="{{currentPhase === 'missionResult'}}" catchtouchmove="noop">

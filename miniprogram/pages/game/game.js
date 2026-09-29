@@ -171,6 +171,12 @@ Page({
     compactRight: [],
     carSeatsText: '',
     showSpectatorPopup: false,
+    specFabX: -9999,
+    specFabY: -9999,
+    specBarTop: 0,
+    specBarSide: 'right',
+    specBarPos: 0,
+    specBarMaxW: 0,
     playerRole: null,
     spectators: [],
     playerSide: null,
@@ -765,7 +771,16 @@ Page({
         });
 
         // 底部栏高度随阶段动态变化：渲染后重新测量，校准玩家列表底部留白
-        wx.nextTick(() => { this.measureBottomBar(); });
+        wx.nextTick(() => {
+          this.measureBottomBar();
+          // 观众席 FAB：首次出现时量尺寸并落到默认位置
+          if ((this.data.spectators || []).length > 0) {
+            if (!this._specInited) this._measureSpec(() => this._initSpecFab());
+          } else {
+            this._specInited = false;
+            if (this.data.showSpectatorPopup) this.setData({ showSpectatorPopup: false });
+          }
+        });
 
         // socket 生命周期：游戏结束停止重连但保留健康 socket（可收后续事件）；
         // 活跃阶段首次获取状态后惰性建链
@@ -842,9 +857,103 @@ Page({
 
   noop() {},
 
-  // 松弛压缩版：观战区底部弹窗（FAB 开合，弹层 z 高于底栏，FAB z 高于弹层）
+  // 观众席：可拖动 FAB（顶栏之下~屏幕底）+ 横向观众条（两版共用）
   toggleSpectatorPopup() {
-    this.setData({ showSpectatorPopup: !this.data.showSpectatorPopup });
+    const next = !this.data.showSpectatorPopup;
+    this.setData({ showSpectatorPopup: next });
+    if (next) {
+      // 观众条渲染后再量高并布局（贴 FAB 内侧、与 FAB 垂直居中）
+      wx.nextTick(() => this._measureSpec(() => this._layoutSpecBar()));
+    }
+  },
+
+  _specGeometry() {
+    const win = (wx.getWindowInfo && wx.getWindowInfo()) || wx.getSystemInfoSync();
+    const winW = win.windowWidth || 375;
+    const winH = win.windowHeight || 667;
+    const rpx = winW / 750;
+    return { winW, winH, rpx, margin: 16 * rpx, topLimit: 100 * rpx + 16 * rpx };
+  },
+
+  _measureSpec(cb) {
+    const q = wx.createSelectorQuery().in(this);
+    q.select('.spec-fab').boundingClientRect();
+    q.select('.spec-bar').boundingClientRect();
+    q.exec((res) => {
+      const fab = res && res[0];
+      const bar = res && res[1];
+      if (fab && fab.width) { this._specFabW = fab.width; this._specFabH = fab.height; }
+      if (bar && bar.height) { this._specBarH = bar.height; }
+      if (cb) cb();
+    });
+  },
+
+  // 首次出现观众席：落到默认位置（右下、坐在底部栏上）
+  _initSpecFab() {
+    if (this._specInited) return;
+    const { winW, winH, rpx, margin } = this._specGeometry();
+    const fabW = this._specFabW || 120 * rpx;
+    const fabH = this._specFabH || 50 * rpx;
+    this._specInited = true;
+    this.setData({ specFabX: winW - fabW - margin, specFabY: winH - fabH - margin });
+    this._layoutSpecBar();
+  },
+
+  // 依据 FAB 位置计算观众条：FAB 在右半屏 → 条在左（right 定位），反之在右
+  _layoutSpecBar() {
+    const { winW, winH, rpx, margin, topLimit } = this._specGeometry();
+    const fabX = this.data.specFabX;
+    const fabY = this.data.specFabY;
+    const fabW = this._specFabW || 120 * rpx;
+    const fabH = this._specFabH || 50 * rpx;
+    const barH = this._specBarH || 60;
+    const gap = 8;
+    let barTop = fabY + fabH / 2 - barH / 2;
+    barTop = Math.max(topLimit, Math.min(barTop, winH - barH - margin));
+    const sideRight = (fabX + fabW / 2) > winW / 2;
+    const pos = sideRight ? (winW - fabX + gap) : (fabX + fabW + gap);
+    const maxW = sideRight ? (fabX - gap - margin) : (winW - (fabX + fabW + gap) - margin);
+    this.setData({
+      specBarTop: barTop,
+      specBarSide: sideRight ? 'right' : 'left',
+      specBarPos: pos,
+      specBarMaxW: Math.max(maxW, 120)
+    });
+  },
+
+  onSpecFabStart(e) {
+    const t = (e.touches && e.touches[0]) || {};
+    this._specDrag = { sx: t.clientX, sy: t.clientY, bx: this.data.specFabX, by: this.data.specFabY, moved: false };
+  },
+
+  onSpecFabMove(e) {
+    const d = this._specDrag;
+    if (!d) return;
+    const t = (e.touches && e.touches[0]) || {};
+    const dx = t.clientX - d.sx;
+    const dy = t.clientY - d.sy;
+    if (!d.moved && (Math.abs(dx) + Math.abs(dy)) < 6) return;
+    d.moved = true;
+    const { winW, winH, rpx, margin, topLimit } = this._specGeometry();
+    const fabW = this._specFabW || 120 * rpx;
+    const fabH = this._specFabH || 50 * rpx;
+    const x = Math.max(margin, Math.min(d.bx + dx, winW - fabW - margin));
+    const y = Math.max(topLimit, Math.min(d.by + dy, winH - fabH - margin));
+    this.setData({ specFabX: x, specFabY: y });
+    this._layoutSpecBar();
+  },
+
+  onSpecFabEnd() {
+    const d = this._specDrag;
+    this._specDrag = null;
+    if (!d) return;
+    if (!d.moved) { this.toggleSpectatorPopup(); return; }
+    // 松手吸附最近左右边
+    const { winW, rpx, margin } = this._specGeometry();
+    const fabW = this._specFabW || 120 * rpx;
+    const center = this.data.specFabX + fabW / 2;
+    this.setData({ specFabX: center > winW / 2 ? (winW - fabW - margin) : margin });
+    this._layoutSpecBar();
   },
 
   // 松弛压缩版：点击玩家 → 与标准版分发逻辑一致（选人者只做选择，其余人弹底部胜率框）
