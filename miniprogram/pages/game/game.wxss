@@ -1033,15 +1033,24 @@ progress { border-radius: 12rpx; }
  * 这些颜色属于一次性装饰/固定深色组件，不参与主题与语义体系。
  * ───────────────────────────────────────────────────────── */
 /* ─────── 观众席：可拖动 FAB + 横向观众条（两版共用） ─────── */
-.spec-fab {
-  position: fixed; z-index: 970;
-  font-size: 24rpx; font-weight: 700; color: var(--on-primary);
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  padding: 10rpx 20rpx; border-radius: 999rpx;
-  box-shadow: var(--shadow-md);
+.spec-dock {
+  position: fixed; right: 24rpx; z-index: 970;
+  display: flex; align-items: stretch; gap: 8rpx;
+  min-height: 128rpx; max-width: calc(100vw - 48rpx);
 }
+.spec-fab {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 4rpx;
+  padding: 0 10rpx; border-radius: 16rpx;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: var(--on-primary); box-shadow: var(--shadow-md);
+}
+.spec-arrow { font-size: 20rpx; }
+.spec-count { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+.spec-emoji { font-size: 22rpx; }
+.spec-num { font-size: 22rpx; font-weight: 700; }
 .spec-bar {
-  position: fixed; z-index: 960;
+  flex: 0 1 auto; min-width: 0;
   background: var(--bg-card); border-radius: 16rpx;
   padding: 10rpx 16rpx; box-shadow: var(--shadow-md);
 }

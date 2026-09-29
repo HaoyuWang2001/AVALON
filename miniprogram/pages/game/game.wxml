@@ -322,22 +322,27 @@
     </block>
   </view>
 
-  <!-- 观众席：可拖动 FAB + 横向观众条（两版共用） -->
+  <!-- 观众席：锚定底部栏的窄 FAB（竖排 emoji+人数、左箭头）+ 等高观众条（两版共用） -->
   <block wx:if="{{spectators.length > 0}}">
-    <view class="spec-fab" style="left:{{specFabX}}px; top:{{specFabY}}px"
-          bindtouchstart="onSpecFabStart" catchtouchmove="onSpecFabMove"
-          bindtouchend="onSpecFabEnd" bindtouchcancel="onSpecFabEnd">👥 {{spectators.length}}</view>
-    <view class="spec-bar" wx:if="{{showSpectatorPopup}}"
-          style="top:{{specBarTop}}px; max-width:{{specBarMaxW}}px; {{specBarSide === 'right' ? 'right' : 'left'}}:{{specBarPos}}px">
-      <scroll-view scroll-x class="spec-bar-scroll" show-scrollbar="{{false}}">
-        <view class="spec-bar-row">
-          <view wx:for="{{spectators}}" wx:key="openId" class="spec-item"
-                bindtap="onSpectatorTap" data-id="{{item.openId}}">
-            <image class="spec-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
-            <text class="spec-name">{{item.nickName}}</text>
+    <view class="spec-dock" style="bottom:{{specDockBottom}}px">
+      <view class="spec-bar" wx:if="{{showSpectatorPopup}}">
+        <scroll-view scroll-x class="spec-bar-scroll" show-scrollbar="{{false}}">
+          <view class="spec-bar-row">
+            <view wx:for="{{spectators}}" wx:key="openId" class="spec-item"
+                  bindtap="onSpectatorTap" data-id="{{item.openId}}">
+              <image class="spec-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
+              <text class="spec-name">{{item.nickName}}</text>
+            </view>
           </view>
+        </scroll-view>
+      </view>
+      <view class="spec-fab" bindtap="toggleSpectatorPopup">
+        <text class="spec-arrow">{{showSpectatorPopup ? '▶' : '◀'}}</text>
+        <view class="spec-count">
+          <text class="spec-emoji">👥</text>
+          <text class="spec-num">{{spectators.length}}</text>
         </view>
-      </scroll-view>
+      </view>
     </view>
   </block>
 
