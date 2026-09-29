@@ -695,28 +695,40 @@ progress { border-radius: 12rpx; }
   width: 140rpx; height: 140rpx;
 }
 
-/* ─────── 任务投票弹窗（仅任务队成员，不可关闭） ─────── */
+/* ─────── 任务投票弹窗（仅任务队成员，不可关闭·全屏） ─────── */
 .mission-modal {
-  position: fixed; top: 100rpx; left: 0; right: 0; bottom: 0;
-  z-index: 800;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 1300;
   display: flex;
 }
-/* 任务投票：左上蓝图 / 右下红图；对角渐变底 + 长按读条填充 */
-.mv {
-  position: relative; flex: 1; overflow: hidden;
-  background: linear-gradient(135deg, var(--mission-vote-from) 0%, var(--mission-mid) 50%, var(--mission-vote-to) 100%);
+.mission-mask {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg-card);
 }
-.mv-fill { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; }
-.mv-corner {
-  position: absolute; width: 340rpx; height: 340rpx;
+.mission-vote-col {
+  position: relative; z-index: 1;
+  flex: 1; display: flex; flex-direction: column;
+}
+/* 左右两半：左=蓝(成功) / 右=红(失败)，点击整块确认 */
+.mission-split { flex: 1; display: flex; }
+.mission-half {
+  flex: 1;
   display: flex; align-items: center; justify-content: center;
-  transition: transform 0.15s ease;
 }
-.mv-corner-blue { left: 16rpx; top: 16rpx; }
-.mv-corner-red { right: 16rpx; bottom: 16rpx; }
-.mv-corner-on { transform: scale(1.12); }
-.mv-img { width: 240rpx; height: 240rpx; transition: filter 0.15s ease; }
-.mv-corner-on .mv-img { filter: drop-shadow(0 0 28rpx rgba(255, 255, 255, 0.9)) brightness(1.08); }
+.mission-half-success { background: linear-gradient(180deg, var(--mission-vote-good-edge) 0%, var(--mission-vote-good) 50%, var(--mission-vote-good-edge) 100%); }
+.mission-half-success:active { background: var(--mission-vote-good-active); }
+.mission-half-fail { background: linear-gradient(180deg, var(--mission-vote-evil-edge) 0%, var(--mission-vote-evil) 50%, var(--mission-vote-evil-edge) 100%); }
+.mission-half-fail:active { background: var(--mission-vote-evil-active); }
+.mission-half-img { width: 240rpx; height: 240rpx; }
+/* 投票层内部底部：本轮车型 */
+.mission-car {
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border-top: 1rpx solid var(--divider);
+  text-align: center;
+  font-size: 28rpx; color: var(--text-body);
+  padding: 20rpx;
+}
 .mission-waiting {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;

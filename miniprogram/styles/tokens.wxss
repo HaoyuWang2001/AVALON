@@ -85,8 +85,6 @@ page {
   --divider-strong: #C4B5FD;
   --divider: rgba(196, 181, 253, 0.45);
   --profile-ring-glow: rgba(196, 181, 253, 0.35);
-  /* 任务投票页渐变中间过渡色（各主题中性色） */
-  --mission-mid: #E6EAED;
   /* 任务成功蒙版中心蓝（比 --hc-good 更浅） */
   --mission-ok: #2563EB;
   /* 任务失败蒙版中心红（比 --hc-evil 更浅） */
@@ -140,8 +138,12 @@ page {
   --egg-glow: rgba(245, 158, 11, 0.32);
   /* 角色卡大图底 / 任务投票对角底 / 任务失败票数字色（固定） */
   --role-card-badge-bg: linear-gradient(160deg, #1E1B4B, #312E81);
-  --mission-vote-from: #99A4BC;
-  --mission-vote-to: #986460;
+  --mission-vote-good: #99A4BC;
+  --mission-vote-good-edge: #8398A1;
+  --mission-vote-good-active: #556B76;
+  --mission-vote-evil: #986460;
+  --mission-vote-evil-edge: #A0605B;
+  --mission-vote-evil-active: #7A403C;
   --mission-fail-text: #991B1B;
 
   /* 禁用态 */

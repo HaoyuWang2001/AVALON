@@ -513,24 +513,25 @@
     </view>
   </view>
 
-  <!-- 任务投票弹窗（仅任务队成员，不可关闭；投票前有 5s 票型倒计时） -->
-  <view class="mission-modal" wx:if="{{currentPhase === 'missionVote' && isMissionTeamMember && missionVoteReady}}" style="bottom:{{bottomBarRawHeight ? bottomBarRawHeight + 'px' : ''}}" catchtouchmove="noop">
-    <block wx:if="{{!hasMissionVoted}}">
-      <view class="mv" catchtouchmove="noop">
-        <view class="mv-fill" style="{{missionFillStyle}}"></view>
-        <view class="mv-corner mv-corner-blue {{missionHoldSide === 'success' ? 'mv-corner-on' : ''}}"
-              data-vote="success" bindtouchstart="onMissionHoldStart" bindtouchend="onMissionHoldEnd" bindtouchcancel="onMissionHoldEnd">
-          <image class="mv-img" src="/images/avalon-blue.png" mode="aspectFit"/>
+  <!-- 任务投票弹窗（仅任务队成员，全屏，不可关闭；投票前有 5s 票型倒计时） -->
+  <view class="mission-modal" wx:if="{{currentPhase === 'missionVote' && isMissionTeamMember && missionVoteReady}}" catchtouchmove="noop">
+    <view class="mission-mask" catchtap="noop" catchtouchmove="noop"></view>
+    <view class="mission-vote-col">
+      <block wx:if="{{!hasMissionVoted}}">
+        <view class="mission-split">
+          <view class="mission-half mission-half-success" data-vote="success" bindtap="confirmMissionVote">
+            <image class="mission-half-img" src="/images/avalon-blue.png" mode="aspectFit"/>
+          </view>
+          <view class="mission-half mission-half-fail" data-vote="fail" bindtap="confirmMissionVote">
+            <image class="mission-half-img" src="/images/avalon-red.png" mode="aspectFit"/>
+          </view>
         </view>
-        <view class="mv-corner mv-corner-red {{missionHoldSide === 'fail' ? 'mv-corner-on' : ''}}"
-              data-vote="fail" bindtouchstart="onMissionHoldStart" bindtouchend="onMissionHoldEnd" bindtouchcancel="onMissionHoldEnd">
-          <image class="mv-img" src="/images/avalon-red.png" mode="aspectFit"/>
-        </view>
+      </block>
+      <view wx:else class="mission-waiting">
+        <view class="mission-waiting-spinner"></view>
+        <text class="mission-waiting-text">等待其他队员完成任务...</text>
       </view>
-    </block>
-    <view wx:else class="mission-waiting">
-      <view class="mission-waiting-spinner"></view>
-      <text class="mission-waiting-text">等待其他队员完成任务...</text>
+      <view class="mission-car">车型：{{carSeatsText}}</view>
     </view>
   </view>
 

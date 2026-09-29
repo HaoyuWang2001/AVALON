@@ -63,7 +63,6 @@
   --role-card-bg: #2E281F;
   --role-card-rate: #DDB56A;
   --profile-bg: #2E281F;
-  --mission-mid: #2E281F;
   --mission-ok: #8FB4E8;
   --mission-fail: #EEB0A0;
   --champion-fg: #F7F1E8;
@@ -147,7 +146,6 @@
   --role-card-bg: #29223E;
   --role-card-rate: #B4A6F0;
   --profile-bg: #29223E;
-  --mission-mid: #29223E;
   --mission-ok: #93B4F5;
   --mission-fail: #F4B2BE;
   --champion-fg: #D8D2EE;
@@ -231,7 +229,6 @@
   --role-card-bg: #262B33;
   --role-card-rate: #C7D2DD;
   --profile-bg: #262B33;
-  --mission-mid: #262B33;
   --mission-ok: #8FB6E0;
   --mission-fail: #E8A4A4;
   --champion-fg: #C7D2DD;
