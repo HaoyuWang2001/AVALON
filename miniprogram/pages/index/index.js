@@ -102,6 +102,17 @@ Page({
     const tc = getThemeClass();
     this.setData({ themeClass: tc });
     wx.setBackgroundColor({ backgroundColor: getThemeBg(tc) });
+
+    // 开启原生分享：发送给朋友 + 分享到朋友圈
+    wx.showShareMenu({ withShareTicket: true, menus: ['shareAppMessage', 'shareTimeline'] });
+  },
+
+  onShareAppMessage() {
+    return { title: 'AVALON · 瓦协会之练秋湖分部', path: '/pages/index/index' };
+  },
+
+  onShareTimeline() {
+    return { title: 'AVALON · 瓦协会之练秋湖分部' };
   },
 
   // 更改主题（功能卡）

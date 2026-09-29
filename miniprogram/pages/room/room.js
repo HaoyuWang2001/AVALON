@@ -57,6 +57,8 @@ Page({
     });
     this.initRoomPolling();
     this._loadFriendSet();
+    // 开启原生分享：发送给朋友 + 分享到朋友圈
+    wx.showShareMenu({ withShareTicket: true, menus: ['shareAppMessage', 'shareTimeline'] });
   },
 
   // 缓存好友 openId 集合（玩家信息底部框判断是否好友用）
@@ -84,6 +86,13 @@ Page({
     return {
       title: '加入我的阿瓦隆房间',
       path: `/pages/index/index?roomId=${this.data.roomId}`
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '加入我的阿瓦隆房间',
+      query: `roomId=${this.data.roomId}`
     };
   },
 
