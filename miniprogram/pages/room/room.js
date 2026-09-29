@@ -114,6 +114,18 @@ Page({
         const readyPlayers = room.readyPlayers || [];
         const currentUser = players.find(p => p.openId === app.globalData.openId);
 
+        // 非成员落地自动入房：仅首次成员校验判定一次，之后不再触发
+        // （避免房主踢人 / 主动退出后被自动拉回；复用首页分享入房链路处理“已在其他房间/开局跳 game”等边界）
+        if (!this._memberChecked && app.globalData.openId) {
+          this._memberChecked = true;
+          if (!currentUser && !this.leaving && this.data.roomId && !this._autoJoining) {
+            this._autoJoining = true;
+            if (this.roomPolling) { clearInterval(this.roomPolling); this.roomPolling = null; }
+            wx.redirectTo({ url: `/pages/index/index?roomId=${this.data.roomId}` });
+            return;
+          }
+        }
+
         let playerCount = 0;
         if (room.roomConfig && room.roomConfig.roles) {
           const good = room.roomConfig.roles.good || [];
