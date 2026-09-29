@@ -986,7 +986,7 @@ progress { border-radius: 12rpx; }
   position: relative;
   height: calc(100vh - 100rpx - 200rpx);
   display: flex; flex-direction: column;
-  padding: 12rpx 12rpx 0; box-sizing: border-box; z-index: 1;
+  padding: 12rpx 12rpx 0; box-sizing: border-box;
 }
 /* 压缩版下取消 .container 的 24rpx padding（避免叠加） */
 .container-compact { padding: 0; }
@@ -1025,8 +1025,7 @@ progress { border-radius: 12rpx; }
 .c-role { font-size: 22rpx; font-weight: 800; color: var(--c-violet); }
 
 /* 观战区底部弹窗 */
-.c-spec-fab { position: absolute; right: 16rpx; bottom: 16rpx; z-index: 5; font-size: 24rpx; font-weight: 700; color: var(--on-primary); background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); padding: 10rpx 20rpx; border-radius: 999rpx; box-shadow: var(--shadow-md); }
-.c-spec-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; background: var(--mask-light); z-index: 950; }
+.c-spec-fab { position: absolute; right: 16rpx; bottom: 16rpx; z-index: 970; font-size: 24rpx; font-weight: 700; color: var(--on-primary); background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); padding: 10rpx 20rpx; border-radius: 999rpx; box-shadow: var(--shadow-md); }
 .c-spec-popup { position: fixed; left: 0; right: 0; bottom: 0; z-index: 960; background: var(--bg-card); border-radius: 26rpx 26rpx 0 0; padding: 24rpx 24rpx calc(24rpx + env(safe-area-inset-bottom)); box-shadow: 0 -6rpx 24rpx rgba(0, 0, 0, 0.18); }
 .c-spec-title { font-size: 28rpx; font-weight: 700; color: var(--text-title); margin-bottom: 14rpx; }
 .c-spec-scroll { width: 100%; white-space: nowrap; }

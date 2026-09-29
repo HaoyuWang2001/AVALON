@@ -842,13 +842,9 @@ Page({
 
   noop() {},
 
-  // 松弛压缩版：观战区底部弹窗
+  // 松弛压缩版：观战区底部弹窗（FAB 开合，弹层 z 高于底栏，FAB z 高于弹层）
   toggleSpectatorPopup() {
     this.setData({ showSpectatorPopup: !this.data.showSpectatorPopup });
-  },
-
-  closeSpectatorPopup() {
-    this.setData({ showSpectatorPopup: false });
   },
 
   // 松弛压缩版：点击玩家 → 与标准版分发逻辑一致（选人者只做选择，其余人弹底部胜率框）

@@ -93,7 +93,6 @@
     <!-- 观战区：默认收起，点按钮弹出底部面板 -->
     <block wx:if="{{spectators.length > 0}}">
       <view class="c-spec-fab" bindtap="toggleSpectatorPopup">👥 观众 {{spectators.length}}</view>
-      <view class="c-spec-mask" wx:if="{{showSpectatorPopup}}" bindtap="closeSpectatorPopup" catchtouchmove="noop"></view>
       <view class="c-spec-popup" wx:if="{{showSpectatorPopup}}">
         <view class="c-spec-title">观众席（{{spectators.length}}）</view>
         <scroll-view scroll-x class="c-spec-scroll" show-scrollbar="{{false}}">
