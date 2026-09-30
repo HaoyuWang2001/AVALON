@@ -1024,30 +1024,37 @@ progress { border-radius: 12rpx; }
  *   - 全屏结果动画的径向渐变（刺杀/任务成功失败）
  * 这些颜色属于一次性装饰/固定深色组件，不参与主题与语义体系。
  * ───────────────────────────────────────────────────────── */
-/* ─────── 观众席：可拖动 FAB + 横向观众条（两版共用） ─────── */
-.spec-dock {
-  position: fixed; right: 24rpx; z-index: 970;
-  display: flex; align-items: stretch; gap: 8rpx;
-  min-height: 128rpx; max-width: calc(100vw - 48rpx);
-}
-.spec-fab {
-  flex: 0 0 auto;
-  display: flex; align-items: center; gap: 4rpx;
-  padding: 0 10rpx; border-radius: 16rpx;
+/* ─────── 观众席：顶部按钮 + 居中弹窗纵向列表（两版共用） ─────── */
+.spec-top-btn {
+  display: flex; align-items: center; gap: 6rpx;
+  padding: 0 18rpx; height: 60rpx; border-radius: 12rpx;
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  color: var(--on-primary); box-shadow: var(--shadow-md);
+  color: var(--on-primary); box-shadow: var(--shadow-sm);
 }
-.spec-arrow { font-size: 24rpx; line-height: 1; transform: scaleY(2.4); }
-.spec-count { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10rpx; line-height: 1.1; }
-.spec-emoji { font-size: 22rpx; }
-.spec-num { font-size: 22rpx; font-weight: 700; }
-.spec-bar {
-  flex: 0 1 auto; min-width: 0;
-  background: var(--bg-card); border-radius: 16rpx;
-  padding: 10rpx 16rpx; box-shadow: var(--shadow-md);
+.spec-top-emoji { font-size: 28rpx; line-height: 1; }
+.spec-top-num { font-size: 28rpx; font-weight: 700; line-height: 1; }
+
+.spec-modal-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 1100; background: var(--mask); }
+.spec-modal {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 1101;
+  width: 620rpx; max-width: calc(100vw - 80rpx); max-height: 70vh;
+  box-sizing: border-box; background: var(--bg-card); border-radius: 24rpx;
+  padding: 24rpx 24rpx 16rpx; display: flex; flex-direction: column;
+  box-shadow: var(--shadow-lg);
 }
-.spec-bar-scroll { width: 100%; white-space: nowrap; }
-.spec-bar-row { display: inline-flex; gap: 24rpx; padding: 0 4rpx; }
-.spec-item { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; width: 96rpx; }
-.spec-avatar { width: 72rpx; height: 72rpx; border-radius: 50%; background: var(--gray-100); }
-.spec-name { font-size: 20rpx; color: var(--text-muted); margin-top: 6rpx; max-width: 92rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spec-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12rpx; }
+.spec-modal-title { font-size: 32rpx; font-weight: 700; color: var(--text-title); }
+.spec-modal-close { font-size: 32rpx; color: var(--text-muted); padding: 0 8rpx; line-height: 1; }
+.spec-modal-empty { text-align: center; color: var(--text-muted); font-size: 26rpx; padding: 40rpx 0; }
+.spec-modal-scroll { max-height: 56vh; }
+.spec-row { display: flex; align-items: center; gap: 16rpx; padding: 16rpx 4rpx; border-bottom: 1rpx solid var(--divider); }
+.spec-row:last-child { border-bottom: none; }
+.spec-row:active { opacity: 0.7; }
+.spec-row-avatar { width: 72rpx; height: 72rpx; border-radius: 50%; background: var(--gray-100); flex-shrink: 0; }
+.spec-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6rpx; }
+.spec-row-name { font-size: 28rpx; font-weight: 600; color: var(--text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spec-row-sub { display: flex; align-items: center; gap: 16rpx; }
+.spec-row-rate { font-size: 24rpx; font-weight: 700; color: var(--primary); }
+.spec-row-private { font-size: 24rpx; color: var(--text-muted); }
+.spec-row-games { font-size: 24rpx; color: var(--text-muted); }
+.spec-row-rank { flex-shrink: 0; font-size: 26rpx; font-weight: 800; color: var(--primary); }

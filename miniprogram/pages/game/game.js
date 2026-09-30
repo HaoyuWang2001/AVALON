@@ -171,7 +171,8 @@ Page({
     compactRight: [],
     carSeatsText: '',
     showSpectatorPopup: false,
-    specDockBottom: 0,
+    specList: [],
+    specLoading: false,
     playerRole: null,
     spectators: [],
     playerSide: null,
@@ -780,10 +781,8 @@ Page({
         // 底部栏高度随阶段动态变化：渲染后重新测量，校准玩家列表底部留白
         wx.nextTick(() => {
           this.measureBottomBar();
-          // 观众席 FAB：按实测底栏高锚定于底部栏高带内
-          if ((this.data.spectators || []).length > 0) {
-            this._updateSpecDock();
-          } else if (this.data.showSpectatorPopup) {
+          // 观众席弹窗：无观众或对局结束则关闭
+          if (this.data.showSpectatorPopup && ((this.data.spectators || []).length === 0 || phase === 'gameEnd')) {
             this.setData({ showSpectatorPopup: false });
           }
         });
@@ -863,20 +862,50 @@ Page({
 
   noop() {},
 
-  // 观众席：锚定底部栏的窄 FAB + 等高观众条（两版共用）
+  // 观众席弹窗：打开时拉取批量胜率（服务端已按 胜率→场次 排序）
   toggleSpectatorPopup() {
-    this.setData({ showSpectatorPopup: !this.data.showSpectatorPopup });
+    const next = !this.data.showSpectatorPopup;
+    this.setData({ showSpectatorPopup: next });
+    if (next) this._loadSpectatorStats();
   },
 
-  // 由实测底栏高把 FAB 竖直居中于底部栏高带内
-  _updateSpecDock() {
-    const win = (wx.getWindowInfo && wx.getWindowInfo()) || wx.getSystemInfoSync();
-    const rpx = ((win && win.windowWidth) || 375) / 750;
-    const dockH = 128 * rpx;
-    const barH = this.data.bottomBarRawHeight || 0;
-    let bottom = barH > 0 ? (barH - dockH) / 2 : 44 * rpx;
-    if (bottom < 8) bottom = 8;
-    this.setData({ specDockBottom: bottom });
+  _loadSpectatorStats() {
+    const spectators = this.data.spectators || [];
+    if (spectators.length === 0) {
+      this.setData({ specList: [], specLoading: false });
+      return;
+    }
+    const me = app.globalData.openId || '';
+    this.setData({ specLoading: true });
+    api.getPlayersStatsBatch(spectators.map(s => s.openId), me).then(res => {
+      const arr = (res && res.success && res.players) || [];
+      const seen = new Set();
+      const merged = arr.map(p => {
+        seen.add(p.openId);
+        const s = spectators.find(x => x.openId === p.openId) || {};
+        return {
+          openId: p.openId,
+          nickName: s.nickName || '玩家',
+          avatarUrl: s.avatarUrl || '',
+          totalGames: p.totalGames,
+          totalWinRate: p.totalWinRate,
+          rank: p.rank,
+          rateVisible: !!p.rateVisible
+        };
+      });
+      // 兜底：接口未返回的观众（理论不会）追加在后
+      for (const s of spectators) {
+        if (!seen.has(s.openId)) {
+          merged.push({ openId: s.openId, nickName: s.nickName || '玩家', avatarUrl: s.avatarUrl || '', totalGames: 0, totalWinRate: 0, rank: null, rateVisible: false });
+        }
+      }
+      this.setData({ specLoading: false, specList: merged });
+    }).catch(() => {
+      this.setData({
+        specLoading: false,
+        specList: spectators.map(s => ({ openId: s.openId, nickName: s.nickName || '玩家', avatarUrl: s.avatarUrl || '', totalGames: 0, totalWinRate: 0, rank: null, rateVisible: false }))
+      });
+    });
   },
 
   // 松弛压缩版：点击玩家 → 与标准版分发逻辑一致（选人者只做选择，其余人弹底部胜率框）

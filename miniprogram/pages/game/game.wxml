@@ -15,6 +15,12 @@
     <view slot="left" class="top-icons">
       <text wx:if="{{isHost && currentPhase !== 'gameEnd'}}" class="top-text-danger" bindtap="abandonGame">炸车</text>
     </view>
+    <view slot="center" class="top-mini-actions">
+      <view wx:if="{{spectators.length > 0 && currentPhase !== 'gameEnd'}}" class="spec-top-btn" bindtap="toggleSpectatorPopup">
+        <text class="spec-top-emoji">👥</text>
+        <text class="spec-top-num">{{spectators.length}}</text>
+      </view>
+    </view>
     <view slot="right" class="top-mini-actions">
       <image class="top-mini-icon {{playerRole ? '' : 'top-mini-icon-hidden'}}" src="/images/my-role.png" mode="aspectFit" bindtap="openRoleModal"></image>
       <image class="top-mini-icon" src="/images/history.png" mode="aspectFit" bindtap="openInfoModal"></image>
@@ -314,29 +320,30 @@
     </block>
   </view>
 
-  <!-- 观众席：锚定底部栏的窄 FAB（竖排 emoji+人数、左箭头）+ 等高观众条（两版共用） -->
-  <block wx:if="{{spectators.length > 0}}">
-    <view class="spec-dock" style="bottom:{{specDockBottom}}px">
-      <view class="spec-bar" wx:if="{{showSpectatorPopup}}">
-        <scroll-view scroll-x class="spec-bar-scroll" show-scrollbar="{{false}}">
-          <view class="spec-bar-row">
-            <view wx:for="{{spectators}}" wx:key="openId" class="spec-item"
-                  bindtap="onSpectatorTap" data-id="{{item.openId}}">
-              <image class="spec-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
-              <text class="spec-name">{{item.nickName}}</text>
-            </view>
-          </view>
-        </scroll-view>
-      </view>
-      <view class="spec-fab" bindtap="toggleSpectatorPopup">
-        <text class="spec-arrow">{{showSpectatorPopup ? '▶' : '◀'}}</text>
-        <view class="spec-count">
-          <text class="spec-emoji">👥</text>
-          <text class="spec-num">{{spectators.length}}</text>
-        </view>
-      </view>
+  <!-- 观众席：顶部中间按钮触发，居中弹窗展示纵向列表（按胜率→场次排序） -->
+  <view class="spec-modal-mask" wx:if="{{showSpectatorPopup}}" bindtap="toggleSpectatorPopup" catchtouchmove="noop"></view>
+  <view class="spec-modal" wx:if="{{showSpectatorPopup}}" catchtap="noop">
+    <view class="spec-modal-head">
+      <text class="spec-modal-title">观众席（{{spectators.length}}）</text>
+      <text class="spec-modal-close" bindtap="toggleSpectatorPopup">✕</text>
     </view>
-  </block>
+    <view wx:if="{{specLoading}}" class="spec-modal-empty">加载中...</view>
+    <scroll-view wx:else scroll-y class="spec-modal-scroll" show-scrollbar="{{false}}">
+      <view wx:for="{{specList}}" wx:key="openId" class="spec-row"
+            bindtap="onSpectatorTap" data-id="{{item.openId}}">
+        <image class="spec-row-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
+        <view class="spec-row-main">
+          <text class="spec-row-name">{{item.nickName}}</text>
+          <view class="spec-row-sub">
+            <text wx:if="{{item.rateVisible}}" class="spec-row-rate">胜率 {{item.totalWinRate}}%</text>
+            <text wx:else class="spec-row-private">未公开</text>
+            <text class="spec-row-games">{{item.totalGames}} 场</text>
+          </view>
+        </view>
+        <text wx:if="{{item.rateVisible && item.rank}}" class="spec-row-rank">#{{item.rank}}</text>
+      </view>
+    </scroll-view>
+  </view>
 
   <!-- 任务结果全屏弹窗 -->
   <view class="result-overlay" wx:if="{{currentPhase === 'missionResult'}}" catchtouchmove="noop">

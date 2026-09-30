@@ -2,6 +2,9 @@
   <view class="top-bar-side">
     <slot name="left"></slot>
   </view>
+  <view class="top-bar-center">
+    <slot name="center"></slot>
+  </view>
   <view class="top-bar-side">
     <slot name="right"></slot>
   </view>
