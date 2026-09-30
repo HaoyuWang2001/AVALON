@@ -1478,26 +1478,28 @@ Page({
     });
   },
 
-  // 任务投票弹窗：点击左(蓝=成功)/右(红=失败)半屏 → 确认弹窗 → 提交
+  // 任务投票弹窗：点击左(蓝=成功)直接提交；右(红=失败)弹二次确认后提交
   confirmMissionVote(e) {
     const vote = e.currentTarget.dataset.vote;
-    const { gameId, playerRole, playerSide } = this.data;
     if (!vote) return;
-    if (vote === 'fail') {
-      // 以当前阵营为准（兰斯洛特转换可能改变 side）；后端为最终裁决
-      const isEvil = playerSide === 'evil' || ['mordred', 'morgana', 'assassin', 'minion', 'oberon', 'lancelotRed'].includes(playerRole);
-      if (!isEvil) {
-        wx.showToast({ title: '只有红方才能破坏任务', icon: 'error' });
-        return;
-      }
+    if (vote === 'success') {
+      this._submitMissionVote('success');
+      return;
+    }
+    // 失败：先校验红方（以当前阵营为准，兰斯洛特转换可能改变 side；后端为最终裁决），再二次确认
+    const { playerRole, playerSide } = this.data;
+    const isEvil = playerSide === 'evil' || ['mordred', 'morgana', 'assassin', 'minion', 'oberon', 'lancelotRed'].includes(playerRole);
+    if (!isEvil) {
+      wx.showToast({ title: '只有红方才能破坏任务', icon: 'error' });
+      return;
     }
     wx.showModal({
-      title: vote === 'success' ? '完成任务' : '破坏任务',
-      content: vote === 'success' ? '确认任务成功？' : '确认任务失败？',
+      title: '破坏任务',
+      content: '确认任务失败？',
       confirmText: '确认',
       cancelText: '取消',
       success: (res) => {
-        if (res.confirm) this._submitMissionVote(vote);
+        if (res.confirm) this._submitMissionVote('fail');
       }
     });
   },
