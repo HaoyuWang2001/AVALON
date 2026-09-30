@@ -52,4 +52,87 @@ describe('13 — 总胜率排名', () => {
     expect(res.body.stats.totalGames).toBe(0);
     expect(res.body.stats.rank).toBeNull();
   });
+
+  it('13-5 批量接口：字段/排序/隐私/000000排除', async () => {
+    const day = Date.now();
+    const visibleId = `test_batch_v_${day}`;
+    const hiddenId = `test_batch_h_${day}`;
+    const botId = `test_batch_b_${day}`;
+    const tag = day.toString(36);
+
+    // 可见玩家：55 局全胜（> 阈值上限 50，确保必在榜）
+    await db.query('INSERT INTO users (open_id, public_winrate) VALUES (?, 1) ON DUPLICATE KEY UPDATE public_winrate = 1', [visibleId]);
+    await db.query('INSERT INTO users (open_id, public_winrate) VALUES (?, 0) ON DUPLICATE KEY UPDATE public_winrate = 0', [hiddenId]);
+    for (let i = 0; i < 55; i++) {
+      const gid = `bt${tag}v${i}`;
+      await db.query(
+        `INSERT INTO games (id, room_id, room_number, owner_id, current_phase, status, game_result, ended_at)
+         VALUES (?, NULL, '111111', ?, 'gameEnd', 'ended', ?, NOW())`,
+        [gid, visibleId, JSON.stringify({ winner: 'good' })]
+      );
+      await db.query(
+        `INSERT INTO game_players (game_id, open_id, role, side, nick_name, seat_number)
+         VALUES (?, ?, 'loyal', 'good', 'V', 1)`,
+        [gid, visibleId]
+      );
+    }
+    // 未公开玩家：1 局，但 public_winrate=0
+    await db.query(
+      `INSERT INTO games (id, room_id, room_number, owner_id, current_phase, status, game_result, ended_at)
+       VALUES (?, NULL, '111111', ?, 'gameEnd', 'ended', ?, NOW())`,
+      [`bt${tag}h0`, hiddenId, JSON.stringify({ winner: 'good' })]
+    );
+    await db.query(
+      `INSERT INTO game_players (game_id, open_id, role, side, nick_name, seat_number)
+       VALUES (?, ?, 'loyal', 'good', 'H', 1)`,
+      [`bt${tag}h0`, hiddenId]
+    );
+    // 机器人房 000000：不计入统计
+    await db.query(
+      `INSERT INTO games (id, room_id, room_number, owner_id, current_phase, status, game_result, ended_at)
+       VALUES (?, NULL, '000000', ?, 'gameEnd', 'ended', ?, NOW())`,
+      [`bt${tag}b0`, botId, JSON.stringify({ winner: 'good' })]
+    );
+    await db.query(
+      `INSERT INTO game_players (game_id, open_id, role, side, nick_name, seat_number)
+       VALUES (?, ?, 'loyal', 'good', 'B', 1)`,
+      [`bt${tag}b0`, botId]
+    );
+
+    const res = await apiGet(`/api/games/stats/batch?openIds=${visibleId},${hiddenId},${botId}&viewerOpenId=${visibleId}`);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    const list = res.body.players;
+    expect(list.length).toBe(3);
+    const byId = Object.fromEntries(list.map(p => [p.openId, p]));
+
+    for (const k of ['totalGames', 'totalWins', 'totalWinRate', 'goodGames', 'goodWins', 'goodWinRate', 'evilGames', 'evilWins', 'evilWinRate', 'rank', 'rateVisible', 'publicWinrate', 'threshold']) {
+      expect(byId[visibleId]).toHaveProperty(k);
+    }
+    expect(byId[visibleId].totalGames).toBe(55);
+    expect(byId[visibleId].totalWins).toBe(55);
+    expect(byId[visibleId].totalWinRate).toBe(100);
+    expect(byId[visibleId].goodGames).toBe(55);
+    expect(byId[visibleId].goodWinRate).toBe(100);
+    expect(byId[visibleId].evilGames).toBe(0);
+    expect(byId[visibleId].rateVisible).toBe(true);
+    expect(typeof byId[visibleId].rank).toBe('number');
+    expect(byId[visibleId].rank).toBeGreaterThanOrEqual(1);
+
+    expect(byId[hiddenId].rateVisible).toBe(false);
+    expect(byId[hiddenId].rank).toBeNull();
+    expect(byId[hiddenId].totalGames).toBe(1);
+
+    expect(byId[botId].totalGames).toBe(0);
+
+    // 排序：可见者在前
+    expect(list[0].openId).toBe(visibleId);
+    expect(list.findIndex(p => p.openId === visibleId)).toBeLessThan(list.findIndex(p => p.openId === hiddenId));
+  });
+
+  it('13-6 批量接口：无 openIds 返回空数组', async () => {
+    const res = await apiGet('/api/games/stats/batch');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true, players: [] });
+  });
 });

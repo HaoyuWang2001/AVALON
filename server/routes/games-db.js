@@ -160,6 +160,110 @@ function createRouter() {
       });
     }
   });
+
+  // 批量玩家胜率（观众席等）：传入 openIds，返回按 胜率→场次 排序的必要信息
+  router.get('/stats/batch', async (req, res) => {
+    try {
+      const raw = (req.query.openIds || '').toString();
+      const viewerOpenId = req.query.viewerOpenId || null;
+      const ids = Array.from(new Set(raw.split(',').map(s => s.trim()).filter(Boolean))).slice(0, 50);
+      if (ids.length === 0) return res.json({ success: true, players: [] });
+
+      const db = require('../config/db');
+      const placeholders = ids.map(() => '?').join(',');
+
+      const rows = await db.query(
+        `SELECT gp.open_id as openId,
+                COUNT(DISTINCT g.id) as games,
+                COUNT(DISTINCT CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN g.id END) as wins,
+                COUNT(DISTINCT CASE WHEN gp.side = 'good' THEN g.id END) as goodGames,
+                COUNT(DISTINCT CASE WHEN gp.side = 'good' AND JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = 'good' THEN g.id END) as goodWins,
+                COUNT(DISTINCT CASE WHEN gp.side = 'evil' THEN g.id END) as evilGames,
+                COUNT(DISTINCT CASE WHEN gp.side = 'evil' AND JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = 'evil' THEN g.id END) as evilWins
+         FROM games g
+         JOIN game_players gp ON gp.game_id = g.id
+         WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
+           AND gp.open_id IN (${placeholders})
+         GROUP BY gp.open_id`,
+        ids
+      );
+      const byId = new Map(rows.map(r => [r.openId, r]));
+
+      const userRows = await db.query(
+        `SELECT open_id as openId, public_winrate as publicWinrate FROM users WHERE open_id IN (${placeholders})`,
+        ids
+      );
+      const publicById = new Map(userRows.map(u => [u.openId, u.publicWinrate]));
+
+      const threshold = await GameModel.getWinRateThreshold();
+
+      // 全局榜单（一次），用于批量计算名次（避免逐个全量查询）
+      const rankRows = await db.query(
+        `SELECT t.openId, t.games, t.wins
+         FROM (
+           SELECT gp.open_id as openId,
+                  COUNT(DISTINCT g.id) as games,
+                  COUNT(DISTINCT CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN g.id END) as wins
+           FROM game_players gp
+           JOIN games g ON g.id = gp.game_id
+           WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
+           GROUP BY gp.open_id
+           HAVING games >= ?
+         ) t
+         JOIN users u ON u.open_id = t.openId
+         WHERE u.public_winrate <> 0`,
+        [threshold]
+      );
+      const rankList = rankRows
+        .map(r => ({ openId: r.openId, games: parseInt(r.games, 10) || 0, wins: parseInt(r.wins, 10) || 0 }))
+        .filter(r => r.games > 0);
+      const rankSet = new Set(rankList.map(r => r.openId));
+
+      const round1 = n => Math.round(n * 10) / 10;
+
+      const players = ids.map(openId => {
+        const r = byId.get(openId);
+        const games = r ? parseInt(r.games, 10) || 0 : 0;
+        const wins = r ? parseInt(r.wins, 10) || 0 : 0;
+        const goodGames = r ? parseInt(r.goodGames, 10) || 0 : 0;
+        const goodWins = r ? parseInt(r.goodWins, 10) || 0 : 0;
+        const evilGames = r ? parseInt(r.evilGames, 10) || 0 : 0;
+        const evilWins = r ? parseInt(r.evilWins, 10) || 0 : 0;
+        const publicWinrate = (publicById.has(openId) && publicById.get(openId) === 0) ? 0 : 1;
+        const isSelf = !!viewerOpenId && viewerOpenId === openId;
+        const rateVisible = isSelf || (publicWinrate === 1 && games >= threshold);
+        const rank = rankSet.has(openId) ? GameModel._computeWinRateRank(rankList, openId) : null;
+        return {
+          openId,
+          totalGames: games,
+          totalWins: wins,
+          totalWinRate: games > 0 ? round1(wins / games * 100) : 0,
+          goodGames,
+          goodWins,
+          goodWinRate: goodGames > 0 ? round1(goodWins / goodGames * 100) : 0,
+          evilGames,
+          evilWins,
+          evilWinRate: evilGames > 0 ? round1(evilWins / evilGames * 100) : 0,
+          rank,
+          rateVisible,
+          publicWinrate,
+          threshold
+        };
+      });
+
+      // 排序：可见者按胜率降序→场次降序；未公开者置后（组内按场次降序）
+      players.sort((a, b) => {
+        if (a.rateVisible !== b.rateVisible) return a.rateVisible ? -1 : 1;
+        if (a.rateVisible && b.totalWinRate !== a.totalWinRate) return b.totalWinRate - a.totalWinRate;
+        return b.totalGames - a.totalGames;
+      });
+
+      res.json({ success: true, players });
+    } catch (error) {
+      console.error('批量玩家胜率API错误:', error);
+      res.status(500).json({ success: false, message: error.message || '获取批量玩家胜率失败' });
+    }
+  });
   
   // 开始游戏（仅房主）
   router.post('/start', async (req, res) => {

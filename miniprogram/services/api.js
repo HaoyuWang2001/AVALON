@@ -479,6 +479,12 @@ class ApiService {
     return this.request(`/games/stats?subjectOpenId=${encodeURIComponent(openId)}${v}`);
   }
 
+  async getPlayersStatsBatch(openIds, viewerOpenId) {
+    const ids = (openIds || []).filter(Boolean).join(',');
+    const v = viewerOpenId ? `&viewerOpenId=${encodeURIComponent(viewerOpenId)}` : '';
+    return this.request(`/games/stats/batch?openIds=${encodeURIComponent(ids)}${v}`);
+  }
+
   async getGlobalStats() {
     return this.request('/games/stats/global');
   }
