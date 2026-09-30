@@ -48,10 +48,10 @@
   --label-evil-bg: #573026;
   /* 通用语义色（随主题） */
   --agree: #7FC8A0;
-  --disagree: #E89A86;
+  --disagree: #F2623F;
   --success: #7FC8A0;
   --fail: #EEB0A0;
-  --danger: #E89A86;
+  --danger: #F2623F;
 
   /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 烛光(暖) */
   --brand-1: #D4A052;
@@ -131,10 +131,10 @@
   --label-evil-bg: #55243E;
   /* 通用语义色（随主题） */
   --agree: #6FD3C7;
-  --disagree: #F09AA8;
+  --disagree: #F04E7A;
   --success: #6FD3C7;
   --fail: #F4B2BE;
-  --danger: #F09AA8;
+  --danger: #F04E7A;
 
   /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 暗夜(冷) */
   --brand-1: #A78BFA;
@@ -214,10 +214,10 @@
   --label-evil-bg: #572828;
   /* 通用语义色（随主题） */
   --agree: #6FC79A;
-  --disagree: #E08A8A;
+  --disagree: #E64B4B;
   --success: #6FC79A;
   --fail: #E8A4A4;
-  --danger: #E08A8A;
+  --danger: #E64B4B;
 
   /* 头部三段三色/辉光/故障 + 彩蛋卡面 + 玻璃色系 + 角色卡/冠军卡 —— 锻造钢铁 */
   --brand-1: #C7D2DD;
