@@ -690,6 +690,44 @@ describe('02 — Room Management', () => {
       expect(room.success).toBe(false);
     });
   });
+
+  // ─────────────── 改名同步房间昵称 ───────────────
+  describe('改名同步房间昵称', () => {
+    it('02.47 更新 customNickName 后房间内昵称同步', async () => {
+      const hostId = makeUserId();
+      const result = await createRoom(hostId, 'Host');
+      const roomId = result.roomId;
+      const uid = makeUserId();
+      await joinRoom(roomId, uid, 2, 'OldName');
+
+      const before = await getRoom(roomId);
+      expect(before.room.players.find(p => p.openId === uid).nickName).toBe('OldName');
+
+      const res = await apiPost(`/api/users/${uid}/profile`, { customNickName: 'NewName' });
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+
+      const after = await getRoom(roomId);
+      expect(after.room.players.find(p => p.openId === uid).nickName).toBe('NewName');
+    });
+
+    it('02.48 清空 customNickName 回退到 wxNickName', async () => {
+      const hostId = makeUserId();
+      const result = await createRoom(hostId, 'Host');
+      const roomId = result.roomId;
+      const uid = makeUserId();
+      await joinRoom(roomId, uid, 2, 'OldName');
+
+      await apiPost(`/api/users/${uid}/profile`, { wxNickName: 'WxName' });
+      await apiPost(`/api/users/${uid}/profile`, { customNickName: 'Custom' });
+      let room = await getRoom(roomId);
+      expect(room.room.players.find(p => p.openId === uid).nickName).toBe('Custom');
+
+      await apiPost(`/api/users/${uid}/profile`, { customNickName: '' });
+      room = await getRoom(roomId);
+      expect(room.room.players.find(p => p.openId === uid).nickName).toBe('WxName');
+    });
+  });
 });
 
 // PUT /api/rooms/:roomId/config 原始请求（返回 supertest 响应）

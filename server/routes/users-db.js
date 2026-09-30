@@ -143,6 +143,15 @@ function createRouter() {
 
       const user = await UserModel.updateProfile(openId, data);
 
+      // 改名后同步房间内昵称：房间页 1s 轮询自动获取（与头像同步逻辑一致）
+      if (data.customNickName !== undefined || data.wxNickName !== undefined) {
+        const finalNickName = user.custom_nick_name || user.wx_nick_name || '匿名玩家';
+        await db.query(
+          'UPDATE room_players SET nick_name = ?, wx_nick_name = ? WHERE open_id = ?',
+          [finalNickName, user.wx_nick_name || '', openId]
+        );
+      }
+
       res.json({
         success: true,
         user: {
