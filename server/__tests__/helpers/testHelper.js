@@ -328,6 +328,11 @@ async function assassinate(gameId, killerOpenId, targetOpenId) {
   return res.body;
 }
 
+async function merlinFlip(gameId, openId) {
+  const res = await apiPost(`/api/games/${gameId}/merlinFlip`, { openId });
+  return res.body;
+}
+
 async function endGame(gameId) {
   const res = await apiPost('/api/games/end', { gameId });
   return res.body;
@@ -513,6 +518,7 @@ module.exports = {
   castMissionVote,
   assassinate,
   startAssassination,
+  merlinFlip,
   endGame,
   submitPreNomination,
   endDiscussion,

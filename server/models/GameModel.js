@@ -2064,6 +2064,76 @@ class GameModel {
     }
   }
 
+  /**
+   * 梅林翻牌：梅林主动亮牌，红方直接获胜，执行后必定 gameEnd
+   * 仅当前对局中的梅林可发起；任意活跃阶段可调用（assassination/gameEnd 除外）
+   * @param {string} gameId 游戏ID
+   * @param {string} openId 发起者openId（须为本局梅林）
+   * @returns {Promise<Object>} 更新后的游戏状态
+   */
+  static async merlinFlip(gameId, openId) {
+    try {
+      await db.transaction(async (connection) => {
+        const [game] = await connection.execute(
+          `SELECT current_phase, current_round, failed_nominations, room_id
+           FROM games WHERE id = ? FOR UPDATE`,
+          [gameId]
+        );
+
+        if (game.length === 0) {
+          throw new Error('游戏不存在');
+        }
+
+        if (game[0].current_phase === 'gameEnd') {
+          throw new Error('游戏已结束');
+        }
+
+        if (game[0].current_phase === 'assassination') {
+          throw new Error('当前阶段不可翻牌');
+        }
+
+        // 校验发起者为本局梅林
+        const [merlinPlayers] = await connection.execute(
+          `SELECT open_id FROM game_players WHERE game_id = ? AND role = 'merlin'`,
+          [gameId]
+        );
+
+        if (merlinPlayers.length === 0) {
+          throw new Error('本局无梅林角色');
+        }
+
+        if (!merlinPlayers.some(p => p.open_id === openId)) {
+          throw new Error('只有梅林才能翻牌');
+        }
+
+        const merlinFlip = {
+          by: openId,
+          phase: game[0].current_phase,
+          round: game[0].current_round,
+          index: game[0].failed_nominations + 1
+        };
+
+        await connection.execute(
+          `UPDATE games
+           SET current_phase = 'gameEnd',
+               status = 'ended',
+               ended_at = NOW(),
+               game_result = ?,
+               updated_at = NOW()
+           WHERE id = ?`,
+          [JSON.stringify({ winner: 'evil', reason: '梅林翻牌', merlinFlip }), gameId]
+        );
+
+        await this._resetRoomAfterEnd(connection, game[0].room_id);
+      });
+
+      return await this.getState(gameId);
+    } catch (error) {
+      console.error('梅林翻牌失败:', error);
+      throw error;
+    }
+  }
+
   // =============== 工具方法 ===============
 
   /**

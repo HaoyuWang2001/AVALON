@@ -262,6 +262,15 @@ class ApiService {
     });
   }
 
+  // 梅林翻牌（梅林主动亮牌 → 红方获胜，游戏立即结束）
+  async merlinFlip(gameId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/games/${gameId}/merlinFlip`, {
+      method: 'POST',
+      data: { openId }
+    });
+  }
+
   async getGameState(gameId) {
     const openId = this.openId || getApp().globalData.openId;
     return this.request(`/games/${gameId}?openId=${openId}`);

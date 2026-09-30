@@ -401,7 +401,7 @@
         <text class="role-tag role-tag-name">{{roleName}}</text>
         <text class="role-tag role-tag-side {{playerSide === 'evil' ? 'tag-evil' : 'tag-good'}}">{{playerSide === 'evil' ? '红方阵营' : '蓝方阵营'}}</text>
       </view>
-      <view class="role-vision" wx:if="{{visionList.length > 0 || canAssassinateVar}}">
+      <view class="role-vision" wx:if="{{visionList.length > 0 || canAssassinateVar || playerRole === 'merlin'}}">
         <view wx:for="{{visionList}}" wx:key="openId" class="role-vision-item">
           <view class="role-vision-seat" wx:if="{{item.seat}}">{{item.seat}}</view>
           <view class="role-vision-spacer"></view>
@@ -410,13 +410,22 @@
             <text class="role-vision-tag {{item.campClass}}">{{item.campText}}</text>
           </view>
         </view>
-        <!-- 开刀条目：左侧紫色座位牌 + 红色开刀块填满剩余行，长按2s读条激活刺杀；刺杀/gameEnd阶段隐藏 -->
+        <!-- 开刀条目：左侧紫色座位牌 + 红色开刀块填满剩余行，长按1s读条激活刺杀；刺杀/gameEnd阶段隐藏 -->
         <view wx:if="{{canAssassinateVar && currentPhase !== 'assassination' && currentPhase !== 'gameEnd'}}" class="role-vision-knife-row"
           bindtouchstart="onKnifeTouchStart" bindtouchend="onKnifeTouchEnd" bindtouchcancel="onKnifeTouchCancel">
           <view class="role-vision-seat">?</view>
           <view class="role-vision-knife">
             <view class="role-vision-knife-progress" style="width: {{knifeProgress}}%"></view>
             <text class="role-vision-knife-text">长按开刀</text>
+          </view>
+        </view>
+        <!-- 梅林翻牌条目：长按1s读条后二次确认，翻牌即红方获胜结束对局；刺杀/gameEnd阶段隐藏 -->
+        <view wx:if="{{playerRole === 'merlin' && currentPhase !== 'assassination' && currentPhase !== 'gameEnd'}}" class="role-vision-flip-row"
+          bindtouchstart="onFlipTouchStart" bindtouchend="onFlipTouchEnd" bindtouchcancel="onFlipTouchCancel">
+          <view class="role-vision-seat">🂠</view>
+          <view class="role-vision-flip">
+            <view class="role-vision-flip-progress" style="width: {{flipProgress}}%"></view>
+            <text class="role-vision-flip-text">长按翻牌</text>
           </view>
         </view>
       </view>
@@ -549,6 +558,27 @@
       <view class="assassin-anim-center">
         <text class="assassin-anim-emoji">{{assassinationSuccess ? '💀' : '🛡️'}}</text>
         <text class="assassin-anim-text">{{assassinationSuccess ? '刺杀成功' : '刺杀失败'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 梅林翻牌全屏动画（全员）：阶段1 梅林牌翻开 → 阶段2 文字浮现 -->
+  <view class="merlin-flip-anim" wx:if="{{showMerlinFlipAnim}}" catchtouchmove="noop">
+    <view class="merlin-flip-bg"></view>
+    <view class="merlin-flip-scene" wx:if="{{merlinFlipPhase === 'flip'}}">
+      <view class="merlin-flip-card">
+        <view class="merlin-flip-face merlin-flip-front">
+          <image class="merlin-flip-back-img" src="/images/back.png" mode="aspectFit"/>
+        </view>
+        <view class="merlin-flip-face merlin-flip-back">
+          <text class="merlin-flip-emoji">🔮</text>
+        </view>
+      </view>
+    </view>
+    <view class="merlin-flip-scene" wx:if="{{merlinFlipPhase === 'result'}}">
+      <view class="merlin-flip-center">
+        <text class="merlin-flip-text">梅林翻牌</text>
+        <text class="merlin-flip-sub">红方胜利</text>
       </view>
     </view>
   </view>

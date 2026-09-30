@@ -263,6 +263,9 @@ Page({
     gameAssassination: null,
     showAssassinationAnim: false,
     knifeProgress: 0,
+    showMerlinFlipAnim: false,
+    merlinFlipPhase: '',
+    flipProgress: 0,
     crownHolderOpenId: '',
     identityMarks: {},
     showMarkPanel: false,
@@ -380,8 +383,11 @@ Page({
     if (this._teamVoteRevealTimer) clearInterval(this._teamVoteRevealTimer);
     if (this._assnAnimTimer) clearTimeout(this._assnAnimTimer);
     if (this._assnAnimTimer2) clearTimeout(this._assnAnimTimer2);
+    if (this._flipAnimTimer) clearTimeout(this._flipAnimTimer);
+    if (this._flipAnimTimer2) clearTimeout(this._flipAnimTimer2);
     if (this._missionAnimTimer) clearTimeout(this._missionAnimTimer);
     this.onKnifeTouchEnd();
+    this.onFlipTouchEnd();
     api.disconnectSocket();
   },
 
@@ -795,6 +801,12 @@ Page({
           // 刺杀结算动画（全员）：从活跃阶段首次进入 gameEnd 且有刺杀记录时播放
           if (gameAssassination && prevPhaseForTransitions && prevPhaseForTransitions !== 'gameEnd') {
             this.playAssassinationAnim(gameAssassination.correct);
+          }
+          // 梅林翻牌动画（全员）：从活跃阶段首次进入 gameEnd 且有翻牌记录时播放
+          const merlinFlip = res.basic && res.basic.result && res.basic.result.merlinFlip;
+          if (merlinFlip && prevPhaseForTransitions && prevPhaseForTransitions !== 'gameEnd' && !this._merlinFlipShown) {
+            this._merlinFlipShown = true;
+            this.playMerlinFlipAnim();
           }
         } else if (!api._socketTask && this.data.roomId) {
           api.connectSocket(this.data.roomId, app.globalData.openId);
@@ -1625,6 +1637,68 @@ Page({
 
   onKnifeTouchCancel() {
     this.onKnifeTouchEnd();
+  },
+
+  // 长按翻牌：按下开始读条（1s 从0→100），每次长按均从0开始；满则弹二次确认
+  onFlipTouchStart() {
+    if (this._flipTimer) return;
+    let p = 0;
+    this._flipTimer = setInterval(() => {
+      p += 2;
+      if (p >= 100) {
+        clearInterval(this._flipTimer);
+        this._flipTimer = null;
+        this.setData({ flipProgress: 0 });
+        this.confirmMerlinFlip();
+      } else {
+        this.setData({ flipProgress: p });
+      }
+    }, 20);
+  },
+
+  // 松手/取消：未读满则取消，进度归零（下次长按从0开始）
+  onFlipTouchEnd() {
+    if (this._flipTimer) { clearInterval(this._flipTimer); this._flipTimer = null; }
+    this.setData({ flipProgress: 0 });
+  },
+
+  onFlipTouchCancel() {
+    this.onFlipTouchEnd();
+  },
+
+  // 梅林翻牌二次确认：确认后调用后端（红方获胜、游戏立即结束）
+  confirmMerlinFlip() {
+    const { gameId } = this.data;
+    wx.showModal({
+      title: '确定翻牌',
+      content: '翻牌后红方获胜，游戏立即结束',
+      success: (res) => {
+        if (res.confirm) {
+          wx.showLoading({ title: '翻牌中...', mask: true });
+          api.merlinFlip(gameId).then(() => {
+            wx.hideLoading();
+            this.setData({ showRoleModal: false });
+            this.fetchGameState();
+          }).catch(err => {
+            wx.hideLoading();
+            wx.showToast({ title: (err && err.message) || '翻牌失败', icon: 'none' });
+          });
+        }
+      }
+    });
+  },
+
+  // 梅林翻牌全屏动画（全员）：阶段1 牌翻开 → 阶段2 文字浮现，总时长约 5s 后露出结束页
+  playMerlinFlipAnim() {
+    this.setData({ showMerlinFlipAnim: true, merlinFlipPhase: 'flip' });
+    if (this._flipAnimTimer) clearTimeout(this._flipAnimTimer);
+    if (this._flipAnimTimer2) clearTimeout(this._flipAnimTimer2);
+    this._flipAnimTimer = setTimeout(() => {
+      this.setData({ merlinFlipPhase: 'result' });
+      this._flipAnimTimer2 = setTimeout(() => {
+        this.setData({ showMerlinFlipAnim: false, merlinFlipPhase: '' });
+      }, 3800);
+    }, 1200);
   },
 
   // 刺客可选目标：非自己，且不是自己已知的盟友（visionList 含红兰；oberon 互隐不在内，可点）

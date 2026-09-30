@@ -699,6 +699,39 @@ function createRouter() {
     }
   });
 
+  // 梅林翻牌（梅林主动亮牌 → 红方获胜，游戏立即结束）
+  router.post('/:gameId/merlinFlip', async (req, res) => {
+    try {
+      const { gameId } = req.params;
+      const { openId } = req.body;
+
+      if (!gameId || !openId) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+
+      const result = await GameModel.merlinFlip(gameId, openId);
+
+      await emitGameForGame(gameId);
+
+      res.json(result);
+    } catch (error) {
+      console.error('梅林翻牌API错误:', error);
+
+      if (error.message.includes('游戏不存在')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+
+      if (error.message.includes('游戏已结束') ||
+          error.message.includes('当前阶段不可翻牌') ||
+          error.message.includes('本局无梅林角色') ||
+          error.message.includes('只有梅林才能翻牌')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
+      res.status(500).json({ success: false, message: error.message || '梅林翻牌失败' });
+    }
+  });
+
   // 湖仙验人（lake → 下一阶段）
   router.post('/:gameId/lakeInspect', async (req, res) => {
     try {
