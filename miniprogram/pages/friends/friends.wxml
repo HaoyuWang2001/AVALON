@@ -57,7 +57,10 @@
       data-id="{{item.openId}}" data-name="{{item.nickName}}" data-avatar="{{item.avatarUrl}}">
       <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="f-avatar"></image>
       <view class="f-info">
-        <text class="f-name">{{item.nickName}}</text>
+        <view class="f-name-row">
+          <text class="f-name">{{item.nickName}}</text>
+          <text wx:if="{{item.rank}}" class="f-rank">#{{item.rank}}</text>
+        </view>
         <view class="f-status-row">
           <view class="f-dot {{item.online ? 'st-online' : 'st-offline'}}"></view>
           <text class="f-status-text {{item.online ? 'st-online' : 'st-offline'}}">{{item.online ? '在线' : '离线'}}</text>

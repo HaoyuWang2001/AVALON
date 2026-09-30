@@ -100,6 +100,14 @@
     <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="showWeirdSettings">
       <text class="func-label">奇奇怪怪的设置们</text>
     </view>
+    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="goToLeaderboard">
+      <text class="func-emoji">🏆</text>
+      <text class="func-label">排行榜</text>
+    </view>
+    <view class="func-item func-glass func-disabled">
+      <text class="func-emoji">⏳</text>
+      <text class="func-label">开发中…</text>
+    </view>
   </view>
 
   <!-- 6. 角色胜率（公共组件，角色卡可点开对局弹窗） -->

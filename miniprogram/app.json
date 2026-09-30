@@ -6,6 +6,7 @@
     "pages/friends/friends",
     "pages/friend-detail/friend-detail",
     "pages/global-stats/global-stats",
+    "pages/leaderboard/leaderboard",
     "pages/configs/configs"
   ],
   "window": {

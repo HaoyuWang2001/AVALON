@@ -485,6 +485,11 @@ class ApiService {
     return this.request(`/games/stats/batch?openIds=${encodeURIComponent(ids)}${v}`);
   }
 
+  async getLeaderboard(page = 1, pageSize = 20, viewerOpenId) {
+    const v = viewerOpenId ? `&viewerOpenId=${encodeURIComponent(viewerOpenId)}` : '';
+    return this.request(`/games/stats/leaderboard?page=${page}&pageSize=${pageSize}${v}`);
+  }
+
   async getGlobalStats() {
     return this.request('/games/stats/global');
   }
