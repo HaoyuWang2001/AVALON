@@ -2262,6 +2262,154 @@ class GameModel {
   }
 
   /**
+   * 全量胜率榜单：ended、非000000、局数>=阈值、公开胜率的玩家，按 胜率↓→场次↓ 排序，并列同名次。
+   * 生产环境内存缓存 60s（测试环境禁用，避免污染用例）。
+   * @returns {Promise<Array<{openId,nickName,avatarUrl,uniqueId,games,wins,winRate,rank}>>}
+   */
+  static async getWinRateLeaderboard() {
+    const now = Date.now();
+    if (process.env.NODE_ENV !== 'test') {
+      const cache = GameModel._leaderboardCache;
+      if (cache && (now - cache.at) < 60 * 1000) return cache.value;
+    }
+
+    const threshold = await GameModel.getWinRateThreshold();
+    const rows = await db.query(
+      `SELECT t.openId, t.games, t.wins,
+              u.custom_nick_name as customNickName, u.wx_nick_name as wxNickName,
+              u.avatar_url as avatarUrl, u.unique_id as uniqueId
+       FROM (
+         SELECT gp.open_id as openId,
+                COUNT(DISTINCT g.id) as games,
+                COUNT(DISTINCT CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN g.id END) as wins
+         FROM game_players gp
+         JOIN games g ON g.id = gp.game_id
+         WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
+         GROUP BY gp.open_id
+         HAVING games >= ?
+       ) t
+       JOIN users u ON u.open_id = t.openId
+       WHERE u.public_winrate <> 0`,
+      [threshold]
+    );
+
+    const list = rows
+      .map(r => ({
+        openId: r.openId,
+        nickName: r.customNickName || r.wxNickName || '玩家',
+        avatarUrl: r.avatarUrl || '',
+        uniqueId: r.uniqueId || '',
+        games: parseInt(r.games, 10) || 0,
+        wins: parseInt(r.wins, 10) || 0
+      }))
+      .filter(r => r.games > 0);
+
+    // 排序：胜率 desc → 场次 desc（交叉相乘避免浮点误差）
+    list.sort((a, b) => {
+      const diff = b.wins * a.games - a.wins * b.games; // >0 → b 胜率更高
+      if (diff !== 0) return diff;
+      return b.games - a.games;
+    });
+
+    // 并列同名次（competition ranking）：胜率与场次都相同 → 与前者同名次
+    for (let i = 0; i < list.length; i++) {
+      if (i > 0) {
+        const prev = list[i - 1];
+        const sameRate = (list[i].wins * prev.games === prev.wins * list[i].games);
+        list[i].rank = (sameRate && list[i].games === prev.games) ? prev.rank : (i + 1);
+      } else {
+        list[i].rank = 1;
+      }
+      list[i].winRate = list[i].games > 0 ? Math.round(list[i].wins / list[i].games * 1000) / 10 : 0;
+    }
+
+    if (process.env.NODE_ENV !== 'test') {
+      GameModel._leaderboardCache = { at: now, value: list };
+    }
+    return list;
+  }
+
+  /**
+   * 批量玩家胜率（观众席/好友列表等）：返回含红蓝分项与名次的项，服务端已按
+   * 可见者 胜率↓→场次↓、未公开者置后（组内场次↓）排序。
+   * @param {string[]} openIds
+   * @param {string|null} viewerOpenId
+   */
+  static async getPlayersStatsBatch(openIds, viewerOpenId) {
+    const ids = Array.from(new Set((openIds || []).filter(Boolean))).slice(0, 200);
+    if (ids.length === 0) return [];
+
+    const threshold = await GameModel.getWinRateThreshold();
+    const placeholders = ids.map(() => '?').join(',');
+
+    const rows = await db.query(
+      `SELECT gp.open_id as openId,
+              COUNT(DISTINCT g.id) as games,
+              COUNT(DISTINCT CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN g.id END) as wins,
+              COUNT(DISTINCT CASE WHEN gp.side = 'good' THEN g.id END) as goodGames,
+              COUNT(DISTINCT CASE WHEN gp.side = 'good' AND JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = 'good' THEN g.id END) as goodWins,
+              COUNT(DISTINCT CASE WHEN gp.side = 'evil' THEN g.id END) as evilGames,
+              COUNT(DISTINCT CASE WHEN gp.side = 'evil' AND JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = 'evil' THEN g.id END) as evilWins
+       FROM games g
+       JOIN game_players gp ON gp.game_id = g.id
+       WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
+         AND gp.open_id IN (${placeholders})
+       GROUP BY gp.open_id`,
+      ids
+    );
+    const byId = new Map(rows.map(r => [r.openId, r]));
+
+    const userRows = await db.query(
+      `SELECT open_id as openId, public_winrate as publicWinrate FROM users WHERE open_id IN (${placeholders})`,
+      ids
+    );
+    const publicById = new Map(userRows.map(u => [u.openId, u.publicWinrate]));
+
+    const leaderboard = await GameModel.getWinRateLeaderboard();
+    const rankById = new Map(leaderboard.map(r => [r.openId, r.rank]));
+
+    const round1 = n => Math.round(n * 10) / 10;
+
+    const players = ids.map(openId => {
+      const r = byId.get(openId);
+      const games = r ? parseInt(r.games, 10) || 0 : 0;
+      const wins = r ? parseInt(r.wins, 10) || 0 : 0;
+      const goodGames = r ? parseInt(r.goodGames, 10) || 0 : 0;
+      const goodWins = r ? parseInt(r.goodWins, 10) || 0 : 0;
+      const evilGames = r ? parseInt(r.evilGames, 10) || 0 : 0;
+      const evilWins = r ? parseInt(r.evilWins, 10) || 0 : 0;
+      const publicWinrate = (publicById.has(openId) && publicById.get(openId) === 0) ? 0 : 1;
+      const isSelf = !!viewerOpenId && viewerOpenId === openId;
+      const rateVisible = isSelf || (publicWinrate === 1 && games >= threshold);
+      const rank = rankById.has(openId) ? rankById.get(openId) : null;
+      return {
+        openId,
+        totalGames: games,
+        totalWins: wins,
+        totalWinRate: games > 0 ? round1(wins / games * 100) : 0,
+        goodGames,
+        goodWins,
+        goodWinRate: goodGames > 0 ? round1(goodWins / goodGames * 100) : 0,
+        evilGames,
+        evilWins,
+        evilWinRate: evilGames > 0 ? round1(evilWins / evilGames * 100) : 0,
+        rank,
+        rateVisible,
+        publicWinrate,
+        threshold
+      };
+    });
+
+    players.sort((a, b) => {
+      if (a.rateVisible !== b.rateVisible) return a.rateVisible ? -1 : 1;
+      if (a.rateVisible && b.totalWinRate !== a.totalWinRate) return b.totalWinRate - a.totalWinRate;
+      return b.totalGames - a.totalGames;
+    });
+
+    return players;
+  }
+
+  /**
    * 全局统计：对局/房间/玩家/用户计数 + 阵营胜率 + 角色出场/胜率 + 全量已结束对局列表
    */
   static async getGlobalStats() {

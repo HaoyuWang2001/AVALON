@@ -95,47 +95,23 @@ function createRouter() {
         [openId]
       );
 
-      // 批量聚合好友胜率（ended、排除房间000000、按局去重）+ 公开胜率开关
+      // 复用共享批量逻辑（含 rank）；在线/房间信息由 getUserView 补充
       const friendIds = friends.map(f => f.openId);
-      const statMap = {};
-      const publicMap = {};
-      if (friendIds.length > 0) {
-        const placeholders = friendIds.map(() => '?').join(',');
-        const stats = await db.query(
-          `SELECT gp.open_id as openId,
-                  COUNT(DISTINCT g.id) as games,
-                  COUNT(DISTINCT CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN g.id END) as wins
-           FROM game_players gp
-           JOIN games g ON g.id = gp.game_id
-           WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
-             AND gp.open_id IN (${placeholders})
-           GROUP BY gp.open_id`,
-          friendIds
-        );
-        stats.forEach(s => { statMap[s.openId] = s; });
-        const pubs = await db.query(
-          `SELECT open_id as openId, public_winrate as publicWinrate FROM users WHERE open_id IN (${placeholders})`,
-          friendIds
-        );
-        pubs.forEach(p => { publicMap[p.openId] = p.publicWinrate; });
-      }
-
-      // 胜率上榜阈值 X（公开且 games>=X 才展示胜率）
+      const statItems = await GameModel.getPlayersStatsBatch(friendIds, openId);
+      const statMap = new Map(statItems.map(s => [s.openId, s]));
       const threshold = await GameModel.getWinRateThreshold();
 
       const list = [];
       for (const f of friends) {
         const view = await getUserView(f.openId, openId);
         if (!view) continue;
-        const st = statMap[f.openId];
-        const games = st ? parseInt(st.games, 10) || 0 : 0;
-        const wins = st ? parseInt(st.wins, 10) || 0 : 0;
-        const publicWinrate = publicMap[f.openId] === 0 ? 0 : 1;
-        view.games = games;
-        view.wins = wins;
-        view.winRate = games > 0 ? Math.round(wins / games * 1000) / 10 : null;
-        view.publicWinrate = publicWinrate;
-        view.qualified = publicWinrate === 1 && games >= threshold;
+        const st = statMap.get(f.openId);
+        view.games = st ? st.totalGames : 0;
+        view.wins = st ? st.totalWins : 0;
+        view.winRate = (st && st.totalGames > 0) ? st.totalWinRate : null;
+        view.publicWinrate = st ? st.publicWinrate : 1;
+        view.qualified = st ? st.rateVisible : false;
+        view.rank = st ? st.rank : null;
         list.push(view);
       }
       // 达标记：胜率降序；未达标（未公开 或 局数<X）：局数降序

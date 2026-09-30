@@ -135,4 +135,128 @@ describe('13 — 总胜率排名', () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ success: true, players: [] });
   });
+
+  // 拉取排行榜全量（分页拼接）
+  async function fetchLeaderboardAll(pageSize = 50) {
+    const all = [];
+    let page = 1;
+    let totalPages = 1;
+    do {
+      const res = await apiGet(`/api/games/stats/leaderboard?page=${page}&pageSize=${pageSize}`);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      all.push(...res.body.players);
+      totalPages = res.body.totalPages;
+      page++;
+    } while (page <= totalPages && page <= 30);
+    return all;
+  }
+
+  // 造 n 局“已结束、非000000、全胜”的对局给某 openId
+  async function seedEndedWins(openId, games, roomNumber, tag) {
+    await db.query('INSERT INTO users (open_id, public_winrate) VALUES (?, 1) ON DUPLICATE KEY UPDATE public_winrate = 1', [openId]);
+    for (let i = 0; i < games; i++) {
+      const gid = `lb${tag}${i}`;
+      await db.query(
+        `INSERT INTO games (id, room_id, room_number, owner_id, current_phase, status, game_result, ended_at)
+         VALUES (?, NULL, ?, ?, 'gameEnd', 'ended', ?, NOW())`,
+        [gid, roomNumber, openId, JSON.stringify({ winner: 'good' })]
+      );
+      await db.query(
+        `INSERT INTO game_players (game_id, open_id, role, side, nick_name, seat_number)
+         VALUES (?, ?, 'loyal', 'good', 'L', 1)`,
+        [gid, openId]
+      );
+    }
+  }
+
+  it('13-7 排行榜：分页元数据 + 全量排序/并列名次一致 + isSelf/isFriend', async () => {
+    const tag = Date.now().toString(36);
+    const seedIds = [];
+    for (let k = 0; k < 3; k++) {
+      const uid = `test_lb_${tag}_${k}`;
+      await seedEndedWins(uid, 55, '111111', `${tag}k${k}_`);
+      seedIds.push(uid);
+    }
+
+    // 分页结构
+    const p1 = await apiGet('/api/games/stats/leaderboard?page=1&pageSize=2');
+    expect(p1.status).toBe(200);
+    expect(p1.body.success).toBe(true);
+    expect(p1.body.page).toBe(1);
+    expect(p1.body.pageSize).toBe(2);
+    expect(Array.isArray(p1.body.players)).toBe(true);
+    expect(p1.body.players.length).toBeLessThanOrEqual(2);
+    expect(p1.body.totalPages).toBe(Math.max(1, Math.ceil(p1.body.total / 2)));
+
+    // 越界/负数夹取
+    const far = await apiGet('/api/games/stats/leaderboard?page=9999&pageSize=2');
+    expect(far.body.page).toBe(far.body.totalPages);
+    const neg = await apiGet('/api/games/stats/leaderboard?page=-3&pageSize=2');
+    expect(neg.body.page).toBe(1);
+
+    // 全量：排序 + 并列名次
+    const all = await fetchLeaderboardAll(50);
+    expect(all.length).toBe(p1.body.total);
+    for (let i = 1; i < all.length; i++) {
+      const a = all[i - 1];
+      const b = all[i];
+      const diff = b.wins * a.games - a.wins * b.games; // >0 → b 胜率更高（不应发生）
+      expect(diff).toBeLessThanOrEqual(0);
+      if (diff === 0) expect(b.games).toBeLessThanOrEqual(a.games);
+      const sameRate = (b.wins * a.games === a.wins * b.games);
+      if (sameRate && b.games === a.games) expect(b.rank).toBe(a.rank);
+      else expect(b.rank).toBeGreaterThan(a.rank);
+    }
+    all.forEach(r => expect(typeof r.rank).toBe('number'));
+
+    // 我们造的玩家都在榜
+    const ids = new Set(all.map(r => r.openId));
+    seedIds.forEach(id => expect(ids.has(id)).toBe(true));
+
+    // isSelf
+    const top = all[0];
+    const withViewer = await apiGet(`/api/games/stats/leaderboard?page=1&pageSize=50&viewerOpenId=${top.openId}`);
+    const selfRow = withViewer.body.players.find(p => p.openId === top.openId);
+    expect(selfRow && selfRow.isSelf).toBe(true);
+
+    // isFriend：top 与另一名玩家建好友关系后应标记
+    const other = all[1];
+    if (other && other.openId !== top.openId) {
+      await db.query('INSERT IGNORE INTO friendships (user_open_id, friend_open_id) VALUES (?, ?)', [top.openId, other.openId]);
+      const wv = await apiGet(`/api/games/stats/leaderboard?page=1&pageSize=50&viewerOpenId=${top.openId}`);
+      const friendRow = wv.body.players.find(p => p.openId === other.openId);
+      if (friendRow) expect(friendRow.isFriend).toBe(true);
+    }
+  });
+
+  it('13-8 排行榜：未公开胜率 / 机器人房 000000 不计入', async () => {
+    const tag = Date.now().toString(36);
+    const priv = `test_lb_priv_${tag}`;
+    const bot = `test_lb_bot_${tag}`;
+
+    // 未公开：60 局全胜但 public_winrate=0
+    await db.query('INSERT INTO users (open_id, public_winrate) VALUES (?, 0) ON DUPLICATE KEY UPDATE public_winrate = 0', [priv]);
+    for (let i = 0; i < 60; i++) {
+      const gid = `lbp${tag}${i}`;
+      await db.query(
+        `INSERT INTO games (id, room_id, room_number, owner_id, current_phase, status, game_result, ended_at)
+         VALUES (?, NULL, '111111', ?, 'gameEnd', 'ended', ?, NOW())`,
+        [gid, priv, JSON.stringify({ winner: 'good' })]
+      );
+      await db.query(
+        `INSERT INTO game_players (game_id, open_id, role, side, nick_name, seat_number)
+         VALUES (?, ?, 'loyal', 'good', 'P', 1)`,
+        [gid, priv]
+      );
+    }
+
+    // 机器人房：60 局、公开，但 room_number=000000
+    await seedEndedWins(bot, 60, '000000', `${tag}b_`);
+
+    const all = await fetchLeaderboardAll(50);
+    const ids = new Set(all.map(r => r.openId));
+    expect(ids.has(priv)).toBe(false);
+    expect(ids.has(bot)).toBe(false);
+  });
 });
