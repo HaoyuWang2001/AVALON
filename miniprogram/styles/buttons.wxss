@@ -68,6 +68,13 @@
 }
 .top-icon-home { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); }
 .top-icon-danger { background: var(--danger); }
+/* 顶栏文字按钮（如「炸车」）：宽度自适应 */
+.top-text-danger {
+  height: 60rpx; padding: 0 22rpx; border-radius: 12rpx;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28rpx; font-weight: 700; color: var(--on-primary);
+  background: var(--danger); flex-shrink: 0;
+}
 .top-mini-icon {
   width: 60rpx; height: 60rpx; border-radius: 12rpx;
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));

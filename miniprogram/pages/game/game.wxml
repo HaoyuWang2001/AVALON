@@ -13,15 +13,7 @@
   <!-- 顶部操作栏（内联①，与引导页②重复——template is 动态绑定失效故手抄两份，改动需同步两处） -->
   <top-bar>
     <view slot="left" class="top-icons">
-      <image wx:if="{{currentPhase === 'gameEnd'}}" class="top-mini-icon"
-             src="/images/back.png" mode="aspectFit" bindtap="goHome"/>
-      <block wx:if="{{currentPhase !== 'gameEnd'}}">
-        <text class="top-icon top-icon-danger" bindtap="abandonGame" wx:if="{{isHost}}">✕</text>
-        <text class="top-icon top-icon-home" bindtap="backToHome">−</text>
-      </block>
-      <button size="mini" class="top-mini-share" open-type="share">
-        <image class="top-mini-icon" src="/images/share.png" mode="aspectFit"/>
-      </button>
+      <text wx:if="{{isHost && currentPhase !== 'gameEnd'}}" class="top-text-danger" bindtap="abandonGame">炸车</text>
     </view>
     <view slot="right" class="top-mini-actions">
       <image class="top-mini-icon {{playerRole ? '' : 'top-mini-icon-hidden'}}" src="/images/my-role.png" mode="aspectFit" bindtap="openRoleModal"></image>

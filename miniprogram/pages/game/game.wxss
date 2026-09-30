@@ -9,14 +9,6 @@
 /* 顶栏图标按钮（方形）样式已移至 styles/buttons.wxss 共享 */
 .top-mini-actions { display: flex; align-items: center; gap: 12rpx; }
 
-/* 分享按钮（button open-type=share）：重置默认样式，与其他 top-mini-icon 视觉一致 */
-.top-mini-share {
-  width: 60rpx; height: 60rpx; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  padding: 0 !important; margin: 0 !important; background: transparent; line-height: normal;
-}
-.top-mini-share::after { border: none; }
-
 /* 5 轮圆圈 */
 .rounds { display: flex; align-items: center; justify-content: center; margin: 40rpx 10rpx; }
 .round-connector { width: 48rpx; height: 10rpx; background: var(--gray-300); border-radius: 5rpx; }
