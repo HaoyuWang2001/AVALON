@@ -408,6 +408,8 @@ Page({
     const items = [];
     const actions = [];
     if (isHost) {
+      // 已入座玩家才可「踢出座位」（移回未入座区，不禁止上座）
+      if (player.seatNumber >= 1) { items.push('踢出座位'); actions.push('unseat'); }
       items.push('踢出房间', isBanned ? '允许上座' : '禁止上座', '转让房主');
       actions.push('kick', 'ban', 'transfer');
     }
@@ -418,7 +420,13 @@ Page({
       itemList: items,
       success: (res) => {
         const act = actions[res.tapIndex];
-        if (act === 'kick') {
+        if (act === 'unseat') {
+          wx.showModal({
+            title: '踢出座位',
+            content: `确定将 ${name} 踢出座位吗？（不禁止其上座）`,
+            success: (r) => { if (r.confirm) api.kickPlayer(roomId, playerId, 'unseat').catch(() => {}); }
+          });
+        } else if (act === 'kick') {
           wx.showModal({
             title: '踢出房间',
             content: `确定将 ${name} 踢出房间吗？`,
