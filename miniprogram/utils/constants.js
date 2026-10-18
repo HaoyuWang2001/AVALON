@@ -128,7 +128,8 @@ function getRoleDescription(role) {
 // ── 配置弹窗共享常量（index 创建房间 / room 配置房间 / configs 组件 共用） ──
 const CONFIG_GOOD_ROLES = ['merlin', 'percival', 'lancelotBlue'];
 const CONFIG_EVIL_ROLES = ['morgana', 'assassin', 'mordred', 'minion', 'oberon', 'lancelotRed'];
-const CONFIG_FORCED_ROLES = ['merlin', 'percival', 'morgana'];
+// 派西维尔可选；梅林/莫甘娜仍为强制角色
+const CONFIG_FORCED_ROLES = ['merlin', 'morgana'];
 
 // 配置弹窗角色短名（派西/蓝兰/红兰）
 const ROLE_NAMES_SHORT = {
@@ -149,29 +150,73 @@ const DEFAULT_CONFIGS = {
   12: { good: ['merlin', 'percival'], evil: ['morgana', 'assassin', 'mordred', 'oberon', 'lancelotBlue', 'lancelotRed'] }
 };
 
-// ── 板子类型：标准局 / 专家局（专家局仅 8 人可用） ──
-const BOARD_TYPES = { STANDARD: 'standard', EXPERT: 'expert' };
+// ── 板子类型：标准局 / 专家局（仅8人）/ 无派板（仅6人） ──
+const BOARD_TYPES = { STANDARD: 'standard', EXPERT: 'expert', NO_PERCIVAL: 'noPercival', CUSTOM: 'custom' };
 
-// 专家局（8人）：梅林/派西 + 3忠臣；莫甘娜/刺客/莫德雷德；湖仙第2轮；流车上限4（第5车强制）
+// 板型展示名（总结页 / 统计页共用）
+const BOARD_TYPE_LABELS = {
+  standard: '标准板',
+  expert: '专家板',
+  noPercival: '无派板',
+  custom: '自定义板'
+};
+
+// 专家局（8人）：梅林/派西 + 3忠臣；莫甘娜/刺客/莫德雷德；湖仙第2轮；流车上限4（第5车强制）；红方互知关
 const EXPERT_CONFIG = {
   playerCount: 8,
   good: ['merlin', 'percival'],
   evil: ['morgana', 'assassin', 'mordred'],
   ladyOfTheLake: true,
   ladyOfTheLakeRound: 2,
-  maxFailedNominations: 4
+  maxFailedNominations: 4,
+  evilKnowsEachOther: false
 };
 
-// 判定某套配置是否为专家局（供配置页反推板子类型）
+// 无派板（6人）：梅林 + 3忠臣；刺客/莫甘娜
+const NO_PERCIVAL_CONFIG = {
+  playerCount: 6,
+  good: ['merlin'],
+  evil: ['morgana', 'assassin']
+};
+
+// roles 可能带 loyal（完整形态）也可能不带（特殊角色形态）：统一滤掉 loyal 后排序比较
+function _specialRoles(list) {
+  return [...((list || []).filter(r => r !== 'loyal'))].sort().join(',');
+}
+
+// 判定某套配置是否为专家局：8人 + 专家角色 + 湖仙开 + 流车4 + 红方互知关
 function isExpertBoard(roles, rules, playerCount) {
   if (playerCount !== EXPERT_CONFIG.playerCount) return false;
-  const good = [...((roles && roles.good) || [])].sort().join(',');
-  const evil = [...((roles && roles.evil) || [])].sort().join(',');
-  const expertGood = [...EXPERT_CONFIG.good, 'loyal', 'loyal', 'loyal'].sort().join(',');
-  const expertEvil = [...EXPERT_CONFIG.evil].sort().join(',');
-  return good === expertGood && evil === expertEvil
+  const good = _specialRoles(roles && roles.good);
+  const evil = _specialRoles(roles && roles.evil);
+  return good === _specialRoles(EXPERT_CONFIG.good) && evil === _specialRoles(EXPERT_CONFIG.evil)
     && !!rules && rules.ladyOfTheLake === true
-    && rules.maxFailedNominations === EXPERT_CONFIG.maxFailedNominations;
+    && rules.maxFailedNominations === EXPERT_CONFIG.maxFailedNominations
+    && rules.evilKnowsEachOther === false;
+}
+
+// 判定是否为无派板：6人 + 梅林单蓝 + 刺客/莫甘娜双红
+function isNoPercivalBoard(roles, playerCount) {
+  if (playerCount !== NO_PERCIVAL_CONFIG.playerCount) return false;
+  const good = _specialRoles(roles && roles.good);
+  const evil = _specialRoles(roles && roles.evil);
+  return good === _specialRoles(NO_PERCIVAL_CONFIG.good) && evil === _specialRoles(NO_PERCIVAL_CONFIG.evil);
+}
+
+// 判定是否为标准板：角色与该人数默认板完全一致（规则改动不降级）
+function isStandardBoard(roles, playerCount) {
+  const def = DEFAULT_CONFIGS[playerCount];
+  if (!def) return false;
+  return _specialRoles(roles && roles.good) === _specialRoles(def.good)
+    && _specialRoles(roles && roles.evil) === _specialRoles(def.evil);
+}
+
+// 板型分类器（与 server 端 classifyBoard 同定义）：expert → noPercival → standard → custom
+function classifyBoard(roles, rules, playerCount) {
+  if (isExpertBoard(roles, rules, playerCount)) return BOARD_TYPES.EXPERT;
+  if (isNoPercivalBoard(roles, playerCount)) return BOARD_TYPES.NO_PERCIVAL;
+  if (isStandardBoard(roles, playerCount)) return BOARD_TYPES.STANDARD;
+  return BOARD_TYPES.CUSTOM;
 }
 
 const SPEECH_OPTIONS = ['不限', '30秒', '60秒', '90秒', '120秒', '150秒', '180秒'];
@@ -213,8 +258,13 @@ module.exports = {
   ROLE_NAMES_SHORT,
   DEFAULT_CONFIGS,
   BOARD_TYPES,
+  BOARD_TYPE_LABELS,
   EXPERT_CONFIG,
+  NO_PERCIVAL_CONFIG,
   isExpertBoard,
+  isNoPercivalBoard,
+  isStandardBoard,
+  classifyBoard,
   SPEECH_OPTIONS,
   ROUND_OPTIONS,
   VOTE_OPTIONS,

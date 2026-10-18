@@ -492,6 +492,7 @@ module.exports = {
   createRoomWithConfig,
   buildConfigWithSpectator,
   buildStandardRoomConfig,
+  buildMinimalRoomConfig,
   buildCustomBoard10,
   buildCustomBoard9,
   withConfigOverrides,

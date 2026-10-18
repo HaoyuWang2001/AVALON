@@ -29,16 +29,27 @@
         </view>
       </view>
       <view class="count-stats">
-        <view wx:for="{{countStats}}" wx:key="count" class="count-stat-row"
-          bindtap="openCountGames" data-count="{{item.count}}">
-          <text class="cs-name">{{item.count}}人局</text>
-          <text class="cs-total">{{item.total}} 场</text>
-          <view class="cs-rate">
-            <text class="rate-good">蓝 {{item.goodRate}}</text>
-            <text class="rate-sep"> / </text>
-            <text class="rate-evil">红 {{item.evilRate}}</text>
+        <block wx:for="{{countStats}}" wx:key="count" wx:for-item="cs">
+          <view class="count-stat-row" bindtap="openCountGames" data-count="{{cs.count}}">
+            <text class="cs-name">{{cs.count}}人局</text>
+            <text class="cs-total">{{cs.total}} 场</text>
+            <view class="cs-rate">
+              <text class="rate-good">蓝 {{cs.goodRate}}</text>
+              <text class="rate-sep"> / </text>
+              <text class="rate-evil">红 {{cs.evilRate}}</text>
+            </view>
           </view>
-        </view>
+          <view wx:for="{{cs.boards}}" wx:key="type" class="count-stat-row cs-sub-row"
+            bindtap="openCountGames" data-count="{{cs.count}}" data-board="{{item.type}}">
+            <text class="cs-name cs-sub-name">{{cs.count}}人局 · {{item.label}}</text>
+            <text class="cs-total">{{item.total}} 场</text>
+            <view class="cs-rate">
+              <text class="rate-good">蓝 {{item.goodRate}}</text>
+              <text class="rate-sep"> / </text>
+              <text class="rate-evil">红 {{item.evilRate}}</text>
+            </view>
+          </view>
+        </block>
       </view>
     </view>
 
@@ -59,17 +70,17 @@
     <view class="card">
       <view class="card-title">全量对局（{{gameList.length}}）</view>
       <view wx:if="{{gameList.length === 0}}" class="empty">暂无对局</view>
-      <scroll-view wx:else scroll-y class="game-scroll">
-        <view wx:for="{{gameList}}" wx:key="id" class="game-row" bindtap="openGame" data-id="{{item.id}}">
-          <view class="game-main">
-            <text class="game-title">{{item.playerCount}}人局 · {{item.durationText}}</text>
-            <text class="game-sub">{{item.dateText}}</text>
+        <scroll-view wx:else scroll-y class="game-scroll">
+          <view wx:for="{{gameList}}" wx:key="id" class="game-row" bindtap="openGame" data-id="{{item.id}}">
+            <view class="game-main">
+              <text class="game-title">{{item.playerCount}}人局 · {{item.boardLabel}} · {{item.durationText}}</text>
+              <text class="game-sub">{{item.dateText}}</text>
+            </view>
+            <view class="game-winner-wrap">
+              <text class="game-winner {{item.winnerClass}}">{{item.winnerText}}</text>
+            </view>
           </view>
-          <view class="game-winner-wrap">
-            <text class="game-winner {{item.winnerClass}}">{{item.winnerText}}</text>
-          </view>
-        </view>
-      </scroll-view>
+        </scroll-view>
     </view>
   </block>
 
@@ -88,7 +99,7 @@
         <scroll-view wx:else scroll-y class="modal-scroll" show-scrollbar="{{false}}">
           <view wx:for="{{detailModal.games}}" wx:key="id" class="game-row" bindtap="openGame" data-id="{{item.id}}">
             <view class="game-main">
-              <text class="game-title">{{item.playerCount}}人局 · {{item.durationText}}</text>
+              <text class="game-title">{{item.playerCount}}人局 · {{item.boardLabel}} · {{item.durationText}}</text>
               <text class="game-sub">{{item.dateText}}</text>
             </view>
             <view class="game-winner-wrap">

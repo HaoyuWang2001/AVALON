@@ -27,6 +27,11 @@
 .cs-name { font-size: 28rpx; font-weight: 600; color: var(--text-title); width: 140rpx; }
 .cs-total { font-size: 24rpx; color: var(--text-muted); flex: 1; }
 .cs-rate { font-size: 26rpx; font-weight: 700; display: flex; align-items: center; }
+/* 板型子行（六人局 · 无派板 等）：缩进弱化 */
+.cs-sub-row { padding: 8rpx 0 14rpx 24rpx; }
+.cs-sub-row .cs-name { width: auto; flex: 1; font-size: 25rpx; font-weight: 500; }
+.cs-sub-row .cs-total { flex: none; margin-right: 20rpx; font-size: 22rpx; }
+.cs-sub-row .cs-rate { font-size: 24rpx; font-weight: 600; }
 .rate-good { color: var(--good); }
 .rate-sep { color: var(--text-muted); font-weight: 400; }
 .rate-evil { color: var(--evil); }

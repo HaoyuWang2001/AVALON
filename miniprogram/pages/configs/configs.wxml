@@ -32,9 +32,13 @@
               <view class="board-toggle">
                 <view class="board-item {{boardType === 'standard' ? 'board-active' : ''}}"
                   data-val="standard" bindtap="onBoardTypeChange">标准局</view>
+                <view wx:if="{{playerCount === 6}}"
+                  class="board-item {{boardType === 'noPercival' ? 'board-active' : ''}}"
+                  data-val="noPercival" bindtap="onBoardTypeChange">无派板</view>
                 <view wx:if="{{playerCount === 8}}"
                   class="board-item {{boardType === 'expert' ? 'board-active' : ''}}"
                   data-val="expert" bindtap="onBoardTypeChange">专家局</view>
+                <view wx:if="{{boardType === 'custom'}}" class="board-item board-custom">自定义</view>
               </view>
             </view>
 
@@ -56,8 +60,8 @@
                     <image src="/images/avalon-blue.png" class="role-img"/>
                   </view>
                   <text class="role-name">{{item === 'merlin' ? '梅林' : item === 'percival' ? '派西' : '蓝兰'}}</text>
-                  <!-- 梅林/派西必选：固定 ×1，无选中框 -->
-                  <text wx:if="{{item === 'merlin' || item === 'percival'}}" class="loyal-count">×1</text>
+                  <!-- 梅林必选：固定 ×1；派西/蓝兰可选 -->
+                  <text wx:if="{{item === 'merlin'}}" class="loyal-count">×1</text>
                   <view wx:else class="role-check {{selectedRoles[item] ? 'check-on' : ''}}">
                     <text wx:if="{{selectedRoles[item]}}">✓</text>
                   </view>
@@ -313,7 +317,7 @@
               <view class="summary-card">
                 <view class="summary-row">
                   <text class="summary-label">玩家数</text>
-                  <text class="summary-value">{{playerCount}}人</text>
+                  <text class="summary-value">{{playerCount}}人 · {{summaryBoard}}</text>
                 </view>
                 <view class="summary-row">
                   <text class="summary-label">蓝方</text>

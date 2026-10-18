@@ -6,7 +6,8 @@ const { getThemeClass } = require('../../utils/theme.js');
 const {
   CONFIG_GOOD_ROLES, CONFIG_EVIL_ROLES, CONFIG_FORCED_ROLES,
   DEFAULT_CONFIGS, SPEECH_OPTIONS, ROUND_OPTIONS, VOTE_OPTIONS, VOTE_REVEAL_OPTIONS,
-  TEAM_SIZES, buildDefaultRule, BOARD_TYPES, EXPERT_CONFIG, isExpertBoard
+  TEAM_SIZES, buildDefaultRule, BOARD_TYPES, EXPERT_CONFIG, NO_PERCIVAL_CONFIG,
+  BOARD_TYPE_LABELS, classifyBoard
 } = require('../../utils/constants.js');
 
 const CONFIG_TITLE = { create: '召开会议', update: '更新配置' };
@@ -50,6 +51,7 @@ Page({
     pageCount: 0,
     goodRoleNames: '',
     evilRoleNames: '',
+    summaryBoard: '',
     summarySpeech: '',
     summarySpec: '',
     summaryLady: ''
@@ -158,7 +160,7 @@ Page({
       CONFIG_FORCED_ROLES.forEach(r => { selected[r] = true; });
 
       const patch = { selectedRoles: selected, playerCount: n };
-      patch.boardType = isExpertBoard(rc.roles, rc.rules, n) ? BOARD_TYPES.EXPERT : BOARD_TYPES.STANDARD;
+      patch.boardType = classifyBoard(rc.roles, rc.rules, n);
       patch.rules = { ...rc.rules };
       patch.ladyOfTheLake = !!rc.rules.ladyOfTheLake;
       patch.ladyOfTheLakeRound = rc.rules.ladyOfTheLakeRound;
@@ -219,6 +221,7 @@ Page({
       rules.ladyOfTheLake = true;
       rules.ladyOfTheLakeRound = EXPERT_CONFIG.ladyOfTheLakeRound;
       rules.maxFailedNominations = EXPERT_CONFIG.maxFailedNominations;
+      rules.evilKnowsEachOther = false;
       rules.lancelotMustFail = false;
       rules.oberonMustFailMission = true;
 
@@ -238,10 +241,41 @@ Page({
       });
       this.computeAll();
     },
+    // 套用无派板（6人固定板）：梅林 + 3忠臣；刺客/莫甘娜
+    applyNoPercivalConfig() {
+      const selected = {};
+      CONFIG_GOOD_ROLES.forEach(r => { selected[r] = false; });
+      CONFIG_EVIL_ROLES.forEach(r => { selected[r] = false; });
+      NO_PERCIVAL_CONFIG.good.forEach(r => { selected[r] = true; });
+      NO_PERCIVAL_CONFIG.evil.forEach(r => { selected[r] = true; });
+      CONFIG_FORCED_ROLES.forEach(r => { selected[r] = true; });
+
+      const rules = buildDefaultRule();
+      rules.lancelotMustFail = false;
+      rules.oberonMustFailMission = true;
+
+      this.setData({
+        boardType: BOARD_TYPES.NO_PERCIVAL,
+        playerCount: NO_PERCIVAL_CONFIG.playerCount,
+        selectedRoles: selected,
+        rules: rules,
+        ladyOfTheLake: false,
+        ladyOfTheLakeRound: 2,
+        speechTimeoutIndex: 0,
+        roundTimeoutIndex: 0,
+        voteTimeoutIndex: 0,
+        voteRevealDurationIndex: 2,
+        goodCount: NO_PERCIVAL_CONFIG.good.length,
+        evilCount: NO_PERCIVAL_CONFIG.evil.length
+      });
+      this.computeAll();
+    },
     onBoardTypeChange(e) {
       const val = e.currentTarget.dataset.val;
       if (val === BOARD_TYPES.EXPERT) {
         this.applyExpertConfig();
+      } else if (val === BOARD_TYPES.NO_PERCIVAL) {
+        this.applyNoPercivalConfig();
       } else {
         this.applyDefaultConfig(this.data.playerCount);
       }
@@ -382,13 +416,24 @@ Page({
       if (sel.minion) evil.push('爪牙');
       if (sel.lancelotRed) evil.push('红兰');
 
+      // 板型反推：手动改角色/规则后自动降级（专家局需红方互知关）
+      const selGood = CONFIG_GOOD_ROLES.filter(r => sel[r]);
+      const selEvil = CONFIG_EVIL_ROLES.filter(r => sel[r]);
+      const boardType = classifyBoard({ good: selGood, evil: selEvil }, {
+        ...this.data.rules,
+        ladyOfTheLake: this.data.ladyOfTheLake,
+        ladyOfTheLakeRound: this.data.ladyOfTheLakeRound
+      }, this.data.playerCount);
+
       const speech = this.data.speechTimeoutIndex > 0 ? SPEECH_OPTIONS[this.data.speechTimeoutIndex] : '不限';
       const spec = this.data.allowSpectator ? (this.data.spectatorLimited ? '允许（上限' + this.data.maxSpectators + '人）' : '允许（不限人数）') : '不允许';
       const lady = this.data.ladyOfTheLake ? '启用（第' + this.data.ladyOfTheLakeRound + '轮）' : '未启用';
 
       this.setData({
+        boardType,
         goodRoleNames: good.join('、'),
         evilRoleNames: evil.join('、'),
+        summaryBoard: BOARD_TYPE_LABELS[boardType] || boardType,
         summarySpeech: speech,
         summarySpec: spec,
         summaryLady: lady

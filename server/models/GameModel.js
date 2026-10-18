@@ -2,6 +2,7 @@
 const db = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
 const { randomInt } = require('node:crypto');
+const { BOARD_TYPES, classifyBoard } = require('../utils/boardType');
 
 // mysql2 默认会把 JSON 列解析为 JS 对象，因此读取时需兼容 string 与 object
 function parseJson(value) {
@@ -191,12 +192,14 @@ class GameModel {
           [roomId]
         );
         
-        // 3. 分配角色
+        // 3. 分配角色 + 判定板型（仅当实际使用自定义板时按快照分类；回退默认板一律 standard）
         let roles;
+        let boardType = BOARD_TYPES.STANDARD;
         if (roomConfig && roomConfig.roles && roomConfig.roles.good && roomConfig.roles.evil) {
           const customRoles = [...roomConfig.roles.good, ...roomConfig.roles.evil];
           if (customRoles.length === playerCount) {
             roles = customRoles;
+            boardType = classifyBoard(roomConfig.roles, roomConfig.rules || {}, playerCount);
           } else {
             roles = this.getRoleConfiguration(playerCount);
           }
@@ -204,18 +207,18 @@ class GameModel {
           roles = this.getRoleConfiguration(playerCount);
         }
         const shuffledRoles = this.shuffleArray(roles);
-        
+
         // 4. 创建游戏记录（首位车长 = 均匀随机；湖仙初始持有者 = 首车主 seat-1 取模，仅湖仙启用时）
         const firstLeaderIndex = playerCount > 0 ? randomInt(playerCount) : 0;
         const firstLakeHolderIndex = (firstLeaderIndex - 1 + playerCount) % playerCount;
         const lakeEnabled = !!(roomConfig && roomConfig.rules && roomConfig.rules.ladyOfTheLake);
         const firstLakeHolderOpenId = lakeEnabled && players[firstLakeHolderIndex] ? players[firstLakeHolderIndex].openId : null;
         await connection.execute(
-          `INSERT INTO games (id, room_id, room_number, room_config_snapshot, owner_id, current_phase, current_round, 
+          `INSERT INTO games (id, room_id, room_number, room_config_snapshot, owner_id, board_type, current_phase, current_round,
                               team_leader_index, failed_nominations, lake_holder_open_id,
                               speaking_order, status, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, 'roleReveal', 1, ?, 0, ?, 'asc', 'active', NOW(), NOW())`,
-          [gameId, roomId, roomId, roomConfig ? JSON.stringify(roomConfig) : null, ownerId, firstLeaderIndex, firstLakeHolderOpenId]
+           VALUES (?, ?, ?, ?, ?, ?, 'roleReveal', 1, ?, 0, ?, 'asc', 'active', NOW(), NOW())`,
+          [gameId, roomId, roomId, roomConfig ? JSON.stringify(roomConfig) : null, ownerId, boardType, firstLeaderIndex, firstLakeHolderOpenId]
         );
         
         // 5. 添加游戏玩家角色
@@ -571,6 +574,7 @@ class GameModel {
       // 获取游戏基本信息
       const games = await db.query(
         `SELECT id as gameId, room_id as roomId, room_config_snapshot as roomConfigSnapshot,
+                board_type as boardType, source as source,
                 owner_id as ownerId, current_phase as currentPhase, current_round as currentRound,
                 team_leader_index as teamLeaderIndex, nominated_team as nominatedTeam,
                 failed_nominations as failedNominations, lake_holder_open_id as lakeHolderOpenId,
@@ -835,6 +839,8 @@ class GameModel {
         gameId: game.gameId,
         roomId: game.roomId,
         roomConfig,
+        boardType: game.boardType || 'standard',
+        source: game.source || 'online',
         status: game.status,
         createdAt: game.createdAt,
         endedAt: game.endedAt,
@@ -2530,6 +2536,7 @@ class GameModel {
       // 全量已结束对局（倒序）
       const gameRows = await db.query(
         `SELECT g.id, g.room_id as roomId, g.room_number as roomNumber, g.game_result as gameResult,
+                g.board_type as boardType, g.source as source,
                 (SELECT COUNT(*) FROM game_players WHERE game_id = g.id) as playerCount,
                 TIMESTAMPDIFF(SECOND, g.created_at, g.ended_at) as durationSeconds,
                 g.created_at as createdAt, g.ended_at as endedAt
@@ -2542,6 +2549,8 @@ class GameModel {
         roomId: g.roomId,
         roomNumber: g.roomNumber,
         gameResult: g.gameResult ? parseJson(g.gameResult) : null,
+        boardType: g.boardType || 'standard',
+        source: g.source || 'online',
         playerCount: parseInt(g.playerCount, 10) || 0,
         durationSeconds: g.durationSeconds,
         createdAt: g.createdAt,

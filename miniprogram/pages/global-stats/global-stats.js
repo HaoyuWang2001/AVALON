@@ -1,6 +1,7 @@
 // pages/global-stats/global-stats.js
 const api = require('../../services/api.js');
 const { getThemeClass, getThemeBg } = require('../../utils/theme.js');
+const { BOARD_TYPES, BOARD_TYPE_LABELS } = require('../../utils/constants.js');
 
 // 角色统计固定展示（合并项取主角色数据）：梅林/派西维尔→merlin，刺客/莫甘娜→morgana
 const ROLE_STATS = [
@@ -43,15 +44,46 @@ function formatDate(ts) {
 
 function mapGame(g) {
   const winner = g.gameResult && g.gameResult.winner;
+  const boardType = g.boardType || 'standard';
   return {
     id: g.id,
     playerCount: g.playerCount,
+    boardType,
+    boardLabel: BOARD_TYPE_LABELS[boardType] || boardType,
     winner,
     durationText: formatDuration(g.durationSeconds),
     dateText: formatDate(g.endedAt || g.createdAt),
     winnerText: winner === 'good' ? '蓝方胜' : winner === 'evil' ? '红方胜' : '—',
     winnerClass: winner === 'good' ? 'win-good' : winner === 'evil' ? 'win-evil' : ''
   };
+}
+
+// 板型子行顺序（自定义板暂不独立子行，仅计入汇总）
+const BOARD_SUB_ROWS = [
+  { type: BOARD_TYPES.STANDARD, label: BOARD_TYPE_LABELS.standard },
+  { type: BOARD_TYPES.NO_PERCIVAL, label: BOARD_TYPE_LABELS.noPercival },
+  { type: BOARD_TYPES.EXPERT, label: BOARD_TYPE_LABELS.expert }
+];
+
+// 人数 × 板型 胜率统计：每行 = 汇总（全部板型）+ 板型子行（仅场次>0）
+function buildCountStats(gameList) {
+  const rate = (v, total) => total > 0 ? Math.round(v / total * 1000) / 10 + '%' : '—';
+  return PLAYER_COUNTS.map(n => {
+    const list = gameList.filter(g => g.playerCount === n);
+    const total = list.length;
+    const good = list.filter(g => g.winner === 'good').length;
+    const evil = list.filter(g => g.winner === 'evil').length;
+    const boards = BOARD_SUB_ROWS.map(b => {
+      const bl = list.filter(g => g.boardType === b.type);
+      const bt = bl.length;
+      return {
+        type: b.type, label: b.label, total: bt,
+        goodRate: rate(bl.filter(g => g.winner === 'good').length, bt),
+        evilRate: rate(bl.filter(g => g.winner === 'evil').length, bt)
+      };
+    }).filter(b => b.total > 0);
+    return { count: n, total, goodRate: rate(good, total), evilRate: rate(evil, total), boards };
+  });
 }
 
 Page({
@@ -101,15 +133,8 @@ Page({
         };
       });
       const gameList = (res.games || []).map(mapGame);
-      // 各人数胜率（由全部 ended 对局按人数分组）
-      const countStats = PLAYER_COUNTS.map(n => {
-        const list = gameList.filter(g => g.playerCount === n);
-        const total = list.length;
-        const good = list.filter(g => g.winner === 'good').length;
-        const evil = list.filter(g => g.winner === 'evil').length;
-        const rate = v => total > 0 ? Math.round(v / total * 1000) / 10 + '%' : '—';
-        return { count: n, total, goodRate: rate(good), evilRate: rate(evil) };
-      });
+      // 各人数胜率（汇总 + 板型子行：六人局-无派板 / 八人局-专家板 / X人局-标准板 独立统计）
+      const countStats = buildCountStats(gameList);
       this.setData({ stats: s, roleStats, gameList, countStats });
     }).catch(() => this.setData({ loading: false }));
   },
@@ -131,11 +156,16 @@ Page({
     }).catch(() => this.setData({ detailModalLoading: false }));
   },
 
-  // 点击人数行：弹出该人数的全部对局（本地过滤）
+  // 点击人数行：弹出该人数全部对局；点击板型子行：仅该板型（本地过滤）
   openCountGames(e) {
     const count = parseInt(e.currentTarget.dataset.count, 10);
-    const games = this.data.gameList.filter(g => g.playerCount === count);
-    this.setData({ detailModal: { show: true, title: `${count}人局`, games }, detailModalLoading: false });
+    const board = e.currentTarget.dataset.board || '';
+    const games = board
+      ? this.data.gameList.filter(g => g.playerCount === count && g.boardType === board)
+      : this.data.gameList.filter(g => g.playerCount === count);
+    const boardLabel = board ? (BOARD_TYPE_LABELS[board] || board) : '';
+    const title = `${count}人局${boardLabel ? ' · ' + boardLabel : ''}`;
+    this.setData({ detailModal: { show: true, title, games }, detailModalLoading: false });
   },
 
   closeDetail() {

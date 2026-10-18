@@ -31,6 +31,8 @@
   transition: all 0.2s;
 }
 .board-active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: var(--on-primary); box-shadow: var(--shadow-primary); }
+/* 自定义板只读角标（不可点）：手动改角色后自动降级显示 */
+.board-custom { opacity: 0.55; }
 
 /* ─────── Count selector ─────── */
 .count-row { display: flex; flex-wrap: wrap; gap: 12rpx; }

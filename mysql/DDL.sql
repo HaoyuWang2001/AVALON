@@ -69,6 +69,8 @@ CREATE TABLE games (
     room_id VARCHAR(6) NULL COMMENT '房间ID（房间删除后置NULL，游戏记录保留）',
     room_number VARCHAR(6) NULL COMMENT '开局快照房间号（房间删除后仍保留，写入后不可变）',
     room_config_snapshot JSON NULL COMMENT '开局快照房间配置（房间删除后历史对局仍可还原版型）',
+    board_type VARCHAR(20) NOT NULL DEFAULT 'standard' COMMENT '板型：standard/noPercival/expert/custom',
+    source VARCHAR(10) NOT NULL DEFAULT 'online' COMMENT '对局来源：online/offline',
     owner_id VARCHAR(64) NOT NULL COMMENT '游戏所有者（从rooms.owner_id复制）',
     current_phase VARCHAR(50) DEFAULT 'waiting' COMMENT '当前阶段',
     current_round INT DEFAULT 1 COMMENT '当前回合(1-5)',
@@ -281,6 +283,43 @@ CREATE TABLE friend_requests (
     UNIQUE KEY uniq_pending (from_open_id, to_open_id),
     INDEX idx_to (to_open_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='好友申请表(仅pending)';
+
+-- =============================================
+-- 12. offline_records表：线下对局记录草稿
+-- =============================================
+CREATE TABLE offline_records (
+    id VARCHAR(36) NOT NULL COMMENT '记录ID（UUID）',
+    owner_open_id VARCHAR(64) NOT NULL COMMENT '房主（记录创建者）openId',
+    room_config JSON NOT NULL COMMENT '板子配置快照（与房间 roomConfig 同构）',
+    board_type VARCHAR(20) NOT NULL COMMENT '板型：standard/noPercival/expert/custom',
+    status VARCHAR(20) NOT NULL DEFAULT 'recording' COMMENT 'recording=记录中 / completed=已完成',
+    rounds JSON NULL COMMENT '轮次记录：车/票型/任务/湖仙/兰斯/刺杀',
+    game_id VARCHAR(36) NULL COMMENT '完成后物化的 games.id（编辑时该 id 保持不变）',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+    PRIMARY KEY (id),
+    KEY idx_offline_records_owner (owner_open_id),
+    KEY idx_offline_records_game (game_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='线下对局记录（草稿）';
+
+-- =============================================
+-- 13. offline_record_players表：线下记录-座位与身份
+-- =============================================
+CREATE TABLE offline_record_players (
+    record_id VARCHAR(36) NOT NULL COMMENT '记录ID',
+    open_id VARCHAR(64) NOT NULL COMMENT '玩家openId',
+    nick_name VARCHAR(100) NOT NULL DEFAULT '匿名玩家',
+    avatar_url TEXT,
+    seat_number INT NOT NULL COMMENT '座位号 1..N',
+    seat_status VARCHAR(10) NOT NULL DEFAULT 'pending' COMMENT 'pending=待房主同意 / approved=已入座',
+    role VARCHAR(50) NULL COMMENT '分配身份（未分配为 NULL）',
+    role_source VARCHAR(10) NULL COMMENT 'self=玩家自选 / host=房主指定',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (record_id, open_id),
+    UNIQUE KEY uk_offline_record_seat (record_id, seat_number),
+    KEY idx_offline_record_players_open (open_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='线下对局记录-玩家座位与身份';
 
 -- =============================================
 -- 初始化完成
