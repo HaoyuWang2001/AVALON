@@ -20,7 +20,9 @@
       <view class="pstat-div"></view>
       <view class="pstat"><text class="pstat-num">{{summary && summary.totalGames ? summary.totalWinRate + '%' : '-'}}</text><text class="pstat-label">总胜率</text></view>
       <view class="pstat-div"></view>
-      <view class="pstat"><text class="pstat-num">-</text><text class="pstat-label">获赞数</text></view>
+      <view class="pstat"><text class="pstat-num pstat-award">🏅 {{summary ? summary.mvpCount || 0 : 0}}</text><text class="pstat-label">MVP</text></view>
+      <view class="pstat-div"></view>
+      <view class="pstat"><text class="pstat-num pstat-award">💠 {{summary ? summary.svpCount || 0 : 0}}</text><text class="pstat-label">SVP</text></view>
     </view>
 
     <block wx:if="{{champions.length > 0}}">

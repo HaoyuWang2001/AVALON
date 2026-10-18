@@ -141,6 +141,25 @@ function createRouter() {
       // 总胜率排名（与 champions 同口径；不在榜 = null）
       stats.rank = await GameModel.getWinRateRank(openId);
 
+      // MVP/SVP 获得数（收到的票数累计；跟随胜率可见性，不可见时不下发）
+      if (stats.rateVisible) {
+        const avRows = await db.query(
+          `SELECT v.award, COUNT(*) AS cnt
+           FROM game_award_votes v
+           JOIN games g ON g.id = v.game_id
+           WHERE v.target_open_id = ? AND v.state = 'voted'
+             AND g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
+           GROUP BY v.award`,
+          [openId]
+        );
+        stats.mvpCount = 0;
+        stats.svpCount = 0;
+        for (const r of avRows) {
+          if (r.award === 'mvp') stats.mvpCount = Number(r.cnt);
+          if (r.award === 'svp') stats.svpCount = Number(r.cnt);
+        }
+      }
+
       // 是否已存在（viewer → subject）待处理的好友申请（供"申请好友"按钮禁用判断）
       stats.friendRequestPending = false;
       if (viewerOpenId && viewerOpenId !== openId) {
@@ -212,6 +231,8 @@ function createRouter() {
         games: p.games,
         wins: p.wins,
         winRate: p.winRate,
+        mvpCount: p.mvpCount || 0,
+        svpCount: p.svpCount || 0,
         isFriend: friendSet.has(p.openId),
         isSelf: !!viewerOpenId && viewerOpenId === p.openId
       }));
@@ -729,6 +750,31 @@ function createRouter() {
       }
 
       res.status(500).json({ success: false, message: error.message || '梅林翻牌失败' });
+    }
+  });
+
+  // MVP/SVP 选择（胜方最佳/败方最佳；declined=NoNoNo 不可重选；跳过不写记录）
+  router.post('/:gameId/awardVote', async (req, res) => {
+    try {
+      const { gameId } = req.params;
+      const { openId, award, action, targetOpenId } = req.body;
+      if (!gameId || !openId || !award || !action) {
+        return res.status(400).json({ success: false, message: '缺少必要参数' });
+      }
+      const result = await GameModel.submitAwardVote(gameId, openId, award, action, targetOpenId);
+      res.json({ success: true, awards: result.awards });
+    } catch (error) {
+      console.error('MVP/SVP选择API错误:', error.message);
+      if (error.message.includes('游戏不存在') || error.message.includes('目标不在此游戏中')) {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+      if (error.message.includes('奖项无效') || error.message.includes('操作无效')
+          || error.message.includes('对局尚未结束') || error.message.includes('该对局不可进行')
+          || error.message.includes('只有本局玩家') || error.message.includes('该奖项已完成选择')
+          || error.message.includes('不能选择自己') || error.message.includes('只能选择')) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+      res.status(500).json({ success: false, message: error.message || '选择失败' });
     }
   });
 

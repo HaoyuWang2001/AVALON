@@ -902,6 +902,51 @@ progress { border-radius: 12rpx; }
   100% { transform: translateY(0); opacity: 1; }
 }
 
+/* ─────── MVP/SVP 选择窗（本局玩家·结束页；高于 player-stats 1200，低于重连 2000） ─────── */
+.award-modal {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1250;
+  display: flex; align-items: center; justify-content: center;
+}
+.award-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--mask); }
+.award-panel {
+  position: relative; width: 640rpx; max-height: 78vh; box-sizing: border-box;
+  background: var(--bg-card); border-radius: 28rpx; padding: 32rpx 28rpx;
+  display: flex; flex-direction: column; box-shadow: var(--shadow-lg, var(--shadow-md));
+}
+.award-head { position: relative; display: flex; flex-direction: column; gap: 4rpx; padding-right: 56rpx; }
+.award-title { font-size: 36rpx; font-weight: 800; color: var(--text-title); }
+.award-sub { font-size: 24rpx; color: var(--text-muted); }
+.award-close { position: absolute; right: 0; top: 4rpx; font-size: 32rpx; color: var(--text-muted); padding: 8rpx; }
+.award-status { display: flex; gap: 12rpx; margin: 20rpx 0 8rpx; }
+.award-chip {
+  font-size: 22rpx; font-weight: 700; padding: 6rpx 18rpx; border-radius: 999rpx;
+  background: var(--bg-page); color: var(--text-muted);
+}
+.award-chip.chip-voted { background: var(--label-good-bg); color: var(--label-good); }
+.award-chip.chip-declined { background: var(--label-grey-bg); color: var(--label-grey); text-decoration: line-through; }
+.award-list { flex: 1; min-height: 200rpx; max-height: 44vh; margin-top: 12rpx; }
+.award-grid { display: flex; flex-wrap: wrap; gap: 14rpx; }
+.award-cand {
+  width: calc((100% - 14rpx) / 2); box-sizing: border-box;
+  display: flex; align-items: center; gap: 12rpx; padding: 14rpx;
+  border-radius: 18rpx; background: var(--bg-page);
+  border: 3rpx solid transparent;
+}
+.award-cand-on { border-color: var(--primary); background: var(--primary-veil); }
+.award-cand-avatar { width: 64rpx; height: 64rpx; border-radius: 50%; background: var(--gray-100); flex-shrink: 0; }
+.award-cand-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2rpx; }
+.award-cand-name { font-size: 24rpx; font-weight: 700; color: var(--text-body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.award-cand-role { font-size: 20rpx; color: var(--text-muted); }
+.award-cand-check { font-size: 28rpx; font-weight: 900; color: var(--primary); flex-shrink: 0; }
+.award-empty { text-align: center; color: var(--text-muted); font-size: 26rpx; padding: 40rpx 0; }
+.award-ops { display: flex; gap: 14rpx; margin-top: 20rpx; }
+.award-btn { flex: 1; border-radius: 999rpx; font-size: 26rpx; font-weight: 700; }
+.award-btn-primary { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: var(--on-primary); }
+.award-btn-plain { background: var(--bg-page); color: var(--text-muted); }
+.award-btn-danger { background: var(--label-evil-bg); color: var(--label-evil); }
+.award-btn[disabled] { opacity: 0.45; color: var(--on-primary); background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); }
+.award-entry-btn { background: var(--label-violet-bg); color: var(--label-violet); }
+
 /* ─────── 任务结果全屏动画（全员） ─────── */
 .mission-anim {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;

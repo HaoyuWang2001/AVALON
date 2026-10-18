@@ -134,6 +134,7 @@
 .pstats { display: flex; align-items: center; margin: 28rpx 0; }
 .pstat { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .pstat-num { font-size: 46rpx; font-weight: 800; color: var(--profile-fg); }
+.pstat-award { font-size: 40rpx; }
 .pstat-label { font-size: 24rpx; color: var(--profile-fg); margin-top: 6rpx; }
 .pstat-div { width: 6rpx; height: 60rpx; background: var(--divider-strong); border-radius: 3rpx; }
 .pstats-longdiv { height: 6rpx; background: var(--divider-strong); border-radius: 3rpx; margin: 0 0 88rpx; }

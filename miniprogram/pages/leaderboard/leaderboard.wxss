@@ -29,6 +29,7 @@
 .lb-friend { background: var(--label-blue-bg); color: var(--label-blue); }
 .lb-me { background: var(--label-violet-bg); color: var(--label-violet); }
 .lb-sub { font-size: 24rpx; color: var(--text-muted); }
+.lb-awards { font-size: 22rpx; font-weight: 700; color: var(--gold); margin-left: 10rpx; }
 .lb-rate { flex-shrink: 0; font-size: 34rpx; font-weight: 800; color: var(--primary); }
 
 .lb-pager {

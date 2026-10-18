@@ -67,7 +67,9 @@ Component({
             totalGames: s.totalGames,
             totalWinRate: s.totalGames > 0 ? s.totalWinRate + '%' : '—',
             goodWinRate: s.goodGames > 0 ? s.goodWinRate + '%' : '—',
-            evilWinRate: s.evilGames > 0 ? s.evilWinRate + '%' : '—'
+            evilWinRate: s.evilGames > 0 ? s.evilWinRate + '%' : '—',
+            mvpCount: s.mvpCount || 0,
+            svpCount: s.svpCount || 0
           } : null,
           roles
         });

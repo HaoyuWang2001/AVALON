@@ -20,6 +20,10 @@
           <view class="ps-stat"><text class="ps-num ps-evil">{{stats.evilWinRate}}</text><text class="ps-label">红方</text></view>
           <view class="ps-stat"><text class="ps-num">{{stats.totalGames}}</text><text class="ps-label">场次</text></view>
         </view>
+        <view class="ps-awards">
+          <view class="ps-award"><text class="ps-award-num">🏅 {{stats.mvpCount || 0}}</text><text class="ps-award-label">MVP</text></view>
+          <view class="ps-award"><text class="ps-award-num">💠 {{stats.svpCount || 0}}</text><text class="ps-award-label">SVP</text></view>
+        </view>
         <view wx:if="{{roles.length > 0}}" class="ps-roles">
           <text class="ps-roles-title">常用角色</text>
           <view class="ps-roles-row">

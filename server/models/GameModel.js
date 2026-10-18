@@ -817,6 +817,19 @@ class GameModel {
           vision,
           identityMarks
         };
+        // MVP/SVP 选择状态（仅正常结束局的参与者：none=未选/已跳过，voted，declined=NoNoNo）
+        if (revealAll && requesterInfo && game.gameResult && game.gameResult.winner && !game.gameResult.abandoned) {
+          const awardRows = await db.query(
+            `SELECT award, state, target_open_id AS target
+             FROM game_award_votes WHERE game_id = ? AND voter_open_id = ?`,
+            [gameId, openId]
+          );
+          const awards = { mvp: { state: 'none', target: null }, svp: { state: 'none', target: null } };
+          for (const r of awardRows) {
+            if (awards[r.award]) awards[r.award] = { state: r.state, target: r.target || null };
+          }
+          player.awards = awards;
+        }
         if (revealAll) {
           publicPlayers = fullPlayers;
         } else {
@@ -2140,6 +2153,69 @@ class GameModel {
     }
   }
 
+  /**
+   * MVP/SVP 选择：每局每位玩家对每个奖项各一次（voted / declined=NoNoNo）。
+   * MVP = 胜利方最有价值玩家；SVP = 失败方最有价值玩家。
+   * 暂时跳过 = 不写记录，下次进入结束页重新弹出；declined 后不可再选。
+   */
+  static async submitAwardVote(gameId, openId, award, action, targetOpenId) {
+    if (!['mvp', 'svp'].includes(award)) throw new Error('奖项无效');
+    if (!['vote', 'decline'].includes(action)) throw new Error('操作无效');
+
+    const [game] = await db.query(
+      `SELECT current_phase, status, game_result AS result FROM games WHERE id = ?`,
+      [gameId]
+    );
+    if (!game) throw new Error('游戏不存在');
+    if (game.status !== 'ended' || game.current_phase !== 'gameEnd') throw new Error('对局尚未结束');
+    const result = typeof game.result === 'string' ? parseJson(game.result) : game.result;
+    if (!result || !result.winner || result.abandoned) throw new Error('该对局不可进行MVP/SVP选择');
+
+    const players = await db.query(
+      `SELECT open_id AS openId, side FROM game_players WHERE game_id = ?`,
+      [gameId]
+    );
+    const voter = players.find(p => p.openId === openId);
+    if (!voter) throw new Error('只有本局玩家才能选择');
+
+    const existing = await db.query(
+      `SELECT state FROM game_award_votes WHERE game_id = ? AND voter_open_id = ? AND award = ?`,
+      [gameId, openId, award]
+    );
+    if (existing.length > 0) throw new Error('该奖项已完成选择');
+
+    if (action === 'vote') {
+      const target = players.find(p => p.openId === targetOpenId);
+      if (!target) throw new Error('目标不在此游戏中');
+      if (target.openId === openId) throw new Error('不能选择自己');
+      const winSide = result.winner;
+      const loseSide = winSide === 'good' ? 'evil' : 'good';
+      if (award === 'mvp' && target.side !== winSide) throw new Error('MVP 只能选择胜利方玩家');
+      if (award === 'svp' && target.side !== loseSide) throw new Error('SVP 只能选择失败方玩家');
+      await db.query(
+        `INSERT INTO game_award_votes (game_id, voter_open_id, award, state, target_open_id, created_at)
+         VALUES (?, ?, ?, 'voted', ?, NOW())`,
+        [gameId, openId, award, targetOpenId]
+      );
+    } else {
+      await db.query(
+        `INSERT INTO game_award_votes (game_id, voter_open_id, award, state, target_open_id, created_at)
+         VALUES (?, ?, ?, 'declined', NULL, NOW())`,
+        [gameId, openId, award]
+      );
+    }
+
+    const rows = await db.query(
+      `SELECT award, state, target_open_id AS target FROM game_award_votes WHERE game_id = ? AND voter_open_id = ?`,
+      [gameId, openId]
+    );
+    const awards = { mvp: { state: 'none', target: null }, svp: { state: 'none', target: null } };
+    for (const r of rows) {
+      if (awards[r.award]) awards[r.award] = { state: r.state, target: r.target || null };
+    }
+    return { awards };
+  }
+
   // =============== 工具方法 ===============
 
   /**
@@ -2352,6 +2428,7 @@ class GameModel {
     const threshold = await GameModel.getWinRateThreshold();
     const rows = await db.query(
       `SELECT t.openId, t.games, t.wins,
+              COALESCE(av.mvp, 0) as mvpCount, COALESCE(av.svp, 0) as svpCount,
               u.custom_nick_name as customNickName, u.wx_nick_name as wxNickName,
               u.avatar_url as avatarUrl, u.unique_id as uniqueId
        FROM (
@@ -2365,6 +2442,15 @@ class GameModel {
          HAVING games >= ?
        ) t
        JOIN users u ON u.open_id = t.openId
+       LEFT JOIN (
+         SELECT v.target_open_id AS openId,
+                SUM(CASE WHEN v.award = 'mvp' THEN 1 ELSE 0 END) AS mvp,
+                SUM(CASE WHEN v.award = 'svp' THEN 1 ELSE 0 END) AS svp
+         FROM game_award_votes v
+         JOIN games g ON g.id = v.game_id
+         WHERE v.state = 'voted' AND g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
+         GROUP BY v.target_open_id
+       ) av ON av.openId = t.openId
        WHERE u.public_winrate <> 0`,
       [threshold]
     );
@@ -2376,7 +2462,9 @@ class GameModel {
         avatarUrl: r.avatarUrl || '',
         uniqueId: r.uniqueId || '',
         games: parseInt(r.games, 10) || 0,
-        wins: parseInt(r.wins, 10) || 0
+        wins: parseInt(r.wins, 10) || 0,
+        mvpCount: parseInt(r.mvpCount, 10) || 0,
+        svpCount: parseInt(r.svpCount, 10) || 0
       }))
       .filter(r => r.games > 0);
 

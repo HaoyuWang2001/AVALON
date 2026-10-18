@@ -322,6 +322,20 @@ CREATE TABLE offline_record_players (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='线下对局记录-玩家座位与身份';
 
 -- =============================================
+-- 14. game_award_votes表：MVP/SVP选择记录
+-- =============================================
+CREATE TABLE game_award_votes (
+    game_id VARCHAR(36) NOT NULL COMMENT 'FK→games.id',
+    voter_open_id VARCHAR(64) NOT NULL COMMENT '投票玩家openId',
+    award VARCHAR(10) NOT NULL COMMENT '奖项：mvp(胜方最佳)/svp(败方最佳)',
+    state VARCHAR(10) NOT NULL COMMENT 'voted/declined',
+    target_open_id VARCHAR(64) NULL COMMENT '获选玩家（voted 时有值）',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (game_id, voter_open_id, award),
+    KEY idx_award_votes_target (target_open_id, award)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='MVP/SVP选择记录';
+
+-- =============================================
 -- 初始化完成
 -- =============================================
 SELECT 'AVALON v2.0 数据库初始化完成' AS status;

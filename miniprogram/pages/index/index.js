@@ -509,7 +509,9 @@ Page({
             totalWins: s.totalWins,
             totalGames: s.totalGames,
             goodWinRate: s.goodWinRate + '%',
-            evilWinRate: s.evilWinRate + '%'
+            evilWinRate: s.evilWinRate + '%',
+            mvpCount: s.mvpCount || 0,
+            svpCount: s.svpCount || 0
           }
         });
       }

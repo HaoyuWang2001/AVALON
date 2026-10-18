@@ -567,6 +567,7 @@ class OfflineRecordModel {
         await connection.execute('DELETE FROM votes WHERE game_id = ?', [record.gameId]);
         await connection.execute('DELETE FROM game_identity_marks WHERE game_id = ?', [record.gameId]);
         await connection.execute('DELETE FROM game_players WHERE game_id = ?', [record.gameId]);
+        await connection.execute('DELETE FROM game_award_votes WHERE game_id = ?', [record.gameId]);
         await connection.execute('DELETE FROM games WHERE id = ?', [record.gameId]);
       }
       await connection.execute('DELETE FROM offline_record_players WHERE record_id = ?', [recordId]);

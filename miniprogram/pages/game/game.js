@@ -265,6 +265,9 @@ Page({
     knifeProgress: 0,
     showMerlinFlipAnim: false,
     merlinFlipPhase: '',
+    myAwards: null,
+    awardCandidates: [],
+    awardModal: { show: false, step: 'mvp', sel: '' },
     flipProgress: 0,
     crownHolderOpenId: '',
     identityMarks: {},
@@ -736,6 +739,7 @@ Page({
           assassinTargetOpenId: phase === 'assassination' ? this.data.assassinTargetOpenId : '',
           oldLakeOpenIds: [...oldLakeOpenIds],
           revealConfirmed: res.player ? !!res.player.revealConfirmed : false,
+          myAwards: (res.player && res.player.awards) ? res.player.awards : null,
           revealConfirmedCount: res.current.revealConfirmedCount || 0,
           revealTotalCount: res.current.revealTotalCount || 0,
           vision: res.player ? res.player.vision || null : null,
@@ -808,6 +812,11 @@ Page({
             this._merlinFlipShown = true;
             this.playMerlinFlipAnim();
           }
+          // MVP/SVP 选择窗：本局玩家在正常结束局且任一奖项未处理（未选/曾跳过）→ 每次进入结束页自动弹一次
+          if (myAwards && !this._awardPrompted && (myAwards.mvp.state === 'none' || myAwards.svp.state === 'none')) {
+            this._awardPrompted = true;
+            this._openAwardModal();
+          }
         } else if (!api._socketTask && this.data.roomId) {
           api.connectSocket(this.data.roomId, app.globalData.openId);
         }
@@ -870,6 +879,78 @@ Page({
     }).catch(err => {
       console.error('获取游戏状态失败:', err);
     });
+  },
+
+  // ── MVP/SVP 选择（MVP=胜利方最佳，SVP=失败方最佳）──
+  _computeAwardCandidates(step) {
+    const winner = this.data.gameWinner;
+    if (!winner) return [];
+    const loser = winner === 'good' ? 'evil' : 'good';
+    const side = step === 'mvp' ? winner : loser;
+    const me = app.globalData.openId || '';
+    return (this.data.tablePlayers || [])
+      .filter(p => p.openId !== me && p.side === side)
+      .map(p => ({ openId: p.openId, seatNumber: p.seatNumber, nickName: p.nickName, avatarUrl: p.avatarUrl, roleName: p.roleName }));
+  },
+  _openAwardModal() {
+    const aw = this.data.myAwards;
+    if (!aw) return;
+    const step = aw.mvp.state === 'none' ? 'mvp' : 'svp';
+    this.setData({
+      awardCandidates: this._computeAwardCandidates(step),
+      awardModal: { show: true, step, sel: '' }
+    });
+  },
+  openAwardModal() { this._openAwardModal(); },
+  onAwardPick(e) {
+    const id = e.currentTarget.dataset.id;
+    this.setData({ 'awardModal.sel': this.data.awardModal.sel === id ? '' : id });
+  },
+  _advanceAward(awards) {
+    const aw = awards || this.data.myAwards;
+    if (aw.mvp.state === 'none') {
+      this.setData({ myAwards: aw, awardCandidates: this._computeAwardCandidates('mvp'), awardModal: { show: true, step: 'mvp', sel: '' } });
+    } else if (aw.svp.state === 'none') {
+      this.setData({ myAwards: aw, awardCandidates: this._computeAwardCandidates('svp'), awardModal: { show: true, step: 'svp', sel: '' } });
+    } else {
+      this.setData({ myAwards: aw, awardCandidates: [], awardModal: { show: false, step: 'mvp', sel: '' } });
+    }
+  },
+  confirmAwardVote() {
+    const { step, sel } = this.data.awardModal;
+    if (!sel) { wx.showToast({ title: '请先选择玩家', icon: 'none' }); return; }
+    wx.showLoading({ title: '提交中...', mask: true });
+    api.submitAwardVote(this.data.gameId, step, 'vote', sel).then(res => {
+      wx.hideLoading();
+      wx.showToast({ title: step === 'mvp' ? 'MVP 已选出' : 'SVP 已选出', icon: 'success' });
+      this._advanceAward(res.awards);
+    }).catch(err => {
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
+    });
+  },
+  declineAward() {
+    const { step } = this.data.awardModal;
+    wx.showModal({
+      title: 'NoNoNo',
+      content: '选择后将不能再选择本奖项，确定吗？',
+      confirmColor: '#DC2626',
+      success: m => {
+        if (!m.confirm) return;
+        api.submitAwardVote(this.data.gameId, step, 'decline').then(res => {
+          this._advanceAward(res.awards);
+        }).catch(err => {
+          wx.showToast({ title: (err && err.message) || '操作失败', icon: 'none' });
+        });
+      }
+    });
+  },
+  skipAward() {
+    // 暂时跳过：不落库，下次进入结束页重新弹出；本次会话内继续处理另一奖项
+    this._advanceAward(null);
+  },
+  closeAwardModal() {
+    this.setData({ awardModal: { show: false, step: 'mvp', sel: '' }, awardCandidates: [] });
   },
 
   noop() {},

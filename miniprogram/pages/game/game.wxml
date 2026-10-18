@@ -312,11 +312,15 @@
           <view class="gameend-title">{{gameWinner === 'good' ? '蓝方获胜' : '红方获胜'}}</view>
         </view>
       </block>
-      <!-- 非历史：回到房间（历史对局无房间，隐藏该按钮） -->
-      <view class="bar-row" wx:if="{{!isHistory}}">
-        <button size="mini" class="btn btn-primary" bindtap="goRoom">回到房间</button>
-      </view>
-    </block>
+    <!-- 非历史：回到房间（历史对局无房间，隐藏该按钮） -->
+    <view class="bar-row" wx:if="{{!isHistory}}">
+      <button size="mini" class="btn btn-primary" bindtap="goRoom">回到房间</button>
+    </view>
+    <!-- MVP/SVP：有未处理奖项（未选/曾跳过）时提供手动入口 -->
+    <view class="bar-row" wx:if="{{myAwards && (myAwards.mvp.state === 'none' || myAwards.svp.state === 'none')}}">
+      <button size="mini" class="btn btn-primary award-entry-btn" bindtap="openAwardModal">MVP / SVP</button>
+    </view>
+  </block>
     </block>
   </view>
 
@@ -579,6 +583,42 @@
       <view class="merlin-flip-center">
         <text class="merlin-flip-text">梅林翻牌</text>
         <text class="merlin-flip-sub">红方胜利</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- MVP/SVP 选择窗（本局玩家·正常结束局；MVP=胜方最佳 SVP=败方最佳） -->
+  <view class="award-modal" wx:if="{{awardModal.show}}" catchtouchmove="noop">
+    <view class="award-mask" bindtap="closeAwardModal"></view>
+    <view class="award-panel">
+      <view class="award-head">
+        <text class="award-title">{{awardModal.step === 'mvp' ? '🏅 本局 MVP' : '💠 本局 SVP'}}</text>
+        <text class="award-sub">{{awardModal.step === 'mvp' ? '胜利方最有价值玩家' : '失败方最有价值玩家'}}</text>
+        <text class="award-close" bindtap="closeAwardModal">✕</text>
+      </view>
+      <view class="award-status">
+        <text class="award-chip {{myAwards.mvp.state === 'voted' ? 'chip-voted' : myAwards.mvp.state === 'declined' ? 'chip-declined' : ''}}">MVP {{myAwards.mvp.state === 'voted' ? '已选' : myAwards.mvp.state === 'declined' ? '已放弃' : '待选'}}</text>
+        <text class="award-chip {{myAwards.svp.state === 'voted' ? 'chip-voted' : myAwards.svp.state === 'declined' ? 'chip-declined' : ''}}">SVP {{myAwards.svp.state === 'voted' ? '已选' : myAwards.svp.state === 'declined' ? '已放弃' : '待选'}}</text>
+      </view>
+      <scroll-view scroll-y class="award-list" show-scrollbar="{{false}}">
+        <view class="award-grid">
+          <view wx:for="{{awardCandidates}}" wx:key="openId"
+            class="award-cand {{awardModal.sel === item.openId ? 'award-cand-on' : ''}}"
+            bindtap="onAwardPick" data-id="{{item.openId}}">
+            <image class="award-cand-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
+            <view class="award-cand-info">
+              <text class="award-cand-name">{{item.seatNumber}}号 {{item.nickName}}</text>
+              <text class="award-cand-role">{{item.roleName}}</text>
+            </view>
+            <text wx:if="{{awardModal.sel === item.openId}}" class="award-cand-check">✓</text>
+          </view>
+        </view>
+        <view wx:if="{{awardCandidates.length === 0}}" class="award-empty">没有可选玩家</view>
+      </scroll-view>
+      <view class="award-ops">
+        <button class="award-btn award-btn-primary" size="mini" disabled="{{!awardModal.sel}}" bindtap="confirmAwardVote">确认选择</button>
+        <button class="award-btn award-btn-plain" size="mini" bindtap="skipAward">暂时跳过</button>
+        <button class="award-btn award-btn-danger" size="mini" bindtap="declineAward">NoNoNo</button>
       </view>
     </view>
   </view>

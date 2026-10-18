@@ -20,6 +20,13 @@
 .ps-tag { font-size: 22rpx; color: var(--on-primary); background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); padding: 4rpx 18rpx; border-radius: 999rpx; margin-top: 8rpx; }
 .ps-loading { text-align: center; color: var(--text-muted); padding: 30rpx 0; }
 .ps-stats { display: flex; margin-top: 24rpx; }
+.ps-awards { display: flex; gap: 16rpx; margin-top: 16rpx; }
+.ps-award {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 14rpx 0; border-radius: 16rpx; background: var(--bg-page);
+}
+.ps-award-num { font-size: 30rpx; font-weight: 800; color: var(--text-title); }
+.ps-award-label { font-size: 20rpx; color: var(--text-muted); margin-top: 4rpx; }
 .ps-stat { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .ps-num { font-size: 36rpx; font-weight: 800; color: var(--primary); }
 .ps-good { color: var(--good); }

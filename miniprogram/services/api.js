@@ -271,6 +271,14 @@ class ApiService {
     });
   }
 
+  // MVP/SVP 选择（award: mvp/svp；action: vote/decline；decline=NoNoNo）
+  submitAwardVote(gameId, award, action, targetOpenId) {
+    const openId = this.openId || getApp().globalData.openId;
+    const data = { openId, award, action };
+    if (targetOpenId) data.targetOpenId = targetOpenId;
+    return this.request(`/games/${gameId}/awardVote`, { method: 'POST', data });
+  }
+
   async getGameState(gameId) {
     const openId = this.openId || getApp().globalData.openId;
     return this.request(`/games/${gameId}?openId=${openId}`);
