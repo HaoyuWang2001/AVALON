@@ -16,6 +16,7 @@ const { BOARD_TYPES, classifyBoard } = require('../utils/boardType');
 
 async function main() {
   const dry = process.argv.includes('--dry');
+  await db.initPool();
 
   // playerCount 由 game_players 计数（games 无该列）
   const [games] = await db.query(

@@ -36,7 +36,7 @@
           <block wx:if="{{item.player}}">
             <image class="rd-seat-avatar" src="{{item.player.avatarUrl || '/images/default-avatar.png'}}"/>
             <text class="rd-seat-name">{{item.player.nickName}}</text>
-            <text class="rd-seat-role {{item.player.role ? '' : 'rd-seat-role-none'}}">{{item.player.role ? (item.player.roleSource === 'host' ? '🂠 ' : '🔒 ') : ''}}</text>
+            <text class="rd-seat-role {{item.player.role ? '' : 'rd-seat-role-none'}}">{{item.player.role ? ((item.player.roleSource === 'host' ? '' : '🔒 ') + item.player.roleLabel) : '未分配'}}</text>
           </block>
           <block wx:else>
             <text class="rd-seat-num">{{item.seat}}</text>
