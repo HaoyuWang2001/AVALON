@@ -10,7 +10,7 @@ const {
   BOARD_TYPE_LABELS, classifyBoard
 } = require('../../utils/constants.js');
 
-const CONFIG_TITLE = { create: '召开会议', update: '更新配置' };
+const CONFIG_TITLE = { create: '召开会议', update: '更新配置', record: '开启记录' };
 
 Page({
   data: {
@@ -495,6 +495,21 @@ Page({
         }).catch((err) => {
           wx.hideLoading();
           wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' });
+        });
+      } else if (this.data.mode === 'record') {
+        // 线下记录：给定配置创建记录草稿，进入记录模式
+        wx.showLoading({ title: '开启记录中...', mask: true });
+        api.createOfflineRecord(config).then((res) => {
+          wx.hideLoading();
+          if (res.success) {
+            this._submitted = true;
+            wx.redirectTo({ url: `/pages/record-detail/record-detail?recordId=${res.record.id}` });
+          } else {
+            wx.showToast({ title: (res && res.message) || '创建失败', icon: 'none' });
+          }
+        }).catch((err) => {
+          wx.hideLoading();
+          wx.showToast({ title: (err && err.message) || '创建失败', icon: 'none' });
         });
       } else {
         const ui = this.data.userInfo || {};

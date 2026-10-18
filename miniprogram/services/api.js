@@ -507,6 +507,79 @@ class ApiService {
     return this.request(`/games/stats/role-games?role=${encodeURIComponent(role)}`);
   }
 
+  // ── 线下对局记录 ──
+  createOfflineRecord(roomConfig) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request('/offline-records/create', { method: 'POST', data: { openId, roomConfig } });
+  }
+
+  getOfflineRecord(recordId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/offline-records/${recordId}?openId=${encodeURIComponent(openId)}`);
+  }
+
+  getOfflineRecords() {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/offline-records/list?openId=${encodeURIComponent(openId)}`);
+  }
+
+  joinOfflineSeat(recordId, seat, invited) {
+    const openId = this.openId || getApp().globalData.openId;
+    const app = getApp();
+    const ui = app.globalData.userInfo || {};
+    return this.request(`/offline-records/${recordId}/joinSeat`, {
+      method: 'POST',
+      data: { openId, seat, invited, userInfo: { nickName: ui.customNickName || ui.nickName || '', avatarUrl: ui.avatarUrl || '' } }
+    });
+  }
+
+  respondOfflineSeat(recordId, targetOpenId, approve) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/offline-records/${recordId}/respondSeat`, { method: 'POST', data: { openId, targetOpenId, approve } });
+  }
+
+  assignOfflinePlayer(recordId, targetOpenId, seat) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/offline-records/${recordId}/assignPlayer`, { method: 'POST', data: { openId, targetOpenId, seat } });
+  }
+
+  removeOfflinePlayer(recordId, targetOpenId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/offline-records/${recordId}/removePlayer`, { method: 'POST', data: { openId, targetOpenId } });
+  }
+
+  leaveOfflineRecord(recordId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/offline-records/${recordId}/leave`, { method: 'POST', data: { openId } });
+  }
+
+  setOfflineRole(recordId, role, targetOpenId) {
+    const openId = this.openId || getApp().globalData.openId;
+    const data = { openId, role };
+    if (targetOpenId) data.targetOpenId = targetOpenId;
+    return this.request(`/offline-records/${recordId}/setRole`, { method: 'POST', data });
+  }
+
+  saveOfflineRounds(recordId, rounds) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/offline-records/${recordId}/saveRounds`, { method: 'POST', data: { openId, rounds } });
+  }
+
+  finishOfflineRecord(recordId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/offline-records/${recordId}/finish`, { method: 'POST', data: { openId } });
+  }
+
+  reopenOfflineRecord(recordId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/offline-records/${recordId}/reopen`, { method: 'POST', data: { openId } });
+  }
+
+  deleteOfflineRecord(recordId) {
+    const openId = this.openId || getApp().globalData.openId;
+    return this.request(`/offline-records/${recordId}/delete`, { method: 'POST', data: { openId } });
+  }
+
   async getChampions(openId) {
     const q = openId ? `?openId=${encodeURIComponent(openId)}` : '';
     return this.request(`/games/stats/champions${q}`);

@@ -333,6 +333,62 @@ async function merlinFlip(gameId, openId) {
   return res.body;
 }
 
+// ── 线下对局记录 ──
+async function createOfflineRecord(openId, roomConfig) {
+  const res = await apiPost('/api/offline-records/create', { openId, roomConfig });
+  return res.body;
+}
+
+async function getOfflineRecord(recordId, openId) {
+  const res = await apiGet(`/api/offline-records/${recordId}?openId=${openId}`);
+  return { status: res.status, body: res.body };
+}
+
+async function listOfflineRecords(openId) {
+  const res = await apiGet(`/api/offline-records/list?openId=${openId}`);
+  return res.body;
+}
+
+async function joinOfflineSeat(recordId, openId, seat, userInfo, invited) {
+  const res = await apiPost(`/api/offline-records/${recordId}/joinSeat`, { openId, seat, userInfo, invited });
+  return res.body;
+}
+
+async function respondOfflineSeat(recordId, openId, targetOpenId, approve) {
+  const res = await apiPost(`/api/offline-records/${recordId}/respondSeat`, { openId, targetOpenId, approve });
+  return res.body;
+}
+
+async function assignOfflinePlayer(recordId, openId, targetOpenId, seat) {
+  const res = await apiPost(`/api/offline-records/${recordId}/assignPlayer`, { openId, targetOpenId, seat });
+  return res.body;
+}
+
+async function setOfflineRole(recordId, openId, targetOpenId, role) {
+  const res = await apiPost(`/api/offline-records/${recordId}/setRole`, { openId, targetOpenId, role });
+  return res.body;
+}
+
+async function saveOfflineRounds(recordId, openId, rounds) {
+  const res = await apiPost(`/api/offline-records/${recordId}/saveRounds`, { openId, rounds });
+  return res.body;
+}
+
+async function finishOfflineRecord(recordId, openId) {
+  const res = await apiPost(`/api/offline-records/${recordId}/finish`, { openId });
+  return res.body;
+}
+
+async function reopenOfflineRecord(recordId, openId) {
+  const res = await apiPost(`/api/offline-records/${recordId}/reopen`, { openId });
+  return res.body;
+}
+
+async function deleteOfflineRecord(recordId, openId) {
+  const res = await apiPost(`/api/offline-records/${recordId}/delete`, { openId });
+  return res.body;
+}
+
 async function endGame(gameId) {
   const res = await apiPost('/api/games/end', { gameId });
   return res.body;
@@ -520,6 +576,9 @@ module.exports = {
   assassinate,
   startAssassination,
   merlinFlip,
+  createOfflineRecord, getOfflineRecord, listOfflineRecords,
+  joinOfflineSeat, respondOfflineSeat, assignOfflinePlayer, setOfflineRole,
+  saveOfflineRounds, finishOfflineRecord, reopenOfflineRecord, deleteOfflineRecord,
   endGame,
   submitPreNomination,
   endDiscussion,

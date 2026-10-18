@@ -730,6 +730,10 @@ Page({
     wx.navigateTo({ url: '/pages/leaderboard/leaderboard' });
   },
 
+  goToRecords() {
+    wx.navigateTo({ url: '/pages/records/records' });
+  },
+
   // 主页"加入会议"入口：固定未入座(seat=0)；room未游戏→room页；room游戏中→game页
   doJoinRoom(roomId) {
     wx.showLoading({ title: '加入会议中...' });

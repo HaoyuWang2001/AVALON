@@ -104,9 +104,9 @@
       <text class="func-emoji">🏆</text>
       <text class="func-label">排行榜</text>
     </view>
-    <view class="func-item func-glass func-disabled">
-      <text class="func-emoji">⏳</text>
-      <text class="func-label">开发中…</text>
+    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="goToRecords">
+      <view class="func-icon-box"><image src="/images/stopwatch.png" class="func-icon" mode="aspectFit"/></view>
+      <text class="func-label">线下记录</text>
     </view>
   </view>
 
@@ -118,7 +118,7 @@
     <history-card title="历史对局" games="{{historyList}}" />
   </view>
 
-  <view class="footer"><view class="footer-version">AVALON v1.0.0</view></view>
+  <view class="footer"><view class="footer-version">AVALON v1.4.2</view></view>
 
   <!-- 游戏说明：全屏覆盖页 -->
   <view class="rules-page" wx:if="{{showInfo}}">

@@ -7,7 +7,9 @@
     "pages/friend-detail/friend-detail",
     "pages/global-stats/global-stats",
     "pages/leaderboard/leaderboard",
-    "pages/configs/configs"
+    "pages/configs/configs",
+    "pages/records/records",
+    "pages/record-detail/record-detail"
   ],
   "window": {
     "backgroundTextStyle": "light",

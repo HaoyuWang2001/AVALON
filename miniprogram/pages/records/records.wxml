@@ -1,0 +1,59 @@
+<!--pages/records/records.wxml-->
+<view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
+
+  <view wx:if="{{loading}}" class="rc-loading">加载中...</view>
+
+  <block wx:else>
+    <!-- 记录中 -->
+    <view class="card">
+      <view class="rc-card-head">
+        <text class="rc-card-title">记录中</text>
+        <view class="rc-create" hover-class="rc-create-hover" bindtap="createRecord">＋ 新建记录</view>
+      </view>
+      <view wx:if="{{recording.length === 0}}" class="rc-empty">
+        <text>还没有进行中的线下记录\n点击「新建记录」，给定配置后即可开始记录</text>
+      </view>
+      <view wx:for="{{recording}}" wx:key="id" class="rc-row" hover-class="rc-row-hover" bindtap="openRecord" data-id="{{item.id}}">
+        <view class="rc-row-main">
+          <view class="rc-row-title">
+            <text class="rc-row-name">{{item.playerCount}}人局 · {{item.boardLabel}}</text>
+            <text wx:if="{{item.mySeat}}" class="rc-tag">我 {{item.mySeat}}号位</text>
+            <text wx:if="{{!item.isOwner && !item.mySeat}}" class="rc-tag">参与</text>
+          </view>
+          <text class="rc-row-sub">入座 {{item.seatsApproved}}/{{item.playerCount}}{{item.seatsPending > 0 ? ' · 待审批 ' + item.seatsPending : ''}} · {{item.timeText}}</text>
+        </view>
+        <view wx:if="{{item.isOwner}}" class="rc-row-ops">
+          <text class="rc-op rc-op-danger" catchtap="deleteRecord" data-id="{{item.id}}">删除</text>
+          <text class="rc-op rc-op-primary">继续</text>
+        </view>
+        <view wx:else class="rc-row-ops">
+          <text class="rc-op rc-op-primary">进入</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 已完成 -->
+    <view class="card">
+      <view class="rc-card-head">
+        <text class="rc-card-title">已完成</text>
+        <text class="rc-card-count">{{completed.length}} 条</text>
+      </view>
+      <view wx:if="{{completed.length === 0}}" class="rc-empty"><text>暂无已完成的记录</text></view>
+      <view wx:for="{{completed}}" wx:key="id" class="rc-row">
+        <view class="rc-row-main" hover-class="rc-row-hover" bindtap="viewReplay" data-game="{{item.gameId}}">
+          <view class="rc-row-title">
+            <text class="rc-row-name">{{item.playerCount}}人局 · {{item.boardLabel}}</text>
+            <text wx:if="{{item.mySeat}}" class="rc-tag">我 {{item.mySeat}}号位</text>
+          </view>
+          <text class="rc-row-sub">完成于 {{item.timeText}} · 点击查看回放</text>
+        </view>
+        <view wx:if="{{item.isOwner}}" class="rc-row-ops">
+          <text class="rc-op rc-op-danger" catchtap="deleteRecord" data-id="{{item.id}}">删除</text>
+          <text class="rc-op rc-op-primary" catchtap="openRecord" data-id="{{item.id}}">编辑</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view style="height: 40rpx"></view>
+</view>

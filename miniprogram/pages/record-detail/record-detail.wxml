@@ -1,0 +1,292 @@
+<!--pages/record-detail/record-detail.wxml-->
+<view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
+
+  <view wx:if="{{loading}}" class="rd-loading">加载中...</view>
+  <view wx:elif="{{loadErr}}" class="rd-loading">{{loadErr}}</view>
+
+  <block wx:if="{{rec}}">
+    <!-- 头部 -->
+    <view class="card rd-head">
+      <view class="rd-head-main">
+        <text class="rd-title">{{rec.playerCount}}人局 · {{boardLabel}}</text>
+        <text class="rd-sub">{{recording ? '记录中' : '已完成'}}{{rec.isOwner ? ' · 房主' : ''}}{{!rec.isOwner && rec.me ? ' · ' + rec.me.seatNumber + '号位' : ''}}</text>
+      </view>
+      <button wx:if="{{recording && isOwner}}" class="rd-share-btn" size="mini" open-type="share">分享记录</button>
+    </view>
+
+    <!-- 待审批（房主） -->
+    <view wx:if="{{recording && isOwner && pending.length > 0}}" class="card">
+      <view class="rd-card-title">待审批入座（{{pending.length}}）</view>
+      <view wx:for="{{pending}}" wx:key="openId" class="rd-pending-row">
+        <image class="rd-pending-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
+        <text class="rd-pending-name">{{item.nickName}} · 申请 {{item.seatNumber}} 号位</text>
+        <view class="rd-pending-ops">
+          <text class="rd-op rd-op-agree" bindtap="onRespond" data-id="{{item.openId}}" data-ok="1">同意</text>
+          <text class="rd-op rd-op-refuse" bindtap="onRespond" data-id="{{item.openId}}" data-ok="0">拒绝</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 座位 -->
+    <view class="card">
+      <view class="rd-card-title">座位（{{approved.length}}/{{rec.playerCount}}）</view>
+      <view class="rd-seat-grid">
+        <view wx:for="{{seats}}" wx:key="seat" class="rd-seat {{item.player ? '' : 'rd-seat-empty'}}"
+          bindtap="onSeatTap" bindlongpress="onSeatLongPress" data-seat="{{item.seat}}">
+          <block wx:if="{{item.player}}">
+            <image class="rd-seat-avatar" src="{{item.player.avatarUrl || '/images/default-avatar.png'}}"/>
+            <text class="rd-seat-name">{{item.player.nickName}}</text>
+            <text class="rd-seat-role {{item.player.role ? '' : 'rd-seat-role-none'}}">{{item.player.role ? (item.player.roleSource === 'host' ? '🂠 ' : '🔒 ') : ''}}</text>
+          </block>
+          <block wx:else>
+            <text class="rd-seat-num">{{item.seat}}</text>
+            <text class="rd-seat-hint">{{recording && !isOwner && !rec.me ? '点我入座' : '空位'}}</text>
+            <view wx:if="{{recording && isOwner}}" class="rd-seat-ops" catchtap="noop">
+              <button class="rd-seat-invite" size="mini" open-type="share" data-seat="{{item.seat}}" bindtap="setShareSeat" data-seat="{{item.seat}}">邀请</button>
+              <text class="rd-seat-assign" bindtap="openAssign" data-seat="{{item.seat}}">指定</text>
+            </view>
+          </block>
+        </view>
+      </view>
+    </view>
+
+    <!-- 身份 -->
+    <view class="card">
+      <view class="rd-card-title">身份（{{approved.length - (configRoleCount - remainingRoles.length) >= 0 ? configRoleCount - remainingRoles.length : 0}}/{{configRoleCount}}）</view>
+
+      <!-- 参与者：自选身份 -->
+      <block wx:if="{{!isOwner && rec.me}}">
+        <view wx:if="{{rec.me.role}}" class="rd-role-card">
+          <text class="rd-role-emoji">{{myRoleEmoji}}</text>
+          <text class="rd-role-name">{{myRoleLabel}}</text>
+        </view>
+        <picker wx:elif="{{recording && remainingRoles.length > 0}}" range="{{remainingRoles}}" range-key="label" bindchange="onMyRoleChange">
+          <view class="rd-role-pick">🂠 选择我的身份（剩 {{remainingRoles.length}} 个）</view>
+        </picker>
+        <view wx:else class="rd-role-wait">身份待分配或已分完</view>
+        <view wx:if="{{recording}}" class="rd-leave" bindtap="leaveRecord">退出记录</view>
+      </block>
+
+      <!-- 房主：逐人指定 -->
+      <block wx:if="{{isOwner && recording}}">
+        <view wx:for="{{approved}}" wx:key="openId" class="rd-assign-row">
+          <text class="rd-assign-seat">{{item.seatNumber}}号</text>
+          <text class="rd-assign-name">{{item.nickName}}</text>
+          <block wx:if="{{item.role}}">
+            <text class="rd-assign-role">{{item.roleSource === 'host' ? (item.roleLabel || '') : '🔒 已自选'}}</text>
+            <text class="rd-op rd-op-refuse" bindtap="clearOwnerRole" data-id="{{item.openId}}">清除</text>
+          </block>
+          <picker wx:else range="{{remainingRoles}}" range-key="label" bindchange="onOwnerRoleChange" data-id="{{item.openId}}">
+            <text class="rd-op rd-op-agree">分配</text>
+          </picker>
+        </view>
+        <view wx:if="{{remainingRoles.length > 0}}" class="rd-role-note">剩 {{remainingRoles.length}} 个身份未分配</view>
+      </block>
+      <block wx:if="{{isOwner && !recording}}">
+        <view class="rd-role-note">已完成：身份 {{configRoleCount - remainingRoles.length}}/{{configRoleCount}} 已分配</view>
+      </block>
+    </view>
+
+    <!-- 轮次记录（房主 + 记录中） -->
+    <block wx:if="{{isOwner && recording}}">
+      <view class="card">
+        <view class="rd-card-title">开局</view>
+        <view class="rd-form-row">
+          <text class="rd-form-label">首车主</text>
+          <picker range="{{approved}}" range-key="nickName" bindchange="onFirstLeaderChange">
+            <text class="rd-form-value">{{roundsDraft.firstLeaderOpenId ? '已选择' : '选择'}}</text>
+          </picker>
+        </view>
+        <view wx:if="{{lakeEnabled}}" class="rd-form-row">
+          <text class="rd-form-label">首湖仙</text>
+          <picker range="{{approved}}" range-key="nickName" bindchange="onFirstLakeChange">
+            <text class="rd-form-value">{{roundsDraft.firstLakeHolderOpenId ? '已选择' : '选择'}}</text>
+          </picker>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="rd-card-title">发车（第 {{carForm.round}} 轮 · 第 {{carForm.carIndex}} 车 · {{teamSize}}人车）</view>
+
+        <view class="rd-form-row">
+          <text class="rd-form-label">队长</text>
+          <picker range="{{approved}}" range-key="nickName" bindchange="onCarLeaderChange">
+            <text class="rd-form-value">{{carForm.leader ? '已选择' : '选择'}}</text>
+          </picker>
+        </view>
+
+        <view class="rd-form-block">
+          <text class="rd-form-label">车队（{{carForm.team.length}}/{{teamSize}}）</text>
+          <view class="rd-chips">
+            <view wx:for="{{approved}}" wx:key="openId" wx:for-item="p"
+              class="rd-chip {{carForm.team.indexOf(p.openId) >= 0 ? 'rd-chip-on' : ''}}"
+              bindtap="onToggleTeam" data-id="{{p.openId}}">{{p.seatNumber}}号 {{p.nickName}}</view>
+          </view>
+        </view>
+
+        <view class="rd-form-block" wx:if="{{!carForm.forced}}">
+          <text class="rd-form-label">票型：多选部分人 → 点「所选为同意/反对」，其余自动取反面</text>
+          <view class="rd-chips">
+            <view wx:for="{{approved}}" wx:key="openId" wx:for-item="p"
+              class="rd-chip {{carForm.voteSel.indexOf(p.openId) >= 0 ? 'rd-chip-sel' : ''}} {{carForm.votes[p.openId] === 'approve' ? 'rd-chip-good' : carForm.votes[p.openId] === 'reject' ? 'rd-chip-evil' : ''}}"
+              bindtap="onToggleVoteSel" data-id="{{p.openId}}">{{p.seatNumber}}号 {{p.nickName}}{{carForm.votes[p.openId] === 'approve' ? ' ✓' : carForm.votes[p.openId] === 'reject' ? ' ✕' : ''}}</view>
+          </view>
+          <view class="rd-btn-row">
+            <view class="rd-mini-btn rd-mini-good" bindtap="applyVotes" data-val="approve">所选为同意</view>
+            <view class="rd-mini-btn rd-mini-evil" bindtap="applyVotes" data-val="reject">所选为反对</view>
+            <view class="rd-mini-btn rd-mini-plain" bindtap="clearVotes">清空</view>
+          </view>
+        </view>
+
+        <view class="rd-form-row">
+          <text class="rd-form-label">强制车</text>
+          <switch checked="{{carForm.forced}}" bindchange="onForcedToggle" color="#8B5CF6"/>
+        </view>
+
+        <view class="rd-form-block" wx:if="{{carForm.team.length === teamSize}}">
+          <text class="rd-form-label">任务票：多选部分人 → 点「所选为成功/失败」，其余自动取反面</text>
+          <view class="rd-chips">
+            <view wx:for="{{carForm.team}}" wx:key="openId" wx:for-item="tp"
+              class="rd-chip {{carForm.missionSel.indexOf(tp.openId) >= 0 ? 'rd-chip-sel' : ''}} {{carForm.mission[tp.openId] === 'success' ? 'rd-chip-good' : carForm.mission[tp.openId] === 'fail' ? 'rd-chip-evil' : ''}}"
+              bindtap="onToggleMissionSel" data-id="{{tp.openId}}">{{tp.seatNumber}}号 {{tp.nickName}}{{carForm.mission[tp.openId] === 'success' ? ' ✓' : carForm.mission[tp.openId] === 'fail' ? ' ✕' : ''}}</view>
+          </view>
+          <view class="rd-btn-row">
+            <view class="rd-mini-btn rd-mini-good" bindtap="applyMission" data-val="success">所选为成功</view>
+            <view class="rd-mini-btn rd-mini-evil" bindtap="applyMission" data-val="fail">所选为失败</view>
+          </view>
+        </view>
+
+        <view class="rd-btn-row">
+          <view class="rd-mini-btn rd-mini-primary" bindtap="addCar">＋ 添加本车</view>
+        </view>
+
+        <!-- 已录车辆 -->
+        <view wx:if="{{roundsDraft.cars.length > 0}}" class="rd-cars">
+          <view wx:for="{{roundsDraft.cars}}" wx:key="index" class="rd-car-row">
+            <text class="rd-car-main">R{{item.round}}C{{item.carIndex}} · {{item.forced ? '强制车' : (item.mission ? '发车' : '流车')}} · {{item.team.length}}人</text>
+            <text class="rd-op rd-op-refuse" bindtap="removeCar" data-idx="{{index}}">删除</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 湖仙 -->
+      <view wx:if="{{lakeEnabled && lakeForm}}" class="card">
+        <view class="rd-card-title">湖仙验人</view>
+        <view class="rd-form-row">
+          <text class="rd-form-label">轮次</text>
+          <picker range="{{[1,2,3,4,5]}}" bindchange="onLakeField" data-field="round">
+            <text class="rd-form-value">第 {{lakeForm.round}} 轮</text>
+          </picker>
+        </view>
+        <view class="rd-form-row">
+          <text class="rd-form-label">验人者</text>
+          <picker range="{{lakeForm.candidates}}" range-key="label" bindchange="onLakeField" data-field="inspector">
+            <text class="rd-form-value">{{lakeForm.inspector ? '已选择' : '选择'}}</text>
+          </picker>
+        </view>
+        <view class="rd-form-row">
+          <text class="rd-form-label">目标</text>
+          <picker range="{{lakeForm.candidates}}" range-key="label" bindchange="onLakeField" data-field="target">
+            <text class="rd-form-value">{{lakeForm.target ? '已选择' : '选择'}}</text>
+          </picker>
+        </view>
+        <view class="rd-form-row">
+          <text class="rd-form-label">结果</text>
+          <view class="rd-btn-row">
+            <view class="rd-mini-btn {{lakeForm.result === 'good' ? 'rd-mini-good' : 'rd-mini-plain'}}" bindtap="onLakeField" data-field="result" data-val="good">蓝方</view>
+            <view class="rd-mini-btn {{lakeForm.result === 'evil' ? 'rd-mini-evil' : 'rd-mini-plain'}}" bindtap="onLakeField" data-field="result" data-val="evil">红方</view>
+          </view>
+        </view>
+        <view class="rd-btn-row"><view class="rd-mini-btn rd-mini-primary" bindtap="addLake">＋ 添加验人</view></view>
+        <view wx:for="{{roundsDraft.lake}}" wx:key="index" class="rd-car-row">
+          <text class="rd-car-main">R{{item.round}} · {{item.result === 'good' ? '蓝方' : '红方'}}</text>
+          <text class="rd-op rd-op-refuse" bindtap="removeLake" data-idx="{{index}}">删除</text>
+        </view>
+      </view>
+
+      <!-- 兰斯洛特 -->
+      <view wx:if="{{hasLancelot}}" class="card">
+        <view class="rd-card-title">兰斯洛特转换</view>
+        <view class="rd-form-row">
+          <text class="rd-form-label">轮次</text>
+          <picker range="{{[1,2,3,4,5]}}" bindchange="onLanceField" data-field="round">
+            <text class="rd-form-value">第 {{lanceForm.round}} 轮</text>
+          </picker>
+        </view>
+        <view class="rd-form-row">
+          <text class="rd-form-label">是否转换</text>
+          <switch checked="{{lanceForm.switched}}" bindchange="onLanceField" data-field="switched" color="#8B5CF6"/>
+        </view>
+        <view class="rd-btn-row"><view class="rd-mini-btn rd-mini-primary" bindtap="addLance">＋ 添加记录</view></view>
+        <view wx:for="{{roundsDraft.lancelot}}" wx:key="index" class="rd-car-row">
+          <text class="rd-car-main">R{{item.round}} · {{item.switched ? '转换' : '未转换'}}</text>
+          <text class="rd-op rd-op-refuse" bindtap="removeLance" data-idx="{{index}}">删除</text>
+        </view>
+      </view>
+
+      <!-- 刺杀（3 成后） -->
+      <view wx:if="{{asnForm.need}}" class="card">
+        <view class="rd-card-title">刺杀（好人三成后）</view>
+        <view class="rd-form-row">
+          <text class="rd-form-label">开刀者</text>
+          <picker range="{{approved}}" range-key="nickName" bindchange="onAsnField" data-field="killer">
+            <text class="rd-form-value">{{asnForm.killer ? '已选择' : '选择'}}</text>
+          </picker>
+        </view>
+        <view class="rd-form-row">
+          <text class="rd-form-label">目标</text>
+          <picker range="{{approved}}" range-key="nickName" bindchange="onAsnField" data-field="target">
+            <text class="rd-form-value">{{asnForm.target ? '已选择' : '选择'}}</text>
+          </picker>
+        </view>
+        <view class="rd-btn-row"><view class="rd-mini-btn rd-mini-primary" bindtap="saveAsn">填入刺杀记录</view></view>
+        <view wx:if="{{roundsDraft.assassination}}" class="rd-car-row">
+          <text class="rd-car-main">已记录刺杀</text>
+          <text class="rd-op rd-op-refuse" bindtap="toggleAsn">清除</text>
+        </view>
+      </view>
+
+      <!-- 保存/完成 -->
+      <view class="rd-finish-bar">
+        <button class="rd-save-btn" bindtap="saveRounds">保存进度</button>
+        <button class="rd-finish-btn" bindtap="finishRecord">记录完成</button>
+      </view>
+    </block>
+
+    <!-- 已完成（房主操作） -->
+    <view wx:if="{{!recording && isOwner}}" class="card">
+      <view class="rd-card-title">对局已生成</view>
+      <view class="rd-btn-row">
+        <view class="rd-mini-btn rd-mini-primary" bindtap="viewReplay">查看回放</view>
+        <view class="rd-mini-btn rd-mini-plain" bindtap="reopenRecord">编辑</view>
+        <view class="rd-mini-btn rd-mini-evil" bindtap="deleteRecord">删除</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 指定玩家弹层 -->
+  <view wx:if="{{showAssign}}" class="rd-assign-mask" bindtap="closeAssign" catchtouchmove="noop">
+    <view class="rd-assign-panel" catchtap="noop">
+      <view class="rd-card-title">指定玩家入 {{assignSeat}} 号位</view>
+      <view class="rd-search-row">
+        <input class="rd-search-input" placeholder="按唯一 ID 搜索" value="{{searchKey}}" bindinput="onSearchInput"/>
+        <view class="rd-mini-btn rd-mini-primary" bindtap="doSearch">搜索</view>
+      </view>
+      <view wx:if="{{friendLoading}}" class="rd-role-note">好友加载中...</view>
+      <scroll-view scroll-y class="rd-assign-scroll">
+        <view wx:for="{{searchResults}}" wx:key="openId" class="rd-assign-row" bindtap="onAssignTap" data-id="{{item.openId}}">
+          <image class="rd-pending-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
+          <text class="rd-assign-name">{{item.nickName}}</text>
+          <text class="rd-op rd-op-agree">指定</text>
+        </view>
+        <view class="rd-role-note" wx:if="{{searchResults.length > 0}}">— 好友列表 —</view>
+        <view wx:for="{{friends}}" wx:key="openId" class="rd-assign-row" bindtap="onAssignTap" data-id="{{item.openId}}">
+          <image class="rd-pending-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
+          <text class="rd-assign-name">{{item.nickName}}</text>
+          <text class="rd-op rd-op-agree">指定</text>
+        </view>
+        <view wx:if="{{!friendLoading && friends.length === 0 && searchResults.length === 0}}" class="rd-role-note">暂无好友，可用唯一 ID 搜索</view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

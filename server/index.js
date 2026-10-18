@@ -145,6 +145,7 @@ function setupRoutes() {
   const authRoutes = require('./routes/auth-db')();
   const playerRoutes = require('./routes/players-db')();
   const friendRoutes = require('./routes/friends-db')();
+  const offlineRecordRoutes = require('./routes/offline-records-db')();
 
   modelManager.setDbInitialized(true);
 
@@ -154,6 +155,7 @@ function setupRoutes() {
   app.use('/api/auth', authRoutes);
   app.use('/api/players', playerRoutes);
   app.use('/api/friends', friendRoutes);
+  app.use('/api/offline-records', offlineRecordRoutes);
 }
 
 // 健康检查端点（包含数据库状态）
