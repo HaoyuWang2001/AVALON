@@ -146,6 +146,20 @@ class OfflineRecordModel {
     });
 
     const me = players.find(p => p.openId === openId) || null;
+
+    // 已完成：附带对局结果（所有参与者可见的摘要）
+    let result = null;
+    if (record.status === 'completed' && record.gameId) {
+      const [g] = await db.query(
+        'SELECT game_result AS result FROM games WHERE id = ?',
+        [record.gameId]
+      );
+      if (g && g.result) {
+        const parsed = typeof g.result === 'string' ? parseJson(g.result) : g.result;
+        result = parsed ? { winner: parsed.winner || null, reason: parsed.reason || '' } : null;
+      }
+    }
+
     return {
       id: record.id,
       isOwner,
@@ -157,6 +171,7 @@ class OfflineRecordModel {
       gameId: record.gameId,
       createdAt: record.createdAt,
       completedAt: record.completedAt,
+      result,
       me: me ? { seatNumber: me.seatNumber, seatStatus: me.seatStatus, role: me.role, roleSource: me.roleSource } : null,
       players: gated,
       rounds: (isOwner || completed) ? record.rounds : null
