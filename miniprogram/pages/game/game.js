@@ -421,6 +421,8 @@ Page({
         const myOpenId = app.globalData.openId || '';
         const isHost = !!(res.players || []).some(p => p.openId === myOpenId && p.isHost);
         const isLeader = !!res.current.teamLeaderOpenId && res.current.teamLeaderOpenId === myOpenId;
+        // MVP/SVP 选择状态（仅正常结束局的本局玩家返回；setData 前预捕获供 gameEnd 分支使用）
+        const myAwards = (res.player && res.player.awards) ? res.player.awards : null;
         // round 或 index(failedNominations) 更新时清空本地选中
         const failed = res.current.failedNominations || 0;
         const shouldResetLocal = this.data.currentRound !== round || this.data.failedNominations !== failed;
@@ -739,7 +741,7 @@ Page({
           assassinTargetOpenId: phase === 'assassination' ? this.data.assassinTargetOpenId : '',
           oldLakeOpenIds: [...oldLakeOpenIds],
           revealConfirmed: res.player ? !!res.player.revealConfirmed : false,
-          myAwards: (res.player && res.player.awards) ? res.player.awards : null,
+          myAwards,
           revealConfirmedCount: res.current.revealConfirmedCount || 0,
           revealTotalCount: res.current.revealTotalCount || 0,
           vision: res.player ? res.player.vision || null : null,
