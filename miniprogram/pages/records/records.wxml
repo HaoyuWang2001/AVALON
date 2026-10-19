@@ -24,11 +24,8 @@
         </view>
         <view wx:if="{{item.isOwner}}" class="rc-row-ops">
           <text class="rc-op rc-op-danger" catchtap="deleteRecord" data-id="{{item.id}}">删除</text>
-          <text class="rc-op rc-op-primary">继续</text>
         </view>
-        <view wx:else class="rc-row-ops">
-          <text class="rc-op rc-op-primary">进入</text>
-        </view>
+        <text class="rc-chevron">›</text>
       </view>
     </view>
 

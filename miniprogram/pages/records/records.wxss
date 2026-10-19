@@ -49,3 +49,4 @@
 .rc-op { font-size: 26rpx; font-weight: 600; }
 .rc-op-primary { color: var(--label-violet); }
 .rc-op-danger { color: var(--danger); }
+.rc-chevron { font-size: 36rpx; color: var(--text-muted); flex-shrink: 0; line-height: 1; }
