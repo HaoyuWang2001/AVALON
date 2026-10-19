@@ -60,6 +60,9 @@ Page({
     resultText: '',
     winnerIsGood: false,
     // 指定玩家弹层
+    showSeatSheet: false,
+    seatSheetSeat: 0,
+    seatSheetPendingName: '',
     showAssign: false,
     assignSeat: 0,
     friends: [],
@@ -380,12 +383,29 @@ Page({
     const seat = parseInt(e.currentTarget.dataset.seat, 10);
     const entry = this.data.seats.find(s => s.seat === seat);
     if (entry && entry.player) return;
-    if (this.data.isOwner) return;
+    if (this.data.isOwner) {
+      // 房主点空位：底部弹层（邀请/指定/自己上座）
+      if (this.data.recording) {
+        this.setData({ showSeatSheet: true, seatSheetSeat: seat, seatSheetPendingName: entry ? entry.pendingName : '' });
+      }
+      return;
+    }
     if (this.data.rec.me) {
       wx.showToast({ title: '你已在本记录中', icon: 'none' });
       return;
     }
     this._join(seat, false);
+  },
+  closeSeatSheet() { this.setData({ showSeatSheet: false }); },
+  seatSheetAssign() {
+    const seat = this.data.seatSheetSeat;
+    this.setData({ showSeatSheet: false });
+    this._openAssignAt(seat);
+  },
+  seatSheetSit() {
+    const seat = this.data.seatSheetSeat;
+    this.setData({ showSeatSheet: false });
+    this._join(seat, true);
   },
   _join(seat, invited) {
     api.joinOfflineSeat(this.data.recordId, seat, invited).then(res => {
@@ -430,7 +450,9 @@ Page({
     this.setData({ friends });
   },
   openAssign(e) {
-    const seat = parseInt(e.currentTarget.dataset.seat, 10);
+    this._openAssignAt(parseInt(e.currentTarget.dataset.seat, 10));
+  },
+  _openAssignAt(seat) {
     this.setData({ showAssign: true, assignSeat: seat, searchKey: '', searchResults: [] });
     if (!this.data.friends.length) {
       this.setData({ friendLoading: true });

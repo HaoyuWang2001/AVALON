@@ -74,17 +74,16 @@
 }
 .rd-seat-badge-empty { opacity: 0.5; }
 .rd-seat-avatar { width: 64rpx; height: 64rpx; border-radius: 50%; background: var(--gray-100); margin-top: 8rpx; }
+/* 空位：头像大小的空虚线圈 */
+.rd-seat-ring {
+  width: 64rpx; height: 64rpx; border-radius: 50%;
+  border: 3rpx dashed var(--divider-strong);
+  box-sizing: border-box; margin-top: 8rpx;
+}
 .rd-seat-name { font-size: 22rpx; color: var(--text-body); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rd-seat-role { font-size: 20rpx; color: var(--label-violet); }
 .rd-seat-waitmark { font-size: 20rpx; color: var(--gold); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rd-seat-hint { font-size: 20rpx; color: var(--text-muted); }
-.rd-seat-ops { display: flex; align-items: center; gap: 10rpx; margin-top: 4rpx; }
-.rd-seat-pill {
-  line-height: 1.5; padding: 0 18rpx; font-size: 22rpx; font-weight: 700; border-radius: 999rpx;
-  margin: 0;
-}
-.rd-seat-pill-share { background: var(--label-violet-bg); color: var(--label-violet); }
-.rd-seat-pill-assign { background: var(--label-violet-bg); color: var(--label-violet); padding: 4rpx 18rpx; }
 
 /* 身份 */
 .rd-role-chips { display: flex; flex-wrap: wrap; gap: 10rpx; margin-bottom: 18rpx; }
@@ -213,3 +212,18 @@
   flex: 1; height: 72rpx; border-radius: 16rpx; padding: 0 24rpx;
   background: var(--bg-page); font-size: 26rpx; color: var(--text-body);
 }
+
+/* 空座位底部弹层 */
+.rd-sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12rpx; }
+.rd-sheet-title { font-size: 34rpx; font-weight: 800; color: var(--text-title); }
+.rd-sheet-actions { display: flex; flex-direction: column; gap: 12rpx; margin-top: 12rpx; }
+.rd-sheet-action {
+  display: flex; align-items: center; gap: 20rpx; padding: 24rpx;
+  border-radius: 20rpx; background: var(--bg-page);
+}
+.rd-sheet-action-icon { font-size: 40rpx; flex-shrink: 0; }
+.rd-sheet-action-main { flex: 1; display: flex; flex-direction: column; gap: 4rpx; min-width: 0; }
+.rd-sheet-action-title { font-size: 28rpx; font-weight: 700; color: var(--text-title); }
+.rd-sheet-action-sub { font-size: 22rpx; color: var(--text-muted); }
+.rd-chevron { font-size: 36rpx; color: var(--text-muted); flex-shrink: 0; line-height: 1; }
+.rd-sheet-note { margin-top: 16rpx; text-align: center; }

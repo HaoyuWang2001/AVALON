@@ -61,12 +61,9 @@
           </block>
           <block wx:else>
             <text class="rd-seat-badge rd-seat-badge-empty">{{item.seat}}</text>
+            <view class="rd-seat-ring"></view>
             <text wx:if="{{item.pendingName}}" class="rd-seat-waitmark">⏳{{item.pendingName}}</text>
-            <view wx:if="{{recording && isOwner}}" class="rd-seat-ops" catchtap="noop">
-              <button class="rd-seat-pill rd-seat-pill-share" size="mini" open-type="share" bindtap="setShareSeat" data-seat="{{item.seat}}">邀</button>
-              <text class="rd-seat-pill rd-seat-pill-assign" bindtap="openAssign" data-seat="{{item.seat}}">指</text>
-            </view>
-            <text wx:elif="{{recording && !rec.me}}" class="rd-seat-hint">点我入座</text>
+            <text wx:elif="{{recording && !rec.me && !isOwner}}" class="rd-seat-hint">点我入座</text>
           </block>
         </view>
       </view>
@@ -308,6 +305,36 @@
   <view wx:if="{{isOwner && recording && rec}}" class="rd-bottombar">
     <view class="rd-save-state {{saveText === '保存失败' ? 'rd-save-err' : ''}}" bindtap="retrySave">{{saveText || '自动保存已开启'}}</view>
     <button class="rd-finish-btn {{canFinish ? '' : 'rd-finish-disabled'}}" bindtap="finishRecord">记录完成</button>
+  </view>
+
+  <!-- 空座位底部弹层（房主）：邀请分享 / 指定玩家 / 自己直接上座 -->
+  <view wx:if="{{showSeatSheet}}" class="rd-assign-mask" bindtap="closeSeatSheet" catchtouchmove="noop">
+    <view class="rd-assign-panel" catchtap="noop">
+      <view class="rd-sheet-head">
+        <text class="rd-sheet-title">{{seatSheetSeat}} 号位</text>
+        <button class="rd-share-btn" size="mini" open-type="share" bindtap="setShareSeat" data-seat="{{seatSheetSeat}}">邀请</button>
+      </view>
+      <view wx:if="{{seatSheetPendingName}}" class="rd-role-note">⏳ {{seatSheetPendingName}} 正在申请此座位（可在待审批区同意）</view>
+      <view class="rd-sheet-actions">
+        <view class="rd-sheet-action" bindtap="seatSheetAssign">
+          <text class="rd-sheet-action-icon">👥</text>
+          <view class="rd-sheet-action-main">
+            <text class="rd-sheet-action-title">指定玩家</text>
+            <text class="rd-sheet-action-sub">从好友列表或唯一 ID 搜索，直接入座</text>
+          </view>
+          <text class="rd-chevron">›</text>
+        </view>
+        <view class="rd-sheet-action" bindtap="seatSheetSit">
+          <text class="rd-sheet-action-icon">🪑</text>
+          <view class="rd-sheet-action-main">
+            <text class="rd-sheet-action-title">自己直接上座</text>
+            <text class="rd-sheet-action-sub">我坐 {{seatSheetSeat}} 号位</text>
+          </view>
+          <text class="rd-chevron">›</text>
+        </view>
+      </view>
+      <view class="rd-role-note rd-sheet-note">点右上角「邀请」转发给好友，好友打开后确认即直接入座此座位</view>
+    </view>
   </view>
 
   <!-- 指定玩家弹层 -->
