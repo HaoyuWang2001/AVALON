@@ -54,6 +54,8 @@ Page({
     showLake: false,
     showLance: false,
     // 表单派生（票型预判/任务票）
+    allSeats: [],
+    teamCount: 0,
     carWillSend: false,
     carAllVoted: false,
     votePreview: '',
@@ -144,6 +146,8 @@ Page({
     }));
     players.forEach(p => { p.roleLabel = p.role ? (ROLE_NAMES_SHORT[p.role] || p.role) : ''; });
     approved.forEach(p => { p.seatLabel = String(p.seatNumber); });
+    const allSeats = [];
+    for (let i = 1; i <= rec.playerCount; i++) allSeats.push({ seat: i, seatLabel: String(i) });
 
     // 被移除/被拒感知：上一刻还在、现在不在且仍在记录中
     if (this._prevMe && this._prevMe.openId && !rec.me && rec.status === 'recording') {
@@ -154,7 +158,7 @@ Page({
     const me = rec.me;
     const patch = {
       loading: false, loadErr: '',
-      rec,
+      rec, allSeats,
       boardLabel: BOARD_TYPE_LABELS[rec.boardType] || rec.boardType,
       isOwner: !!rec.isOwner,
       recording: rec.status === 'recording',
@@ -184,12 +188,12 @@ Page({
         patch.curRound = curRound;
         patch.curCarIndex = this._nextCarIndex(draft, curRound);
         patch.teamSize = (TEAM_SIZES[rec.playerCount] || TEAM_SIZES[5])[curRound - 1];
-        patch.carForm = this._buildCarForm(draft, curRound, patch.curCarIndex, approved);
-        patch.lakeForm = this._buildLakeForm(draft, rules, approved, curRound);
+        patch.carForm = this._buildCarForm(draft, curRound, patch.curCarIndex);
+        patch.lakeForm = this._buildLakeForm(draft, rules, curRound);
         patch.lanceForm = patch.lanceForm || { round: curRound, switched: false };
         patch.asnForm = draft.assassination
-          ? { killer: draft.assassination.killerOpenId, target: draft.assassination.targetOpenId, need: false }
-          : { killer: '', target: '', need: false };
+          ? { killerSeat: draft.assassination.killerSeat || 0, targetSeat: draft.assassination.targetSeat || 0, need: false }
+          : { killerSeat: 0, targetSeat: 0, need: false };
       } else {
         // 轮询：保留本地草稿，仅同步派生展示
         patch.lanceForm = this.data.lanceForm;
@@ -245,10 +249,6 @@ Page({
     if (c.mission.votes) return Object.values(c.mission.votes).filter(v => v === 'fail').length;
     return 0;
   },
-  _seatLabelOf(openId) {
-    const p = (this.data.approved || []).find(x => x.openId === openId);
-    return p ? String(p.seatNumber) : '?';
-  },
   _failThreshold(round) {
     return (round === 4 && this.data.rec && this.data.rec.playerCount >= 7) ? 2 : 1;
   },
@@ -268,16 +268,13 @@ Page({
       const rj = keys.length - ap;
       const hasMission = !!c.mission;
       const fails = hasMission ? this._missionFailCountOf(c) : 0;
-      const missionOk = hasMission
-        ? (typeof c.mission.success === 'boolean' ? c.mission.success
-          : fails < ((c.round === 4 && N >= 7) ? 2 : 1))
-        : null;
+      const missionOk = hasMission ? c.mission.success === true : null;
       return {
         idx,
         round: c.round, carIndex: c.carIndex,
         editing: idx === this.data.editingCarIdx,
-        leaderLabel: this._seatLabelOf(c.leaderOpenId),
-        teamLabels: (c.team || []).map(t => this._seatLabelOf(t)).join('、'),
+        leaderLabel: c.leaderSeat,
+        teamLabels: (c.team || []).join('、'),
         voteText: c.forced ? '强制车' : (ap + '✓ ' + rj + '✕'),
         outcome: c.forced || hasMission ? 'send' : 'reject',
         outcomeText: c.forced ? '强制发车' : (hasMission ? '发车' : '流车'),
@@ -287,7 +284,7 @@ Page({
     });
     const lakeList = (d.lake || []).map((l, idx) => ({
       idx, round: l.round,
-      text: this._seatLabelOf(l.inspectorOpenId) + ' 验 ' + this._seatLabelOf(l.targetOpenId),
+      text: (l.inspectorSeat || '?') + ' 验 ' + (l.targetSeat || '?'),
       result: l.result
     }));
     const lanceList = (d.lancelot || []).map((s, idx) => ({
@@ -326,11 +323,11 @@ Page({
       showLake: this.data.lakeEnabled && (completedMissions >= Math.max(0, (rules.ladyOfTheLakeRound || 2) - 1) || lakeList.length > 0),
       showLance: this.data.hasLancelot && (completedMissions >= Math.max(1, (rules.lancelotSwapRound || 2) - 1) || lanceList.length > 0),
       'asnForm.need': needAsn,
-      carLeaderLabel: cf && cf.leader ? this._seatLabelOf(cf.leader) : '选择',
-      lakeInspectorLabel: lf && lf.inspector ? this._seatLabelOf(lf.inspector) : '选择',
-      lakeTargetLabel: lf && lf.target ? this._seatLabelOf(lf.target) : '选择',
-      asnKillerLabel: af && af.killer ? this._seatLabelOf(af.killer) : '选择',
-      asnTargetLabel: af && af.target ? this._seatLabelOf(af.target) : '选择'
+      carLeaderLabel: cf && cf.leaderSeat ? String(cf.leaderSeat) : '选择',
+      lakeInspectorLabel: lf && lf.inspectorSeat ? String(lf.inspectorSeat) : '选择',
+      lakeTargetLabel: lf && lf.targetSeat ? String(lf.targetSeat) : '选择',
+      asnKillerLabel: af && af.killerSeat ? String(af.killerSeat) : '选择',
+      asnTargetLabel: af && af.targetSeat ? String(af.targetSeat) : '选择'
     };
     this.setData(patch);
   },
@@ -354,37 +351,36 @@ Page({
   },
 
   // ── 座位 ──
-  _buildCarForm(draft, round, carIndex, approved) {
+  _buildCarForm(draft, round, carIndex) {
+    const N = (this.data.rec && this.data.rec.playerCount) || 5;
     const cars = (draft.cars || []).slice().sort((a, b) => (a.round - b.round) || (a.carIndex - b.carIndex));
-    // 默认队长：上一辆车长的下一位（按座位顺延）；首车默认 1 号位
-    let leader = '';
-    if (cars.length) {
-      const last = cars[cars.length - 1].leaderOpenId;
-      const idx = approved.findIndex(p => p.openId === last);
-      if (idx >= 0 && approved[idx + 1]) leader = approved[idx + 1].openId;
+    // 默认队长：上一辆车长座位顺延（1..N 循环）；首车默认 1 号位
+    let leader = 1;
+    if (cars.length && Number.isInteger(cars[cars.length - 1].leaderSeat)) {
+      leader = (cars[cars.length - 1].leaderSeat % N) + 1;
     }
-    if (!leader && approved.length) leader = approved[0].openId;
-    const form = {
-      round, carIndex, leader,
-      team: [], votes: {},
+    return {
+      round, carIndex, leaderSeat: leader,
+      teamSel: {}, votes: {},
       forced: false, mission: { outcome: '', failCount: 0 }
     };
-    return form;
   },
-  _buildLakeForm(draft, rules, approved, curRound) {
-    if (!rules.ladyOfTheLake || !approved.length) return null;
+  _buildLakeForm(draft, rules, curRound) {
+    if (!rules.ladyOfTheLake) return null;
+    const N = (this.data.rec && this.data.rec.playerCount) || 5;
     const used = new Set();
-    (draft.lake || []).forEach(l => { used.add(l.inspectorOpenId); used.add(l.targetOpenId); });
-    const candidates = approved.filter(p => !used.has(p.openId));
-    // 默认验人者：上次验人的目标，否则候选首位
-    let inspector = '';
-    if ((draft.lake || []).length) inspector = draft.lake[draft.lake.length - 1].targetOpenId;
-    if (!inspector || used.has(inspector)) inspector = candidates.length ? candidates[0].openId : '';
-    const targets = candidates.filter(p => p.openId !== inspector);
+    (draft.lake || []).forEach(l => { used.add(l.inspectorSeat); used.add(l.targetSeat); });
+    const candidates = [];
+    for (let i = 1; i <= N; i++) if (!used.has(i)) candidates.push({ seat: i, seatLabel: String(i) });
+    // 默认验人者：上次验人的目标座位，否则候选首位
+    let inspector = 0;
+    if ((draft.lake || []).length) inspector = draft.lake[draft.lake.length - 1].targetSeat;
+    if (!inspector || used.has(inspector)) inspector = candidates.length ? candidates[0].seat : 0;
+    const targets = candidates.filter(c => c.seat !== inspector);
     return {
       round: curRound || 1,
-      inspector,
-      target: targets.length ? targets[0].openId : '',
+      inspectorSeat: inspector,
+      targetSeat: targets.length ? targets[0].seat : 0,
       result: 'good',
       candidates
     };
@@ -527,36 +523,35 @@ Page({
   // ── 轮次记录（房主）──
   onCarLeaderChange(e) {
     const f = this.data.carForm;
-    f.leader = this.data.approved[parseInt(e.detail.value, 10)].openId;
+    f.leaderSeat = this.data.allSeats[parseInt(e.detail.value, 10)].seat;
     this.setData({ carForm: f });
     this._recalcDraftDerived();
   },
+  // 车队：teamSel 为 {座位号: true} map（wxml 成员访问绑定，空位同样可选）
   onToggleTeam(e) {
-    const id = e.currentTarget.dataset.id;
+    const seat = parseInt(e.currentTarget.dataset.seat, 10);
     const f = this.data.carForm;
-    const i = f.team.indexOf(id);
-    if (i >= 0) f.team.splice(i, 1);
-    else if (f.team.length < this.data.teamSize) f.team.push(id);
+    if (f.teamSel[seat]) delete f.teamSel[seat];
+    else if (Object.keys(f.teamSel).length < this.data.teamSize) f.teamSel[seat] = true;
     this.setData({ carForm: f });
     this._refreshCarFormDerived();
   },
   // 号码牌点击循环：灰 → 绿(同意) → 红(反对) → 绿…
   onVoteChipTap(e) {
-    const id = e.currentTarget.dataset.id;
+    const seat = e.currentTarget.dataset.seat;
     const f = this.data.carForm;
-    const cur = f.votes[id];
-    f.votes[id] = (cur === 'approve') ? 'reject' : 'approve';
+    const cur = f.votes[seat];
+    f.votes[seat] = (cur === 'approve') ? 'reject' : 'approve';
     this.setData({ carForm: f });
     this._refreshCarFormDerived();
   },
-  // 全员同意 / 全员反对 / 全部清空
+  // 全员同意 / 全员反对 / 全部清空（覆盖全部座位）
   applyVotes(e) {
     const val = e.currentTarget.dataset.val;
     const f = this.data.carForm;
-    if (val === 'all-approve') {
-      this.data.approved.forEach(p => { f.votes[p.openId] = 'approve'; });
-    } else if (val === 'all-reject') {
-      this.data.approved.forEach(p => { f.votes[p.openId] = 'reject'; });
+    if (val === 'all-approve' || val === 'all-reject') {
+      const v = val === 'all-approve' ? 'approve' : 'reject';
+      this.data.allSeats.forEach(p => { f.votes[p.seat] = v; });
     } else if (val === 'clear') {
       f.votes = {};
     }
@@ -588,39 +583,45 @@ Page({
   _refreshCarFormDerived() {
     const f = this.data.carForm;
     if (!f) return;
+    const N = this.data.allSeats.length;
+    const teamCount = Object.keys(f.teamSel).length;
     const vals = Object.values(f.votes);
     const ap = vals.filter(v => v === 'approve').length;
     const rj = vals.filter(v => v === 'reject').length;
-    const allVoted = !f.forced && vals.length === this.data.approved.length;
+    const allVoted = !f.forced && vals.length === N;
     const willSend = f.forced || (allVoted && ap > rj);
     const threshold = this._failThreshold(f.round);
     let failCountOptions = [];
     if (f.mission.outcome === 'fail') {
-      for (let i = threshold; i <= f.team.length; i++) failCountOptions.push(i);
+      for (let i = threshold; i <= teamCount; i++) failCountOptions.push(i);
     } else if (f.mission.outcome === 'success' && threshold > 1) {
       for (let i = 0; i < threshold; i++) failCountOptions.push(i);
     }
     this.setData({
+      teamCount,
       carWillSend: willSend,
       carAllVoted: allVoted,
-      votePreview: f.forced ? '强制发车' : (allVoted ? (willSend ? '✓ 发车' : '✗ 流车') : (vals.length + '/' + this.data.approved.length + ' 已投')),
+      votePreview: f.forced ? '强制发车' : (allVoted ? (willSend ? '✓ 发车' : '✗ 流车') : (vals.length + '/' + N + ' 已投')),
       failThreshold: threshold,
       failCountOptions
     });
   },
   _carWillSend(f) {
     if (f.forced) return true;
+    const N = this.data.allSeats.length;
     const vals = Object.values(f.votes);
-    if (!vals.length || vals.length < this.data.approved.length) return false;
+    if (vals.length !== N) return false;
     const ap = vals.filter(v => v === 'approve').length;
     return ap > vals.length - ap;
   },
   submitCar() {
     const f = this.data.carForm;
-    if (!f.leader) { wx.showToast({ title: '请选择队长', icon: 'none' }); return; }
-    if (f.team.length !== this.data.teamSize) { wx.showToast({ title: '车队需 ' + this.data.teamSize + ' 人', icon: 'none' }); return; }
+    const team = Object.keys(f.teamSel).map(Number).sort((a, b) => a - b);
+    const N = this.data.allSeats.length;
+    if (!f.leaderSeat) { wx.showToast({ title: '请选择队长', icon: 'none' }); return; }
+    if (team.length !== this.data.teamSize) { wx.showToast({ title: '车队需 ' + this.data.teamSize + ' 人', icon: 'none' }); return; }
     const willSend = this._carWillSend(f);
-    if (!f.forced && Object.keys(f.votes).length !== this.data.approved.length) {
+    if (!f.forced && Object.keys(f.votes).length !== N) {
       wx.showToast({ title: '票型未记录完整', icon: 'none' }); return;
     }
     const threshold = this._failThreshold(f.round);
@@ -632,8 +633,8 @@ Page({
     }
     const d = this.data.roundsDraft;
     const entry = {
-      round: f.round, carIndex: f.carIndex, leaderOpenId: f.leader,
-      team: f.team.slice(), forced: f.forced,
+      round: f.round, carIndex: f.carIndex, leaderSeat: f.leaderSeat,
+      team, forced: f.forced,
       votes: f.forced ? null : { ...f.votes },
       mission: willSend ? { success: f.mission.outcome === 'success', failCount: f.mission.failCount } : null
     };
@@ -650,7 +651,7 @@ Page({
       curRound,
       curCarIndex: nextIndex,
       teamSize: (TEAM_SIZES[this.data.rec.playerCount] || TEAM_SIZES[5])[curRound - 1],
-      carForm: this._buildCarForm(d, curRound, nextIndex, this.data.approved)
+      carForm: this._buildCarForm(d, curRound, nextIndex)
     };
     this.setData(patch);
     this._recalcDraftDerived();
@@ -662,24 +663,20 @@ Page({
     const d = this.data.roundsDraft;
     const c = d.cars[idx];
     if (!c) return;
-    const approved = this.data.approved;
-    const teamIds = (c.team || []).filter(id => approved.some(p => p.openId === id));
-    // 兼容旧逐人任务票 → 换算为结果 + 失败票数
+    const N = this.data.allSeats.length;
+    const teamSel = {};
+    (c.team || []).forEach(seat => { if (seat >= 1 && seat <= N) teamSel[seat] = true; });
+    const votes = {};
+    Object.keys(c.votes || {}).forEach(seat => { votes[seat] = c.votes[seat]; });
     let outcome = '';
     let failCount = 0;
-    if (c.mission) {
-      if (typeof c.mission.success === 'boolean') {
-        outcome = c.mission.success ? 'success' : 'fail';
-        failCount = Number(c.mission.failCount) || 0;
-      } else if (c.mission.votes) {
-        const fails = Object.values(c.mission.votes).filter(v => v === 'fail').length;
-        outcome = fails < this._failThreshold(c.round) ? 'success' : 'fail';
-        failCount = fails;
-      }
+    if (c.mission && typeof c.mission.success === 'boolean') {
+      outcome = c.mission.success ? 'success' : 'fail';
+      failCount = Number(c.mission.failCount) || 0;
     }
     const f = {
-      round: c.round, carIndex: c.carIndex, leader: c.leaderOpenId,
-      team: teamIds, votes: c.votes ? { ...c.votes } : {},
+      round: c.round, carIndex: c.carIndex, leaderSeat: c.leaderSeat || 1,
+      teamSel, votes,
       forced: !!c.forced,
       mission: { outcome, failCount }
     };
@@ -698,7 +695,7 @@ Page({
       curRound,
       curCarIndex: nextIndex,
       teamSize: (TEAM_SIZES[this.data.rec.playerCount] || TEAM_SIZES[5])[curRound - 1],
-      carForm: this._buildCarForm(d, curRound, nextIndex, this.data.approved)
+      carForm: this._buildCarForm(d, curRound, nextIndex)
     });
     this._recalcDraftDerived();
     this._refreshCarFormDerived();
@@ -724,7 +721,7 @@ Page({
         };
         if (wasEditing) {
           patch.editingCarIdx = -1;
-          patch.carForm = this._buildCarForm(d, curRound, patch.curCarIndex, this.data.approved);
+          patch.carForm = this._buildCarForm(d, curRound, patch.curCarIndex);
         } else if (editingAfter) {
           patch.editingCarIdx = this.data.editingCarIdx - 1;
         }
@@ -744,18 +741,18 @@ Page({
     const { field } = e.currentTarget.dataset;
     const f = this.data.lakeForm;
     if (field === 'round') f.round = parseInt(e.detail.value, 10) + 1;
-    else if (field === 'inspector') f.inspector = f.candidates[parseInt(e.detail.value, 10)].openId;
-    else if (field === 'target') f.target = f.candidates.filter(c => c.openId !== f.inspector)[parseInt(e.detail.value, 10)].openId;
+    else if (field === 'inspector') f.inspectorSeat = f.candidates[parseInt(e.detail.value, 10)].seat;
+    else if (field === 'target') f.targetSeat = f.candidates.filter(c => c.seat !== f.inspectorSeat)[parseInt(e.detail.value, 10)].seat;
     else if (field === 'result') f.result = e.currentTarget.dataset.val;
     this.setData({ lakeForm: f });
     this._recalcDraftDerived();
   },
   addLake() {
     const f = this.data.lakeForm;
-    if (!f.inspector || !f.target) { wx.showToast({ title: '请选择验人双方', icon: 'none' }); return; }
+    if (!f.inspectorSeat || !f.targetSeat) { wx.showToast({ title: '请选择验人双方', icon: 'none' }); return; }
     const d = this.data.roundsDraft;
-    d.lake.push({ round: f.round, inspectorOpenId: f.inspector, targetOpenId: f.target, result: f.result });
-    this.setData({ roundsDraft: d, lakeForm: this._buildLakeForm(d, (this.data.rec.roomConfig || {}).rules || {}, this.data.approved, this.data.curRound) });
+    d.lake.push({ round: f.round, inspectorSeat: f.inspectorSeat, targetSeat: f.targetSeat, result: f.result });
+    this.setData({ roundsDraft: d, lakeForm: this._buildLakeForm(d, (this.data.rec.roomConfig || {}).rules || {}, this.data.curRound) });
     this._recalcDraftDerived();
     this._saveNow();
   },
@@ -763,7 +760,7 @@ Page({
     const idx = parseInt(e.currentTarget.dataset.idx, 10);
     const d = this.data.roundsDraft;
     d.lake.splice(idx, 1);
-    this.setData({ roundsDraft: d, lakeForm: this._buildLakeForm(d, (this.data.rec.roomConfig || {}).rules || {}, this.data.approved, this.data.curRound) });
+    this.setData({ roundsDraft: d, lakeForm: this._buildLakeForm(d, (this.data.rec.roomConfig || {}).rules || {}, this.data.curRound) });
     this._recalcDraftDerived();
     this._saveNow();
   },
@@ -791,16 +788,16 @@ Page({
   onAsnField(e) {
     const { field } = e.currentTarget.dataset;
     const f = this.data.asnForm;
-    if (field === 'killer') f.killer = this.data.approved[parseInt(e.detail.value, 10)].openId;
-    else f.target = this.data.approved[parseInt(e.detail.value, 10)].openId;
+    if (field === 'killer') f.killerSeat = this.data.allSeats[parseInt(e.detail.value, 10)].seat;
+    else f.targetSeat = this.data.allSeats[parseInt(e.detail.value, 10)].seat;
     this.setData({ asnForm: f });
     this._recalcDraftDerived();
   },
   saveAsn() {
     const f = this.data.asnForm;
-    if (!f.killer || !f.target) { wx.showToast({ title: '请选择刺杀双方', icon: 'none' }); return; }
+    if (!f.killerSeat || !f.targetSeat) { wx.showToast({ title: '请选择刺杀双方', icon: 'none' }); return; }
     const d = this.data.roundsDraft;
-    d.assassination = { killerOpenId: f.killer, targetOpenId: f.target };
+    d.assassination = { killerSeat: f.killerSeat, targetSeat: f.targetSeat };
     this.setData({ roundsDraft: d });
     this._recalcDraftDerived();
     this._saveNow();
@@ -813,7 +810,7 @@ Page({
         if (!m.confirm) return;
         const d = this.data.roundsDraft;
         d.assassination = null;
-        this.setData({ roundsDraft: d, 'asnForm.killer': '', 'asnForm.target': '' });
+        this.setData({ roundsDraft: d, 'asnForm.killerSeat': 0, 'asnForm.targetSeat': 0 });
         this._recalcDraftDerived();
         this._saveNow();
       }

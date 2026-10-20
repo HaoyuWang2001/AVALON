@@ -137,18 +137,16 @@ describe('15 — Offline Record', () => {
 
   it('15-5 完成：三轮全败 → 红方胜，物化 games 并入统计', async () => {
     const rounds = {
-      firstLeaderOpenId: HOST,
-      firstLakeHolderOpenId: null,
       cars: [
-        { round: 1, carIndex: 1, leaderOpenId: HOST, team: [HOST, U.u1], forced: false,
-          votes: { [HOST]: 'approve', [U.u1]: 'approve', [U.u2]: 'approve', [U.u3]: 'reject', [U.u4]: 'reject' },
-          mission: { votes: { [HOST]: 'fail', [U.u1]: 'success' } } },
-        { round: 2, carIndex: 1, leaderOpenId: HOST, team: [HOST, U.u1, U.u2], forced: false,
-          votes: { [HOST]: 'approve', [U.u1]: 'approve', [U.u2]: 'approve', [U.u3]: 'reject', [U.u4]: 'approve' },
-          mission: { votes: { [HOST]: 'fail', [U.u1]: 'success', [U.u2]: 'success' } } },
-        { round: 3, carIndex: 1, leaderOpenId: HOST, team: [U.u3, U.u4], forced: false,
-          votes: { [HOST]: 'approve', [U.u1]: 'approve', [U.u2]: 'reject', [U.u3]: 'approve', [U.u4]: 'approve' },
-          mission: { votes: { [U.u3]: 'success', [U.u4]: 'fail' } } }
+        { round: 1, carIndex: 1, leaderSeat: 1, team: [1, 2], forced: false,
+          votes: { '1': 'approve', '2': 'approve', '3': 'approve', '4': 'reject', '5': 'reject' },
+          mission: { success: false, failCount: 1 } },
+        { round: 2, carIndex: 1, leaderSeat: 1, team: [1, 2, 3], forced: false,
+          votes: { '1': 'approve', '2': 'approve', '3': 'approve', '4': 'reject', '5': 'approve' },
+          mission: { success: false, failCount: 1 } },
+        { round: 3, carIndex: 1, leaderSeat: 4, team: [4, 5], forced: false,
+          votes: { '1': 'approve', '2': 'approve', '3': 'reject', '4': 'approve', '5': 'approve' },
+          mission: { success: false, failCount: 1 } }
       ],
       lake: [],
       lancelot: [],
@@ -205,11 +203,9 @@ describe('15 — Offline Record', () => {
     // 改为蓝方胜：三轮任务全成 + 刺客 u3 错杀 u2（u1=梅林未被刺中）
     const rounds = reopened.record.rounds;
     for (const car of rounds.cars) {
-      const mv = {};
-      Object.keys(car.mission.votes).forEach(k => { mv[k] = 'success'; });
-      car.mission.votes = mv;
+      if (car.mission) car.mission = { success: true, failCount: 0 };
     }
-    rounds.assassination = { killerOpenId: U.u3, targetOpenId: U.u2 };
+    rounds.assassination = { killerSeat: 4, targetSeat: 3 };
     await saveOfflineRounds(recordId, HOST, rounds);
 
     const done = await finishOfflineRecord(recordId, HOST);
@@ -236,20 +232,20 @@ describe('15 — Offline Record', () => {
     await setOfflineRole(rid, HOST, U.u3, 'assassin');
     await setOfflineRole(rid, HOST, U.u4, 'morgana');
 
-    // 无 firstLeaderOpenId；任务票 = 结果 + 失败票数
+    // 座位号驱动；任务票 = 结果 + 失败票数
     const rounds = {
       cars: [
-        { round: 1, carIndex: 1, leaderOpenId: HOST, team: [HOST, U.u1], forced: false,
-          votes: { [HOST]: 'approve', [U.u1]: 'approve', [U.u2]: 'approve', [U.u3]: 'reject', [U.u4]: 'reject' },
+        { round: 1, carIndex: 1, leaderSeat: 1, team: [1, 2], forced: false,
+          votes: { '1': 'approve', '2': 'approve', '3': 'approve', '4': 'reject', '5': 'reject' },
           mission: { success: false, failCount: 1 } },
-        { round: 2, carIndex: 1, leaderOpenId: U.u1, team: [HOST, U.u1, U.u2], forced: false,
-          votes: { [HOST]: 'approve', [U.u1]: 'approve', [U.u2]: 'reject', [U.u3]: 'reject', [U.u4]: 'approve' },
+        { round: 2, carIndex: 1, leaderSeat: 2, team: [1, 2, 3], forced: false,
+          votes: { '1': 'approve', '2': 'approve', '3': 'reject', '4': 'reject', '5': 'approve' },
           mission: { success: false, failCount: 2 } },
-        { round: 3, carIndex: 1, leaderOpenId: U.u2, team: [U.u3, U.u4], forced: false,
-          votes: { [HOST]: 'approve', [U.u1]: 'approve', [U.u2]: 'approve', [U.u3]: 'reject', [U.u4]: 'reject' },
+        { round: 3, carIndex: 1, leaderSeat: 3, team: [4, 5], forced: false,
+          votes: { '1': 'approve', '2': 'approve', '3': 'approve', '4': 'reject', '5': 'reject' },
           mission: { success: true, failCount: 1 } },
-        { round: 4, carIndex: 1, leaderOpenId: U.u3, team: [HOST, U.u3, U.u4], forced: false,
-          votes: { [HOST]: 'approve', [U.u1]: 'approve', [U.u2]: 'reject', [U.u3]: 'approve', [U.u4]: 'reject' },
+        { round: 4, carIndex: 1, leaderSeat: 4, team: [1, 4, 5], forced: false,
+          votes: { '1': 'approve', '2': 'approve', '3': 'reject', '4': 'approve', '5': 'reject' },
           mission: { success: false, failCount: 1 } }
       ],
       lake: [], lancelot: [], assassination: null

@@ -121,17 +121,17 @@
 
         <view class="rd-form-row">
           <text class="rd-form-label">队长</text>
-          <picker range="{{approved}}" range-key="seatLabel" bindchange="onCarLeaderChange">
+          <picker range="{{allSeats}}" range-key="seatLabel" bindchange="onCarLeaderChange">
             <text class="rd-form-value">{{carLeaderLabel}}</text>
           </picker>
         </view>
 
         <view class="rd-form-block">
-          <text class="rd-form-label">车队（{{carForm.team.length}}/{{teamSize}}）</text>
+          <text class="rd-form-label">车队（{{teamCount}}/{{teamSize}}）</text>
           <view class="rd-tiles">
-            <view wx:for="{{approved}}" wx:key="openId" wx:for-item="p"
-              class="rd-tile {{carForm.team.indexOf(p.openId) >= 0 ? 'rd-tile-on' : ''}}"
-              bindtap="onToggleTeam" data-id="{{p.openId}}">{{p.seatLabel}}</view>
+            <view wx:for="{{allSeats}}" wx:key="seat" wx:for-item="p"
+              class="rd-tile {{carForm.teamSel[p.seat] ? 'rd-tile-on' : ''}}"
+              bindtap="onToggleTeam" data-seat="{{p.seat}}">{{p.seatLabel}}</view>
           </view>
         </view>
 
@@ -143,9 +143,9 @@
         <view class="rd-form-block" wx:if="{{!carForm.forced}}">
           <text class="rd-form-label">票型（点击号码：灰 → 绿 → 红 循环）</text>
           <view class="rd-tiles">
-            <view wx:for="{{approved}}" wx:key="openId" wx:for-item="p"
-              class="rd-tile {{carForm.votes[p.openId] === 'approve' ? 'rd-tile-agree' : carForm.votes[p.openId] === 'reject' ? 'rd-tile-reject' : ''}}"
-              bindtap="onVoteChipTap" data-id="{{p.openId}}">{{p.seatLabel}}</view>
+            <view wx:for="{{allSeats}}" wx:key="seat" wx:for-item="p"
+              class="rd-tile {{carForm.votes[p.seat] === 'approve' ? 'rd-tile-agree' : carForm.votes[p.seat] === 'reject' ? 'rd-tile-reject' : ''}}"
+              bindtap="onVoteChipTap" data-seat="{{p.seat}}">{{p.seatLabel}}</view>
           </view>
           <view class="rd-btn-row">
             <view class="rd-mini-btn rd-vote-agree" bindtap="applyVotes" data-val="all-approve">全员同意</view>
@@ -155,7 +155,7 @@
           <text class="rd-vote-preview">{{votePreview}}</text>
         </view>
 
-        <view class="rd-form-block" wx:if="{{carForm.team.length === teamSize && (carForm.forced || carWillSend)}}">
+        <view class="rd-form-block" wx:if="{{teamCount === teamSize && (carForm.forced || carWillSend)}}">
           <text class="rd-form-label">任务票{{failThreshold > 1 ? '（保护轮：2坏才失败）' : ''}}</text>
           <view class="rd-btn-row">
             <view class="rd-mini-btn {{carForm.mission.outcome === 'success' ? 'rd-vote-agree' : 'rd-mini-plain'}}" bindtap="setMissionOutcome" data-val="success">任务成功</view>
@@ -261,13 +261,13 @@
         <view class="rd-card-title">刺杀（好人三成后）</view>
         <view class="rd-form-row">
           <text class="rd-form-label">开刀者</text>
-          <picker range="{{approved}}" range-key="seatLabel" bindchange="onAsnField" data-field="killer">
+          <picker range="{{allSeats}}" range-key="seatLabel" bindchange="onAsnField" data-field="killer">
             <text class="rd-form-value">{{asnKillerLabel}}</text>
           </picker>
         </view>
         <view class="rd-form-row">
           <text class="rd-form-label">目标</text>
-          <picker range="{{approved}}" range-key="seatLabel" bindchange="onAsnField" data-field="target">
+          <picker range="{{allSeats}}" range-key="seatLabel" bindchange="onAsnField" data-field="target">
             <text class="rd-form-value">{{asnTargetLabel}}</text>
           </picker>
         </view>
