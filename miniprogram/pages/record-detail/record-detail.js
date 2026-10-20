@@ -534,10 +534,9 @@ Page({
   onToggleTeam(e) {
     const id = e.currentTarget.dataset.id;
     const f = this.data.carForm;
-    const p = this.data.approved.find(x => x.openId === id);
-    const i = f.team.findIndex(t => t.openId === id);
+    const i = f.team.indexOf(id);
     if (i >= 0) f.team.splice(i, 1);
-    else if (p && f.team.length < this.data.teamSize) f.team.push(p);
+    else if (f.team.length < this.data.teamSize) f.team.push(id);
     this.setData({ carForm: f });
     this._refreshCarFormDerived();
   },
@@ -634,7 +633,7 @@ Page({
     const d = this.data.roundsDraft;
     const entry = {
       round: f.round, carIndex: f.carIndex, leaderOpenId: f.leader,
-      team: f.team.map(t => t.openId), forced: f.forced,
+      team: f.team.slice(), forced: f.forced,
       votes: f.forced ? null : { ...f.votes },
       mission: willSend ? { success: f.mission.outcome === 'success', failCount: f.mission.failCount } : null
     };
@@ -664,7 +663,7 @@ Page({
     const c = d.cars[idx];
     if (!c) return;
     const approved = this.data.approved;
-    const teamObjs = (c.team || []).map(id => approved.find(p => p.openId === id)).filter(Boolean);
+    const teamIds = (c.team || []).filter(id => approved.some(p => p.openId === id));
     // 兼容旧逐人任务票 → 换算为结果 + 失败票数
     let outcome = '';
     let failCount = 0;
@@ -680,7 +679,7 @@ Page({
     }
     const f = {
       round: c.round, carIndex: c.carIndex, leader: c.leaderOpenId,
-      team: teamObjs, votes: c.votes ? { ...c.votes } : {},
+      team: teamIds, votes: c.votes ? { ...c.votes } : {},
       forced: !!c.forced,
       mission: { outcome, failCount }
     };

@@ -126,6 +126,19 @@
 .rd-form-block { padding: 14rpx 0; display: flex; flex-direction: column; gap: 14rpx; }
 
 .rd-chips { display: flex; flex-wrap: wrap; gap: 12rpx; }
+/* 号码牌：圆角正方形（车队选中/票型三态） */
+.rd-tiles { display: flex; flex-wrap: wrap; gap: 14rpx; }
+.rd-tile {
+  width: 88rpx; height: 88rpx; border-radius: 20rpx;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32rpx; font-weight: 800;
+  background: var(--label-grey-bg); color: var(--label-grey);
+  border: 3rpx solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.rd-tile-on { background: var(--label-violet-bg); color: var(--label-violet); border-color: var(--label-violet); }
+.rd-tile-agree { background: var(--state-approve); color: var(--agree); }
+.rd-tile-reject { background: var(--state-reject); color: var(--disagree); }
 /* 号码牌初始灰（label-grey 对） */
 .rd-chip {
   min-width: 72rpx; text-align: center;
