@@ -148,10 +148,15 @@
 }
 /* 中性选中（车队/人数）：label-violet 对 */
 .rd-chip-on { background: var(--label-violet-bg); color: var(--label-violet); border-color: var(--label-violet); }
-/* 同意/成功：既有「投赞成」状态绿（state-approve 底 + agree 字） */
+/* 同意：既有「投赞成」状态绿（state-approve 底 + agree 字） */
 .rd-vote-agree { background: var(--state-approve); color: var(--agree); }
-/* 反对/失败：既有「投反对」状态红（state-reject 底 + disagree 字） */
+/* 反对：既有「投反对」状态红（state-reject 底 + disagree 字） */
 .rd-vote-reject { background: var(--state-reject); color: var(--disagree); }
+/* 任务票标签（label 系列）：成功=绿标签，失败/x坏=红标签 */
+.rd-mn-green { background: var(--label-green-bg); color: var(--label-green); }
+.rd-mn-red { background: var(--label-evil-bg); color: var(--label-evil); }
+.rd-failchip { background: var(--label-evil-bg); color: var(--label-evil); border-color: transparent; }
+.rd-failchip-on { border-color: var(--label-evil); }
 .rd-vote-preview { font-size: 24rpx; font-weight: 700; color: var(--text-muted); }
 
 .rd-btn-row { display: flex; gap: 14rpx; flex-wrap: wrap; }
@@ -176,9 +181,9 @@
 }
 .rd-car-main { flex: 1; min-width: 200rpx; font-size: 24rpx; color: var(--text-body); }
 .rd-car-votes { font-size: 22rpx; color: var(--text-muted); flex-shrink: 0; }
-.rd-car-mission { font-size: 22rpx; font-weight: 800; flex-shrink: 0; }
-.rd-mission-ok { color: var(--label-good); }
-.rd-mission-bad { color: var(--label-evil); }
+.rd-car-mission { font-size: 22rpx; font-weight: 800; flex-shrink: 0; padding: 4rpx 14rpx; border-radius: 999rpx; }
+.rd-mission-ok { background: var(--label-green-bg); color: var(--label-green); }
+.rd-mission-bad { background: var(--label-evil-bg); color: var(--label-evil); }
 .rd-car-detail { padding: 0 0 16rpx; }
 .rd-car-ops { display: flex; gap: 14rpx; }
 

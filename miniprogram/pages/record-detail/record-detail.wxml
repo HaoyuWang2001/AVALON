@@ -175,17 +175,17 @@
         <view class="rd-form-block" wx:if="{{teamCount === teamSize && (carForm.forced || carWillSend)}}">
           <text class="rd-form-label">任务票{{failThreshold > 1 ? '（保护轮：2坏才失败）' : ''}}</text>
           <view class="rd-btn-row">
-            <view class="rd-mini-btn {{carForm.mission.outcome === 'success' ? 'rd-vote-agree' : 'rd-mini-plain'}}" bindtap="setMissionOutcome" data-val="success">任务成功</view>
-            <view class="rd-mini-btn {{carForm.mission.outcome === 'fail' ? 'rd-vote-reject' : 'rd-mini-plain'}}" bindtap="setMissionOutcome" data-val="fail">任务失败</view>
+            <view class="rd-mini-btn {{carForm.mission.outcome === 'success' ? 'rd-mn-green' : 'rd-mini-plain'}}" bindtap="setMissionOutcome" data-val="success">任务成功</view>
+            <view class="rd-mini-btn {{carForm.mission.outcome === 'fail' ? 'rd-mn-red' : 'rd-mini-plain'}}" bindtap="setMissionOutcome" data-val="fail">任务失败</view>
           </view>
           <view wx:if="{{carForm.mission.outcome === 'fail'}}" class="rd-chips">
             <view wx:for="{{failCountOptions}}" wx:key="*this"
-              class="rd-chip {{carForm.mission.failCount === item ? 'rd-chip-on' : ''}}"
+              class="rd-chip rd-failchip {{carForm.mission.failCount === item ? 'rd-failchip-on' : ''}}"
               bindtap="setFailCount" data-n="{{item}}">{{item}}坏</view>
           </view>
           <view wx:if="{{carForm.mission.outcome === 'success' && failThreshold > 1}}" class="rd-chips">
             <view wx:for="{{failCountOptions}}" wx:key="*this"
-              class="rd-chip {{carForm.mission.failCount === item ? 'rd-chip-on' : ''}}"
+              class="rd-chip rd-failchip {{carForm.mission.failCount === item ? 'rd-failchip-on' : ''}}"
               bindtap="setFailCount" data-n="{{item}}">{{item}}坏</view>
           </view>
         </view>

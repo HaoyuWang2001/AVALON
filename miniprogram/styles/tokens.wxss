@@ -66,6 +66,7 @@ page {
   --label-grey: #6B7280;
   --label-grey-bg: #F3F4F6;
   --label-green: #22C55E;
+  --label-green-bg: #DCFCE7;
 
   /* 主页头部：三段三色 + 辉光 + 故障分层色（黎明初现：深紫·皇家） */
   --brand-1: #2E1065;
