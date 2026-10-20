@@ -333,8 +333,8 @@ class OfflineRecordModel {
 
   /**
    * 保存轮次记录（仅房主，仅 recording）。结构：
-   * { firstLeaderOpenId, firstLakeHolderOpenId?,
-   *   cars: [{round, carIndex, leaderOpenId, team:[], forced, votes:{}|null, mission:{votes:{}}|null}],
+   * { cars: [{round, carIndex, leaderOpenId, team:[], forced, votes:{}|null,
+   *           mission: {success:bool, failCount} | {votes:{}} | null}],
    *   lake: [{round, inspectorOpenId, targetOpenId, result}],
    *   lancelot: [{round, switched}],
    *   assassination: {killerOpenId, targetOpenId}|null }
@@ -363,8 +363,6 @@ class OfflineRecordModel {
     const N = record.playerCount;
     const isPlayer = id => approvedIds.has(id);
 
-    if (!isPlayer(rounds.firstLeaderOpenId)) throw new Error('首车主无效');
-
     // 按轮分组校验车队
     const byRound = {};
     for (const car of rounds.cars) {
@@ -390,9 +388,12 @@ class OfflineRecordModel {
         if (team.length !== teamSize) throw new Error(`第${r}轮车队人数应为${teamSize}人`);
         if (!team.every(isPlayer) || new Set(team).size !== team.length) throw new Error(`第${r}轮车队成员无效`);
 
+        const mission = car.mission || null;
+        const isSimpleMission = !!(mission && typeof mission.success === 'boolean');
+
         if (car.forced) {
           // 强制车：直接发车，无票型
-          if (!car.mission || !car.mission.votes) throw new Error(`第${r}轮强制车缺少任务票`);
+          if (!mission) throw new Error(`第${r}轮强制车缺少任务票`);
         } else {
           const votes = car.votes || {};
           const voterIds = Object.keys(votes);
@@ -402,19 +403,31 @@ class OfflineRecordModel {
           if (!voterIds.every(v => votes[v] === 'approve' || votes[v] === 'reject')) throw new Error('票型取值无效');
           const approve = voterIds.filter(v => votes[v] === 'approve').length;
           const sent = approve > voterIds.length - approve;
-          if (!sent && car.mission) throw new Error(`第${r}轮流车的任务票不应存在`);
-          if (sent && (!car.mission || !car.mission.votes)) throw new Error(`第${r}轮第${i + 1}车缺少任务票`);
+          if (!sent && mission) throw new Error(`第${r}轮流车的任务票不应存在`);
+          if (sent && !mission) throw new Error(`第${r}轮第${i + 1}车缺少任务票`);
         }
 
-        if (car.mission && car.mission.votes) {
-          const mv = car.mission.votes;
-          const mvIds = Object.keys(mv);
-          if (mvIds.length !== team.length || !mvIds.every(t => team.includes(t))) throw new Error('任务票应覆盖且仅覆盖车队成员');
-          if (!mvIds.every(v => mv[v] === 'success' || mv[v] === 'fail')) throw new Error('任务票取值无效');
-          const failCount = mvIds.filter(v => mv[v] === 'fail').length;
+        if (mission) {
           const threshold = (r === 4 && N >= 7) ? 2 : 1;
-          const success = failCount < threshold;
-          missions.push({ round: r, success, failCount, team });
+          if (isSimpleMission) {
+            // 新形态：任务票 = 结果 + 失败票数（保护轮成功也允许 0/1 坏）
+            const fc = Number(mission.failCount);
+            if (!Number.isInteger(fc) || fc < 0 || fc > team.length) throw new Error('任务失败票数无效');
+            if (mission.success && fc >= threshold) throw new Error('任务成功但失败票数已达失败阈值');
+            if (!mission.success && fc < threshold) throw new Error('任务失败但失败票数未达失败阈值');
+            missions.push({ round: r, success: !!mission.success, failCount: fc, team });
+          } else if (mission.votes) {
+            // 旧形态：逐人任务票
+            const mv = mission.votes;
+            const mvIds = Object.keys(mv);
+            if (mvIds.length !== team.length || !mvIds.every(t => team.includes(t))) throw new Error('任务票应覆盖且仅覆盖车队成员');
+            if (!mvIds.every(v => mv[v] === 'success' || mv[v] === 'fail')) throw new Error('任务票取值无效');
+            const failCount = mvIds.filter(v => mv[v] === 'fail').length;
+            const success = failCount < threshold;
+            missions.push({ round: r, success, failCount, team });
+          } else {
+            throw new Error('任务票格式无效');
+          }
         }
       }
       // 每轮最多一个任务结果；发车后该轮不再有后续车
@@ -511,8 +524,20 @@ class OfflineRecordModel {
         const approve = Object.values(votes).filter(v => v === 'approve').length;
         const reject = Object.values(votes).filter(v => v === 'reject').length;
         const outcome_ = car.forced ? 'send' : (approve > reject ? 'send' : 'reject');
-        const missionVotes = (outcome_ === 'send' && car.mission && car.mission.votes) ? car.mission.votes : null;
-        const failCount = missionVotes ? Object.values(missionVotes).filter(v => v === 'fail').length : 0;
+        // 任务票双形态：新 {success, failCount}（无逐人票）/ 旧 {votes}
+        let missionVotes = null;
+        let missionSuccess = null;
+        let missionFailCount = 0;
+        if (outcome_ === 'send' && car.mission) {
+          if (typeof car.mission.success === 'boolean') {
+            missionSuccess = car.mission.success ? 1 : 0;
+            missionFailCount = Number(car.mission.failCount) || 0;
+          } else if (car.mission.votes) {
+            missionVotes = car.mission.votes;
+            missionFailCount = Object.values(missionVotes).filter(v => v === 'fail').length;
+            missionSuccess = missionFailCount < ((car.round === 4 && record.playerCount >= 7) ? 2 : 1) ? 1 : 0;
+          }
+        }
         await connection.execute(
           `INSERT INTO game_cars (game_id, round, car_index, team_leader_open_id, nominated_team, team_votes,
                                   outcome, is_forced_car, mission_votes, mission_success, created_at)
@@ -521,7 +546,7 @@ class OfflineRecordModel {
            JSON.stringify(car.team || []), JSON.stringify(votes),
            outcome_, car.forced ? 1 : 0,
            missionVotes ? JSON.stringify(missionVotes) : null,
-           missionVotes ? (failCount < ((car.round === 4 && record.playerCount >= 7) ? 2 : 1) ? 1 : 0) : null]
+           missionSuccess]
         );
       }
       for (const m of outcome.missions) {

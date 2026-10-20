@@ -222,6 +222,61 @@ describe('15 — Offline Record', () => {
     expect(state.basic.result.assassination.correct).toBe(false);
   });
 
+  it('15-8 新任务票形态（success/failCount）且无首车主可完成', async () => {
+    const rec = await createOfflineRecord(HOST, recordConfig());
+    const rid = rec.record.id;
+    await joinOfflineSeat(rid, HOST, 1, { nickName: 'host' }, false);
+    await joinOfflineSeat(rid, U.u1, 2, { nickName: 'u1' }, true);
+    await joinOfflineSeat(rid, U.u2, 3, { nickName: 'u2' }, true);
+    await joinOfflineSeat(rid, U.u3, 4, { nickName: 'u3' }, true);
+    await joinOfflineSeat(rid, U.u4, 5, { nickName: 'u4' }, true);
+    await setOfflineRole(rid, U.u1, null, 'merlin');
+    await setOfflineRole(rid, HOST, HOST, 'percival');
+    await setOfflineRole(rid, HOST, U.u2, 'loyal');
+    await setOfflineRole(rid, HOST, U.u3, 'assassin');
+    await setOfflineRole(rid, HOST, U.u4, 'morgana');
+
+    // 无 firstLeaderOpenId；任务票 = 结果 + 失败票数
+    const rounds = {
+      cars: [
+        { round: 1, carIndex: 1, leaderOpenId: HOST, team: [HOST, U.u1], forced: false,
+          votes: { [HOST]: 'approve', [U.u1]: 'approve', [U.u2]: 'approve', [U.u3]: 'reject', [U.u4]: 'reject' },
+          mission: { success: false, failCount: 1 } },
+        { round: 2, carIndex: 1, leaderOpenId: U.u1, team: [HOST, U.u1, U.u2], forced: false,
+          votes: { [HOST]: 'approve', [U.u1]: 'approve', [U.u2]: 'reject', [U.u3]: 'reject', [U.u4]: 'approve' },
+          mission: { success: false, failCount: 2 } },
+        { round: 3, carIndex: 1, leaderOpenId: U.u2, team: [U.u3, U.u4], forced: false,
+          votes: { [HOST]: 'approve', [U.u1]: 'approve', [U.u2]: 'approve', [U.u3]: 'reject', [U.u4]: 'reject' },
+          mission: { success: true, failCount: 1 } },
+        { round: 4, carIndex: 1, leaderOpenId: U.u3, team: [HOST, U.u3, U.u4], forced: false,
+          votes: { [HOST]: 'approve', [U.u1]: 'approve', [U.u2]: 'reject', [U.u3]: 'approve', [U.u4]: 'reject' },
+          mission: { success: false, failCount: 1 } }
+      ],
+      lake: [], lancelot: [], assassination: null
+    };
+    // 第3轮非保护轮成功却 1 坏 → 矛盾应拒绝
+    const bad = await saveOfflineRounds(rid, HOST, rounds);
+    expect(bad.success).toBe(true); // save 不校验结构
+    const badFinish = await finishOfflineRecord(rid, HOST);
+    expect(badFinish.success).toBe(false);
+    expect(badFinish.message).toContain('任务成功但失败票数');
+
+    rounds.cars[2].mission = { success: true, failCount: 0 };
+    await saveOfflineRounds(rid, HOST, rounds);
+    const done = await finishOfflineRecord(rid, HOST);
+    expect(done.success).toBe(true);
+
+    const state = await getGameState(done.gameId, HOST);
+    expect(state.basic.result.winner).toBe('evil');
+    expect(state.basic.result.reason).toBe('红方完成3个任务');
+    expect(state.history.missions.length).toBe(4);
+    expect(state.history.missions[2].success).toBe(true);
+    expect(state.history.missions[1].missionFailCount).toBe(2);
+    expect(state.history.missions[3].missionFailCount).toBe(1);
+
+    await deleteOfflineRecord(rid, HOST);
+  });
+
   it('15-7 删除：记录与物化对局一并移除', async () => {
     const detail = (await getOfflineRecord(recordId, HOST)).body.record;
     const gameId = detail.gameId;

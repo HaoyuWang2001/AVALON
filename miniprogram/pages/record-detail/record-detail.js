@@ -9,7 +9,6 @@ const app = getApp();
 const { getThemeClass, getThemeBg } = require('../../utils/theme.js');
 const { TEAM_SIZES, ROLE_NAMES_SHORT, ROLE_EMOJIS, BOARD_TYPE_LABELS } = require('../../utils/constants.js');
 
-const SAVE_DEBOUNCE = 700;
 
 Page({
   data: {
@@ -54,8 +53,12 @@ Page({
     outcomeText: '',
     showLake: false,
     showLance: false,
-    // 保存状态
-    saveText: '',
+    // 表单派生（票型预判/任务票）
+    carWillSend: false,
+    carAllVoted: false,
+    votePreview: '',
+    failThreshold: 1,
+    failCountOptions: [],
     // 已完成摘要
     resultText: '',
     winnerIsGood: false,
@@ -140,7 +143,7 @@ Page({
       role: r, label: ROLE_NAMES_SHORT[r] || r, emoji: ROLE_EMOJIS[r] || ''
     }));
     players.forEach(p => { p.roleLabel = p.role ? (ROLE_NAMES_SHORT[p.role] || p.role) : ''; });
-    approved.forEach(p => { p.seatLabel = p.seatNumber + '号'; });
+    approved.forEach(p => { p.seatLabel = String(p.seatNumber); });
 
     // 被移除/被拒感知：上一刻还在、现在不在且仍在记录中
     if (this._prevMe && this._prevMe.openId && !rec.me && rec.status === 'recording') {
@@ -171,7 +174,6 @@ Page({
       this._killerInBoard = configRoles.some(r => r === 'assassin' || r === 'morgana');
       if (resetDraft || !this.data.roundsDraft) {
         const draft = rec.rounds ? JSON.parse(JSON.stringify(rec.rounds)) : {
-          firstLeaderOpenId: '', firstLakeHolderOpenId: '',
           cars: [], lake: [], lancelot: [], assassination: null
         };
         draft.cars = (draft.cars || []).slice().sort((a, b) => (a.round - b.round) || (a.carIndex - b.carIndex));
@@ -202,7 +204,10 @@ Page({
       }
     }
     this.setData(patch);
-    if (rec.isOwner && rec.status === 'recording') this._recalcDraftDerived();
+    if (rec.isOwner && rec.status === 'recording') {
+      this._recalcDraftDerived();
+      this._refreshCarFormDerived();
+    }
     this._markFriends();
   },
 
@@ -221,16 +226,31 @@ Page({
   _missionStats(draft, playerCount) {
     let success = 0, fail = 0;
     for (const c of (draft.cars || [])) {
-      if (!c.mission || !c.mission.votes) continue;
-      const fails = Object.values(c.mission.votes).filter(v => v === 'fail').length;
-      const ok = fails < ((c.round === 4 && playerCount >= 7) ? 2 : 1);
+      if (!c.mission) continue;
+      let ok = null;
+      if (typeof c.mission.success === 'boolean') {
+        ok = c.mission.success;
+      } else if (c.mission.votes) {
+        const fails = Object.values(c.mission.votes).filter(v => v === 'fail').length;
+        ok = fails < ((c.round === 4 && playerCount >= 7) ? 2 : 1);
+      }
+      if (ok === null) continue;
       if (ok) success++; else fail++;
     }
     return { success, fail };
   },
+  _missionFailCountOf(c) {
+    if (!c.mission) return 0;
+    if (typeof c.mission.success === 'boolean') return Number(c.mission.failCount) || 0;
+    if (c.mission.votes) return Object.values(c.mission.votes).filter(v => v === 'fail').length;
+    return 0;
+  },
   _seatLabelOf(openId) {
     const p = (this.data.approved || []).find(x => x.openId === openId);
-    return p ? p.seatNumber + '号' : '?';
+    return p ? String(p.seatNumber) : '?';
+  },
+  _failThreshold(round) {
+    return (round === 4 && this.data.rec && this.data.rec.playerCount >= 7) ? 2 : 1;
   },
 
   // 草稿派生展示：车辆/湖仙/兰斯列表、进度、checklist、条件卡、picker 标签
@@ -246,17 +266,22 @@ Page({
       const keys = Object.keys(votes);
       const ap = keys.filter(k => votes[k] === 'approve').length;
       const rj = keys.length - ap;
-      const mv = (c.mission && c.mission.votes) || null;
-      const fails = mv ? Object.values(mv).filter(v => v === 'fail').length : 0;
+      const hasMission = !!c.mission;
+      const fails = hasMission ? this._missionFailCountOf(c) : 0;
+      const missionOk = hasMission
+        ? (typeof c.mission.success === 'boolean' ? c.mission.success
+          : fails < ((c.round === 4 && N >= 7) ? 2 : 1))
+        : null;
       return {
         idx,
         round: c.round, carIndex: c.carIndex,
+        editing: idx === this.data.editingCarIdx,
         leaderLabel: this._seatLabelOf(c.leaderOpenId),
         teamLabels: (c.team || []).map(t => this._seatLabelOf(t)).join('、'),
         voteText: c.forced ? '强制车' : (ap + '✓ ' + rj + '✕'),
-        outcome: c.forced ? 'send' : (c.mission ? 'send' : 'reject'),
-        outcomeText: c.forced ? '强制发车' : (c.mission ? '发车' : '流车'),
-        missionText: mv ? (fails > 0 ? '失败(' + fails + '坏)' : '成功') : '',
+        outcome: c.forced || hasMission ? 'send' : 'reject',
+        outcomeText: c.forced ? '强制发车' : (hasMission ? '发车' : '流车'),
+        missionText: hasMission ? (missionOk ? (fails > 0 ? '成功(' + fails + '坏)' : '成功') : '失败(' + fails + '坏)') : '',
         expanded: false
       };
     });
@@ -301,8 +326,6 @@ Page({
       showLake: this.data.lakeEnabled && (completedMissions >= Math.max(0, (rules.ladyOfTheLakeRound || 2) - 1) || lakeList.length > 0),
       showLance: this.data.hasLancelot && (completedMissions >= Math.max(1, (rules.lancelotSwapRound || 2) - 1) || lanceList.length > 0),
       'asnForm.need': needAsn,
-      firstLeaderLabel: d.firstLeaderOpenId ? this._seatLabelOf(d.firstLeaderOpenId) : '选择',
-      firstLakeLabel: d.firstLakeHolderOpenId ? this._seatLabelOf(d.firstLakeHolderOpenId) : '选择',
       carLeaderLabel: cf && cf.leader ? this._seatLabelOf(cf.leader) : '选择',
       lakeInspectorLabel: lf && lf.inspector ? this._seatLabelOf(lf.inspector) : '选择',
       lakeTargetLabel: lf && lf.target ? this._seatLabelOf(lf.target) : '选择',
@@ -312,28 +335,14 @@ Page({
     this.setData(patch);
   },
 
-  // ── 自动静默保存 ──
-  _scheduleSave() {
-    this._saveDirty = true;
-    this.setData({ saveText: '保存中…' });
-    if (this._saveTimer) clearTimeout(this._saveTimer);
-    this._saveTimer = setTimeout(() => this._doSave(true), SAVE_DEBOUNCE);
-  },
-  _doSave(silent) {
-    const d = this.data.roundsDraft;
-    if (!d) return Promise.resolve();
-    this._saveDirty = false;
-    if (this._saveTimer) { clearTimeout(this._saveTimer); this._saveTimer = null; }
-    return api.saveOfflineRounds(this.data.recordId, d).then(res => {
+  // ── 即时保存：座位/身份/车的增删/湖仙/兰斯/刺杀操作成功后触发（无周期保存） ──
+  _saveNow() {
+    if (!this.data.isOwner || !this.data.recording || !this.data.roundsDraft) return;
+    api.saveOfflineRounds(this.data.recordId, this.data.roundsDraft).then(res => {
       if (!res.success) throw new Error(res.message || '保存失败');
-      const t = new Date();
-      const p = n => (n < 10 ? '0' + n : '' + n);
-      this.setData({ saveText: '已自动保存 ' + p(t.getHours()) + ':' + p(t.getMinutes()) });
-      if (!silent) wx.showToast({ title: '已保存', icon: 'success' });
     }).catch(err => {
       this._saveDirty = true;
-      this.setData({ saveText: '保存失败' });
-      if (!silent) wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' });
+      wx.showToast({ title: (err && err.message) || '保存失败，请重试', icon: 'none' });
     });
   },
   _flushSave() {
@@ -343,30 +352,32 @@ Page({
       this._saveDirty = false;
     }
   },
-  retrySave() { this._doSave(false); },
 
   // ── 座位 ──
   _buildCarForm(draft, round, carIndex, approved) {
     const cars = (draft.cars || []).slice().sort((a, b) => (a.round - b.round) || (a.carIndex - b.carIndex));
-    let leader = draft.firstLeaderOpenId;
+    // 默认队长：上一辆车长的下一位（按座位顺延）；首车默认 1 号位
+    let leader = '';
     if (cars.length) {
       const last = cars[cars.length - 1].leaderOpenId;
       const idx = approved.findIndex(p => p.openId === last);
       if (idx >= 0 && approved[idx + 1]) leader = approved[idx + 1].openId;
     }
     if (!leader && approved.length) leader = approved[0].openId;
-    return {
+    const form = {
       round, carIndex, leader,
-      team: [], voteSel: [], votes: {},
-      forced: false, missionSel: [], mission: {}
+      team: [], votes: {},
+      forced: false, mission: { outcome: '', failCount: 0 }
     };
+    return form;
   },
   _buildLakeForm(draft, rules, approved, curRound) {
     if (!rules.ladyOfTheLake || !approved.length) return null;
     const used = new Set();
     (draft.lake || []).forEach(l => { used.add(l.inspectorOpenId); used.add(l.targetOpenId); });
     const candidates = approved.filter(p => !used.has(p.openId));
-    let inspector = draft.firstLakeHolderOpenId;
+    // 默认验人者：上次验人的目标，否则候选首位
+    let inspector = '';
     if ((draft.lake || []).length) inspector = draft.lake[draft.lake.length - 1].targetOpenId;
     if (!inspector || used.has(inspector)) inspector = candidates.length ? candidates[0].openId : '';
     const targets = candidates.filter(p => p.openId !== inspector);
@@ -410,8 +421,9 @@ Page({
   _join(seat, invited) {
     api.joinOfflineSeat(this.data.recordId, seat, invited).then(res => {
       if (res.success) {
-        wx.showToast({ title: invited ? '已入座' + seat + '号位' : '已申请，等待房主同意', icon: 'none' });
+        wx.showToast({ title: invited ? '已入座 ' + seat + ' 号位' : '已申请，等待房主同意', icon: 'none' });
         this._apply(res.record, { resetDraft: false });
+        this._saveNow();
       } else {
         wx.showToast({ title: res.message || '入座失败', icon: 'none' });
       }
@@ -429,15 +441,17 @@ Page({
       confirmColor: '#DC2626',
       success: m => {
         if (!m.confirm) return;
-        api.removeOfflinePlayer(this.data.recordId, p.openId).then(r => this._apply(r.record, { resetDraft: false }))
-          .catch(err => wx.showToast({ title: (err && err.message) || '移除失败', icon: 'none' }));
+        api.removeOfflinePlayer(this.data.recordId, p.openId).then(r => {
+          this._apply(r.record, { resetDraft: false });
+          this._saveNow();
+        }).catch(err => wx.showToast({ title: (err && err.message) || '移除失败', icon: 'none' }));
       }
     });
   },
   onRespond(e) {
     const { id, ok } = e.currentTarget.dataset;
     api.respondOfflineSeat(this.data.recordId, id, ok === '1').then(res => {
-      if (res.success) this._apply(res.record, { resetDraft: false });
+      if (res.success) { this._apply(res.record, { resetDraft: false }); this._saveNow(); }
       else wx.showToast({ title: res.message || '操作失败', icon: 'none' });
     }).catch(err => wx.showToast({ title: (err && err.message) || '操作失败', icon: 'none' }));
   },
@@ -478,7 +492,7 @@ Page({
   onAssignTap(e) {
     const id = e.currentTarget.dataset.id;
     api.assignOfflinePlayer(this.data.recordId, id, this.data.assignSeat).then(res => {
-      if (res.success) { this.setData({ showAssign: false }); this._apply(res.record, { resetDraft: false }); }
+      if (res.success) { this.setData({ showAssign: false }); this._apply(res.record, { resetDraft: false }); this._saveNow(); }
       else wx.showToast({ title: res.message || '指定失败', icon: 'none' });
     }).catch(err => wx.showToast({ title: (err && err.message) || '指定失败', icon: 'none' }));
   },
@@ -489,7 +503,7 @@ Page({
     const r = this.data.remainingRoles[idx];
     if (!r) return;
     api.setOfflineRole(this.data.recordId, r.role).then(res => {
-      if (res.success) this._apply(res.record, { resetDraft: false });
+      if (res.success) { this._apply(res.record, { resetDraft: false }); this._saveNow(); }
       else wx.showToast({ title: res.message || '设置失败', icon: 'none' });
     }).catch(err => wx.showToast({ title: (err && err.message) || '设置失败', icon: 'none' }));
   },
@@ -498,33 +512,19 @@ Page({
     const idx = parseInt(e.detail.value, 10);
     const role = this.data.remainingRoles[idx] ? this.data.remainingRoles[idx].role : null;
     api.setOfflineRole(this.data.recordId, role, openId).then(res => {
-      if (res.success) this._apply(res.record, { resetDraft: false });
+      if (res.success) { this._apply(res.record, { resetDraft: false }); this._saveNow(); }
       else wx.showToast({ title: res.message || '设置失败', icon: 'none' });
     }).catch(err => wx.showToast({ title: (err && err.message) || '设置失败', icon: 'none' }));
   },
   clearOwnerRole(e) {
     const openId = e.currentTarget.dataset.id;
     api.setOfflineRole(this.data.recordId, null, openId).then(res => {
-      if (res.success) this._apply(res.record, { resetDraft: false });
+      if (res.success) { this._apply(res.record, { resetDraft: false }); this._saveNow(); }
       else wx.showToast({ title: res.message || '清除失败', icon: 'none' });
     }).catch(err => wx.showToast({ title: (err && err.message) || '清除失败', icon: 'none' }));
   },
 
   // ── 轮次记录（房主）──
-  onFirstLeaderChange(e) {
-    const d = this.data.roundsDraft;
-    d.firstLeaderOpenId = this.data.approved[parseInt(e.detail.value, 10)].openId;
-    this.setData({ roundsDraft: d });
-    this._recalcDraftDerived();
-    this._scheduleSave();
-  },
-  onFirstLakeChange(e) {
-    const d = this.data.roundsDraft;
-    d.firstLakeHolderOpenId = this.data.approved[parseInt(e.detail.value, 10)].openId;
-    this.setData({ roundsDraft: d });
-    this._recalcDraftDerived();
-    this._scheduleSave();
-  },
   onCarLeaderChange(e) {
     const f = this.data.carForm;
     f.leader = this.data.approved[parseInt(e.detail.value, 10)].openId;
@@ -539,15 +539,18 @@ Page({
     if (i >= 0) f.team.splice(i, 1);
     else if (p && f.team.length < this.data.teamSize) f.team.push(p);
     this.setData({ carForm: f });
+    this._refreshCarFormDerived();
   },
-  onToggleVoteSel(e) {
+  // 号码牌点击循环：灰 → 绿(同意) → 红(反对) → 绿…
+  onVoteChipTap(e) {
     const id = e.currentTarget.dataset.id;
     const f = this.data.carForm;
-    const i = f.voteSel.indexOf(id);
-    if (i >= 0) f.voteSel.splice(i, 1); else f.voteSel.push(id);
+    const cur = f.votes[id];
+    f.votes[id] = (cur === 'approve') ? 'reject' : 'approve';
     this.setData({ carForm: f });
+    this._refreshCarFormDerived();
   },
-  // 所选 → 同意/反对（其余反面）；all-* 为全员快捷
+  // 全员同意 / 全员反对 / 全部清空
   applyVotes(e) {
     const val = e.currentTarget.dataset.val;
     const f = this.data.carForm;
@@ -555,36 +558,56 @@ Page({
       this.data.approved.forEach(p => { f.votes[p.openId] = 'approve'; });
     } else if (val === 'all-reject') {
       this.data.approved.forEach(p => { f.votes[p.openId] = 'reject'; });
-    } else {
-      const agree = val === 'approve';
-      this.data.approved.forEach(p => { f.votes[p.openId] = f.voteSel.includes(p.openId) === agree ? 'approve' : 'reject'; });
+    } else if (val === 'clear') {
+      f.votes = {};
     }
-    f.voteSel = [];
     this.setData({ carForm: f });
+    this._refreshCarFormDerived();
   },
-  clearVotes() {
+  // 任务票：结果二选一 + 失败票数
+  setMissionOutcome(e) {
+    const val = e.currentTarget.dataset.val;
     const f = this.data.carForm;
-    f.votes = {}; f.voteSel = [];
+    f.mission.outcome = (f.mission.outcome === val) ? '' : val;
+    f.mission.failCount = 0;
     this.setData({ carForm: f });
+    this._refreshCarFormDerived();
   },
-  onToggleMissionSel(e) {
-    const id = e.currentTarget.dataset.id;
+  setFailCount(e) {
+    const n = parseInt(e.currentTarget.dataset.n, 10);
     const f = this.data.carForm;
-    const i = f.missionSel.indexOf(id);
-    if (i >= 0) f.missionSel.splice(i, 1); else f.missionSel.push(id);
-    this.setData({ carForm: f });
-  },
-  applyMission(e) {
-    const fail = e.currentTarget.dataset.val === 'fail';
-    const f = this.data.carForm;
-    f.team.forEach(t => { f.mission[t.openId] = f.missionSel.includes(t.openId) === fail ? 'fail' : 'success'; });
-    f.missionSel = [];
+    f.mission.failCount = n;
     this.setData({ carForm: f });
   },
   onForcedToggle() {
     const f = this.data.carForm;
     f.forced = !f.forced;
     this.setData({ carForm: f });
+    this._refreshCarFormDerived();
+  },
+  // 表单派生：派车预判 + 保护轮阈值 + 失败票数可选范围
+  _refreshCarFormDerived() {
+    const f = this.data.carForm;
+    if (!f) return;
+    const vals = Object.values(f.votes);
+    const ap = vals.filter(v => v === 'approve').length;
+    const rj = vals.filter(v => v === 'reject').length;
+    const allVoted = !f.forced && vals.length === this.data.approved.length;
+    const willSend = f.forced || (allVoted && ap > rj);
+    const threshold = this._failThreshold(f.round);
+    let failCountOptions = [];
+    if (f.mission.outcome === 'fail') {
+      for (let i = threshold; i <= f.team.length; i++) failCountOptions.push(i);
+    } else if (f.mission.outcome === 'success' && threshold > 1) {
+      for (let i = 0; i < threshold; i++) failCountOptions.push(i);
+    }
+    this.setData({
+      carWillSend: willSend,
+      carAllVoted: allVoted,
+      votePreview: f.forced ? '强制发车' : (allVoted ? (willSend ? '✓ 发车' : '✗ 流车') : (vals.length + '/' + this.data.approved.length + ' 已投')),
+      failThreshold: threshold,
+      failCountOptions
+    });
   },
   _carWillSend(f) {
     if (f.forced) return true;
@@ -601,18 +624,22 @@ Page({
     if (!f.forced && Object.keys(f.votes).length !== this.data.approved.length) {
       wx.showToast({ title: '票型未记录完整', icon: 'none' }); return;
     }
-    if (willSend && Object.keys(f.mission).length !== f.team.length) {
-      wx.showToast({ title: '任务票未记录完整', icon: 'none' }); return;
+    const threshold = this._failThreshold(f.round);
+    if (willSend) {
+      if (!f.mission.outcome) { wx.showToast({ title: '请记录任务成功或失败', icon: 'none' }); return; }
+      const fc = f.mission.failCount;
+      if (f.mission.outcome === 'fail' && fc < threshold) { wx.showToast({ title: '失败票数未达阈值', icon: 'none' }); return; }
+      if (f.mission.outcome === 'success' && fc >= threshold) { wx.showToast({ title: '成功票数与结果矛盾', icon: 'none' }); return; }
     }
     const d = this.data.roundsDraft;
     const entry = {
       round: f.round, carIndex: f.carIndex, leaderOpenId: f.leader,
       team: f.team.map(t => t.openId), forced: f.forced,
       votes: f.forced ? null : { ...f.votes },
-      mission: willSend ? { votes: { ...f.mission } } : null
+      mission: willSend ? { success: f.mission.outcome === 'success', failCount: f.mission.failCount } : null
     };
     const editIdx = this.data.editingCarIdx;
-    if (editIdx >= 0) d.cars.splice(editIdx, 0, entry);
+    if (editIdx >= 0) d.cars.splice(editIdx, 1, entry);
     else d.cars.push(entry);
     d.cars.sort((a, b) => (a.round - b.round) || (a.carIndex - b.carIndex));
     // 编辑可能改变轮次推进，重算当前轮/车次
@@ -628,7 +655,8 @@ Page({
     };
     this.setData(patch);
     this._recalcDraftDerived();
-    this._scheduleSave();
+    this._refreshCarFormDerived();
+    this._saveNow();
   },
   editCar(e) {
     const idx = parseInt(e.currentTarget.dataset.idx, 10);
@@ -637,16 +665,30 @@ Page({
     if (!c) return;
     const approved = this.data.approved;
     const teamObjs = (c.team || []).map(id => approved.find(p => p.openId === id)).filter(Boolean);
+    // 兼容旧逐人任务票 → 换算为结果 + 失败票数
+    let outcome = '';
+    let failCount = 0;
+    if (c.mission) {
+      if (typeof c.mission.success === 'boolean') {
+        outcome = c.mission.success ? 'success' : 'fail';
+        failCount = Number(c.mission.failCount) || 0;
+      } else if (c.mission.votes) {
+        const fails = Object.values(c.mission.votes).filter(v => v === 'fail').length;
+        outcome = fails < this._failThreshold(c.round) ? 'success' : 'fail';
+        failCount = fails;
+      }
+    }
     const f = {
       round: c.round, carIndex: c.carIndex, leader: c.leaderOpenId,
-      team: teamObjs, voteSel: [], votes: c.votes ? { ...c.votes } : {},
-      forced: !!c.forced, missionSel: [],
-      mission: (c.mission && c.mission.votes) ? { ...c.mission.votes } : {}
+      team: teamObjs, votes: c.votes ? { ...c.votes } : {},
+      forced: !!c.forced,
+      mission: { outcome, failCount }
     };
-    d.cars.splice(idx, 1);
-    this.setData({ roundsDraft: d, carForm: f, editingCarIdx: idx });
+    // 不从草稿移除：提交时替换，取消时丢弃，避免中途保存丢失
+    this.setData({ carForm: f, editingCarIdx: idx });
     this._recalcDraftDerived();
-    wx.showToast({ title: '已载入该车，修改后点「保存本车」', icon: 'none' });
+    this._refreshCarFormDerived();
+    wx.showToast({ title: '已载入该车，修改后点「保存本车修改」', icon: 'none' });
   },
   cancelEditCar() {
     const d = this.data.roundsDraft;
@@ -660,6 +702,7 @@ Page({
       carForm: this._buildCarForm(d, curRound, nextIndex, this.data.approved)
     });
     this._recalcDraftDerived();
+    this._refreshCarFormDerived();
   },
   removeCar(e) {
     const idx = parseInt(e.currentTarget.dataset.idx, 10);
@@ -688,7 +731,7 @@ Page({
         }
         this.setData(patch);
         this._recalcDraftDerived();
-        this._scheduleSave();
+        this._saveNow();
       }
     });
   },
@@ -715,7 +758,7 @@ Page({
     d.lake.push({ round: f.round, inspectorOpenId: f.inspector, targetOpenId: f.target, result: f.result });
     this.setData({ roundsDraft: d, lakeForm: this._buildLakeForm(d, (this.data.rec.roomConfig || {}).rules || {}, this.data.approved, this.data.curRound) });
     this._recalcDraftDerived();
-    this._scheduleSave();
+    this._saveNow();
   },
   removeLake(e) {
     const idx = parseInt(e.currentTarget.dataset.idx, 10);
@@ -723,7 +766,7 @@ Page({
     d.lake.splice(idx, 1);
     this.setData({ roundsDraft: d, lakeForm: this._buildLakeForm(d, (this.data.rec.roomConfig || {}).rules || {}, this.data.approved, this.data.curRound) });
     this._recalcDraftDerived();
-    this._scheduleSave();
+    this._saveNow();
   },
   onLanceField(e) {
     const f = this.data.lanceForm;
@@ -736,7 +779,7 @@ Page({
     d.lancelot.push({ round: this.data.lanceForm.round, switched: this.data.lanceForm.switched });
     this.setData({ roundsDraft: d, lanceForm: { round: this.data.lanceForm.round, switched: false } });
     this._recalcDraftDerived();
-    this._scheduleSave();
+    this._saveNow();
   },
   removeLance(e) {
     const idx = parseInt(e.currentTarget.dataset.idx, 10);
@@ -744,7 +787,7 @@ Page({
     d.lancelot.splice(idx, 1);
     this.setData({ roundsDraft: d });
     this._recalcDraftDerived();
-    this._scheduleSave();
+    this._saveNow();
   },
   onAsnField(e) {
     const { field } = e.currentTarget.dataset;
@@ -761,7 +804,7 @@ Page({
     d.assassination = { killerOpenId: f.killer, targetOpenId: f.target };
     this.setData({ roundsDraft: d });
     this._recalcDraftDerived();
-    this._scheduleSave();
+    this._saveNow();
     wx.showToast({ title: '已填入刺杀记录', icon: 'none' });
   },
   clearAsn() {
@@ -773,7 +816,7 @@ Page({
         d.assassination = null;
         this.setData({ roundsDraft: d, 'asnForm.killer': '', 'asnForm.target': '' });
         this._recalcDraftDerived();
-        this._scheduleSave();
+        this._saveNow();
       }
     });
   },

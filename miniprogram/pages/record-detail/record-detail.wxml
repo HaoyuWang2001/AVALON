@@ -39,7 +39,7 @@
       <view class="rd-card-title">待审批入座（{{pending.length}}）</view>
       <view wx:for="{{pending}}" wx:key="openId" class="rd-pending-row">
         <image class="rd-pending-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
-        <text class="rd-pending-name">{{item.nickName}} → 申请 {{item.seatNumber}}号位</text>
+        <text class="rd-pending-name">{{item.nickName}} → 申请 {{item.seatNumber}}</text>
         <view class="rd-pending-ops">
           <text class="rd-op rd-op-agree" bindtap="onRespond" data-id="{{item.openId}}" data-ok="1">同意</text>
           <text class="rd-op rd-op-refuse" bindtap="onRespond" data-id="{{item.openId}}" data-ok="0">拒绝</text>
@@ -114,25 +114,9 @@
       </view>
 
       <view class="card">
-        <view class="rd-card-title">开局</view>
-        <view class="rd-form-row">
-          <text class="rd-form-label">首车主</text>
-          <picker range="{{approved}}" range-key="seatLabel" bindchange="onFirstLeaderChange">
-            <text class="rd-form-value">{{firstLeaderLabel}}</text>
-          </picker>
-        </view>
-        <view wx:if="{{lakeEnabled}}" class="rd-form-row">
-          <text class="rd-form-label">首湖仙</text>
-          <picker range="{{approved}}" range-key="seatLabel" bindchange="onFirstLakeChange">
-            <text class="rd-form-value">{{firstLakeLabel}}</text>
-          </picker>
-        </view>
-      </view>
-
-      <view class="card">
         <view class="rd-card-title">
-          {{editingCarIdx >= 0 ? '修改车辆' : '发车'}}
-          <text class="rd-card-tip">{{editingCarIdx >= 0 ? '第 ' + carForm.round + ' 轮 第 ' + carForm.carIndex + ' 车' : '第 ' + curRound + ' 轮 · 第 ' + curCarIndex + ' 车 · ' + teamSize + '人车'}}</text>
+          第{{carForm.round}}轮 · 第{{carForm.carIndex}}车 · {{teamSize}}人车
+          <text class="rd-card-tip">{{editingCarIdx >= 0 ? '修改中' : ''}}</text>
         </view>
 
         <view class="rd-form-row">
@@ -157,31 +141,35 @@
         </view>
 
         <view class="rd-form-block" wx:if="{{!carForm.forced}}">
-          <text class="rd-form-label">票型（多选 → 所选为同/反，其余取反面；或全员快捷）</text>
+          <text class="rd-form-label">票型（点击号码：灰 → 绿 → 红 循环）</text>
           <view class="rd-chips">
             <view wx:for="{{approved}}" wx:key="openId" wx:for-item="p"
-              class="rd-chip {{carForm.voteSel.indexOf(p.openId) >= 0 ? 'rd-chip-sel' : ''}} {{carForm.votes[p.openId] === 'approve' ? 'rd-chip-good' : carForm.votes[p.openId] === 'reject' ? 'rd-chip-evil' : ''}}"
-              bindtap="onToggleVoteSel" data-id="{{p.openId}}">{{p.seatLabel}}{{carForm.votes[p.openId] === 'approve' ? '✓' : carForm.votes[p.openId] === 'reject' ? '✕' : ''}}</view>
+              class="rd-chip {{carForm.votes[p.openId] === 'approve' ? 'rd-vote-agree' : carForm.votes[p.openId] === 'reject' ? 'rd-vote-reject' : ''}}"
+              bindtap="onVoteChipTap" data-id="{{p.openId}}">{{p.seatLabel}}</view>
           </view>
           <view class="rd-btn-row">
-            <view class="rd-mini-btn rd-mini-good" bindtap="applyVotes" data-val="all-approve">全员同意</view>
-            <view class="rd-mini-btn rd-mini-evil" bindtap="applyVotes" data-val="all-reject">全员反对</view>
-            <view class="rd-mini-btn rd-mini-plain" bindtap="applyVotes" data-val="approve">所选为同意</view>
-            <view class="rd-mini-btn rd-mini-plain" bindtap="applyVotes" data-val="reject">所选为反对</view>
-            <view class="rd-mini-btn rd-mini-plain" bindtap="clearVotes">清空</view>
+            <view class="rd-mini-btn rd-vote-agree" bindtap="applyVotes" data-val="all-approve">全员同意</view>
+            <view class="rd-mini-btn rd-vote-reject" bindtap="applyVotes" data-val="all-reject">全员反对</view>
+            <view class="rd-mini-btn rd-mini-plain" bindtap="applyVotes" data-val="clear">全部清空</view>
           </view>
+          <text class="rd-vote-preview">{{votePreview}}</text>
         </view>
 
-        <view class="rd-form-block" wx:if="{{carForm.team.length === teamSize}}">
-          <text class="rd-form-label">任务票（多选 → 所选为成功/失败，其余取反面）</text>
-          <view class="rd-chips">
-            <view wx:for="{{carForm.team}}" wx:key="openId" wx:for-item="tp"
-              class="rd-chip {{carForm.missionSel.indexOf(tp.openId) >= 0 ? 'rd-chip-sel' : ''}} {{carForm.mission[tp.openId] === 'success' ? 'rd-chip-good' : carForm.mission[tp.openId] === 'fail' ? 'rd-chip-evil' : ''}}"
-              bindtap="onToggleMissionSel" data-id="{{tp.openId}}">{{tp.seatLabel}}{{carForm.mission[tp.openId] === 'success' ? '✓' : carForm.mission[tp.openId] === 'fail' ? '✕' : ''}}</view>
-          </view>
+        <view class="rd-form-block" wx:if="{{carForm.team.length === teamSize && (carForm.forced || carWillSend)}}">
+          <text class="rd-form-label">任务票{{failThreshold > 1 ? '（保护轮：2坏才失败）' : ''}}</text>
           <view class="rd-btn-row">
-            <view class="rd-mini-btn rd-mini-good" bindtap="applyMission" data-val="success">所选为成功</view>
-            <view class="rd-mini-btn rd-mini-evil" bindtap="applyMission" data-val="fail">所选为失败</view>
+            <view class="rd-mini-btn {{carForm.mission.outcome === 'success' ? 'rd-vote-agree' : 'rd-mini-plain'}}" bindtap="setMissionOutcome" data-val="success">任务成功</view>
+            <view class="rd-mini-btn {{carForm.mission.outcome === 'fail' ? 'rd-vote-reject' : 'rd-mini-plain'}}" bindtap="setMissionOutcome" data-val="fail">任务失败</view>
+          </view>
+          <view wx:if="{{carForm.mission.outcome === 'fail'}}" class="rd-chips">
+            <view wx:for="{{failCountOptions}}" wx:key="*this"
+              class="rd-chip {{carForm.mission.failCount === item ? 'rd-chip-on' : ''}}"
+              bindtap="setFailCount" data-n="{{item}}">{{item}}坏</view>
+          </view>
+          <view wx:if="{{carForm.mission.outcome === 'success' && failThreshold > 1}}" class="rd-chips">
+            <view wx:for="{{failCountOptions}}" wx:key="*this"
+              class="rd-chip {{carForm.mission.failCount === item ? 'rd-chip-on' : ''}}"
+              bindtap="setFailCount" data-n="{{item}}">{{item}}坏</view>
           </view>
         </view>
 
@@ -195,7 +183,7 @@
       <view wx:if="{{carList.length > 0}}" class="card">
         <view class="rd-card-title">已录车辆（{{carList.length}}）<text class="rd-card-tip">点击展开</text></view>
         <view wx:for="{{carList}}" wx:key="idx" class="rd-car-item {{item.outcome === 'send' ? 'rd-car-send' : 'rd-car-reject'}}">
-          <view class="rd-car-line" bindtap="toggleCarExpand" data-idx="{{item.idx}}">
+          <view class="rd-car-line {{item.editing ? 'rd-car-editing' : ''}}" bindtap="toggleCarExpand" data-idx="{{item.idx}}">
             <text class="rd-car-tag">R{{item.round}}C{{item.carIndex}}</text>
             <text class="rd-car-main">队长{{item.leaderLabel}} · {{item.teamLabels}}</text>
             <text class="rd-car-votes">{{item.voteText}}</text>
@@ -303,7 +291,6 @@
 
   <!-- 底部固定操作条（房主+记录中）：自动保存状态 + 完成 -->
   <view wx:if="{{isOwner && recording && rec}}" class="rd-bottombar">
-    <view class="rd-save-state {{saveText === '保存失败' ? 'rd-save-err' : ''}}" bindtap="retrySave">{{saveText || '自动保存已开启'}}</view>
     <button class="rd-finish-btn {{canFinish ? '' : 'rd-finish-disabled'}}" bindtap="finishRecord">记录完成</button>
   </view>
 

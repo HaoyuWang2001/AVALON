@@ -126,16 +126,20 @@
 .rd-form-block { padding: 14rpx 0; display: flex; flex-direction: column; gap: 14rpx; }
 
 .rd-chips { display: flex; flex-wrap: wrap; gap: 12rpx; }
+/* 号码牌初始灰（label-grey 对） */
 .rd-chip {
   min-width: 72rpx; text-align: center;
   padding: 10rpx 20rpx; border-radius: 999rpx; font-size: 24rpx; font-weight: 700;
-  background: var(--bg-page); color: var(--text-muted);
-  border: 2rpx dashed transparent;
+  background: var(--label-grey-bg); color: var(--label-grey);
+  border: 2rpx solid transparent;
 }
+/* 中性选中（车队/人数）：label-violet 对 */
 .rd-chip-on { background: var(--label-violet-bg); color: var(--label-violet); border-color: var(--label-violet); }
-.rd-chip-sel { border-color: var(--primary); border-style: solid; }
-.rd-chip-good { background: var(--label-good-bg); color: var(--label-good); }
-.rd-chip-evil { background: var(--label-evil-bg); color: var(--label-evil); }
+/* 同意/成功：既有「投赞成」状态绿（state-approve 底 + agree 字） */
+.rd-vote-agree { background: var(--state-approve); color: var(--agree); }
+/* 反对/失败：既有「投反对」状态红（state-reject 底 + disagree 字） */
+.rd-vote-reject { background: var(--state-reject); color: var(--disagree); }
+.rd-vote-preview { font-size: 24rpx; font-weight: 700; color: var(--text-muted); }
 
 .rd-btn-row { display: flex; gap: 14rpx; flex-wrap: wrap; }
 .rd-mini-btn {
@@ -154,6 +158,7 @@
 .rd-car-item.rd-car-reject { opacity: 0.62; }
 .rd-car-item.rd-car-reject .rd-car-tag { background: var(--label-grey-bg); color: var(--label-grey); }
 .rd-car-line { display: flex; align-items: center; gap: 12rpx; padding: 14rpx 0; flex-wrap: wrap; }
+.rd-car-editing { outline: 2rpx dashed var(--primary); outline-offset: -6rpx; border-radius: 12rpx; padding-left: 12rpx; padding-right: 12rpx; }
 .rd-car-tag {
   flex-shrink: 0; font-size: 20rpx; font-weight: 800; padding: 4rpx 12rpx; border-radius: 8rpx;
 }
@@ -186,10 +191,8 @@
   background: var(--bg-card);
   box-shadow: 0 -8rpx 24rpx rgba(0, 0, 0, 0.08);
 }
-.rd-save-state { flex: 1; font-size: 22rpx; color: var(--text-muted); }
-.rd-save-err { color: var(--danger); font-weight: 700; }
 .rd-finish-btn {
-  flex-shrink: 0; margin: 0; width: 320rpx;
+  flex: 1; margin: 0;
   border-radius: 999rpx; font-size: 30rpx; font-weight: 700; color: var(--on-primary);
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
 }
