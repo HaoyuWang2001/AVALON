@@ -216,17 +216,13 @@
   background: var(--bg-page); font-size: 26rpx; color: var(--text-body);
 }
 
-/* 空座位底部弹层 */
+/* 空座位底部弹层：三个纵向按钮（自己上座/指定好友/微信邀请） */
 .rd-sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12rpx; }
 .rd-sheet-title { font-size: 34rpx; font-weight: 800; color: var(--text-title); }
-.rd-sheet-actions { display: flex; flex-direction: column; gap: 12rpx; margin-top: 12rpx; }
-.rd-sheet-action {
-  display: flex; align-items: center; gap: 20rpx; padding: 24rpx;
-  border-radius: 20rpx; background: var(--bg-page);
+.rd-sheet-actions { display: flex; flex-direction: column; gap: 16rpx; margin-top: 16rpx; }
+.rd-sheet-btn {
+  width: 100%; box-sizing: border-box; text-align: center; margin: 0;
+  padding: 24rpx 0; border-radius: 999rpx; line-height: 1.4;
+  font-size: 28rpx; font-weight: 700;
+  background: var(--label-violet-bg); color: var(--label-violet);
 }
-.rd-sheet-action-icon { font-size: 40rpx; flex-shrink: 0; }
-.rd-sheet-action-main { flex: 1; display: flex; flex-direction: column; gap: 4rpx; min-width: 0; }
-.rd-sheet-action-title { font-size: 28rpx; font-weight: 700; color: var(--text-title); }
-.rd-sheet-action-sub { font-size: 22rpx; color: var(--text-muted); }
-.rd-chevron { font-size: 36rpx; color: var(--text-muted); flex-shrink: 0; line-height: 1; }
-.rd-sheet-note { margin-top: 16rpx; text-align: center; }

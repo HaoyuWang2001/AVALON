@@ -294,33 +294,18 @@
     <button class="rd-finish-btn {{canFinish ? '' : 'rd-finish-disabled'}}" bindtap="finishRecord">记录完成</button>
   </view>
 
-  <!-- 空座位底部弹层（房主）：邀请分享 / 指定玩家 / 自己直接上座 -->
+  <!-- 空座位底部弹层（房主）：自己上座 / 指定好友 / 微信邀请 -->
   <view wx:if="{{showSeatSheet}}" class="rd-assign-mask" bindtap="closeSeatSheet" catchtouchmove="noop">
     <view class="rd-assign-panel" catchtap="noop">
       <view class="rd-sheet-head">
         <text class="rd-sheet-title">{{seatSheetSeat}} 号位</text>
-        <button class="rd-share-btn" size="mini" open-type="share" bindtap="setShareSeat" data-seat="{{seatSheetSeat}}">邀请</button>
       </view>
       <view wx:if="{{seatSheetPendingName}}" class="rd-role-note">⏳ {{seatSheetPendingName}} 正在申请此座位（可在待审批区同意）</view>
       <view class="rd-sheet-actions">
-        <view class="rd-sheet-action" bindtap="seatSheetAssign">
-          <text class="rd-sheet-action-icon">👥</text>
-          <view class="rd-sheet-action-main">
-            <text class="rd-sheet-action-title">指定玩家</text>
-            <text class="rd-sheet-action-sub">从好友列表或唯一 ID 搜索，直接入座</text>
-          </view>
-          <text class="rd-chevron">›</text>
-        </view>
-        <view class="rd-sheet-action" bindtap="seatSheetSit">
-          <text class="rd-sheet-action-icon">🪑</text>
-          <view class="rd-sheet-action-main">
-            <text class="rd-sheet-action-title">自己直接上座</text>
-            <text class="rd-sheet-action-sub">我坐 {{seatSheetSeat}} 号位</text>
-          </view>
-          <text class="rd-chevron">›</text>
-        </view>
+        <view class="rd-sheet-btn" bindtap="seatSheetSit">自己上座</view>
+        <view class="rd-sheet-btn" bindtap="seatSheetAssign">指定好友</view>
+        <button class="rd-sheet-btn" size="mini" open-type="share" bindtap="setShareSeat" data-seat="{{seatSheetSeat}}">微信邀请</button>
       </view>
-      <view class="rd-role-note rd-sheet-note">点右上角「邀请」转发给好友，好友打开后确认即直接入座此座位</view>
     </view>
   </view>
 
