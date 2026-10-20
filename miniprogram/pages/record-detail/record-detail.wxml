@@ -113,6 +113,23 @@
         <text class="rd-progress-text">{{progressText}}</text>
       </view>
 
+      <!-- 已录车辆：每车一卡，位于发车卡上方（点击展开编辑/删除） -->
+      <view wx:for="{{carList}}" wx:key="idx"
+        class="card rd-car-card {{item.outcome === 'send' ? 'rd-car-send' : 'rd-car-reject'}}">
+        <view class="rd-car-line {{item.editing ? 'rd-car-editing' : ''}}" bindtap="toggleCarExpand" data-idx="{{item.idx}}">
+          <text class="rd-car-tag">R{{item.round}}C{{item.carIndex}}</text>
+          <text class="rd-car-main">队长{{item.leaderLabel}} · {{item.teamLabels}}</text>
+          <text class="rd-car-votes">{{item.voteText}}</text>
+          <text wx:if="{{item.missionText}}" class="rd-car-mission {{item.missionOk ? 'rd-mission-ok' : 'rd-mission-bad'}}">{{item.missionText}}</text>
+        </view>
+        <view wx:if="{{item.expanded}}" class="rd-car-detail">
+          <view class="rd-car-ops">
+            <view class="rd-mini-btn rd-mini-plain" bindtap="editCar" data-idx="{{item.idx}}">编辑</view>
+            <view class="rd-mini-btn rd-mini-evil" bindtap="removeCar" data-idx="{{item.idx}}">删除</view>
+          </view>
+        </view>
+      </view>
+
       <view class="card">
         <view class="rd-card-title">
           第{{carForm.round}}轮 · 第{{carForm.carIndex}}车 · {{teamSize}}人车
@@ -176,25 +193,6 @@
         <view class="rd-btn-row">
           <view class="rd-mini-btn rd-mini-primary" bindtap="submitCar">{{editingCarIdx >= 0 ? '保存本车修改' : '＋ 添加本车'}}</view>
           <view wx:if="{{editingCarIdx >= 0}}" class="rd-mini-btn rd-mini-plain" bindtap="cancelEditCar">取消修改</view>
-        </view>
-      </view>
-
-      <!-- 已录车辆（点击展开/编辑） -->
-      <view wx:if="{{carList.length > 0}}" class="card">
-        <view class="rd-card-title">已录车辆（{{carList.length}}）<text class="rd-card-tip">点击展开</text></view>
-        <view wx:for="{{carList}}" wx:key="idx" class="rd-car-item {{item.outcome === 'send' ? 'rd-car-send' : 'rd-car-reject'}}">
-          <view class="rd-car-line {{item.editing ? 'rd-car-editing' : ''}}" bindtap="toggleCarExpand" data-idx="{{item.idx}}">
-            <text class="rd-car-tag">R{{item.round}}C{{item.carIndex}}</text>
-            <text class="rd-car-main">队长{{item.leaderLabel}} · {{item.teamLabels}}</text>
-            <text class="rd-car-votes">{{item.voteText}}</text>
-            <text wx:if="{{item.missionText}}" class="rd-car-mission {{item.missionText === '成功' ? 'rd-mission-ok' : 'rd-mission-bad'}}">{{item.missionText}}</text>
-          </view>
-          <view wx:if="{{item.expanded}}" class="rd-car-detail">
-            <view class="rd-car-ops">
-              <view class="rd-mini-btn rd-mini-plain" bindtap="editCar" data-idx="{{item.idx}}">编辑</view>
-              <view class="rd-mini-btn rd-mini-evil" bindtap="removeCar" data-idx="{{item.idx}}">删除</view>
-            </view>
-          </view>
         </view>
       </view>
 

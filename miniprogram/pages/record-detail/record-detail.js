@@ -278,6 +278,7 @@ Page({
         voteText: c.forced ? '强制车' : (ap + '✓ ' + rj + '✕'),
         outcome: c.forced || hasMission ? 'send' : 'reject',
         outcomeText: c.forced ? '强制发车' : (hasMission ? '发车' : '流车'),
+        missionOk: hasMission ? missionOk === true : false,
         missionText: hasMission ? (missionOk ? (fails > 0 ? '成功(' + fails + '坏)' : '成功') : '失败(' + fails + '坏)') : '',
         expanded: false
       };

@@ -164,12 +164,11 @@
 .rd-mini-evil { background: var(--label-evil-bg); color: var(--label-evil); }
 .rd-mini-plain { background: var(--bg-page); color: var(--text-muted); }
 
-/* 已录车辆 */
-.rd-car-item { border-bottom: 1rpx solid var(--divider); padding: 6rpx 0; }
-.rd-car-item:last-child { border-bottom: none; }
-.rd-car-item.rd-car-send .rd-car-tag { background: var(--label-violet-bg); color: var(--label-violet); }
-.rd-car-item.rd-car-reject { opacity: 0.62; }
-.rd-car-item.rd-car-reject .rd-car-tag { background: var(--label-grey-bg); color: var(--label-grey); }
+/* 已录车辆：每车独立卡片（位于发车卡上方） */
+.rd-car-card { padding: 20rpx 28rpx; }
+.rd-car-card.rd-car-send .rd-car-tag { background: var(--label-violet-bg); color: var(--label-violet); }
+.rd-car-card.rd-car-reject { opacity: 0.62; }
+.rd-car-card.rd-car-reject .rd-car-tag { background: var(--label-grey-bg); color: var(--label-grey); }
 .rd-car-line { display: flex; align-items: center; gap: 12rpx; padding: 14rpx 0; flex-wrap: wrap; }
 .rd-car-editing { outline: 2rpx dashed var(--primary); outline-offset: -6rpx; border-radius: 12rpx; padding-left: 12rpx; padding-right: 12rpx; }
 .rd-car-tag {
