@@ -148,9 +148,10 @@ function createRouter() {
       const data = {};
       if (wxNickName !== undefined) data.wxNickName = wxNickName;
       if (customNickName !== undefined) {
+        // 允许空字符串（清空后回退到 wxNickName）；非空限 1-10 字
         const nick = String(customNickName).trim();
-        if (nick.length < 1 || nick.length > 10) {
-          return res.status(400).json({ success: false, message: '昵称需为 1-10 个字符' });
+        if (nick.length > 10) {
+          return res.status(400).json({ success: false, message: '昵称最多 10 个字符' });
         }
         data.customNickName = nick;
       }
