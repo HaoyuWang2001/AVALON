@@ -39,13 +39,15 @@
 ```bash
 cd preview && npm run check     # 等价于 node preview/check-miniprogram.js
 ```
-检查项：JSON 合法性、`app.json` 页面四件套、`usingComponents` 路径、WXML 自定义组件注册 / 标签配对 / 图片资源引用、JS 语法、主包体积（2MB）。
+检查项：JSON 合法性、`app.json` 页面四件套、`usingComponents` 路径、WXML 自定义组件注册 / 标签配对 / 图片资源引用、WXSS 语法（含多余分号 `;;`、`@import` 路径）、JS 语法、主包体积（2MB）。
 `npm run preview` 已内置该自检（先检查再打包真机预览），不在 repo 里的临时文件不会误报。
 
 > **主包 2MB 限制**：`miniprogram/` 的 `project.private.config.json` 中 `bigPackageSizeSupport: false`，主包超过 2MB 时开发者工具会报「代码包大小超限」。
 > 参考截图、设计稿、日志等非运行文件**不要**放在 `miniprogram/` 内，也**不要提交到仓库**；统一存放到仓库外（如 `~/avalon-screenshots/`）。
 >
 > 事故记录（2026-11-21）：两张共 1.3MB 的参考截图被放入 `miniprogram/images/`，项目体积达 2.60MB，导致编译报体积超限；截图已移出仓库（现存于仓库外 `~/avalon-screenshots/`，从未提交到 git/origin），体积恢复为 1.34MB。
+>
+> 事故记录（2026-11-21 二次）：titles 合并产生 `min-width: 0;;` 多余分号，`friends` / `leaderboard` 的 WXSS 编译报 `unexpected token ;`；自检脚本已加入 WXSS 连续分号检测。
 
 ## 架构
 

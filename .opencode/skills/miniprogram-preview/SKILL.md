@@ -49,7 +49,7 @@ WeChat (「扫一扫」). The mini-program will connect to the backend at `https
 Repeat `npm run preview && npm run preview:push` any time to refresh the QR.
 
 > `npm run preview` 现在会先执行编译自检 `node check-miniprogram.js`（JSON 合法性 / 页面四件套 / usingComponents /
-> WXML 组件注册与标签配对 / 图片引用 / JS 语法 / 主包体积）。也可单独运行 `npm run check`。
+> WXML 组件注册与标签配对 / 图片引用 / WXSS 语法（含 `;;`）/ JS 语法 / 主包体积）。也可单独运行 `npm run check`。
 > 主包上限 2MB（`bigPackageSizeSupport: false`）：截图、设计稿等非运行文件不要放进 `miniprogram/`，统一放 `docs/`。
 
 ## Production static server

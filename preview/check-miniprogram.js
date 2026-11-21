@@ -152,7 +152,46 @@ for (const f of wxmlFiles) {
   }
 }
 
-// ── 5. JS 语法 ────────────────────────────────────────────────
+// ── 5. WXSS 语法 ──────────────────────────────────────────────
+const wxssFiles = files.filter(f => f.endsWith('.wxss'));
+let postcss = null;
+try { postcss = require('postcss'); } catch (e) { /* 可选依赖 */ }
+
+// 去掉注释与字符串字面量（保留长度/换行，便于定位行号）
+function stripCssNonCode(src) {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, ' '))
+    .replace(/"(?:\\.|[^"\\])*"/g, m => m.replace(/[^\n]/g, ' '))
+    .replace(/'(?:\\.|[^'\\])*'/g, m => m.replace(/[^\n]/g, ' '));
+}
+const lineAt = (src, idx) => src.slice(0, idx).split('\n').length;
+
+for (const f of wxssFiles) {
+  const src = fs.readFileSync(f, 'utf8');
+  if (postcss) {
+    try { postcss.parse(src, { from: f }); }
+    catch (e) {
+      const line = e.line || (e.input && e.input.line) || '?';
+      errors.push(`WXSS 解析失败: ${rel(f)}:${line} — ${e.reason || e.message}`);
+    }
+  }
+  const code = stripCssNonCode(src);
+  // 连续分号：WXSS 编译器会报 "unexpected token `;`"（postcss 不报错）
+  const dupRe = /;\s*;/g;
+  let dm;
+  while ((dm = dupRe.exec(code))) {
+    errors.push(`WXSS 多余分号(;;): ${rel(f)}:${lineAt(src, dm.index)}`);
+  }
+  // @import 目标存在性
+  const impRe = /@import\s+(?:url\()?\s*['"]?([^'")\s]+)['"]?\s*\)?\s*;/g;
+  let im;
+  while ((im = impRe.exec(code))) {
+    const target = path.resolve(path.dirname(f), im[1]);
+    if (!fs.existsSync(target)) errors.push(`WXSS @import 不存在: ${rel(f)} → ${im[1]}`);
+  }
+}
+
+// ── 6. JS 语法 ────────────────────────────────────────────────
 const jsFiles = files.filter(f => /\.(js|cjs)$/.test(f));
 for (const f of jsFiles) {
   try {
@@ -163,7 +202,7 @@ for (const f of jsFiles) {
   }
 }
 
-// ── 6. 包体积（排除 node_modules；上传包限制 2MB） ─────────────
+// ── 7. 包体积（排除 node_modules；上传包限制 2MB） ─────────────
 let total = 0;
 for (const f of files) total += fs.statSync(f).size;
 const MB = total / 1024 / 1024;
@@ -171,7 +210,7 @@ if (MB > 2) warnings.push(`项目文件总大小 ${MB.toFixed(2)}MB 超过主包
 
 // ── 输出 ──────────────────────────────────────────────────────
 console.log(`检查目录: ${ROOT}`);
-console.log(`扫描文件: ${files.length}（JSON ${jsonFiles.length} / WXML ${wxmlFiles.length} / JS ${jsFiles.length}），合计 ${MB.toFixed(2)}MB`);
+console.log(`扫描文件: ${files.length}（JSON ${jsonFiles.length} / WXML ${wxmlFiles.length} / WXSS ${wxssFiles.length} / JS ${jsFiles.length}），合计 ${MB.toFixed(2)}MB`);
 if (warnings.length) {
   console.log(`\n⚠ 警告 ${warnings.length}:`);
   warnings.forEach(w => console.log('  - ' + w));

@@ -23,7 +23,7 @@
 
 .lb-avatar { width: 76rpx; height: 76rpx; border-radius: 50%; background: var(--gray-100); flex-shrink: 0; }
 .lb-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6rpx; }
-.lb-name-row { display: flex; align-items: center; gap: 10rpx; min-width: 0;; flex-wrap: wrap; }
+.lb-name-row { display: flex; align-items: center; gap: 10rpx; min-width: 0; flex-wrap: wrap; }
 .lb-name { font-size: 30rpx; font-weight: 600; color: var(--text-title); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-tag { flex-shrink: 0; font-size: 20rpx; padding: 2rpx 12rpx; border-radius: 8rpx; }
 .lb-friend { background: var(--label-blue-bg); color: var(--label-blue); }
