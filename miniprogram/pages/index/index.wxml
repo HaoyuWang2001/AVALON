@@ -24,6 +24,9 @@
       <view class="pstat-div"></view>
       <view class="pstat"><text class="pstat-num pstat-award">💠 {{summary ? summary.svpCount || 0 : 0}}</text><text class="pstat-label">SVP</text></view>
     </view>
+    <view wx:if="{{summary && summary.titles && summary.titles.length > 0}}" class="profile-titles">
+      <title-badge titles="{{summary.titles}}"></title-badge>
+    </view>
 
     <block wx:if="{{champions.length > 0}}">
       <view class="pstats-longdiv"></view>
@@ -39,6 +42,7 @@
             <view class="podium-badge">{{item.rank}}</view>
           </view>
           <text class="podium-name">{{item.nickName}}</text>
+          <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}" size="mini"></title-badge>
           <text class="podium-rate">{{item.winRate}}%</text>
           <view class="podium-stand">{{item.rank}}</view>
         </view>

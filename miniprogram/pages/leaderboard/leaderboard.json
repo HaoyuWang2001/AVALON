@@ -2,6 +2,7 @@
   "navigationBarTitleText": "排行榜",
   "enablePullDownRefresh": false,
   "usingComponents": {
-    "player-stats": "/components/player-stats/player-stats"
+    "player-stats": "/components/player-stats/player-stats",
+    "title-badge": "/components/title-badge/title-badge"
   }
 }

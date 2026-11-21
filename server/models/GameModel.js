@@ -4,6 +4,18 @@ const { v4: uuidv4 } = require('uuid');
 const { randomInt } = require('node:crypto');
 const { BOARD_TYPES, classifyBoard } = require('../utils/boardType');
 
+// users.titles JSON 列 → 字符串数组（空值 → []）
+function parseTitles(v) {
+  if (v === null || v === undefined) return [];
+  if (Array.isArray(v)) return v.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim());
+  try {
+    const arr = typeof v === 'string' ? JSON.parse(v) : v;
+    return Array.isArray(arr) ? arr.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim()) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
 // mysql2 默认会把 JSON 列解析为 JS 对象，因此读取时需兼容 string 与 object
 function parseJson(value) {
   if (value === null || value === undefined) return null;
@@ -614,13 +626,16 @@ class GameModel {
         `SELECT gp.open_id as openId, gp.role, gp.side, gp.reveal_confirmed as revealConfirmed,
                 gp.lancelot_confirmed as lancelotConfirmed,
                 gp.lake_confirmed as lakeConfirmed,
-                gp.nick_name as nickName, gp.avatar_url as avatarUrl, gp.seat_number as seatNumber
+                gp.nick_name as nickName, gp.avatar_url as avatarUrl, gp.seat_number as seatNumber,
+                u.titles
          FROM game_players gp
+         LEFT JOIN users u ON u.open_id = gp.open_id
          WHERE gp.game_id = ?
          ORDER BY COALESCE(gp.seat_number, 999999), gp.open_id`,
         [gameId]
       );
 
+      players.forEach(p => { p.titles = parseTitles(p.titles); });
       const playerCount = players.length;
       const revealConfirmedCount = players.filter(p => p.revealConfirmed === 1 || p.revealConfirmed === true).length;
       const lancelotConfirmedCount = players.filter(p => p.lancelotConfirmed === 1 || p.lancelotConfirmed === true).length;
@@ -834,7 +849,7 @@ class GameModel {
           publicPlayers = fullPlayers;
         } else {
           publicPlayers = fullPlayers.map(p => {
-            const entry = { openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl, seatNumber: p.seatNumber, isHost: p.isHost, revealConfirmed: p.revealConfirmed === 1 || p.revealConfirmed === true, lancelotConfirmed: p.lancelotConfirmed === 1 || p.lancelotConfirmed === true, lakeConfirmed: p.lakeConfirmed === 1 || p.lakeConfirmed === true };
+            const entry = { openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl, seatNumber: p.seatNumber, titles: p.titles || [], isHost: p.isHost, revealConfirmed: p.revealConfirmed === 1 || p.revealConfirmed === true, lancelotConfirmed: p.lancelotConfirmed === 1 || p.lancelotConfirmed === true, lakeConfirmed: p.lakeConfirmed === 1 || p.lakeConfirmed === true };
             if (p.openId === openId) {
               entry.role = p.role;
               entry.side = p.side;
@@ -905,16 +920,18 @@ class GameModel {
 
       // 观众席：room_players seat=-1（观战者），供游戏页展示
       const spectatorRows = await db.query(
-        `SELECT open_id as openId, nick_name as nickName, avatar_url as avatarUrl
-         FROM room_players
-         WHERE room_id = ? AND seat_number = -1
-         ORDER BY created_at`,
+        `SELECT rp.open_id as openId, rp.nick_name as nickName, rp.avatar_url as avatarUrl, u.titles
+         FROM room_players rp
+         LEFT JOIN users u ON u.open_id = rp.open_id
+         WHERE rp.room_id = ? AND rp.seat_number = -1
+         ORDER BY rp.created_at`,
         [game.roomId]
       );
       const spectators = spectatorRows.map(s => ({
         openId: s.openId,
         nickName: s.nickName || '玩家',
-        avatarUrl: s.avatarUrl || ''
+        avatarUrl: s.avatarUrl || '',
+        titles: parseTitles(s.titles)
       }));
 
       return {
@@ -2430,7 +2447,7 @@ class GameModel {
       `SELECT t.openId, t.games, t.wins,
               COALESCE(av.mvp, 0) as mvpCount, COALESCE(av.svp, 0) as svpCount,
               u.custom_nick_name as customNickName, u.wx_nick_name as wxNickName,
-              u.avatar_url as avatarUrl, u.unique_id as uniqueId
+              u.avatar_url as avatarUrl, u.unique_id as uniqueId, u.titles
        FROM (
          SELECT gp.open_id as openId,
                 COUNT(DISTINCT g.id) as games,
@@ -2464,7 +2481,8 @@ class GameModel {
         games: parseInt(r.games, 10) || 0,
         wins: parseInt(r.wins, 10) || 0,
         mvpCount: parseInt(r.mvpCount, 10) || 0,
-        svpCount: parseInt(r.svpCount, 10) || 0
+        svpCount: parseInt(r.svpCount, 10) || 0,
+        titles: parseTitles(r.titles)
       }))
       .filter(r => r.games > 0);
 
@@ -2524,10 +2542,11 @@ class GameModel {
     const byId = new Map(rows.map(r => [r.openId, r]));
 
     const userRows = await db.query(
-      `SELECT open_id as openId, public_winrate as publicWinrate FROM users WHERE open_id IN (${placeholders})`,
+      `SELECT open_id as openId, public_winrate as publicWinrate, titles FROM users WHERE open_id IN (${placeholders})`,
       ids
     );
     const publicById = new Map(userRows.map(u => [u.openId, u.publicWinrate]));
+    const titlesById = new Map(userRows.map(u => [u.openId, parseTitles(u.titles)]));
 
     const leaderboard = await GameModel.getWinRateLeaderboard();
     const rankById = new Map(leaderboard.map(r => [r.openId, r.rank]));
@@ -2560,6 +2579,7 @@ class GameModel {
         rank,
         rateVisible,
         publicWinrate,
+        titles: titlesById.get(openId) || [],
         threshold
       };
     });

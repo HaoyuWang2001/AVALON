@@ -4,6 +4,18 @@
 const db = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
 const { classifyBoard } = require('../utils/boardType');
+
+// users.titles JSON 列 → 字符串数组（空值 → []）
+function parseTitles(v) {
+  if (v === null || v === undefined) return [];
+  if (Array.isArray(v)) return v.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim());
+  try {
+    const arr = typeof v === 'string' ? JSON.parse(v) : v;
+    return Array.isArray(arr) ? arr.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim()) : [];
+  } catch (e) {
+    return [];
+  }
+}
 const GameModel = require('./GameModel');
 const RoomModel = require('./RoomModel');
 
@@ -111,12 +123,15 @@ class OfflineRecordModel {
   /** 记录内玩家（按座位排序） */
   static async _players(recordId) {
     const rows = await db.query(
-      `SELECT open_id AS openId, nick_name AS nickName, avatar_url AS avatarUrl,
-              seat_number AS seatNumber, seat_status AS seatStatus, role, role_source AS roleSource
-       FROM offline_record_players WHERE record_id = ? ORDER BY seat_number`,
+      `SELECT p.open_id AS openId, p.nick_name AS nickName, p.avatar_url AS avatarUrl,
+              p.seat_number AS seatNumber, p.seat_status AS seatStatus, p.role, p.role_source AS roleSource,
+              u.titles
+       FROM offline_record_players p
+       LEFT JOIN users u ON u.open_id = p.open_id
+       WHERE p.record_id = ? ORDER BY p.seat_number`,
       [recordId]
     );
-    return rows.map(r => ({ ...r, avatarUrl: parseJson(r.avatarUrl) || r.avatarUrl }));
+    return rows.map(r => ({ ...r, avatarUrl: parseJson(r.avatarUrl) || r.avatarUrl, titles: parseTitles(r.titles) }));
   }
 
   /**
@@ -140,6 +155,7 @@ class OfflineRecordModel {
         avatarUrl: p.avatarUrl,
         seatNumber: p.seatNumber,
         seatStatus: p.seatStatus,
+        titles: p.titles || [],
         role: canSee ? p.role : null,
         roleSource: canSee ? p.roleSource : null
       };

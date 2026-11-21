@@ -5,6 +5,7 @@
         bindtap="onCompactPlayerTap" bindlongpress="onPlayerLongPress" data-id="{{item.openId}}">
     <text class="c-seat">{{item.seatNumber}}</text>
     <text wx:if="{{item.isCrownHolder}}" class="c-crown-mini">👑</text>
+    <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}" size="mini"></title-badge>
     <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag c-tag {{tag.cls}}">{{tag.text}}</text>
     <text wx:if="{{currentPhase === 'gameEnd' && item.roleName}}" class="c-role">{{item.roleName}}</text>
   </view>
@@ -149,6 +150,7 @@
         <view class="tplayer-info">
           <text class="tplayer-name">{{item.nickName}}</text>
           <view class="tplayer-tags">
+            <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}" size="mini"></title-badge>
             <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text" class="ptag {{tag.cls}}">{{tag.text}}</text>
           </view>
         </view>
@@ -338,6 +340,7 @@
         <image class="spec-row-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
         <view class="spec-row-main">
           <text class="spec-row-name">{{item.nickName}}</text>
+          <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}" size="mini"></title-badge>
           <view class="spec-row-sub">
             <text wx:if="{{item.rateVisible}}" class="spec-row-rate">胜率 {{item.totalWinRate}}%</text>
             <text wx:else class="spec-row-private">未公开</text>
@@ -608,6 +611,7 @@
             <image class="award-cand-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
             <view class="award-cand-info">
               <text class="award-cand-name">{{item.seatNumber}}号 {{item.nickName}}</text>
+              <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}" size="mini"></title-badge>
               <text class="award-cand-role">{{item.roleName}}</text>
             </view>
             <text wx:if="{{awardModal.sel === item.openId}}" class="award-cand-check">✓</text>

@@ -2,6 +2,18 @@
 // 端点均以 openId 明文传参（与全项目一致，依赖微信登录获取 openId）
 const express = require('express');
 const db = require('../config/db');
+
+// users.titles JSON 列 → 字符串数组（兼容 mysql2 已解析/字符串两种形态；空值 → []）
+function parseTitles(v) {
+  if (v === null || v === undefined) return [];
+  if (Array.isArray(v)) return v.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim());
+  try {
+    const arr = typeof v === 'string' ? JSON.parse(v) : v;
+    return Array.isArray(arr) ? arr.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim()) : [];
+  } catch (e) {
+    return [];
+  }
+}
 const socket = require('../config/socket');
 const GameModel = require('../models/GameModel');
 
@@ -22,7 +34,7 @@ function isSocketOnline(openId) {
 async function getUserView(openId, viewerOpenId) {
   const [user] = await db.query(
     `SELECT open_id as openId, wx_nick_name as wxNickName, custom_nick_name as customNickName,
-            avatar_url as avatarUrl, unique_id as uniqueId, last_seen_at as lastSeenAt
+            avatar_url as avatarUrl, unique_id as uniqueId, last_seen_at as lastSeenAt, titles
      FROM users WHERE open_id = ?`,
     [openId]
   );
@@ -56,6 +68,7 @@ async function getUserView(openId, viewerOpenId) {
     nickName: user.customNickName || user.wxNickName || '玩家',
     avatarUrl: user.avatarUrl || '',
     uniqueId: user.uniqueId || '',
+    titles: parseTitles(user.titles),
     online,
     room
   };
@@ -140,7 +153,7 @@ function createRouter() {
       const requests = await db.query(
         `SELECT r.id, r.from_open_id as fromOpenId, r.created_at as createdAt,
                 u.custom_nick_name as customNickName, u.wx_nick_name as wxNickName,
-                u.avatar_url as avatarUrl, u.unique_id as uniqueId
+                u.avatar_url as avatarUrl, u.unique_id as uniqueId, u.titles
          FROM friend_requests r
          JOIN users u ON u.open_id = r.from_open_id
          WHERE r.to_open_id = ?
@@ -156,6 +169,7 @@ function createRouter() {
           fromNickName: r.customNickName || r.wxNickName || '玩家',
           fromAvatarUrl: r.avatarUrl || '',
           fromUniqueId: r.uniqueId || '',
+          fromTitles: parseTitles(r.titles),
           createdAt: r.createdAt
         }))
       });
@@ -252,7 +266,7 @@ function createRouter() {
 
       const rows = await db.query(
         `SELECT open_id as openId, wx_nick_name as wxNickName, custom_nick_name as customNickName,
-                avatar_url as avatarUrl, unique_id as uniqueId
+                avatar_url as avatarUrl, unique_id as uniqueId, titles
          FROM users WHERE unique_id = ? LIMIT 1`,
         [uniqueId]
       );
@@ -270,6 +284,7 @@ function createRouter() {
           nickName: u.customNickName || u.wxNickName || '玩家',
           avatarUrl: u.avatarUrl || '',
           uniqueId: u.uniqueId || '',
+          titles: parseTitles(u.titles),
           isFriend: await isFriend(openId, u.openId),
           hasPending: !!(await hasPendingRequest(openId, u.openId))
         }

@@ -1,5 +1,17 @@
 // 游戏逻辑API路由（数据库版本）
 const express = require('express');
+
+// users.titles JSON 列 → 字符串数组（空值 → []）
+function parseTitles(v) {
+  if (v === null || v === undefined) return [];
+  if (Array.isArray(v)) return v.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim());
+  try {
+    const arr = typeof v === 'string' ? JSON.parse(v) : v;
+    return Array.isArray(arr) ? arr.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim()) : [];
+  } catch (e) {
+    return [];
+  }
+}
 const { GameModel, RoomModel } = require('../models');
 const socket = require('../config/socket');
 
@@ -131,11 +143,12 @@ function createRouter() {
       }));
 
       // 公开胜率 + 阈值门控（本人始终可见）
-      const [urow] = await db.query('SELECT public_winrate FROM users WHERE open_id = ?', [openId]);
+      const [urow] = await db.query('SELECT public_winrate, titles FROM users WHERE open_id = ?', [openId]);
       const publicWinrate = urow && urow.public_winrate === 0 ? 0 : 1;
       const threshold = await GameModel.getWinRateThreshold();
       const isSelf = !!viewerOpenId && viewerOpenId === openId;
       stats.publicWinrate = publicWinrate;
+      stats.titles = parseTitles(urow && urow.titles); // 称谓公开（不受胜率可见性门控）
       stats.rateVisible = isSelf || (publicWinrate === 1 && stats.totalGames >= threshold);
       stats.threshold = threshold;
       // 总胜率排名（与 champions 同口径；不在榜 = null）
@@ -233,6 +246,7 @@ function createRouter() {
         winRate: p.winRate,
         mvpCount: p.mvpCount || 0,
         svpCount: p.svpCount || 0,
+        titles: p.titles || [],
         isFriend: friendSet.has(p.openId),
         isSelf: !!viewerOpenId && viewerOpenId === p.openId
       }));
@@ -977,7 +991,7 @@ function createRouter() {
       const rows = await db.query(
         `SELECT t.openId, t.games, t.wins,
                 u.custom_nick_name as customNickName, u.wx_nick_name as wxNickName,
-                u.avatar_url as avatarUrl, u.unique_id as uniqueId
+                u.avatar_url as avatarUrl, u.unique_id as uniqueId, u.titles
          FROM (
            SELECT gp.open_id as openId,
                   COUNT(DISTINCT g.id) as games,
@@ -1015,6 +1029,7 @@ function createRouter() {
           games,
           wins,
           winRate: games > 0 ? Math.round(wins / games * 1000) / 10 : 0,
+          titles: parseTitles(r.titles),
           isFriend
         });
       }
@@ -1024,7 +1039,7 @@ function createRouter() {
       const beeRows = await db.query(
         `SELECT t.openId, t.games,
                 u.custom_nick_name as customNickName, u.wx_nick_name as wxNickName,
-                u.avatar_url as avatarUrl, u.unique_id as uniqueId
+                u.avatar_url as avatarUrl, u.unique_id as uniqueId, u.titles
          FROM (
            SELECT gp.open_id as openId, COUNT(DISTINCT g.id) as games
            FROM game_players gp
@@ -1052,6 +1067,7 @@ function createRouter() {
           avatarUrl: b.avatarUrl || '',
           uniqueId: b.uniqueId || '',
           games: parseInt(b.games, 10) || 0,
+          titles: parseTitles(b.titles),
           isFriend: beeIsFriend
         };
       }

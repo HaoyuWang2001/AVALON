@@ -12,6 +12,7 @@
           <text class="hd-name">{{friend.nickName}}</text>
           <text class="hd-id">{{friend.uniqueId}}</text>
         </view>
+        <title-badge wx:if="{{friend.titles && friend.titles.length > 0}}" titles="{{friend.titles}}"></title-badge>
         <view class="hd-status-row">
           <view class="hd-dot {{friend.online ? 'st-online' : 'st-offline'}}"></view>
           <text class="hd-status {{friend.online ? 'st-online' : 'st-offline'}}">{{friend.online ? '在线' : '离线'}}</text>

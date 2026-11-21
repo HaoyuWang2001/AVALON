@@ -18,6 +18,7 @@ CREATE TABLE users (
     unique_id_updated_at DATETIME NULL COMMENT 'unique_id最近设置/修改时间(每日一次)',
     last_seen_at DATETIME NULL COMMENT '最近活跃时间(混合判定在线用)',
     avatar_url TEXT COMMENT '头像路径',
+    titles JSON NULL COMMENT '特殊称谓数组（开发者手工维护）',
     public_winrate TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否公开胜率(1=公开,0=私密)',
     current_room_id VARCHAR(6) NULL COMMENT '当前所在房间号，NULL=不在任何房间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

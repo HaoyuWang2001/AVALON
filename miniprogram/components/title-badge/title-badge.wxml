@@ -1,0 +1,6 @@
+<view wx:if="{{titles && titles.length > 0}}" class="tb-wrap {{size === 'mini' ? 'tb-mini' : ''}}">
+  <view wx:for="{{titles}}" wx:key="*this" class="tb-badge">
+    <view class="tb-flow"></view>
+    <text class="tb-text">{{item}}</text>
+  </view>
+</view>

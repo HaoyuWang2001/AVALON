@@ -17,6 +17,7 @@
         <view class="lb-main">
           <view class="lb-name-row">
             <text class="lb-name">{{item.nickName}}</text>
+            <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}"></title-badge>
             <text wx:if="{{item.isFriend}}" class="lb-tag lb-friend">好友</text>
             <text wx:if="{{item.isSelf}}" class="lb-tag lb-me">我</text>
           </view>

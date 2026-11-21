@@ -60,6 +60,7 @@
         <view wx:if="{{item.occupied}}" class="seat-info">
           <text class="seat-name">{{item.player.nickName || item.player.wxNickName || '玩家'}}</text>
           <view class="seat-tags">
+            <title-badge wx:if="{{item.player.titles && item.player.titles.length > 0}}" titles="{{item.player.titles}}"></title-badge>
             <text wx:if="{{item.player.isHost}}" class="tag tag-host">房主</text>
           </view>
         </view>
@@ -90,6 +91,7 @@
       <view wx:for="{{unseatedPlayers}}" wx:key="openId" class="waiting-item" bindtap="onPlayerTap" bindlongpress="onPlayerAction" data-id="{{item.openId}}">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="waiting-avatar"></image>
         <text class="waiting-name">{{item.nickName || item.wxNickName || '玩家'}}</text>
+        <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}" size="mini"></title-badge>
       </view>
     </view>
     </scroll-view>
@@ -107,6 +109,7 @@
         <view wx:for="{{spectatorPlayers}}" wx:key="openId" class="waiting-item" bindtap="onPlayerTap" bindlongpress="onPlayerAction" data-id="{{item.openId}}">
         <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="waiting-avatar"></image>
         <text class="waiting-name">{{item.nickName || '玩家'}}</text>
+        <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}" size="mini"></title-badge>
       </view>
       </view>
     </scroll-view>

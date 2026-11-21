@@ -57,6 +57,7 @@
             <text class="rd-seat-badge">{{item.seat}}</text>
             <image class="rd-seat-avatar" src="{{item.player.avatarUrl || '/images/default-avatar.png'}}"/>
             <text class="rd-seat-name">{{item.player.nickName}}</text>
+            <title-badge wx:if="{{item.player.titles && item.player.titles.length > 0}}" titles="{{item.player.titles}}" size="mini"></title-badge>
             <text wx:if="{{item.player.role}}" class="rd-seat-role">{{item.player.roleSource === 'host' ? '' : '🔒'}}{{item.player.roleLabel}}</text>
           </block>
           <block wx:else>
@@ -94,6 +95,7 @@
         <view wx:for="{{approved}}" wx:key="openId" class="rd-assign-row">
           <text class="rd-assign-seat">{{item.seatNumber}}号</text>
           <text class="rd-assign-name">{{item.nickName}}</text>
+          <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}" size="mini"></title-badge>
           <block wx:if="{{item.role}}">
             <text class="rd-assign-role">{{item.roleSource === 'host' ? item.roleLabel : '🔒 已自选'}}</text>
             <text class="rd-op rd-op-refuse" bindtap="clearOwnerRole" data-id="{{item.openId}}">清除</text>
@@ -320,12 +322,14 @@
         <view wx:for="{{searchResults}}" wx:key="openId" class="rd-assign-row" bindtap="onAssignTap" data-id="{{item.openId}}">
           <image class="rd-pending-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
           <text class="rd-assign-name">{{item.nickName}}</text>
+          <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}" size="mini"></title-badge>
           <text class="rd-op rd-op-agree">指定</text>
         </view>
         <view class="rd-role-note" wx:if="{{searchResults.length > 0}}">— 好友列表 —</view>
         <view wx:for="{{friends}}" wx:key="openId" class="rd-assign-row {{item.inRecord ? 'rd-assign-dup' : ''}}" bindtap="onAssignTap" data-id="{{item.openId}}">
           <image class="rd-pending-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
           <text class="rd-assign-name">{{item.nickName}}</text>
+          <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}" size="mini"></title-badge>
           <text wx:if="{{item.inRecord}}" class="rd-role-note">已在记录中</text>
           <text wx:else class="rd-op rd-op-agree">指定</text>
         </view>

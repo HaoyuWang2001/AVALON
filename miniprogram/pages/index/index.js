@@ -511,7 +511,8 @@ Page({
             goodWinRate: s.goodWinRate + '%',
             evilWinRate: s.evilWinRate + '%',
             mvpCount: s.mvpCount || 0,
-            svpCount: s.svpCount || 0
+            svpCount: s.svpCount || 0,
+            titles: Array.isArray(s.titles) ? s.titles : []
           }
         });
       }

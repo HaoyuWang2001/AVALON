@@ -2,6 +2,7 @@
   "navigationBarTitleText": "牛马朋友",
   "enablePullDownRefresh": true,
   "usingComponents": {
-    "player-stats": "/components/player-stats/player-stats"
+    "player-stats": "/components/player-stats/player-stats",
+    "title-badge": "/components/title-badge/title-badge"
   }
 }

@@ -1,0 +1,32 @@
+/* 玩家特殊称谓：炫彩流动标签（固定光谱，不随主题；文字白+描边阴影保证可读） */
+.tb-wrap { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8rpx; vertical-align: middle; }
+.tb-badge {
+  position: relative; overflow: hidden;
+  display: inline-flex; align-items: center;
+  padding: 4rpx 18rpx; border-radius: 999rpx;
+  box-shadow: 0 0 12rpx rgba(168, 85, 247, 0.45);
+}
+/* 流动层：宽 200%，铺「两轮完整光谱」，translateX(-50%) 位移一轮 → 无接缝循环 */
+.tb-flow {
+  position: absolute; top: 0; left: 0; width: 200%; height: 100%;
+  background: linear-gradient(90deg,
+    #a855f7 0%, #6366f1 8.33%, #22d3ee 16.67%, #34d399 25%, #fbbf24 33.33%, #f472b6 41.67%, #a855f7 50%,
+    #6366f1 58.33%, #22d3ee 66.67%, #34d399 75%, #fbbf24 83.33%, #f472b6 91.67%, #a855f7 100%);
+  animation: tbFlow 4s linear infinite;
+  will-change: transform;
+}
+.tb-text {
+  position: relative; z-index: 1;
+  font-size: 22rpx; font-weight: 800; line-height: 1.35;
+  color: #FFFFFF; letter-spacing: 0.5rpx;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+}
+@keyframes tbFlow {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+/* 紧凑版（受限位置） */
+.tb-mini { gap: 6rpx; }
+.tb-mini .tb-badge { padding: 2rpx 14rpx; box-shadow: 0 0 8rpx rgba(168, 85, 247, 0.4); }
+.tb-mini .tb-text { font-size: 18rpx; }

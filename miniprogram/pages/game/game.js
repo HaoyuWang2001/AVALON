@@ -892,7 +892,7 @@ Page({
     const me = app.globalData.openId || '';
     return (this.data.tablePlayers || [])
       .filter(p => p.openId !== me && p.side === side)
-      .map(p => ({ openId: p.openId, seatNumber: p.seatNumber, nickName: p.nickName, avatarUrl: p.avatarUrl, roleName: p.roleName }));
+      .map(p => ({ openId: p.openId, seatNumber: p.seatNumber, nickName: p.nickName, avatarUrl: p.avatarUrl, roleName: p.roleName, titles: Array.isArray(p.titles) ? p.titles : [] }));
   },
   _openAwardModal() {
     const aw = this.data.myAwards;
@@ -985,20 +985,21 @@ Page({
           totalGames: p.totalGames,
           totalWinRate: p.totalWinRate,
           rank: p.rank,
-          rateVisible: !!p.rateVisible
+          rateVisible: !!p.rateVisible,
+          titles: Array.isArray(p.titles) ? p.titles : []
         };
       });
       // 兜底：接口未返回的观众（理论不会）追加在后
       for (const s of spectators) {
         if (!seen.has(s.openId)) {
-          merged.push({ openId: s.openId, nickName: s.nickName || '玩家', avatarUrl: s.avatarUrl || '', totalGames: 0, totalWinRate: 0, rank: null, rateVisible: false });
+          merged.push({ openId: s.openId, nickName: s.nickName || '玩家', avatarUrl: s.avatarUrl || '', totalGames: 0, totalWinRate: 0, rank: null, rateVisible: false, titles: Array.isArray(s.titles) ? s.titles : [] });
         }
       }
       this.setData({ specLoading: false, specList: merged });
     }).catch(() => {
       this.setData({
         specLoading: false,
-        specList: spectators.map(s => ({ openId: s.openId, nickName: s.nickName || '玩家', avatarUrl: s.avatarUrl || '', totalGames: 0, totalWinRate: 0, rank: null, rateVisible: false }))
+        specList: spectators.map(s => ({ openId: s.openId, nickName: s.nickName || '玩家', avatarUrl: s.avatarUrl || '', totalGames: 0, totalWinRate: 0, rank: null, rateVisible: false, titles: Array.isArray(s.titles) ? s.titles : [] }))
       });
     });
   },

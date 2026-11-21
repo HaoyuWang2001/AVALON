@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "线下记录",
-  "enablePullDownRefresh": false
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "title-badge": "/components/title-badge/title-badge"
+  }
 }

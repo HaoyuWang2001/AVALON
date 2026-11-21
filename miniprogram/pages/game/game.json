@@ -3,6 +3,7 @@
   "enablePullDownRefresh": true,
   "usingComponents": {
     "top-bar": "/components/top-bar/top-bar",
-    "player-stats": "/components/player-stats/player-stats"
+    "player-stats": "/components/player-stats/player-stats",
+    "title-badge": "/components/title-badge/title-badge"
   }
 }

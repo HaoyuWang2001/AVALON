@@ -2,6 +2,18 @@ const express = require('express');
 const https = require('https');
 const UserModel = require('../models/UserModel');
 
+// users.titles JSON 列 → 字符串数组（空值 → []）
+function parseTitles(v) {
+  if (v === null || v === undefined) return [];
+  if (Array.isArray(v)) return v.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim());
+  try {
+    const arr = typeof v === 'string' ? JSON.parse(v) : v;
+    return Array.isArray(arr) ? arr.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim()) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
 function createRouter() {
   const router = express.Router();
 
@@ -49,7 +61,8 @@ function createRouter() {
           openId: user.open_id,
           wxNickName: user.wx_nick_name || '',
           customNickName: user.custom_nick_name || '',
-          avatarUrl: user.avatar_url || ''
+          avatarUrl: user.avatar_url || '',
+          titles: parseTitles(user.titles)
         }
       });
     } catch (error) {

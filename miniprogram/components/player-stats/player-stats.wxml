@@ -9,6 +9,7 @@
         <text wx:if="{{rateVisible && rank}}" class="ps-rank">#{{rank}}</text>
       </view>
       <view wx:if="{{isSelf}}" class="ps-tag">这是你</view>
+      <title-badge wx:if="{{stats && stats.titles && stats.titles.length > 0}}" titles="{{stats.titles}}"></title-badge>
     </view>
 
     <view wx:if="{{loading}}" class="ps-loading">加载中...</view>

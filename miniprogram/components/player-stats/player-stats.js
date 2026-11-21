@@ -69,7 +69,8 @@ Component({
             goodWinRate: s.goodGames > 0 ? s.goodWinRate + '%' : '—',
             evilWinRate: s.evilGames > 0 ? s.evilWinRate + '%' : '—',
             mvpCount: s.mvpCount || 0,
-            svpCount: s.svpCount || 0
+            svpCount: s.svpCount || 0,
+            titles: Array.isArray(s.titles) ? s.titles : []
           } : null,
           roles
         });

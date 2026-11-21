@@ -14,7 +14,7 @@
 .ps-close { position: absolute; top: 24rpx; right: 28rpx; font-size: 34rpx; color: var(--text-muted); }
 .ps-head { display: flex; flex-direction: column; align-items: center; }
 .ps-avatar { width: 140rpx; height: 140rpx; border-radius: 50%; border: 4rpx solid var(--card-border); background: var(--gray-100); }
-.ps-name-row { display: flex; align-items: center; gap: 10rpx; margin-top: 14rpx; }
+.ps-name-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10rpx; margin-top: 14rpx; }
 .ps-name { font-size: 34rpx; font-weight: 800; color: var(--text-title); }
 .ps-rank { font-size: 28rpx; font-weight: 800; color: var(--primary); }
 .ps-tag { font-size: 22rpx; color: var(--on-primary); background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); padding: 4rpx 18rpx; border-radius: 999rpx; margin-top: 8rpx; }

@@ -60,6 +60,7 @@
         <view class="f-name-row">
           <text class="f-name">{{item.nickName}}</text>
           <text wx:if="{{item.rank}}" class="f-rank">#{{item.rank}}</text>
+          <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}"></title-badge>
         </view>
         <view class="f-status-row">
           <view class="f-dot {{item.online ? 'st-online' : 'st-offline'}}"></view>

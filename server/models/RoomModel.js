@@ -1,6 +1,18 @@
 // 房间数据模型
 const db = require('../config/db');
 
+// users.titles JSON 列 → 字符串数组（空值 → []）
+function parseTitles(v) {
+  if (v === null || v === undefined) return [];
+  if (Array.isArray(v)) return v.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim());
+  try {
+    const arr = typeof v === 'string' ? JSON.parse(v) : v;
+    return Array.isArray(arr) ? arr.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim()) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
 const VALID_ROLES = [
   'merlin', 'percival', 'loyal',
   'mordred', 'morgana', 'assassin', 'minion', 'oberon',
@@ -252,9 +264,12 @@ class RoomModel {
       }
 
       const players = await db.query(
-        `SELECT open_id as openId, nick_name as nickName, wx_nick_name as wxNickName, avatar_url as avatarUrl, 
-                seat_number as seatNumber, is_ready as isReady, banned_from_seating as bannedFromSeating
-         FROM room_players WHERE room_id = ? ORDER BY seat_number`,
+        `SELECT rp.open_id as openId, rp.nick_name as nickName, rp.wx_nick_name as wxNickName, rp.avatar_url as avatarUrl,
+                rp.seat_number as seatNumber, rp.is_ready as isReady, rp.banned_from_seating as bannedFromSeating,
+                u.titles
+         FROM room_players rp
+         LEFT JOIN users u ON u.open_id = rp.open_id
+         WHERE rp.room_id = ? ORDER BY rp.seat_number`,
         [roomId]
       );
       
@@ -271,6 +286,7 @@ class RoomModel {
         readyPlayers,
         players: players.map(player => ({
           ...player,
+          titles: parseTitles(player.titles),
           isHost: player.openId === room.ownerId,
           isReady: player.isReady === 1 || player.isReady === true
         }))
