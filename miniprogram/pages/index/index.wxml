@@ -18,7 +18,6 @@
       <text class="profile-rank">#{{myRank}}</text>
     </view>
     <block wx:if="{{champions.length > 0}}">
-      <view class="podium-title">胜率前三</view>
       <view class="podium">
         <view wx:for="{{podium}}" wx:key="openId"
           class="podium-item rank-{{item.rank}}"
