@@ -36,5 +36,6 @@ coverage/
 **/package-lock.json
 !server/package-lock.json
 
-## 本地参考截图（勿放入 miniprogram/，主包 2MB 限制）
+# 本地参考截图（勿放入仓库；主包 2MB 限制）
+screenshots/
 docs/screenshots/

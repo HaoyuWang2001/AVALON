@@ -43,9 +43,9 @@ cd preview && npm run check     # 等价于 node preview/check-miniprogram.js
 `npm run preview` 已内置该自检（先检查再打包真机预览），不在 repo 里的临时文件不会误报。
 
 > **主包 2MB 限制**：`miniprogram/` 的 `project.private.config.json` 中 `bigPackageSizeSupport: false`，主包超过 2MB 时开发者工具会报「代码包大小超限」。
-> 参考截图、设计稿、日志等非运行文件**不要**放在 `miniprogram/` 内，统一放仓库根 `docs/`。
+> 参考截图、设计稿、日志等非运行文件**不要**放在 `miniprogram/` 内，也**不要提交到仓库**；统一存放到仓库外（如 `~/avalon-screenshots/`）。
 >
-> 事故记录（2026-11-21）：两张共 1.3MB 的参考截图被放入 `miniprogram/images/`，项目体积达 2.60MB，导致编译报体积超限；移入 `docs/screenshots/` 后恢复为 1.34MB。
+> 事故记录（2026-11-21）：两张共 1.3MB 的参考截图被放入 `miniprogram/images/`，项目体积达 2.60MB，导致编译报体积超限；截图已移出仓库（现存于仓库外 `~/avalon-screenshots/`，从未提交到 git/origin），体积恢复为 1.34MB。
 
 ## 架构
 
@@ -88,7 +88,7 @@ cd preview && npm run check     # 等价于 node preview/check-miniprogram.js
 - **游戏类目**：微信对游戏类小程序有特定资质要求；确保正确选择类目。
 - **网络处理**：实现健壮的错误处理以应对多人游戏会话中的网络中断。
 - **安全性**：依赖微信内置的身份验证（`openId`）；无需额外的认证。
-- **编译自检**：修改 `miniprogram/` 后必须运行 `cd preview && npm run check`；主包 2MB 上限，非运行文件放 `docs/` 而非 `miniprogram/`。
+- **编译自检**：修改 `miniprogram/` 后必须运行 `cd preview && npm run check`；主包 2MB 上限，非运行文件不要提交到仓库（放仓库外），更不要放在 `miniprogram/`。
 
 ## 参考文档
 
