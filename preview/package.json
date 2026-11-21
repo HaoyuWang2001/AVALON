@@ -4,9 +4,10 @@
   "private": true,
   "description": "AVALON 小程序真机预览工具（miniprogram-ci）",
   "scripts": {
-    "preview": "node miniprogram-preview.js",
+    "preview": "node check-miniprogram.js && node miniprogram-preview.js",
     "preview:push": "node preview-push.js",
-    "qr:serve": "node qr-server.js"
+    "qr:serve": "node qr-server.js",
+    "check": "node check-miniprogram.js"
   },
   "devDependencies": {
     "miniprogram-ci": "^2.1.31"
