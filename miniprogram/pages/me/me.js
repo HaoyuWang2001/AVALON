@@ -1,6 +1,6 @@
 // pages/me/me.js
 const api = require('../../services/api.js');
-const { getThemeClass, getThemeBg, pickTheme, applyTheme } = require('../../utils/theme.js');
+const { getThemeClass, getThemeBg } = require('../../utils/theme.js');
 const { DEFAULT_AVATAR, ROLE_NAMES, ROLE_EMOJIS, CONFIG_EVIL_ROLES } = require('../../utils/constants.js');
 
 function formatDuration(seconds) {
@@ -39,23 +39,13 @@ Page({
     summary: null,
     roleStats: [],
     historyList: [],
-    champions: [],
-    podium: [],
-    championsLoaded: false,
-    publicWinrate: true,
-    compactGame: false,
-    showWeirdSettings: false,
     loading: true
   },
 
   onLoad() {
     const tc = getThemeClass();
     this._openId = getApp().globalData.openId || wx.getStorageSync('openId') || '';
-    this.setData({
-      themeClass: tc,
-      openId: this._openId,
-      compactGame: !!wx.getStorageSync('avalon_compact_game')
-    });
+    this.setData({ themeClass: tc, openId: this._openId });
   },
 
   onShow() {
@@ -66,7 +56,6 @@ Page({
     this.loadProfile();
     this.loadStats();
     this.loadHistory();
-    this.loadChampions();
     wx.setBackgroundColor({ backgroundColor: getThemeBg(this.data.themeClass) });
   },
 
@@ -74,7 +63,6 @@ Page({
     this.loadProfile();
     this.loadStats();
     this.loadHistory();
-    this.loadChampions();
     wx.stopPullDownRefresh();
   },
 
@@ -92,8 +80,7 @@ Page({
             avatarUrl: u.avatarUrl && /^https?:\/\//i.test(u.avatarUrl) ? u.avatarUrl : (storedAvatar || DEFAULT_AVATAR),
             nickName: u.customNickName || u.wxNickName || wx.getStorageSync('customNickName') || '',
             uniqueId: u.uniqueId || ''
-          },
-          publicWinrate: u.publicWinrate !== 0
+          }
         });
       }
     }).catch(() => this.setData({ loading: false }));
@@ -214,112 +201,6 @@ Page({
         });
       }
     }).catch(() => {});
-  },
-
-  // ─── 胜率冠军（公开胜率前三禁关规则需要） ───
-  loadChampions() {
-    const openId = this._openId;
-    if (!openId) return;
-    api.getChampions(openId).then(res => {
-      if (res && res.success && Array.isArray(res.champions)) {
-        const champions = res.champions.map((c, i) => ({ ...c, rank: i + 1 }));
-        const podium = [];
-        if (champions[1]) podium.push(champions[1]);
-        if (champions[0]) podium.push(champions[0]);
-        if (champions[2]) podium.push(champions[2]);
-        this.setData({ champions, podium, championsLoaded: true });
-      }
-    }).catch(() => {});
-  },
-
-  // ─── 功能入口 ───
-  onChangeTheme() {
-    pickTheme().then(picked => {
-      if (picked === null) return;
-      applyTheme(picked);
-      this.setData({ themeClass: picked });
-    });
-  },
-
-  showWeirdSettings() {
-    this.setData({ showWeirdSettings: true });
-  },
-  closeWeirdSettings() {
-    this.setData({ showWeirdSettings: false });
-  },
-
-  // 公开胜率开关：二次确认；胜率前三禁止关闭
-  onPublicWinrateChange(e) {
-    const openId = this._openId || getApp().globalData.openId || wx.getStorageSync('openId');
-    if (!openId) return;
-    const val = !!e.detail.value;
-    this.setData({ publicWinrate: val }); // 先同步开关视觉，取消/被禁止时回滚
-
-    if (!val) {
-      if (!this.data.championsLoaded) {
-        wx.showModal({
-          title: '请稍候',
-          content: '榜单数据加载中，暂时无法关闭公开胜率，请稍后重试。',
-          showCancel: false,
-          confirmText: '知道了',
-          success: () => this.setData({ publicWinrate: true })
-        });
-        return;
-      }
-      const inTop3 = (this.data.podium || []).some(p => p.openId === openId);
-      if (inTop3) {
-        wx.showModal({
-          title: '无法关闭',
-          content: '您当前位于胜率前三榜单，公开胜率不可关闭；需胜率掉出前三后方可关闭。',
-          showCancel: false,
-          confirmText: '知道了',
-          success: () => this.setData({ publicWinrate: true })
-        });
-        return;
-      }
-    }
-
-    wx.showModal({
-      title: val ? '公开胜率' : '关闭公开胜率',
-      content: val ? '确定公开你的胜率？其他玩家将可以看到。' : '确定关闭公开胜率？关闭后将不再出现在胜率榜。',
-      confirmText: '确定',
-      cancelText: '取消',
-      success: (res) => {
-        if (!res.confirm) { this.setData({ publicWinrate: !val }); return; }
-        api.setPublicWinrate(openId, val).then(r => {
-          if (r && r.success) {
-            wx.showToast({ title: val ? '已公开胜率' : '已设为私密', icon: 'none' });
-          } else {
-            this.setData({ publicWinrate: !val });
-            wx.showToast({ title: (r && r.message) || '设置失败', icon: 'none' });
-          }
-        }).catch(err => {
-          this.setData({ publicWinrate: !val });
-          wx.showToast({ title: (err && err.message) || '设置失败', icon: 'none' });
-        });
-      }
-    });
-  },
-
-  // 松弛压缩版开关（本地存储，按设备）
-  onCompactGameChange(e) {
-    const val = !!e.detail.value;
-    this.setData({ compactGame: val });
-    try { wx.setStorageSync('avalon_compact_game', val ? 1 : 0); } catch (err) {}
-    wx.showToast({ title: val ? '已开启松弛压缩版' : '已关闭松弛压缩版', icon: 'none' });
-  },
-
-  goToGlobalStats() {
-    wx.navigateTo({ url: '/pages/global-stats/global-stats' });
-  },
-  goToFriends() {
-    wx.navigateTo({ url: '/pages/friends/friends' });
-  },
-  goToLeaderboard() {
-    wx.navigateTo({ url: '/pages/leaderboard/leaderboard' });
-  },
-  goToRecords() {
-    wx.navigateTo({ url: '/pages/records/records' });
   },
 
   noop() {}
