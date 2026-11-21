@@ -147,7 +147,13 @@ function createRouter() {
 
       const data = {};
       if (wxNickName !== undefined) data.wxNickName = wxNickName;
-      if (customNickName !== undefined) data.customNickName = customNickName;
+      if (customNickName !== undefined) {
+        const nick = String(customNickName).trim();
+        if (nick.length < 1 || nick.length > 10) {
+          return res.status(400).json({ success: false, message: '昵称需为 1-10 个字符' });
+        }
+        data.customNickName = nick;
+      }
       // 仅接受 http(s) 头像链接；本机路径(/images、wxfile、USER_DATA_PATH)直接忽略，避免污染跨设备头像
       if (avatarUrl !== undefined && /^https?:\/\//i.test(avatarUrl || '')) data.avatarUrl = avatarUrl;
 

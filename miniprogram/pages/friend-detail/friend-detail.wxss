@@ -6,9 +6,9 @@
 .head-card { display: flex; align-items: center; padding: 32rpx 28rpx; }
 .hd-avatar { width: 128rpx; height: 128rpx; border-radius: 50%; flex-shrink: 0; background: var(--gray-100); }
 .hd-info { margin-left: 24rpx; min-width: 0; flex: 1; }
-.hd-name-row { display: flex; align-items: baseline; }
-.hd-name { font-size: 40rpx; font-weight: 800; color: var(--text-title); }
-.hd-id { font-size: 26rpx; color: var(--text-muted); margin-left: 14rpx; }
+.hd-name-row { display: flex; align-items: baseline; min-width: 0; }
+.hd-name { font-size: 40rpx; font-weight: 800; color: var(--text-title); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hd-id { font-size: 26rpx; color: var(--text-muted); margin-left: 14rpx; flex-shrink: 0; }
 .hd-status-row { display: flex; align-items: center; margin-top: 12rpx; }
 .hd-dot { width: 16rpx; height: 16rpx; border-radius: 50%; margin-right: 8rpx; flex-shrink: 0; }
 .hd-status { font-size: 26rpx; }

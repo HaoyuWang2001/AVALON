@@ -1,35 +1,24 @@
 <!--pages/index/index.wxml-->
 <view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
-  <!-- 1. 头部 -->
+  <!-- 品牌栏（单行）：左圆徽+字标，最右为个人头像（点击进入个人页） -->
   <view class="brand-bar">
-    <view class="brand-text"><view class="brand-1">瓦协会</view><view class="brand-2">之</view><view class="brand-3">练秋湖分部</view></view>
+    <view class="brand-main">
+      <view class="brand-emblem"><text class="brand-emblem-char">瓦</text></view>
+      <text class="brand-title">练秋湖的瓦协会</text>
+    </view>
+    <view class="brand-avatar" hover-class="brand-avatar-hover" hover-stay-time="60" bindtap="goToMe">
+      <image class="brand-avatar-img" src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}"/>
+    </view>
   </view>
 
-  <!-- 2. 个人信息 + 胜率冠军（合并卡） -->
-  <view class="card profile-card">
-    <button size="mini" class="profile-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" binderror="onAvatarError" bindtap="onAvatarTap">
-      <image src="{{userInfo.avatarUrl}}" class="profile-avatar-img"/>
-    </button>
-    <view class="profile-name-row">
-      <view class="profile-name {{customNickName ? '' : 'name-placeholder'}}" bindtap="showNickNameModal">{{customNickName || '改名撒！'}}</view>
-      <text wx:if="{{myRank}}" class="profile-rank">#{{myRank}}</text>
+  <!-- 个人卡：我的排名 + 胜率前三领奖台 -->
+  <view class="card profile-card" wx:if="{{myRank || champions.length > 0}}">
+    <view class="profile-rank-row" wx:if="{{myRank}}">
+      <text class="profile-rank-label">我的排名</text>
+      <text class="profile-rank">#{{myRank}}</text>
     </view>
-    <view class="user-info-btn" hover-class="user-info-hover" hover-stay-time="60" bindtap="showInfoModal">i</view>
-    <view class="pstats">
-      <view class="pstat"><text class="pstat-num">{{summary ? summary.totalGames : 0}}</text><text class="pstat-label">对局数</text></view>
-      <view class="pstat-div"></view>
-      <view class="pstat"><text class="pstat-num">{{summary && summary.totalGames ? summary.totalWinRate + '%' : '-'}}</text><text class="pstat-label">总胜率</text></view>
-      <view class="pstat-div"></view>
-      <view class="pstat"><text class="pstat-num pstat-award">🏅 {{summary ? summary.mvpCount || 0 : 0}}</text><text class="pstat-label">MVP</text></view>
-      <view class="pstat-div"></view>
-      <view class="pstat"><text class="pstat-num pstat-award">💠 {{summary ? summary.svpCount || 0 : 0}}</text><text class="pstat-label">SVP</text></view>
-    </view>
-    <view wx:if="{{summary && summary.titles && summary.titles.length > 0}}" class="profile-titles">
-      <title-badge titles="{{summary.titles}}"></title-badge>
-    </view>
-
     <block wx:if="{{champions.length > 0}}">
-      <view class="pstats-longdiv"></view>
+      <view class="podium-title">胜率前三</view>
       <view class="podium">
         <view wx:for="{{podium}}" wx:key="openId"
           class="podium-item rank-{{item.rank}}"
@@ -50,7 +39,7 @@
     </block>
   </view>
 
-  <!-- 4. 房间 / 开始游戏 -->
+  <!-- 当前房间 -->
   <view class="card current-room-card" wx:if="{{currentRoom}}">
     <view class="current-room-top">
       <view class="current-room-label">您当前处于房间</view>
@@ -87,76 +76,29 @@
     </view>
   </view>
 
-  <!-- 功能格 2×2（直接放置；第一行彩蛋风 / 第二行玻璃质感） -->
-  <view class="func-grid">
-    <view class="func-item func-egg" hover-class="func-hover" hover-stay-time="80" bindtap="goToGlobalStats">
-      <view class="func-icon-box"><image src="/images/medal.png" class="func-icon" mode="aspectFit"/></view>
-      <text class="func-label">全局统计</text>
-      <view class="func-badge">彩蛋</view>
-    </view>
-    <view class="func-item func-egg" hover-class="func-hover" hover-stay-time="80" bindtap="goToFriends">
-      <view class="func-icon-box"><image src="/images/fossa.png" class="func-icon" mode="aspectFit"/></view>
-      <text class="func-label">牛马朋友</text>
-      <view class="func-badge">彩蛋</view>
-    </view>
-    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="onChangeTheme">
-      <view class="func-icon-box"><image src="/images/themes.png" class="func-icon" mode="aspectFit"/></view>
-      <text class="func-label">更改主题</text>
-    </view>
-    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="showWeirdSettings">
-      <text class="func-label">奇奇怪怪的设置们</text>
-    </view>
-    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="goToLeaderboard">
-      <text class="func-emoji">🏆</text>
-      <text class="func-label">排行榜</text>
-    </view>
-    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="goToRecords">
-      <view class="func-icon-box"><image src="/images/stopwatch.png" class="func-icon" mode="aspectFit"/></view>
-      <text class="func-label">线下记录</text>
-    </view>
-  </view>
-
-  <!-- 6. 角色胜率（公共组件，角色卡可点开对局弹窗） -->
-  <role-stats-card wx:if="{{roleStats.length > 0}}" roles="{{roleStats}}" summary="{{summary}}" games="{{historyList}}" />
-
-  <!-- 7. 历史对局（公共组件） -->
-  <view class="card history-card" wx:if="{{historyList.length > 0}}">
-    <history-card title="历史对局" games="{{historyList}}" />
-  </view>
-
   <view class="footer"><view class="footer-version">AVALON v1.4.2</view></view>
 
-  <!-- 游戏说明：全屏覆盖页 -->
-  <view class="rules-page" wx:if="{{showInfo}}">
-    <view class="rules-page-header">
-      <text class="rules-page-title">游戏说明</text>
-      <view class="rules-page-close" bindtap="closeInfo">✕</view>
-    </view>
-    <scroll-view scroll-y class="rules-page-body">
-      <view class="info-item">• 5-12 人，支持标准局 / 专家局 / 自定义板子</view>
-      <view class="info-item">• 支持多样村规，可扩展性拉满</view>
-      <view class="info-item">• 线上发牌与线下发牌+小程序发车两种模式</view>
-      <view class="info-item">• 好友系统、胜率统计、全服对局排行一应俱全</view>
-    </scroll-view>
-  </view>
-
-  <!-- 奇奇怪怪的设置们：中部弹窗（点遮罩关闭） -->
-  <view class="weird-mask" wx:if="{{showWeirdSettings}}" bindtap="closeWeirdSettings" catchtouchmove="noop">
-    <view class="weird-modal" catchtap="noop">
-      <view class="weird-title">奇奇怪怪的设置们</view>
-      <view class="weird-row">
-        <switch class="func-switch" checked="{{publicWinrate}}" bindchange="onPublicWinrateChange" color="#8B5CF6"/>
-        <text class="func-label">公开胜率</text>
+  <!-- 首登资料完善弹窗（头像 / 昵称缺失时自动弹出，可跳过） -->
+  <view class="setup-mask" wx:if="{{showProfileSetup}}" bindtap="closeProfileSetup" catchtouchmove="noop">
+    <view class="setup-modal" catchtap="noop">
+      <view class="setup-title">完善资料</view>
+      <view class="setup-row">
+        <text class="setup-label">头像</text>
+        <button class="setup-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onSetupChooseAvatar" bindtap="onSetupAvatarTap">
+          <image class="setup-avatar" src="{{setupAvatarUrl || '/images/default-avatar.png'}}"/>
+        </button>
       </view>
-      <view class="weird-row">
-        <switch class="func-switch" checked="{{compactGame}}" bindchange="onCompactGameChange" color="#8B5CF6"/>
-        <text class="func-label">松弛压缩版</text>
+      <view class="setup-row">
+        <text class="setup-label">昵称</text>
+        <input class="setup-input" type="nickname" maxlength="10" value="{{setupNickName}}" bindinput="onSetupNickInput" placeholder="请输入昵称（≤10字）"/>
+      </view>
+      <view class="setup-ops">
+        <button class="setup-btn setup-btn-plain" size="mini" bindtap="closeProfileSetup">跳过</button>
+        <button class="setup-btn setup-btn-primary" size="mini" disabled="{{!setupAvatarUrl || !setupNickName}}" bindtap="saveProfileSetup">保存</button>
       </view>
     </view>
   </view>
 
-  <!-- 玩家胜率信息弹窗（公共组件） -->
+  <!-- 玩家胜率信息弹窗（公共组件，领奖台点击） -->
   <player-stats id="playerStats" />
 </view>
-
-<!-- ─────────── Config 已改为独立页面 pages/configs/configs ─────────── -->

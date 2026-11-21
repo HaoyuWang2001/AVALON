@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/me/me",
     "pages/room/room",
     "pages/game/game",
     "pages/friends/friends",

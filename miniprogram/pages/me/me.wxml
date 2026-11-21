@@ -1,0 +1,91 @@
+<!--pages/me/me.wxml-->
+<view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
+  <!-- 基本信息 -->
+  <view class="card me-head">
+    <button class="me-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" bindtap="onAvatarTap">
+      <image class="me-avatar" src="{{me.avatarUrl || '/images/default-avatar.png'}}"/>
+    </button>
+    <view class="me-info">
+      <view class="me-name-row">
+        <text class="me-name" bindtap="editNickName">{{me.nickName || '点击设置昵称'}}</text>
+        <text wx:if="{{rank}}" class="me-rank">#{{rank}}</text>
+      </view>
+      <view wx:if="{{stats.titles && stats.titles.length > 0}}" class="me-titles">
+        <title-badge titles="{{stats.titles}}"></title-badge>
+      </view>
+      <view class="me-sub">
+        <text wx:if="{{me.uniqueId}}" class="me-uid">ID：{{me.uniqueId}}</text>
+        <text class="me-edit-hint" bindtap="editNickName">点头像换头像 · 点昵称改名</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 统计 -->
+  <view class="card me-stats">
+    <view class="me-stat"><text class="me-stat-num">{{stats.totalGames}}</text><text class="me-stat-label">场次</text></view>
+    <view class="me-stat-div"></view>
+    <view class="me-stat"><text class="me-stat-num">{{stats.totalGames ? stats.totalWinRate + '%' : '—'}}</text><text class="me-stat-label">总胜率</text></view>
+    <view class="me-stat-div"></view>
+    <view class="me-stat"><text class="me-stat-num me-good">{{stats.totalGames ? stats.goodWinRate + '%' : '—'}}</text><text class="me-stat-label">蓝方</text></view>
+    <view class="me-stat-div"></view>
+    <view class="me-stat"><text class="me-stat-num me-evil">{{stats.totalGames ? stats.evilWinRate + '%' : '—'}}</text><text class="me-stat-label">红方</text></view>
+  </view>
+  <view class="card me-awards">
+    <view class="me-award"><text class="me-award-num">🏅 {{stats.mvpCount}}</text><text class="me-award-label">MVP</text></view>
+    <view class="me-award"><text class="me-award-num">💠 {{stats.svpCount}}</text><text class="me-award-label">SVP</text></view>
+  </view>
+
+  <!-- 角色胜率（公共组件，角色卡可点开对局弹窗） -->
+  <role-stats-card wx:if="{{roleStats.length > 0}}" roles="{{roleStats}}" summary="{{summary}}" games="{{historyList}}" />
+
+  <!-- 历史对局（公共组件） -->
+  <view class="card history-card" wx:if="{{historyList.length > 0}}">
+    <history-card title="历史对局" games="{{historyList}}" />
+  </view>
+
+  <!-- 功能入口（2×3） -->
+  <view class="func-grid">
+    <view class="func-item func-egg" hover-class="func-hover" hover-stay-time="80" bindtap="goToGlobalStats">
+      <view class="func-icon-box"><image src="/images/medal.png" class="func-icon" mode="aspectFit"/></view>
+      <text class="func-label">全局统计</text>
+      <view class="func-badge">彩蛋</view>
+    </view>
+    <view class="func-item func-egg" hover-class="func-hover" hover-stay-time="80" bindtap="goToFriends">
+      <view class="func-icon-box"><image src="/images/fossa.png" class="func-icon" mode="aspectFit"/></view>
+      <text class="func-label">牛马朋友</text>
+      <view class="func-badge">彩蛋</view>
+    </view>
+    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="onChangeTheme">
+      <view class="func-icon-box"><image src="/images/themes.png" class="func-icon" mode="aspectFit"/></view>
+      <text class="func-label">更改主题</text>
+    </view>
+    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="showWeirdSettings">
+      <text class="func-label">奇奇怪怪的设置们</text>
+    </view>
+    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="goToLeaderboard">
+      <text class="func-emoji">🏆</text>
+      <text class="func-label">排行榜</text>
+    </view>
+    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="goToRecords">
+      <view class="func-icon-box"><image src="/images/stopwatch.png" class="func-icon" mode="aspectFit"/></view>
+      <text class="func-label">线下记录</text>
+    </view>
+  </view>
+
+  <view class="footer"><view class="footer-version">AVALON v1.4.2</view></view>
+
+  <!-- 奇奇怪怪的设置们：中部弹窗（点遮罩关闭） -->
+  <view class="weird-mask" wx:if="{{showWeirdSettings}}" bindtap="closeWeirdSettings" catchtouchmove="noop">
+    <view class="weird-modal" catchtap="noop">
+      <view class="weird-title">奇奇怪怪的设置们</view>
+      <view class="weird-row">
+        <switch class="func-switch" checked="{{publicWinrate}}" bindchange="onPublicWinrateChange" color="#8B5CF6"/>
+        <text class="func-label">公开胜率</text>
+      </view>
+      <view class="weird-row">
+        <switch class="func-switch" checked="{{compactGame}}" bindchange="onCompactGameChange" color="#8B5CF6"/>
+        <text class="func-label">松弛压缩版</text>
+      </view>
+    </view>
+  </view>
+</view>

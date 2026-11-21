@@ -125,6 +125,11 @@ function enrichTablePlayer(p, ctx) {
       : 'ptag-grey';
     tags.push({ text, cls });
   }
+  // 游戏结束：本局 MVP/SVP 获得票数标签（🏅N=胜方最佳 / 💠N=败方最佳；0 票不显示）
+  if (currentPhase === 'gameEnd') {
+    if (p.mvpVotes > 0) tags.push({ text: '🏅' + p.mvpVotes, cls: TAG_STYLES.gold });
+    if (p.svpVotes > 0) tags.push({ text: '💠' + p.svpVotes, cls: TAG_STYLES.purple });
+  }
 
   return {
     ...p,
@@ -267,6 +272,7 @@ Page({
     merlinFlipPhase: '',
     myAwards: null,
     awardCandidates: [],
+    awardChips: { mvp: { state: 'none', avatarUrl: '' }, svp: { state: 'none', avatarUrl: '' } },
     awardModal: { show: false, step: 'mvp', sel: '' },
     flipProgress: 0,
     crownHolderOpenId: '',
@@ -750,6 +756,7 @@ Page({
           visionList: visionList,
           allPlayers: res.players || [],
           tablePlayers: tablePlayers,
+          awardChips: this._buildAwardChips(myAwards, tablePlayers),
           compactLeft: compactLeft,
           compactRight: compactRight,
           carSeatsText: carSeatsText,
@@ -894,10 +901,26 @@ Page({
       .filter(p => p.openId !== me && p.side === side)
       .map(p => ({ openId: p.openId, seatNumber: p.seatNumber, nickName: p.nickName, avatarUrl: p.avatarUrl, roleName: p.roleName, titles: Array.isArray(p.titles) ? p.titles : [] }));
   },
+  // 状态 chip 展示：已选 → 显示所选玩家头像；否则展示待选/已放弃
+  _buildAwardChips(aw, players) {
+    const byId = {};
+    (players || []).forEach(p => { byId[p.openId] = p; });
+    const mk = kind => {
+      const a = (aw && aw[kind]) || { state: 'none', target: null };
+      const tp = a.state === 'voted' && a.target ? byId[a.target] : null;
+      return {
+        state: a.state,
+        avatarUrl: tp ? (tp.avatarUrl || '/images/default-avatar.png') : ''
+      };
+    };
+    return { mvp: mk('mvp'), svp: mk('svp') };
+  },
   _openAwardModal() {
     const aw = this.data.myAwards;
     if (!aw) return;
-    const step = aw.mvp.state === 'none' ? 'mvp' : 'svp';
+    // 只弹第一个未处理的奖项；两项都已处理（voted/declined）则不再弹窗
+    const step = aw.mvp.state === 'none' ? 'mvp' : (aw.svp.state === 'none' ? 'svp' : '');
+    if (!step) return;
     this.setData({
       awardCandidates: this._computeAwardCandidates(step),
       awardModal: { show: true, step, sel: '' }
@@ -908,14 +931,21 @@ Page({
     const id = e.currentTarget.dataset.id;
     this.setData({ 'awardModal.sel': this.data.awardModal.sel === id ? '' : id });
   },
+  // 单按钮双态：已选中→就他了（投票）；未选中→都不配（永久放弃）
+  onAwardAction() {
+    if (this.data.awardModal.sel) this.confirmAwardVote();
+    else this.declineAward();
+  },
   _advanceAward(awards) {
     const aw = awards || this.data.myAwards;
+    if (!aw) { this.closeAwardModal(); return; }
+    const awardChips = this._buildAwardChips(aw, this.data.tablePlayers);
     if (aw.mvp.state === 'none') {
-      this.setData({ myAwards: aw, awardCandidates: this._computeAwardCandidates('mvp'), awardModal: { show: true, step: 'mvp', sel: '' } });
+      this.setData({ myAwards: aw, awardChips, awardCandidates: this._computeAwardCandidates('mvp'), awardModal: { show: true, step: 'mvp', sel: '' } });
     } else if (aw.svp.state === 'none') {
-      this.setData({ myAwards: aw, awardCandidates: this._computeAwardCandidates('svp'), awardModal: { show: true, step: 'svp', sel: '' } });
+      this.setData({ myAwards: aw, awardChips, awardCandidates: this._computeAwardCandidates('svp'), awardModal: { show: true, step: 'svp', sel: '' } });
     } else {
-      this.setData({ myAwards: aw, awardCandidates: [], awardModal: { show: false, step: 'mvp', sel: '' } });
+      this.setData({ myAwards: aw, awardChips, awardCandidates: [], awardModal: { show: false, step: 'mvp', sel: '' } });
     }
   },
   confirmAwardVote() {
@@ -934,7 +964,7 @@ Page({
   declineAward() {
     const { step } = this.data.awardModal;
     wx.showModal({
-      title: 'NoNoNo',
+      title: '都不配',
       content: '选择后将不能再选择本奖项，确定吗？',
       confirmColor: '#DC2626',
       success: m => {
@@ -947,11 +977,8 @@ Page({
       }
     });
   },
-  skipAward() {
-    // 暂时跳过：不落库，下次进入结束页重新弹出；本次会话内继续处理另一奖项
-    this._advanceAward(null);
-  },
   closeAwardModal() {
+    // 点框外/关闭 = 暂时跳过：不落库，下次进入结束页或手动入口重新弹出
     this.setData({ awardModal: { show: false, step: 'mvp', sel: '' }, awardCandidates: [] });
   },
 

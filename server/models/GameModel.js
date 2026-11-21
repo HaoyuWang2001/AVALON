@@ -862,6 +862,28 @@ class GameModel {
         publicPlayers = fullPlayers;
       }
 
+      // 本局 MVP/SVP 获得票数（正常结束局全员可见；结束页玩家标签展示，投票后经 gameUpdated 广播刷新）
+      if (revealAll && game.gameResult && game.gameResult.winner && !game.gameResult.abandoned) {
+        const tallyRows = await db.query(
+          `SELECT target_open_id AS target, award, COUNT(*) AS cnt
+           FROM game_award_votes
+           WHERE game_id = ? AND state = 'voted'
+           GROUP BY target_open_id, award`,
+          [gameId]
+        );
+        const tally = {};
+        for (const r of tallyRows) {
+          if (!tally[r.target]) tally[r.target] = { mvpVotes: 0, svpVotes: 0 };
+          if (r.award === 'mvp') tally[r.target].mvpVotes = Number(r.cnt);
+          if (r.award === 'svp') tally[r.target].svpVotes = Number(r.cnt);
+        }
+        publicPlayers = publicPlayers.map(p => ({
+          ...p,
+          mvpVotes: (tally[p.openId] || {}).mvpVotes || 0,
+          svpVotes: (tally[p.openId] || {}).svpVotes || 0
+        }));
+      }
+
       // 基础信息
       const basic = {
         gameId: game.gameId,

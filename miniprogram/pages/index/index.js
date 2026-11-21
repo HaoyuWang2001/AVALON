@@ -1,36 +1,9 @@
 // pages/index/index.js
 const api = require('../../services/api.js');
-const { getThemeClass, getThemeBg, pickTheme, applyTheme } = require('../../utils/theme.js');
-
-const { DEFAULT_AVATAR, ROLE_NAMES, ROLE_EMOJIS, CONFIG_EVIL_ROLES } = require('../../utils/constants.js');
+const { getThemeClass, getThemeBg } = require('../../utils/theme.js');
+const { DEFAULT_AVATAR } = require('../../utils/constants.js');
 
 const DEFAULT_SEAT_NUMBER = 0;
-
-function formatDuration(seconds) {
-  const sec = parseInt(seconds, 10) || 0;
-  if (sec <= 0) return '';
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  if (h > 0) return h + '小时' + (m > 0 ? m + '分钟' : '');
-  if (m > 0) return m + '分钟';
-  return '不足1分钟';
-}
-
-// 后端返回 UTC 字符串（'YYYY-MM-DD HH:mm:ss'，无时区），转换为北京时间(+8)
-function formatDate(ts) {
-  if (!ts) return '';
-  let ms;
-  if (typeof ts === 'string') {
-    const m = ts.match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
-    ms = m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) : new Date(ts).getTime();
-  } else {
-    ms = new Date(ts).getTime();
-  }
-  if (isNaN(ms)) return '';
-  const bj = new Date(ms + 8 * 3600 * 1000);
-  const p = n => (n < 10 ? '0' + n : '' + n);
-  return `${bj.getUTCFullYear()}-${p(bj.getUTCMonth() + 1)}-${p(bj.getUTCDate())} ${p(bj.getUTCHours())}:${p(bj.getUTCMinutes())}`;
-}
 
 Page({
   data: {
@@ -42,19 +15,16 @@ Page({
     userStatusText: '在线',
     userStatusClass: 'status-online',
 
-    showInfo: false,
-    showWeirdSettings: false,
     themeClass: '',
-    historyList: [],
-    roleStats: [],
-    summary: null,
     myRank: 0,
     champions: [],
     podium: [],
-    championsLoaded: false,
-    hardworking: null,
-    publicWinrate: true,
-    compactGame: false,
+
+    // 首登资料完善
+    showProfileSetup: false,
+    setupAvatarUrl: '',
+    setupNickName: '',
+
     meetingPressStyle: '',
     meetingFillClass: '',
     meetingFillMs: 420
@@ -83,19 +53,16 @@ Page({
 
     if (app.globalData.openId) {
       this.loadUserProfile();
-      this.loadHistoryAndStats();
+      this.loadHomeData();
+      this.checkCurrentRoom();
       this.dispatchShareJoin(shareRoomId, shareGameId);
     } else {
       app.openIdReadyCallback = () => {
         this.loadUserProfile();
         this.checkCurrentRoom();
-        this.loadHistoryAndStats();
+        this.loadHomeData();
         this.dispatchShareJoin(shareRoomId, shareGameId);
       };
-    }
-
-    if (app.globalData.openId) {
-      this.checkCurrentRoom();
     }
 
     // 主题初始化
@@ -113,15 +80,6 @@ Page({
 
   onShareTimeline() {
     return { title: 'AVALON · 瓦协会之练秋湖分部' };
-  },
-
-  // 更改主题（功能卡）
-  onChangeTheme() {
-    pickTheme().then(picked => {
-      if (picked === null) return;
-      applyTheme(picked);
-      this.setData({ themeClass: picked });
-    });
   },
 
   dispatchShareJoin(roomId, gameId) {
@@ -269,10 +227,17 @@ Page({
   },
 
   onShow() {
-    this.setData({ compactGame: !!wx.getStorageSync('avalon_compact_game') });
+    // 从个人页返回：同步头像/昵称修改
+    const savedNick = wx.getStorageSync('customNickName') || '';
+    const savedAvatar = wx.getStorageSync('avatarUrl') || '';
+    const updates = {};
+    if (savedNick && savedNick !== this.data.customNickName) updates.customNickName = savedNick;
+    if (savedAvatar && savedAvatar !== this.data.userInfo.avatarUrl) updates['userInfo.avatarUrl'] = savedAvatar;
+    if (Object.keys(updates).length > 0) this.setData(updates);
+
     if (getApp().globalData.openId) {
       this.checkCurrentRoom();
-      this.loadHistoryAndStats();
+      this.loadHomeData();
     }
     // 返回本页时重新应用主题背景（离开时已复位，保证其他亮色页面不串色）
     wx.setBackgroundColor({ backgroundColor: getThemeBg(this.data.themeClass) });
@@ -351,7 +316,7 @@ Page({
     this.checkCurrentRoom();
     if (getApp().globalData.openId) {
       this.loadUserProfile();
-      this.loadHistoryAndStats();
+      this.loadHomeData();
     }
     wx.stopPullDownRefresh();
   },
@@ -438,11 +403,9 @@ Page({
 
   loadUserProfile() {
     const app = getApp();
-    if (app.globalData.profileLoaded) return;
-    app.globalData.profileLoaded = true;
     const openId = app.globalData.openId;
     if (!openId) return;
-    api.getUserProfile(openId).then(res => {
+    return api.getUserProfile(openId).then(res => {
       if (res && res.success && res.user) {
         const u = res.user;
         const updates = {};
@@ -460,61 +423,109 @@ Page({
           updates['userInfo.avatarUrl'] = u.avatarUrl;
           wx.setStorageSync('avatarUrl', u.avatarUrl);
         }
-        if (u.publicWinrate !== undefined) {
-          updates.publicWinrate = u.publicWinrate !== 0;
-        }
         if (Object.keys(updates).length > 0) {
           this.setData(updates);
         }
+        this._maybeShowProfileSetup(u);
       }
     }).catch(() => {});
   },
 
-  loadHistoryAndStats() {
+  // 首登资料完善：头像或昵称缺失时自动弹出（每页面实例只自动检查一次）
+  _maybeShowProfileSetup(profile) {
+    if (this._profileSetupChecked) return;
+    this._profileSetupChecked = true;
+    const storedAvatar = wx.getStorageSync('avatarUrl') || '';
+    const serverAvatar = (profile && profile.avatarUrl) || '';
+    const hasAvatar = !!serverAvatar || !!storedAvatar;
+    const nick = (profile && profile.customNickName) || this.data.customNickName || '';
+    if (hasAvatar && nick) return;
+    const presetNick = (nick || (profile && profile.wxNickName) || '').slice(0, 10);
+    this.setData({
+      showProfileSetup: true,
+      setupAvatarUrl: hasAvatar ? (serverAvatar || storedAvatar) : '',
+      setupNickName: presetNick
+    });
+  },
+
+  goToMe() {
+    wx.navigateTo({ url: '/pages/me/me' });
+  },
+
+  closeProfileSetup() {
+    this.setData({ showProfileSetup: false });
+  },
+
+  onSetupAvatarTap() {
+    if (!wx.canIUse('button.open-type.chooseAvatar')) {
+      wx.showToast({ title: '当前微信版本过低，请升级微信后再换头像', icon: 'none' });
+    }
+  },
+
+  onSetupChooseAvatar(e) {
+    if (!e.detail || !e.detail.avatarUrl) return;
+    this._setupAvatarTemp = e.detail.avatarUrl;
+    this.setData({ setupAvatarUrl: e.detail.avatarUrl });
+  },
+
+  onSetupNickInput(e) {
+    this.setData({ setupNickName: e.detail.value });
+  },
+
+  saveProfileSetup() {
+    const nick = (this.data.setupNickName || '').trim();
+    if (!nick) { wx.showToast({ title: '请填写昵称', icon: 'none' }); return; }
+    if (nick.length > 10) { wx.showToast({ title: '昵称最多 10 字', icon: 'none' }); return; }
+    const avatar = this.data.setupAvatarUrl || '';
+    if (!avatar) { wx.showToast({ title: '请先选择头像', icon: 'none' }); return; }
+    const app = getApp();
+    const openId = app.globalData.openId || wx.getStorageSync('openId');
+    if (!openId) { wx.showToast({ title: '登录中，请稍后重试', icon: 'none' }); return; }
+
+    wx.showLoading({ title: '保存中...', mask: true });
+    const commit = (avatarUrl) => api.updateUserProfile(openId, { customNickName: nick }).then(() => {
+      wx.hideLoading();
+      wx.setStorageSync('customNickName', nick);
+      if (avatarUrl) wx.setStorageSync('avatarUrl', avatarUrl);
+      const finalAvatar = avatarUrl || this.data.userInfo.avatarUrl || DEFAULT_AVATAR;
+      this.setData({
+        customNickName: nick,
+        'userInfo.avatarUrl': finalAvatar,
+        showProfileSetup: false
+      });
+      if (app.globalData.userInfo) {
+        app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: finalAvatar };
+      }
+      this._setupAvatarTemp = '';
+      wx.showToast({ title: '已保存', icon: 'success' });
+    }).catch(err => {
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' });
+    });
+
+    if (this._setupAvatarTemp) {
+      api.uploadAvatar(openId, this._setupAvatarTemp).then(res => {
+        commit((res && res.avatarUrl) || '');
+      }).catch(() => {
+        wx.hideLoading();
+        wx.showToast({ title: '头像上传失败', icon: 'none' });
+      });
+    } else {
+      commit('');
+    }
+  },
+
+  loadHomeData() {
     const openId = getApp().globalData.openId || wx.getStorageSync('openId');
     if (!openId) return;
     this.loadChampions(openId);
-    api.getUserHistory(openId, 0).then(res => {
-      if (res && res.success && Array.isArray(res.history)) {
-        const historyList = res.history.map(item => ({
-          gameId: item.gameId,
-          role: item.role,
-          roleName: ROLE_NAMES[item.role] || item.role,
-          side: item.side,
-          playerCount: item.playerCount,
-          durationText: formatDuration(item.durationSeconds),
-          dateText: formatDate(item.createdAt),
-          isWin: !!(item.gameResult && item.gameResult.winner === item.side)
-        }));
-        this.setData({ historyList });
-      }
-    }).catch(() => {});
+    this.loadMyRank(openId);
+  },
+
+  loadMyRank(openId) {
     api.getUserStats(openId).then(res => {
       if (res && res.success && res.stats) {
-        const s = res.stats;
-        const roleStats = (s.roles || []).filter(r => r.games > 0).map(r => ({
-          role: r.role,
-          roleName: ROLE_NAMES[r.role] || r.role,
-          emoji: ROLE_EMOJIS[r.role] || '🎴',
-          side: CONFIG_EVIL_ROLES.includes(r.role) ? 'evil' : 'good',
-          games: r.games,
-          wins: r.wins,
-          winRate: r.winRate + '%'
-        }));
-        this.setData({
-          roleStats,
-          myRank: s.rank || 0,
-          summary: {
-            totalWinRate: s.totalWinRate,
-            totalWins: s.totalWins,
-            totalGames: s.totalGames,
-            goodWinRate: s.goodWinRate + '%',
-            evilWinRate: s.evilWinRate + '%',
-            mvpCount: s.mvpCount || 0,
-            svpCount: s.svpCount || 0,
-            titles: Array.isArray(s.titles) ? s.titles : []
-          }
-        });
+        this.setData({ myRank: res.stats.rank || 0 });
       }
     }).catch(() => {});
   },
@@ -528,7 +539,7 @@ Page({
         if (champions[1]) podium.push(champions[1]);
         if (champions[0]) podium.push(champions[0]);
         if (champions[2]) podium.push(champions[2]);
-        this.setData({ champions, podium, hardworking: res.hardworking || null, championsLoaded: true });
+        this.setData({ champions, podium });
       }
     }).catch(() => {});
   },
@@ -548,155 +559,7 @@ Page({
     });
   },
 
-  // 公开胜率开关：二次确认；胜率前三禁止关闭
-  onPublicWinrateChange(e) {
-    const openId = getApp().globalData.openId || wx.getStorageSync('openId');
-    if (!openId) return;
-    const val = !!e.detail.value;
-    this.setData({ publicWinrate: val }); // 先同步开关视觉，取消/被禁止时回滚
-
-    if (!val) {
-      // 榜单未加载完成：保守禁止关闭
-      if (!this.data.championsLoaded) {
-        wx.showModal({
-          title: '请稍候',
-          content: '榜单数据加载中，暂时无法关闭公开胜率，请稍后重试。',
-          showCancel: false,
-          confirmText: '知道了',
-          success: () => this.setData({ publicWinrate: true })
-        });
-        return;
-      }
-      // 关闭操作且位于胜率前三榜单 → 禁止
-      const inTop3 = (this.data.podium || []).some(p => p.openId === openId);
-      if (inTop3) {
-        wx.showModal({
-          title: '无法关闭',
-          content: '您当前位于胜率前三榜单，公开胜率不可关闭；需胜率掉出前三后方可关闭。',
-          showCancel: false,
-          confirmText: '知道了',
-          success: () => this.setData({ publicWinrate: true })
-        });
-        return;
-      }
-    }
-
-    wx.showModal({
-      title: val ? '公开胜率' : '关闭公开胜率',
-      content: val ? '确定公开你的胜率？其他玩家将可以看到。' : '确定关闭公开胜率？关闭后将不再出现在胜率榜。',
-      confirmText: '确定',
-      cancelText: '取消',
-      success: (res) => {
-        if (!res.confirm) { this.setData({ publicWinrate: !val }); return; }
-        api.setPublicWinrate(openId, val).then(r => {
-          if (r && r.success) {
-            wx.showToast({ title: val ? '已公开胜率' : '已设为私密', icon: 'none' });
-          } else {
-            this.setData({ publicWinrate: !val });
-            wx.showToast({ title: (r && r.message) || '设置失败', icon: 'none' });
-          }
-        }).catch(err => {
-          this.setData({ publicWinrate: !val });
-          wx.showToast({ title: (err && err.message) || '设置失败', icon: 'none' });
-        });
-      }
-    });
-  },
-
   noop() {},
-
-  // 松弛压缩版开关（本地存储，按设备）
-  onCompactGameChange(e) {
-    const val = !!e.detail.value;
-    this.setData({ compactGame: val });
-    try { wx.setStorageSync('avalon_compact_game', val ? 1 : 0); } catch (err) {}
-    wx.showToast({ title: val ? '已开启松弛压缩版' : '已关闭松弛压缩版', icon: 'none' });
-  },
-
-  showInfoModal() {
-    this.setData({ showInfo: true });
-  },
-  closeInfo() {
-    this.setData({ showInfo: false });
-  },
-  showWeirdSettings() {
-    this.setData({ showWeirdSettings: true });
-  },
-  closeWeirdSettings() {
-    this.setData({ showWeirdSettings: false });
-  },
-
-  openHistoryGame(e) {
-    const gameId = e.currentTarget.dataset.gameid;
-    if (!gameId) return;
-    wx.navigateTo({ url: `/pages/game/game?gameId=${gameId}&fromHistory=1` });
-  },
-
-  onAvatarError() {},
-
-  // chooseAvatar 能力要求基础库 ≥ 2.21.2：不支持时给出明确提示（否则点击静默无反应）
-  onAvatarTap() {
-    if (!wx.canIUse('button.open-type.chooseAvatar')) {
-      wx.showToast({ title: '当前微信版本过低，请升级微信后再换头像', icon: 'none' });
-    }
-  },
-
-  onChooseAvatar(e) {
-    if (!e.detail || !e.detail.avatarUrl) return;
-    const tempPath = e.detail.avatarUrl;
-    const app = getApp();
-    const openId = app.globalData.openId || wx.getStorageSync('openId') || 'default';
-
-    this.setData({ 'userInfo.avatarUrl': tempPath });
-    app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: tempPath };
-
-    // 上传至服务器，链接存入数据库（跨设备可见）；失败回退本地保存
-    api.uploadAvatar(openId, tempPath).then((res) => {
-      const url = res.avatarUrl || '';
-      if (url) {
-        wx.setStorageSync('avatarUrl', url);
-        this.setData({ 'userInfo.avatarUrl': url });
-        app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: url };
-      }
-    }).catch(() => {
-      wx.showToast({ title: '头像上传失败', icon: 'none' });
-      const fs = wx.getFileSystemManager();
-      const savedPath = wx.env.USER_DATA_PATH + '/avatar_' + openId + '.jpg';
-      fs.saveFile({
-        tempFilePath: tempPath,
-        filePath: savedPath,
-        success: () => {
-          wx.setStorageSync('avatarUrl', savedPath);
-          this.setData({ 'userInfo.avatarUrl': savedPath });
-          app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: savedPath };
-        },
-        fail: () => {
-          wx.setStorageSync('avatarUrl', tempPath);
-        }
-      });
-    });
-  },
-
-  showNickNameModal() {
-    const savedNickName = wx.getStorageSync('customNickName') || '';
-    wx.showModal({
-      title: '修改昵称', editable: true, placeholderText: '请输入昵称',
-      content: savedNickName,
-      success: (res) => {
-        if (res.confirm && res.content) {
-          const nickName = res.content.trim();
-          if (nickName.length > 0 && nickName.length <= 10) {
-            wx.setStorageSync('customNickName', nickName);
-            this.setData({ customNickName: nickName });
-            const openId = getApp().globalData.openId;
-            if (openId) {
-              api.updateUserProfile(openId, { customNickName: nickName }).catch(() => {});
-            }
-          }
-        }
-      }
-    });
-  },
 
   // ─────────── 配置页（pages/configs/configs） ───────────
   openConfigs() {
@@ -719,22 +582,6 @@ Page({
         }
       }
     });
-  },
-
-  goToFriends() {
-    wx.navigateTo({ url: '/pages/friends/friends' });
-  },
-
-  goToGlobalStats() {
-    wx.navigateTo({ url: '/pages/global-stats/global-stats' });
-  },
-
-  goToLeaderboard() {
-    wx.navigateTo({ url: '/pages/leaderboard/leaderboard' });
-  },
-
-  goToRecords() {
-    wx.navigateTo({ url: '/pages/records/records' });
   },
 
   // 主页"加入会议"入口：固定未入座(seat=0)；room未游戏→room页；room游戏中→game页

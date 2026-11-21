@@ -11,111 +11,37 @@
   overflow-y: auto;
 }
 
-/* ─────── 头部（三段差异化故障：霓虹流光 / 拉长 / 撕裂放大） ─────── */
-.brand-bar { padding: 26rpx 0 0 0; margin-left: -24rpx; margin-right: -24rpx; text-align: center; flex-shrink: 0; }
-.brand-text {
-  position: relative; display: inline-block; white-space: nowrap;
-  font-size: 60rpx; font-weight: 900; letter-spacing: 4rpx; font-style: italic;
-  font-family: 'ZCOOL QingKe HuangYou', 'Smiley Sans', 'PingFang SC', 'Heiti SC', 'Microsoft YaHei', sans-serif;
+/* ─────── 品牌栏（单行：圆徽 + 字标 + 右侧个人头像） ─────── */
+.brand-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16rpx;
+  padding: 6rpx 0 18rpx; flex-shrink: 0;
 }
-.brand-1, .brand-2, .brand-3 { position: relative; display: inline-block; -webkit-text-fill-color: currentColor; }
-/* 头部文字仅亮色主题(黎明初现)显示，暗色主题隐藏 */
-.theme-torch .brand-bar, .theme-aurora .brand-bar, .theme-steel .brand-bar { display: none; }
+.brand-main { display: flex; align-items: center; gap: 16rpx; flex: 1; min-width: 0; }
+.brand-emblem {
+  width: 64rpx; height: 64rpx; border-radius: 50%;
+  border: 3rpx solid var(--gold); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 12rpx rgba(212, 160, 82, 0.35);
+}
+.brand-emblem-char { font-size: 34rpx; font-weight: 900; color: var(--gold); line-height: 1; }
+.brand-title {
+  font-size: 42rpx; font-weight: 900; letter-spacing: 4rpx;
+  color: var(--brand-1, var(--gold));
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.brand-avatar {
+  width: 84rpx; height: 84rpx; border-radius: 50%; flex-shrink: 0;
+  overflow: hidden; border: 3rpx solid var(--gold); background: var(--bg-page);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.18);
+}
+.brand-avatar-img { width: 100%; height: 100%; display: block; }
+.brand-avatar-hover { transform: scale(0.94); opacity: 0.9; }
 
-/* 瓦协会：原字体；慢速霓虹(无白) + 彩色流光滑过；故障带极小 */
-.brand-1 { font-family: 'PingFang SC', 'Heiti SC', 'Microsoft YaHei', sans-serif; font-style: normal; color: var(--brand-1); animation: brand-neon-flicker 7s steps(1, end) infinite, brand-neon 2.4s ease-in-out infinite; }
-.brand-1::after {
-  content: '瓦协会'; position: absolute; left: 0; top: 0; width: 100%; pointer-events: none;
-  background: linear-gradient(100deg, transparent 35%, #22D3EE 46%, #A855F7 50%, #F472B6 54%, transparent 65%);
-  background-size: 250% 100%;
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: brand-sweep 3.6s linear infinite;
-}
-@keyframes brand-sweep { 0% { background-position: 170% 0; } 100% { background-position: -70% 0; } }
-@keyframes brand-neon-flicker {
-  0% { color: #FF3B30; }
-  6% { color: #FF9500; }
-  12% { color: #FFCC00; }
-  18% { color: #34C759; }
-  24% { color: #00C7BE; }
-  30% { color: #30B0C7; }
-  36% { color: #007AFF; }
-  42% { color: #5856D6; }
-  48% { color: #AF52DE; }
-  54% { color: #FF2D55; }
-  60% { color: #000000; }
-  68% { color: #C4B5FD; }
-  76% { color: #2E1065; }
-  84% { color: #A855F7; }
-  92% { color: #FF3B30; }
-  100% { color: #FF3B30; }
-}
-@keyframes brand-neon {
-  0%, 100% { text-shadow: 0 0 6rpx currentColor, 0 0 16rpx currentColor; }
-  50% { text-shadow: 0 0 12rpx currentColor, 0 0 30rpx currentColor; }
-}
-
-/* 之：保持黑色、字号略小（无任何变化） */
-.brand-2 { color: #000000; font-size: 0.86em; }
-
-/* 练秋湖分部：主题紫实色 + 下划线 + 极短故障 burst(C) */
-.brand-3 {
-  color: var(--brand-3);
-  font-style: normal;
-  text-decoration: underline; text-underline-offset: 6rpx; text-decoration-color: var(--brand-3);
-  -webkit-text-fill-color: currentColor;
-  animation: lianqiu-burst 12s steps(1, end) infinite;
-}
-/* C：每 5~10s 一次极短 burst（轻微错位 + 扭曲 + 细撕裂，~180ms 后复原） */
-@keyframes lianqiu-burst {
-  0%, 29%, 33%, 72%, 76%, 100% { transform: translate(0, 0) skewX(0deg); clip-path: inset(0 0 0 0); }
-  30% { transform: translate(-3rpx, 0) skewX(4deg); clip-path: inset(38% 0 44% 0); }
-  31% { transform: translate(3rpx, 0) skewX(-4deg); clip-path: inset(0 0 0 0); }
-  73% { transform: translate(0, 0) skewX(0deg); clip-path: inset(0 0 0 0); }
-  74% { transform: translate(3rpx, 0) skewX(-3deg); clip-path: inset(20% 0 62% 0); }
-  75% { transform: translate(-3rpx, 0) skewX(3deg); clip-path: inset(0 0 0 0); }
-}
-/* C：故障时的 RGB 色差分离（青/红错位） */
-.brand-3::before {
-  content: '练秋湖分部'; position: absolute; left: 0; top: 0; width: 100%; pointer-events: none;
-  color: #F43F5E; -webkit-text-fill-color: currentColor; opacity: 0;
-  animation: lianqiu-chroma 12s steps(1, end) infinite;
-}
-@keyframes lianqiu-chroma {
-  0%, 29%, 33%, 72%, 76%, 100% { opacity: 0; transform: translate(0, 0); }
-  30% { opacity: 0.85; transform: translate(-4rpx, 1rpx); color: #22D3EE; }
-  31% { opacity: 0.85; transform: translate(4rpx, -1rpx); color: #F43F5E; }
-  74% { opacity: 0.85; transform: translate(4rpx, 1rpx); color: #22D3EE; }
-  75% { opacity: 0.85; transform: translate(-4rpx, -1rpx); color: #F43F5E; }
-}
-
-/* 整串故障层：上下带极小 */
-.brand-text::before, .brand-text::after {
-  content: '瓦协会之练秋湖分部';
-  position: absolute; left: 0; top: 0; width: 100%;
-  line-height: 1;
-  -webkit-text-fill-color: currentColor;
-  pointer-events: none;
-}
-.brand-text::before { color: var(--brand-g1); animation: brand-tear-a 3s steps(1, end) infinite; }
-.brand-text::after { color: var(--brand-g2); animation: brand-tear-b 3.4s steps(1, end) infinite; }
-@keyframes brand-tear-a {
-  0%, 90%, 100% { clip-path: inset(96% 0 0 0); transform: translate(0, 0); opacity: 0; }
-  92% { clip-path: inset(40% 0 34% 0); transform: translate(-5rpx, -1rpx); opacity: 0.5; }
-  96% { clip-path: inset(56% 0 22% 0); transform: translate(4rpx, 1rpx); opacity: 0.35; }
-}
-@keyframes brand-tear-b {
-  0%, 90%, 100% { clip-path: inset(96% 0 0 0); transform: translate(0, 0); opacity: 0; }
-  92% { clip-path: inset(30% 0 46% 0); transform: translate(5rpx, 1rpx); opacity: 0.5; }
-  96% { clip-path: inset(48% 0 30% 0); transform: translate(-4rpx, -1rpx); opacity: 0.35; }
-}
-
-/* ─────── 个人信息卡（头像半嵌 + 三栏数据） ─────── */
+/* ─────── 个人卡（我的排名 + 胜率前三领奖台） ─────── */
 .profile-card {
   position: relative;
-  margin-top: 104rpx; margin-bottom: 20rpx;
-  background: var(--profile-bg, var(--bg-card)); border-radius: 28rpx; padding: 84rpx 24rpx 26rpx;
+  margin-top: 4rpx; margin-bottom: 20rpx;
+  background: var(--profile-bg, var(--bg-card)); border-radius: 28rpx; padding: 24rpx;
   background-size: 170% 170%;
   animation: profile-breathe 7s ease-in-out infinite;
   box-shadow: var(--shadow-sm); flex-shrink: 0;
@@ -124,35 +50,10 @@
   0%, 100% { background-position: 15% 15%; }
   50%      { background-position: 85% 85%; }
 }
-.profile-avatar-btn { position: absolute; top: -70rpx; left: 36rpx; width: 140rpx !important; height: 140rpx !important; border: none; background: var(--bg-card); border-radius: 50%; overflow: hidden; padding: 0 !important; margin: 0 !important; box-sizing: border-box; z-index: 2; box-shadow: 0 0 0 8rpx var(--profile-ring-glow), 0 8rpx 20rpx rgba(0, 0, 0, 0.15); }
-.profile-avatar-btn::after { border: none; display: none; }
-.profile-avatar-img { width: 100%; height: 100%; border-radius: 50%; display: block; }
-.profile-name-row { position: absolute; top: 20rpx; left: 204rpx; right: 96rpx; height: 60rpx; display: flex; align-items: center; gap: 10rpx; }
-.profile-name { flex: 0 1 auto; min-width: 0; height: 60rpx; line-height: 60rpx; font-size: 40rpx; font-weight: 800; color: var(--profile-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.profile-rank { flex-shrink: 0; font-size: 34rpx; font-weight: 800; color: var(--primary); }
-.name-placeholder { color: var(--profile-fg); opacity: 0.7; font-weight: 400; }
-.pstats { display: flex; align-items: center; margin: 28rpx 0; }
-.profile-titles { display: flex; justify-content: center; margin: -14rpx 0 18rpx; }
-.pstat { flex: 1; display: flex; flex-direction: column; align-items: center; }
-.pstat-num { font-size: 46rpx; font-weight: 800; color: var(--profile-fg); }
-.pstat-award { font-size: 40rpx; }
-.pstat-label { font-size: 24rpx; color: var(--profile-fg); margin-top: 6rpx; }
-.pstat-div { width: 6rpx; height: 60rpx; background: var(--divider-strong); border-radius: 3rpx; }
-.pstats-longdiv { height: 6rpx; background: var(--divider-strong); border-radius: 3rpx; margin: 0 0 88rpx; }
-
-/* ─────── 用户卡 emoji 按钮（游戏说明） ─────── */
-.user-info-btn {
-  margin-left: auto; flex-shrink: 0;
-  width: 64rpx; height: 64rpx; border-radius: 16rpx;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 34rpx; font-weight: 700; color: var(--text-title);
-  background: var(--btn-icon-bg);
-  transition: transform 0.12s ease;
-}
-.profile-card .user-info-btn { position: absolute; margin: 0; top: 18rpx; right: 22rpx; z-index: 3; }
-.user-info-hover { transform: scale(0.9); opacity: 0.8; }
-
-.login-btn { width: 100%; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: var(--on-primary); border-radius: 16rpx; font-size: 32rpx; font-weight: 600; padding: 24rpx; box-shadow: var(--shadow-primary); }
+.profile-rank-row { display: flex; align-items: center; justify-content: space-between; padding: 4rpx 8rpx 12rpx; }
+.profile-rank-label { font-size: 28rpx; font-weight: 600; color: var(--text-muted); }
+.profile-rank { font-size: 42rpx; font-weight: 800; color: var(--primary); }
+.podium-title { font-size: 26rpx; color: var(--text-muted); text-align: center; margin: 8rpx 0 16rpx; }
 
 .current-room-card { background: var(--gold-bg); border-radius: 28rpx; padding: 40rpx 36rpx; margin-bottom: 20rpx; border-left: 8rpx solid var(--gold); flex-shrink: 0; }
 .current-room-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16rpx; }
@@ -165,7 +66,6 @@
 .current-room-tag-host { background: var(--label-orange-bg); color: var(--label-orange); }
 .current-room-btns { display: flex; gap: 20rpx; }
 .room-btn { font-size: 30rpx !important; padding: 20rpx 16rpx !important; }
-
 
 /* ─────── 召开/加入会议（合并按钮·对角全切） ─────── */
 .meeting-btn {
@@ -196,95 +96,38 @@
 .meeting-icon { width: 56rpx; height: 56rpx; flex-shrink: 0; }
 .meeting-label { font-size: 34rpx; font-weight: 800; color: var(--on-primary); white-space: nowrap; text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.35); }
 
-/* ─────── 功能卡（2×2 宫格） ─────── */
-.func-grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20rpx; margin-bottom: 20rpx; }
-.func-item {
-  width: 48%; box-sizing: border-box; min-height: 156rpx;
-  border-radius: 20rpx; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 18rpx;
-  padding: 0 22rpx; position: relative; overflow: hidden; color: var(--on-primary);
-}
-.func-hover { transform: scale(0.96); opacity: 0.92; }
-.func-disabled { opacity: 0.45; pointer-events: none; }
-.func-icon { width: 48rpx; height: 48rpx; }
-.func-emoji { font-size: 48rpx; }
-.func-icon-box { width: 72rpx; height: 72rpx; border-radius: 16rpx; background: rgba(255, 255, 255, 0.16); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.18); }
-.func-label { font-size: 30rpx; font-weight: 800; }
-.func-switch { transform: scale(0.9); }
-
-/* 右上角「彩蛋」标签（与旧版同款：彩虹流光 + 抖动） */
-.func-badge {
-  position: absolute; top: 12rpx; right: 14rpx; z-index: 3;
-  font-size: 32rpx; font-weight: 800; letter-spacing: 2rpx;
-  padding: 6rpx 20rpx; border-radius: 12rpx; color: var(--on-primary);
-  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.25);
-  text-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.4);
-  background: linear-gradient(120deg, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);
-  background-size: 300% 300%;
-  animation: badge-shake 1.4s ease-in-out infinite, rainbow-flow 6s linear infinite;
-}
-@keyframes badge-shake {
-  0%, 100% { transform: rotate(-8deg) translate(0, 0); }
-  12% { transform: rotate(-5deg) translate(-2rpx, 1rpx); }
-  24% { transform: rotate(-10deg) translate(2rpx, -2rpx); }
-  36% { transform: rotate(-4deg) translate(-1rpx, 2rpx); }
-  48% { transform: rotate(-9deg) translate(3rpx, -1rpx); }
-  60% { transform: rotate(-6deg) translate(-2rpx, 1rpx); }
-  72% { transform: rotate(-11deg) translate(1rpx, -2rpx); }
-  84% { transform: rotate(-5deg) translate(-3rpx, 1rpx); }
-}
-
-/* 第一行：彩蛋风（流动彩虹描边加粗 + 主题卡面） */
-.func-egg {
-  background: linear-gradient(120deg, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);
-  background-size: 400% 400%;
-  animation: rainbow-flow 6s linear infinite;
-  box-shadow: 0 8rpx 24rpx var(--egg-glow);
-}
-.func-egg::before {
-  content: ''; position: absolute; top: 7rpx; left: 7rpx; right: 7rpx; bottom: 7rpx;
-  border-radius: 15rpx; background: var(--func-face);
-}
-.func-egg .func-icon-box, .func-egg .func-icon, .func-egg .func-emoji, .func-egg .func-label { position: relative; z-index: 1; }
-@keyframes rainbow-flow { 0% { background-position: 0% 50%; } 100% { background-position: 400% 50%; } }
-
-/* 第二行：玻璃色系（更强玻璃质感：多层渐变 + 顶部高光 + 对角光泽 + 内描边） */
-.func-glass {
-  background: var(--func-face);
-  border: 2rpx solid rgba(255, 255, 255, 0.30);
-  box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.32), inset 0 0 26rpx rgba(255, 255, 255, 0.10), 0 4rpx 14rpx rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(18rpx);
-  -webkit-backdrop-filter: blur(18rpx);
-}
-.func-glass::after {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, transparent 44%, transparent 58%, rgba(255, 255, 255, 0.10) 100%);
-}
-.func-glass .func-icon-box, .func-glass .func-icon, .func-glass .func-emoji, .func-glass .func-label, .func-glass .func-switch { position: relative; z-index: 1; }
-
-.info-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
-.info-item { font-size: 26rpx; color: var(--text-muted); line-height: 1.8; }
 .footer { text-align: center; padding: 16rpx 0; color: var(--text-muted); font-size: 22rpx; flex-shrink: 0; }
 
-/* 历史对局（外层卡片；内容由 history-card 组件渲染） */
-.history-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
-
-/* ─────── 游戏说明：全屏覆盖页 ─────── */
-.rules-page { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1100; background: var(--bg-card); display: flex; flex-direction: column; }
-.rules-page-header { height: 100rpx; display: flex; align-items: center; justify-content: space-between; padding: 0 32rpx; border-bottom: 1rpx solid var(--card-border); flex-shrink: 0; }
-.rules-page-title { font-size: 34rpx; font-weight: 800; color: var(--text-title); }
-.rules-page-close { width: 56rpx; height: 56rpx; border-radius: 12rpx; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 32rpx; color: var(--text-muted); }
-.rules-page-body { flex: 1; padding: 32rpx; }
-.rules-page-body .info-item { font-size: 28rpx; color: var(--text-body); line-height: 1.9; margin-bottom: 12rpx; }
-
-/* 奇奇怪怪的设置们：中部弹窗（点遮罩关闭） */
-.weird-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1150; background: var(--mask-light); display: flex; align-items: center; justify-content: center; }
-.weird-modal { width: 560rpx; box-sizing: border-box; background: var(--bg-card); border-radius: 24rpx; padding: 36rpx 32rpx 24rpx; box-shadow: var(--shadow-lg); }
-.weird-title { font-size: 32rpx; font-weight: 800; color: var(--text-title); text-align: center; margin-bottom: 20rpx; }
-.weird-row { display: flex; align-items: center; gap: 16rpx; padding: 18rpx 4rpx; }
-.weird-row + .weird-row { border-top: 1rpx solid var(--divider); }
+/* ─────── 首登资料完善弹窗 ─────── */
+.setup-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1300;
+  background: var(--mask-light); display: flex; align-items: center; justify-content: center;
+}
+.setup-modal {
+  width: 600rpx; box-sizing: border-box; background: var(--bg-card);
+  border-radius: 28rpx; padding: 40rpx 36rpx 28rpx; box-shadow: var(--shadow-lg);
+}
+.setup-title { font-size: 34rpx; font-weight: 800; color: var(--text-title); text-align: center; margin-bottom: 28rpx; }
+.setup-row { display: flex; align-items: center; gap: 24rpx; padding: 18rpx 0; }
+.setup-label { width: 90rpx; flex-shrink: 0; font-size: 28rpx; color: var(--text-muted); }
+.setup-avatar-btn {
+  width: 120rpx !important; height: 120rpx !important; padding: 0 !important; margin: 0 !important;
+  border: none; background: transparent; border-radius: 50%; overflow: hidden; line-height: 1;
+}
+.setup-avatar-btn::after { border: none; display: none; }
+.setup-avatar { width: 120rpx; height: 120rpx; border-radius: 50%; display: block; background: var(--gray-100); }
+.setup-input {
+  flex: 1; min-width: 0; font-size: 30rpx; color: var(--text-title);
+  background: var(--bg-page); border-radius: 14rpx; padding: 16rpx 20rpx; box-sizing: border-box;
+}
+.setup-ops { display: flex; gap: 16rpx; margin-top: 28rpx; }
+.setup-btn { flex: 1; border-radius: 999rpx; font-size: 28rpx; font-weight: 700; }
+.setup-btn-plain { background: var(--bg-page); color: var(--text-muted); }
+.setup-btn-primary { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: var(--on-primary); }
+.setup-btn[disabled] { opacity: 0.45; color: var(--on-primary); background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); }
 
 /* ─────── 胜率冠军（领奖台） ─────── */
-.podium { display: flex; align-items: flex-end; justify-content: center; gap: 16rpx; padding-top: 0; margin-bottom: 28rpx; }
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 16rpx; padding-top: 0; margin-bottom: 8rpx; }
 .podium-item { flex: 1; max-width: 190rpx; display: flex; flex-direction: column; align-items: center; }
 .podium-avatar-wrap { position: relative; margin-bottom: 10rpx; }
 .podium-avatar { width: 112rpx; height: 112rpx; border-radius: 50%; border: 4rpx solid var(--gray-300); background: var(--gray-100); }
@@ -309,9 +152,6 @@
 
 /* ─────────────────────────────────────────────────────────
  * 有意保留的硬编码（豁免，不做 token 化）：
- *   - 品牌霓虹/故障彩虹、彩蛋卡彩虹、召开会议按钮对角渐变（装饰性）
- *   - 启动动画光效（白色光核、紫色辉光）
- *   - 固定深色全屏底组件（看身份/结果/发言顺序/启动）内部配色
- *   - 全屏结果动画的径向渐变（刺杀/任务成功失败）
+ *   - 召开会议按钮对角渐变（装饰性）
  * 这些颜色属于一次性装饰/固定深色组件，不参与主题与语义体系。
  * ───────────────────────────────────────────────────────── */

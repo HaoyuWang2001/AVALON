@@ -776,6 +776,8 @@ function createRouter() {
         return res.status(400).json({ success: false, message: '缺少必要参数' });
       }
       const result = await GameModel.submitAwardVote(gameId, openId, award, action, targetOpenId);
+      // 广播刷新：结束页玩家标签的本局 MVP/SVP 票数实时更新
+      emitGameForGame(gameId);
       res.json({ success: true, awards: result.awards });
     } catch (error) {
       console.error('MVP/SVP选择API错误:', error.message);

@@ -595,13 +595,18 @@
     <view class="award-mask" bindtap="closeAwardModal"></view>
     <view class="award-panel">
       <view class="award-head">
-        <text class="award-title">{{awardModal.step === 'mvp' ? '🏅 本局 MVP' : '💠 本局 SVP'}}</text>
-        <text class="award-sub">{{awardModal.step === 'mvp' ? '胜利方最有价值玩家' : '失败方最有价值玩家'}}</text>
+        <text class="award-title">{{awardModal.step === 'mvp' ? '🏅 MVP' : '💠 SVP'}}</text>
         <text class="award-close" bindtap="closeAwardModal">✕</text>
       </view>
       <view class="award-status">
-        <text class="award-chip {{myAwards.mvp.state === 'voted' ? 'chip-voted' : myAwards.mvp.state === 'declined' ? 'chip-declined' : ''}}">MVP {{myAwards.mvp.state === 'voted' ? '已选' : myAwards.mvp.state === 'declined' ? '已放弃' : '待选'}}</text>
-        <text class="award-chip {{myAwards.svp.state === 'voted' ? 'chip-voted' : myAwards.svp.state === 'declined' ? 'chip-declined' : ''}}">SVP {{myAwards.svp.state === 'voted' ? '已选' : myAwards.svp.state === 'declined' ? '已放弃' : '待选'}}</text>
+        <view class="award-chip {{awardChips.mvp.state === 'voted' ? 'chip-voted' : awardChips.mvp.state === 'declined' ? 'chip-declined' : ''}}">
+          <image wx:if="{{awardChips.mvp.state === 'voted' && awardChips.mvp.avatarUrl}}" class="award-chip-avatar" src="{{awardChips.mvp.avatarUrl}}"/>
+          <text>MVP{{awardChips.mvp.state === 'voted' ? '' : awardChips.mvp.state === 'declined' ? ' 已放弃' : ' 待选'}}</text>
+        </view>
+        <view class="award-chip {{awardChips.svp.state === 'voted' ? 'chip-voted' : awardChips.svp.state === 'declined' ? 'chip-declined' : ''}}">
+          <image wx:if="{{awardChips.svp.state === 'voted' && awardChips.svp.avatarUrl}}" class="award-chip-avatar" src="{{awardChips.svp.avatarUrl}}"/>
+          <text>SVP{{awardChips.svp.state === 'voted' ? '' : awardChips.svp.state === 'declined' ? ' 已放弃' : ' 待选'}}</text>
+        </view>
       </view>
       <scroll-view scroll-y class="award-list" show-scrollbar="{{false}}">
         <view class="award-grid">
@@ -620,9 +625,7 @@
         <view wx:if="{{awardCandidates.length === 0}}" class="award-empty">没有可选玩家</view>
       </scroll-view>
       <view class="award-ops">
-        <button class="award-btn award-btn-primary" size="mini" disabled="{{!awardModal.sel}}" bindtap="confirmAwardVote">确认选择</button>
-        <button class="award-btn award-btn-plain" size="mini" bindtap="skipAward">暂时跳过</button>
-        <button class="award-btn award-btn-danger" size="mini" bindtap="declineAward">NoNoNo</button>
+        <button class="award-btn {{awardModal.sel ? 'award-btn-primary' : 'award-btn-danger'}}" size="mini" bindtap="onAwardAction">{{awardModal.sel ? '就他了' : '都不配'}}</button>
       </view>
     </view>
   </view>

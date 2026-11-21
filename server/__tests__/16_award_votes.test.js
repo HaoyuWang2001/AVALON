@@ -118,7 +118,25 @@ describe('16 — MVP/SVP', () => {
     expect(st.player.awards.mvp.state).toBe('none');
   });
 
-  it('16-5 校验：非参与者 / 未结束对局 / 参数非法', async () => {
+  it('16-5 状态接口下发本局票数：players 带 mvpVotes/svpVotes（仅 voted 计数）', async () => {
+    // 此前投票：u1 投 MVP→u3、SVP→HOST；u2 decline MVP（不计票）
+    const st = await getGameState(gameId, U.u2);
+    const byId = {};
+    st.players.forEach(p => { byId[p.openId] = p; });
+    expect(byId[U.u3].mvpVotes).toBe(1);
+    expect(byId[U.u4].mvpVotes).toBe(0);
+    expect(byId[U.u2].mvpVotes).toBe(0);
+    expect(byId[HOST].svpVotes).toBe(1);
+    expect(byId[U.u1].svpVotes).toBe(0);
+
+    // 进行中对局不下发票数字段
+    const active = await createRoomAndStartGame(5, buildMinimalRoomConfig());
+    const st2 = await getGameState(active.gameId, active.players[0].openId);
+    expect(st2.players[0].mvpVotes).toBeUndefined();
+    expect(st2.players[0].svpVotes).toBeUndefined();
+  });
+
+  it('16-6 校验：非参与者 / 未结束对局 / 参数非法', async () => {
     let r = await awardVote(gameId, `ghost_${TS}`, 'mvp', 'vote', U.u3);
     expect(r.success).toBe(false);
     expect(r.message).toContain('只有本局玩家');
@@ -133,7 +151,7 @@ describe('16 — MVP/SVP', () => {
     expect(r.message).toContain('尚未结束');
   });
 
-  it('16-6 聚合：个人 stats 返回 mvpCount/svpCount；排行榜字段透传', async () => {
+  it('16-7 聚合：个人 stats 返回 mvpCount/svpCount；排行榜字段透传', async () => {
     const s = await apiGet(`/api/games/stats?subjectOpenId=${U.u3}&viewerOpenId=${U.u3}`);
     expect(s.body.stats.mvpCount).toBeGreaterThanOrEqual(1);
     const s2 = await apiGet(`/api/games/stats?subjectOpenId=${HOST}&viewerOpenId=${HOST}`);
@@ -147,7 +165,7 @@ describe('16 — MVP/SVP', () => {
     }
   });
 
-  it('16-7 删除线下记录连带清理投票，计数回落', async () => {
+  it('16-8 删除线下记录连带清理投票，计数回落', async () => {
     const gone = await deleteOfflineRecord(recordId, HOST);
     expect(gone.success).toBe(true);
     const s = await apiGet(`/api/games/stats?subjectOpenId=${U.u3}&viewerOpenId=${U.u3}`);
