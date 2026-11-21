@@ -7,7 +7,7 @@
       <text class="brand-title">练秋湖的瓦协会</text>
     </view>
     <view class="brand-avatar" hover-class="brand-avatar-hover" hover-stay-time="60" bindtap="goToMe">
-      <image class="brand-avatar-img" src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}"/>
+      <image class="brand-avatar-img" src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}" catchtap="goToMe"/>
     </view>
   </view>
 

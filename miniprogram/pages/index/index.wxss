@@ -30,6 +30,7 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .brand-avatar {
+  position: relative; z-index: 5;
   width: 84rpx; height: 84rpx; border-radius: 50%; flex-shrink: 0;
   overflow: hidden; border: 3rpx solid var(--gold); background: var(--bg-page);
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.18);

@@ -449,7 +449,21 @@ Page({
   },
 
   goToMe() {
-    wx.navigateTo({ url: '/pages/me/me' });
+    if (this._goingToMe) return;
+    this._goingToMe = true;
+    wx.navigateTo({
+      url: '/pages/me/me',
+      complete: () => { setTimeout(() => { this._goingToMe = false; }, 300); },
+      fail: (err) => {
+        this._goingToMe = false;
+        console.error('跳转个人页失败:', err);
+        wx.showModal({
+          title: '打开失败',
+          content: (err && err.errMsg) || '未知错误',
+          showCancel: false
+        });
+      }
+    });
   },
 
   closeProfileSetup() {
