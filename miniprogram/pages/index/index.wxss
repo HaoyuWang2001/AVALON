@@ -67,7 +67,7 @@
 .current-room-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16rpx; }
 .current-room-id { min-width: 0; font-size: 56rpx; font-weight: 800; color: var(--gold); letter-spacing: 4rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .current-room-right { display: flex; align-items: center; gap: 12rpx; flex-shrink: 0; }
-.current-room-count { flex-shrink: 0; font-size: 46rpx; font-weight: 400; color: var(--text-title); }
+.current-room-count { flex-shrink: 0; font-size: 40rpx; font-weight: 500; font-style: italic; font-family: Baskerville, Didot, 'Times New Roman', 'Songti SC', serif; color: var(--text-title); }
 .current-room-tag { font-size: 24rpx; padding: 4rpx 16rpx; border-radius: 999rpx; background: transparent; border: 1rpx solid currentColor; }
 .current-room-tag-ingame { color: var(--label-red); }
 .current-room-tag-wait { color: var(--label-blue); }
@@ -169,13 +169,12 @@
 .func-label { font-size: 30rpx; font-weight: 800; }
 .func-switch { transform: scale(0.9); }
 .brand-menu-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1300; background: var(--mask-light); display: flex; align-items: center; justify-content: center; }
-.brand-menu { width: 580rpx; box-sizing: border-box; background: var(--bg-card); border-radius: 24rpx; padding: 16rpx; box-shadow: var(--shadow-lg); }
-.brand-menu-row { display: flex; align-items: center; gap: 18rpx; padding: 20rpx 18rpx; border-radius: 16rpx; }
+.brand-menu { width: 520rpx; box-sizing: border-box; background: var(--bg-card); border-radius: 24rpx; padding: 16rpx; box-shadow: var(--shadow-lg); }
+.brand-menu-row { width: 440rpx; margin-left: auto; margin-right: auto; box-sizing: border-box; display: flex; align-items: center; gap: 18rpx; padding: 20rpx 18rpx; border-radius: 16rpx; }
 .brand-menu-row + .brand-menu-row { margin-top: 4rpx; }
 .brand-menu-row-hover { background: var(--bg-page); }
 .brand-menu-label { flex: 1; min-width: 0; font-size: 30rpx; font-weight: 700; color: var(--text-title); }
 .brand-menu-emoji { font-size: 40rpx; line-height: 1; }
-.brand-menu-arrow { font-size: 32rpx; color: var(--text-muted); }
 
 /* 奇奇怪怪的设置们：中部弹窗（点遮罩关闭） */
 .weird-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1150; background: var(--mask-light); display: flex; align-items: center; justify-content: center; }
@@ -201,19 +200,14 @@
 .room-list-empty { text-align: center; color: var(--text-muted); font-size: 28rpx; padding: 48rpx 0; }
 .room-card {
   background: var(--bg-card); border-radius: 24rpx; padding: 24rpx;
-  margin-bottom: 16rpx; box-shadow: var(--shadow-sm);
+  margin: 0 12rpx 16rpx; box-shadow: var(--shadow-sm);
   border: 3rpx solid transparent;
 }
 .room-card-is-mine { border-color: var(--primary); }
 .room-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12rpx; }
 .room-card-id-wrap { display: flex; align-items: center; gap: 12rpx; min-width: 0; }
 .room-card-id { font-size: 52rpx; font-weight: 800; color: var(--gold); letter-spacing: 4rpx; }
-.room-card-mine-tag {
-  flex-shrink: 0; font-size: 20rpx; font-weight: 700;
-  color: var(--primary); background: var(--primary-bg);
-  border-radius: 8rpx; padding: 4rpx 12rpx;
-}
-.room-card-count { flex-shrink: 0; font-size: 46rpx; font-weight: 400; color: var(--text-title); }
+.room-card-count { flex-shrink: 0; font-size: 40rpx; font-weight: 500; font-style: italic; font-family: Baskerville, Didot, 'Times New Roman', 'Songti SC', serif; color: var(--text-title); }
 .room-tags-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10rpx; margin-bottom: 14rpx; }
 .room-tag {
   font-size: 24rpx; color: var(--text-muted);

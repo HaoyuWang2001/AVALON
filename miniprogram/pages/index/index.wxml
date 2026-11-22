@@ -101,7 +101,6 @@
       <view class="room-card-top">
         <view class="room-card-id-wrap">
           <text class="room-card-id">{{item.roomId}}</text>
-          <text wx:if="{{item.isMine}}" class="room-card-mine-tag">我的房间</text>
         </view>
         <text class="room-card-count">{{item.playerCount}}/{{item.maxPlayers}}</text>
       </view>
@@ -141,27 +140,22 @@
       <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="goToGlobalStats">
         <view class="func-icon-box"><image src="/images/medal.png" class="func-icon" mode="aspectFit"/></view>
         <text class="brand-menu-label">全局统计</text>
-        <text class="brand-menu-arrow">›</text>
       </view>
       <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="goToFriends">
         <view class="func-icon-box"><image src="/images/fossa.png" class="func-icon" mode="aspectFit"/></view>
         <text class="brand-menu-label">牛马朋友</text>
-        <text class="brand-menu-arrow">›</text>
       </view>
       <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="onChangeTheme">
         <view class="func-icon-box"><image src="/images/themes.png" class="func-icon" mode="aspectFit"/></view>
         <text class="brand-menu-label">更改主题</text>
-        <text class="brand-menu-arrow">›</text>
       </view>
       <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="showWeirdSettings">
         <view class="func-icon-box"><text class="brand-menu-emoji">⚙️</text></view>
         <text class="brand-menu-label">奇奇怪怪的设置们</text>
-        <text class="brand-menu-arrow">›</text>
       </view>
       <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="goToRecords">
         <view class="func-icon-box"><image src="/images/stopwatch.png" class="func-icon" mode="aspectFit"/></view>
         <text class="brand-menu-label">线下记录</text>
-        <text class="brand-menu-arrow">›</text>
       </view>
     </view>
   </view>
