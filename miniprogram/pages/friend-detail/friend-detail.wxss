@@ -5,9 +5,9 @@
 /* 基本信息 + 数据（合并卡） */
 .head-card { display: flex; flex-direction: column; align-items: stretch; padding: 28rpx 24rpx; }
 .head-top { display: flex; align-items: center; }
-.hd-divider { height: 1rpx; background: var(--divider); margin: 24rpx 4rpx 0; }
-.hd-stats-row { display: flex; align-items: flex-start; padding: 22rpx 0 0; }
-.hd-stats-row-3 { padding-top: 6rpx; padding-bottom: 4rpx; }
+.hd-divider { width: 60%; height: 1rpx; background: var(--divider); margin: 28rpx auto 0; }
+.hd-stats-row { display: flex; align-items: flex-start; padding: 30rpx 0 0; }
+.hd-stats-row-3 { padding-top: 18rpx; padding-bottom: 10rpx; }
 .hd-stat { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .hd-stat-num { font-size: 34rpx; font-weight: 800; color: var(--text-title); }
 .hd-stat-label { font-size: 22rpx; color: var(--text-muted); margin-top: 6rpx; }
@@ -16,7 +16,8 @@
 .hd-score { color: var(--primary); }
 .hd-good { color: var(--good); }
 .hd-evil { color: var(--evil); }
-.hd-stats-line { height: 1rpx; background: var(--divider); margin: 20rpx 4rpx 0; }
+.hd-stats-line { width: 60%; height: 1rpx; background: var(--divider); margin: 28rpx auto 0; }
+.hd-stat-div { width: 2rpx; height: 56rpx; background: var(--divider); align-self: center; flex-shrink: 0; }
 .hd-avatar { width: 128rpx; height: 128rpx; border-radius: 50%; flex-shrink: 0; background: var(--gray-100); }
 .hd-info { margin-left: 24rpx; min-width: 0; flex: 1; }
 .hd-name-row { display: flex; align-items: baseline; min-width: 0; }

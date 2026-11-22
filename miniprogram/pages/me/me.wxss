@@ -13,8 +13,8 @@
 
 /* ─────── 基本信息 + 数据（合并卡） ─────── */
 .me-card { padding: 0; overflow: hidden; flex-shrink: 0; }
-.me-head { display: flex; align-items: center; gap: 28rpx; padding: 32rpx 28rpx 24rpx; }
-.me-divider { height: 1rpx; background: var(--divider); margin: 0 28rpx; }
+.me-head { display: flex; align-items: center; gap: 28rpx; padding: 32rpx 28rpx; }
+.me-divider { width: 60%; height: 1rpx; background: var(--divider); margin: 0 auto; }
 .me-avatar-btn {
   width: 132rpx !important; height: 132rpx !important; padding: 0 !important; margin: 0 !important;
   border: none; background: transparent; border-radius: 50%; overflow: hidden; line-height: 1; flex-shrink: 0;
@@ -33,8 +33,8 @@
 .me-edit-hint { font-size: 22rpx; color: var(--text-muted); opacity: 0.8; }
 
 /* ─────── 数据行 ─────── */
-.me-stats-row { display: flex; align-items: flex-start; padding: 24rpx 12rpx; }
-.me-stats-row-3 { padding-top: 8rpx; padding-bottom: 28rpx; }
+.me-stats-row { display: flex; align-items: flex-start; padding: 32rpx 12rpx; }
+.me-stats-row-3 { padding-top: 20rpx; padding-bottom: 40rpx; }
 .me-stat { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .me-stat-num { font-size: 36rpx; font-weight: 800; color: var(--text-title); }
 .me-score { color: var(--primary); }
@@ -48,7 +48,8 @@
 .me-good { color: var(--good); }
 .me-evil { color: var(--evil); }
 .me-stat-label { font-size: 22rpx; color: var(--text-muted); margin-top: 6rpx; }
-.me-stats-line { height: 1rpx; background: var(--divider); margin: 0 28rpx; }
+.me-stats-line { width: 60%; height: 1rpx; background: var(--divider); margin: 0 auto; }
+.me-stat-div { width: 2rpx; height: 56rpx; background: var(--divider); align-self: center; flex-shrink: 0; }
 
 /* 历史对局（外层卡片；内容由 history-card 组件渲染） */
 .history-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
