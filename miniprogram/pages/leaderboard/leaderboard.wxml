@@ -15,7 +15,7 @@
       <view wx:for="{{players}}" wx:key="openId" class="lb-row {{item.isSelf ? 'lb-self' : ''}}"
         bindtap="onPlayerTap" data-id="{{item.openId}}" data-name="{{item.nickName}}"
         data-avatar="{{item.avatarUrl}}" data-friend="{{item.isFriend}}">
-        <text class="lb-rank">{{item.rank}}</text>
+        <text class="lb-rank {{item.rank <= 3 ? 'r' + item.rank : ''}}">{{item.rank}}</text>
         <image class="lb-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"></image>
         <view class="lb-main">
           <view class="lb-name-row">

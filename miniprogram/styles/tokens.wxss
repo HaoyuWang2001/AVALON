@@ -167,6 +167,9 @@ page {
   --medal-silver-light: #C9D1D8;
   --medal-silver-deep: #8E99A4;
   --medal-silver-text: #CDD5DD;
+  --rank-ring-1: #B8860B;
+  --rank-ring-2: #64748B;
+  --rank-ring-3: #B45309;
   --medal-bronze: #CD7F32;
   --medal-bronze-deep: #8B4513;
   --medal-bronze-light: #E8A56A;
