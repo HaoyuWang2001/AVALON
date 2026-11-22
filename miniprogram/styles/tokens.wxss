@@ -170,6 +170,9 @@ page {
   --rank-ring-1: #B8860B;
   --rank-ring-2: #64748B;
   --rank-ring-3: #B45309;
+  --rank-glow-1: rgba(184,134,11,0.35);
+  --rank-glow-2: rgba(100,116,139,0.30);
+  --rank-glow-3: rgba(180,83,9,0.32);
   --medal-bronze: #CD7F32;
   --medal-bronze-deep: #8B4513;
   --medal-bronze-light: #E8A56A;
