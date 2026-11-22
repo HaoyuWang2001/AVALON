@@ -70,6 +70,18 @@ function createRouter() {
   });
   
   // 获取房间信息
+  // 主页公开房间列表（等待中 + 游戏中）——须在 /:roomId 之前注册
+  router.get('/public-list', async (req, res) => {
+    try {
+      const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 100);
+      const rooms = await RoomModel.getPublicRoomList(limit);
+      res.json({ success: true, rooms });
+    } catch (error) {
+      console.error('公开房间列表API错误:', error);
+      res.status(500).json({ success: false, message: error.message || '获取房间列表失败' });
+    }
+  });
+
   router.get('/:roomId', async (req, res) => {
     try {
       const { roomId } = req.params;

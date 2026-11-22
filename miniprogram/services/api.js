@@ -154,6 +154,10 @@ class ApiService {
     });
   }
 
+  async getPublicRooms() {
+    return this.request('/rooms/public-list');
+  }
+
   async getCurrentRoom(openId) {
     return this.request(`/players/${openId}/currentRoom`);
   }

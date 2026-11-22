@@ -2,6 +2,7 @@
 const api = require('../../services/api.js');
 const { getThemeClass, getThemeBg, pickTheme, applyTheme } = require('../../utils/theme.js');
 const { DEFAULT_AVATAR } = require('../../utils/constants.js');
+const { buildRoomTags } = require('../../utils/roomTags.js');
 
 const DEFAULT_SEAT_NUMBER = 0;
 
@@ -29,6 +30,14 @@ Page({
     setupAvatarUrl: '',
     setupNickName: '',
 
+    // 公开房间列表
+    roomTab: 'waiting',
+    publicRooms: [],
+    visibleRooms: [],
+    roomCounts: { waiting: 0, playing: 0 },
+    roomListLoading: false,
+    myRoomInfo: null,
+
     meetingPressStyle: '',
     meetingFillClass: '',
     meetingFillMs: 420
@@ -55,6 +64,7 @@ Page({
     const shareRoomId = options && options.roomId;
     const shareGameId = options && options.gameId;
 
+    this.loadRoomList();
     if (app.globalData.openId) {
       this.loadUserProfile();
       this.loadHomeData();
@@ -244,6 +254,7 @@ Page({
       this.checkCurrentRoom();
       this.loadHomeData();
     }
+    this.loadRoomList();
     // 返回本页时重新应用主题背景（离开时已复位，保证其他亮色页面不串色）
     wx.setBackgroundColor({ backgroundColor: getThemeBg(this.data.themeClass) });
     this._measureMeeting();
@@ -317,8 +328,112 @@ Page({
     }
   },
 
+  // ─── 公开房间列表（等待中 / 游戏中） ───
+  loadRoomList() {
+    this.setData({ roomListLoading: true });
+    api.getPublicRooms().then(res => {
+      this._allRooms = (res && res.rooms) || [];
+      this.setData({ roomListLoading: false });
+      this._applyRoomData();
+    }).catch(() => {
+      this._allRooms = [];
+      this.setData({ roomListLoading: false });
+      this._applyRoomData();
+    });
+  },
+
+  _applyRoomData() {
+    const all = this._allRooms || [];
+    const myId = this.data.currentRoom ? this.data.currentRoom.roomId : '';
+    const expanded = this._expandedTags || {};
+    const mapped = all.map(r => {
+      const showAllTags = !!expanded[r.roomId];
+      return {
+        ...r,
+        isMine: r.roomId === myId,
+        showAllTags,
+        displayTags: showAllTags ? (r.tags || []) : (r.tags || []).slice(0, 3)
+      };
+    });
+    // 我的房间置顶（其余保持服务端 updated_at 倒序）
+    mapped.sort((a, b) => (b.isMine ? 1 : 0) - (a.isMine ? 1 : 0));
+    const waiting = mapped.filter(r => !r.gameStarted).length;
+    const playing = mapped.length - waiting;
+    this.setData({
+      publicRooms: mapped,
+      roomCounts: { waiting, playing }
+    });
+    this._setVisibleRooms();
+  },
+
+  _setVisibleRooms() {
+    const wantPlaying = this.data.roomTab === 'playing';
+    const list = (this.data.publicRooms || []).filter(r => !!r.gameStarted === wantPlaying);
+    this.setData({ visibleRooms: list });
+  },
+
+  switchRoomTab(e) {
+    const tab = e.currentTarget.dataset.tab === 'playing' ? 'playing' : 'waiting';
+    if (tab === this.data.roomTab) return;
+    this.setData({ roomTab: tab });
+    this._setVisibleRooms();
+  },
+
+  toggleRoomTags(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!id) return;
+    if (!this._expandedTags) this._expandedTags = {};
+    this._expandedTags[id] = !this._expandedTags[id];
+    this._applyRoomData();
+  },
+
+  // 点击公开房间卡：等待中→加入等待区进房间；游戏中→观战进对局
+  onPublicRoomTap(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!id) return;
+    if (this.data.currentRoom && this.data.currentRoom.roomId === id) {
+      this.backToRoom();
+      return;
+    }
+    const room = (this._allRooms || []).find(r => r.roomId === id);
+    if (room && room.gameStarted) {
+      if (room.activeGameId) this.doShareJoinFromGame(id, room.activeGameId);
+      else this.doShareJoinFromRoom(id);
+      return;
+    }
+    this.doShareJoinFromRoom(id);
+  },
+
+  // 我的房间信息（人数/标签/头像行）
+  _loadMyRoomInfo(roomId) {
+    if (!roomId) return;
+    api.getRoom(roomId).then(res => {
+      const room = res && res.room;
+      if (!room) return;
+      const cfg = room.roomConfig || {};
+      const good = (cfg.roles && cfg.roles.good) || [];
+      const evil = (cfg.roles && cfg.roles.evil) || [];
+      const players = (room.players || [])
+        .filter(p => p.seatNumber >= 1)
+        .sort((a, b) => a.seatNumber - b.seatNumber)
+        .slice(0, 12)
+        .map(p => ({ openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl }));
+      this.setData({
+        myRoomInfo: {
+          roomId,
+          gameStarted: !!room.gameStarted,
+          maxPlayers: good.length + evil.length,
+          playerCount: (room.players || []).filter(p => p.seatNumber >= 1).length,
+          tags: buildRoomTags(cfg),
+          players
+        }
+      });
+    }).catch(() => {});
+  },
+
   onPullDownRefresh() {
     this.checkCurrentRoom();
+    this.loadRoomList();
     if (getApp().globalData.openId) {
       this.loadUserProfile();
       this.loadHomeData();
@@ -336,6 +451,8 @@ Page({
           currentSeat: res.room.seatNumber !== undefined ? res.room.seatNumber : null,
           isCurrentRoomHost: !!(res.room.ownerId && res.room.ownerId === openId)
         });
+        this._loadMyRoomInfo(res.room.roomId);
+        this._applyRoomData();
         // 状态：游戏中(红) / 房间中(蓝)
         if (res.room.gameStarted) {
           this.setData({ userStatusText: '游戏中', userStatusClass: 'status-ingame' });
@@ -343,7 +460,8 @@ Page({
           this.setData({ userStatusText: '房间中', userStatusClass: 'status-inroom' });
         }
       } else if (res && res.success) {
-        this.setData({ currentRoom: null, isCurrentRoomHost: false, userStatusText: '在线', userStatusClass: 'status-online' });
+        this.setData({ currentRoom: null, isCurrentRoomHost: false, userStatusText: '在线', userStatusClass: 'status-online', myRoomInfo: null });
+        this._applyRoomData();
       }
     }).catch(() => {});
   },

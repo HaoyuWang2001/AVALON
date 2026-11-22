@@ -40,21 +40,24 @@
     </block>
   </view>
 
-  <!-- 当前房间 -->
-  <view class="card current-room-card" wx:if="{{currentRoom}}">
+  <!-- 当前房间（整卡点击=回到房间；退出/解散在房间内操作） -->
+  <view class="card current-room-card" wx:if="{{currentRoom}}" bindtap="backToRoom">
     <view class="current-room-top">
-      <view class="current-room-label">您当前处于房间</view>
+      <view class="current-room-label">我的房间 · {{currentRoom.roomId}}</view>
       <view class="current-room-tags">
         <text wx:if="{{currentRoom.gameStarted}}" class="current-room-tag current-room-tag-ingame">游戏中</text>
         <text wx:else class="current-room-tag current-room-tag-wait">准备中</text>
         <text wx:if="{{isCurrentRoomHost}}" class="current-room-tag current-room-tag-host">房主</text>
+        <text wx:if="{{myRoomInfo}}" class="current-room-tag current-room-tag-count">{{myRoomInfo.playerCount}}/{{myRoomInfo.maxPlayers}}</text>
       </view>
     </view>
-    <view class="current-room-id">{{currentRoom.roomId}}</view>
-    <view class="current-room-btns">
-      <button class="btn btn-sm btn-primary room-btn" bindtap="backToRoom">回到房间</button>
-      <button wx:if="{{isCurrentRoomHost}}" class="btn btn-sm btn-danger room-btn {{currentRoom.gameStarted ? 'btn-disabled' : ''}}" disabled="{{currentRoom.gameStarted}}" bindtap="disbandCurrentRoom">解散房间</button>
-      <button wx:else class="btn btn-sm btn-danger room-btn {{currentRoom.gameStarted && currentSeat >= 1 ? 'btn-disabled' : ''}}" disabled="{{currentRoom.gameStarted && currentSeat >= 1}}" bindtap="exitCurrentRoom">退出房间</button>
+    <view class="room-tags-row" wx:if="{{myRoomInfo && myRoomInfo.tags.length > 0}}">
+      <text wx:for="{{myRoomInfo.tags}}" wx:key="*this" class="room-tag">{{item}}</text>
+    </view>
+    <view class="room-avatars-row" wx:if="{{myRoomInfo && myRoomInfo.players.length > 0}}">
+      <block wx:for="{{myRoomInfo.players}}" wx:key="openId">
+        <image class="room-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
+      </block>
     </view>
   </view>
 
@@ -77,6 +80,39 @@
     </view>
   </view>
 
+
+  <!-- 公开房间列表：等待中 / 游戏中 -->
+  <view class="room-list-section">
+    <view class="room-tabs">
+      <view class="room-tab {{roomTab === 'waiting' ? 'room-tab-on' : ''}}" data-tab="waiting" bindtap="switchRoomTab">
+        等待中<text class="room-tab-count">{{roomCounts.waiting}}</text>
+      </view>
+      <view class="room-tab {{roomTab === 'playing' ? 'room-tab-on' : ''}}" data-tab="playing" bindtap="switchRoomTab">
+        游戏中<text class="room-tab-count">{{roomCounts.playing}}</text>
+      </view>
+    </view>
+    <view wx:if="{{visibleRooms.length === 0}}" class="room-list-empty">{{roomListLoading ? '加载中...' : '没得玩，速开！'}}</view>
+    <view wx:for="{{visibleRooms}}" wx:key="roomId"
+      class="room-card {{item.isMine ? 'room-card-is-mine' : ''}}"
+      bindtap="onPublicRoomTap" data-id="{{item.roomId}}">
+      <view class="room-card-top">
+        <view class="room-card-id-wrap">
+          <text class="room-card-id">{{item.roomId}}</text>
+          <text wx:if="{{item.isMine}}" class="room-card-mine-tag">我的房间</text>
+        </view>
+        <text class="room-card-count">{{item.playerCount}}/{{item.maxPlayers}}</text>
+      </view>
+      <view class="room-tags-row" wx:if="{{item.tags.length > 0}}" catchtap="noop">
+        <text wx:for="{{item.displayTags}}" wx:for-item="tg" wx:key="*this" class="room-tag">{{tg}}</text>
+        <text wx:if="{{item.tags.length > 3}}" class="room-tag-more" data-id="{{item.roomId}}" catchtap="toggleRoomTags">{{item.showAllTags ? '收起' : '…'}}</text>
+      </view>
+      <view class="room-avatars-row" wx:if="{{item.players.length > 0}}">
+        <block wx:for="{{item.players}}" wx:for-item="pl" wx:key="openId">
+          <image class="room-avatar" src="{{pl.avatarUrl || '/images/default-avatar.png'}}"/>
+        </block>
+      </view>
+    </view>
+  </view>
 
   <!-- 功能入口（2×3）：房间卡下方 -->
   <view class="func-grid">

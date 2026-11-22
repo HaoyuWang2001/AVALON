@@ -670,6 +670,33 @@ describe('02 — Room Management', () => {
       expect(Number(room.readyCount)).toBe(1);
     });
 
+    it('02.44a 公开房间列表：等待中（人数/标签/头像）', async () => {
+      const cfg = withConfigOverrides(buildStandardRoomConfig(5), { rules: { ladyOfTheLake: true } });
+      const result = await createRoomWithConfig(makeUserId(), 'PHost', cfg);
+      const roomId = result.roomId;
+      await joinRoom(roomId, makeUserId(), 2, 'P2');
+      const res = await apiGet('/api/rooms/public-list');
+      expect(res.status).toBe(200);
+      const room = (res.body.rooms || []).find(r => r.roomId === roomId);
+      expect(room).toBeDefined();
+      expect(room.gameStarted).toBe(false);
+      expect(room.playerCount).toBe(2);
+      expect(room.maxPlayers).toBe(5);
+      expect(room.tags).toContain('湖仙');
+      expect(room.players.length).toBe(2);
+      expect(room.players[0].seatNumber).toBe(1);
+    });
+
+    it('02.44b 公开房间列表：开局后 gameStarted + activeGameId', async () => {
+      const cfg = buildStandardRoomConfig(5);
+      const { roomId, gameId } = await createRoomAndStartGame(5, cfg);
+      const res = await apiGet('/api/rooms/public-list');
+      const room = (res.body.rooms || []).find(r => r.roomId === roomId);
+      expect(room).toBeDefined();
+      expect(room.gameStarted).toBe(true);
+      expect(room.activeGameId).toBe(gameId);
+    });
+
     it('02.45 stats 返回结构', async () => {
       await createRoom(makeUserId(), 'StatsHost');
       const res = await roomStats();

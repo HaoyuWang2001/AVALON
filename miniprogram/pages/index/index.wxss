@@ -232,3 +232,51 @@
 .weird-row { display: flex; align-items: center; gap: 16rpx; padding: 18rpx 4rpx; }
 .weird-row + .weird-row { border-top: 1rpx solid var(--divider); }
 .weird-row .func-label { color: var(--text-body); }
+
+/* ─────── 公开房间列表（等待中 / 游戏中） ─────── */
+.room-list-section { margin-bottom: 20rpx; flex-shrink: 0; }
+.room-tabs { display: flex; gap: 44rpx; padding: 2rpx 10rpx 16rpx; }
+.room-tab {
+  position: relative; font-size: 32rpx; font-weight: 700;
+  color: var(--text-muted); padding-bottom: 12rpx;
+}
+.room-tab-on { color: var(--text-title); }
+.room-tab-on::after {
+  content: ''; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: 48rpx; height: 6rpx; border-radius: 3rpx; background: var(--primary);
+}
+.room-tab-count {
+  margin-left: 8rpx; font-size: 22rpx; font-weight: 700;
+  color: var(--text-muted); background: var(--gray-100);
+  border-radius: 999rpx; padding: 2rpx 12rpx;
+}
+.room-list-empty { text-align: center; color: var(--text-muted); font-size: 28rpx; padding: 48rpx 0; }
+.room-card {
+  background: var(--bg-card); border-radius: 24rpx; padding: 24rpx;
+  margin-bottom: 16rpx; box-shadow: var(--shadow-sm);
+  border: 3rpx solid transparent;
+}
+.room-card-is-mine { border-color: var(--primary); }
+.room-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12rpx; }
+.room-card-id-wrap { display: flex; align-items: center; gap: 12rpx; min-width: 0; }
+.room-card-id { font-size: 40rpx; font-weight: 800; color: var(--gold); letter-spacing: 4rpx; }
+.room-card-mine-tag {
+  flex-shrink: 0; font-size: 20rpx; font-weight: 700;
+  color: var(--primary); background: var(--primary-bg);
+  border-radius: 8rpx; padding: 4rpx 12rpx;
+}
+.room-card-count { flex-shrink: 0; font-size: 30rpx; font-weight: 800; color: var(--text-title); }
+.room-tags-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10rpx; margin-bottom: 14rpx; }
+.room-tag {
+  font-size: 22rpx; color: var(--text-body);
+  background: var(--gray-100); border-radius: 999rpx; padding: 6rpx 16rpx;
+}
+.room-tag-more { font-size: 22rpx; font-weight: 700; color: var(--primary); padding: 6rpx 12rpx; }
+.room-avatars-row { display: flex; align-items: center; }
+.room-avatar {
+  width: 56rpx; height: 56rpx; border-radius: 50%;
+  border: 3rpx solid var(--bg-page); background: var(--gray-100);
+  margin-left: -14rpx;
+}
+.room-avatar:first-child { margin-left: 0; }
+.current-room-tag-count { background: var(--gray-100); color: var(--text-body); }

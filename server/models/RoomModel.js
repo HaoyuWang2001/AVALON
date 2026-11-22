@@ -677,6 +677,95 @@ class RoomModel {
   }
   
   /**
+   * 生成房间展示标签（仅村规差异项）
+   */
+  static buildRoomTags(roomConfig) {
+    const cfg = roomConfig || {};
+    const rules = cfg.rules || {};
+    const roles = cfg.roles || {};
+    const all = [...(roles.good || []), ...(roles.evil || [])];
+    const tags = [];
+    if (rules.ladyOfTheLake) tags.push('湖仙');
+    if (rules.voteVisibility === 'anonymous') tags.push('匿名投票');
+    if (typeof rules.maxFailedNominations === 'number' && rules.maxFailedNominations !== 3) {
+      tags.push('强制开车·' + rules.maxFailedNominations + '轮');
+    }
+    if (rules.missionFailDetail === 'binary') tags.push('失败仅成败');
+    if (all.includes('oberon')) tags.push('奥伯伦');
+    const hasBlue = all.includes('lancelotBlue');
+    const hasRed = all.includes('lancelotRed');
+    if (hasBlue && hasRed) tags.push('双兰');
+    else if (hasRed) tags.push('红兰');
+    else if (hasBlue) tags.push('蓝兰');
+    if (typeof rules.lancelotSwapRound === 'number' && rules.lancelotSwapRound !== 2) {
+      tags.push('换身·第' + rules.lancelotSwapRound + '轮');
+    }
+    if (rules.lancelotMustFail) tags.push('兰斯必败');
+    if (rules.oberonMustFailMission) tags.push('奥伯伦必败');
+    if (rules.evilKnowsEachOther === false) tags.push('红方不互知');
+    return tags;
+  }
+
+  /**
+   * 主页公开房间列表（等待中 + 游戏中）：房间号、人数、村规标签、座上玩家头像
+   */
+  static async getPublicRoomList(limit = 50) {
+    const rows = await db.query(
+      `SELECT r.id as roomId, r.owner_id as ownerId, r.game_started as gameStarted,
+              r.room_config as roomConfig, r.updated_at as updatedAt,
+              p.open_id as openId, p.nick_name as nickName, p.avatar_url as avatarUrl, p.seat_number as seatNumber
+       FROM rooms r
+       LEFT JOIN room_players p ON p.room_id = r.id AND p.seat_number >= 1
+       WHERE r.updated_at > DATE_SUB(NOW(), INTERVAL 1 HOUR) AND r.id <> '000000'
+       ORDER BY r.updated_at DESC
+       LIMIT ${parseInt(limit, 10) || 50}`,
+      []
+    );
+    const map = new Map();
+    for (const row of rows) {
+      if (!map.has(row.roomId)) {
+        const cfg = typeof row.roomConfig === 'string' ? JSON.parse(row.roomConfig) : (row.roomConfig || {});
+        const good = (cfg.roles && cfg.roles.good) || [];
+        const evil = (cfg.roles && cfg.roles.evil) || [];
+        map.set(row.roomId, {
+          roomId: row.roomId,
+          ownerId: row.ownerId,
+          gameStarted: row.gameStarted === 1 || row.gameStarted === true,
+          updatedAt: row.updatedAt,
+          maxPlayers: good.length + evil.length,
+          tags: this.buildRoomTags(cfg),
+          players: []
+        });
+      }
+      const room = map.get(row.roomId);
+      if (row.openId) {
+        room.players.push({
+          openId: row.openId,
+          nickName: row.nickName || '玩家',
+          avatarUrl: row.avatarUrl || '',
+          seatNumber: row.seatNumber
+        });
+      }
+    }
+    const list = Array.from(map.values()).map(r => ({
+      ...r,
+      players: r.players.sort((a, b) => a.seatNumber - b.seatNumber).slice(0, 12),
+      playerCount: r.players.length
+    }));
+    const startedRoomIds = list.filter(r => r.gameStarted).map(r => r.roomId);
+    if (startedRoomIds.length > 0) {
+      const placeholders = startedRoomIds.map(() => '?').join(',');
+      const gameRows = await db.query(
+        `SELECT id, room_id FROM games WHERE status = 'active' AND room_id IN (${placeholders})`,
+        startedRoomIds
+      );
+      const byRoom = new Map(gameRows.map(g => [g.room_id, g.id]));
+      list.forEach(r => { if (r.gameStarted) r.activeGameId = byRoom.get(r.roomId) || null; });
+    }
+    return list;
+  }
+
+  /**
    * 获取房间统计信息
    * @returns {Promise<Object>} 统计信息
    */
