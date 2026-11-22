@@ -260,7 +260,7 @@ button::after { border: none; }
   border-radius: 12rpx; gap: 12rpx;
 }
 .seat-filled { background: var(--gray-50); }
-.seat-self { padding: 24rpx 16rpx; margin: 0 -4rpx; box-shadow: var(--shadow-primary); border-radius: 12rpx; background: var(--primary-bg); }
+.seat-self { padding: 24rpx 16rpx; margin: 0 -4rpx; box-shadow: 0 0 10rpx var(--seat-glow); border-radius: 12rpx; background: var(--primary-bg); }
 .seat-self .seat-action { gap: 16rpx; }
 .seat-empty { background: var(--gray-50); border: 2rpx dashed var(--gray-200); }
 
