@@ -17,6 +17,7 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* ─────── 品牌栏（单行：圆徽 + 字标 + 右侧个人头像） ─────── */
@@ -71,19 +72,22 @@
   position: relative; width: 100%; height: 220rpx; margin-bottom: 20rpx;
   border-radius: 24rpx; overflow: hidden; box-sizing: border-box;
   background:
-    linear-gradient(135deg, rgba(17,24,39,0.10) 0%, rgba(17,24,39,0.10) 46%, rgba(17,24,39,0) 54%),
-    linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 42%, #3F3F46 58%, #18181B 100%);
+    linear-gradient(135deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.07) 40%, rgba(0,0,0,0) 100%),
+    linear-gradient(135deg, var(--meeting-lead-1) 0%, var(--meeting-lead-2) 34%, rgba(63,63,70,0) 78%, rgba(63,63,70,0) 100%),
+    linear-gradient(135deg, #3F3F46 0%, #2A2A2F 55%, #18181B 100%);
   box-shadow: 0 12rpx 32rpx rgba(30,41,59,0.35), inset 0 2rpx 0 rgba(255,255,255,0.35);
   transition: transform 0.2s ease;
 }
 /* 点击后该半区颜色软边铺满（对角线渐变扫过，无硬边界） */
 .meeting-fill { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; background-repeat: no-repeat; background-size: 260% 260%; }
 .meeting-btn.filling-lead .meeting-fill {
-  background-image: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 40%, rgba(109,40,217,0) 68%, rgba(109,40,217,0) 100%);
+  background-image:
+    linear-gradient(135deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.07) 40%, rgba(0,0,0,0) 70%),
+    linear-gradient(135deg, var(--meeting-lead-1) 0%, var(--meeting-lead-2) 34%, rgba(63,63,70,0) 78%);
   animation: meeting-fill-lead var(--fill-ms, 700ms) ease-out forwards;
 }
 .meeting-btn.filling-join .meeting-fill {
-  background-image: linear-gradient(135deg, rgba(63,63,70,0) 0%, rgba(63,63,70,0) 32%, #3F3F46 60%, #18181B 100%);
+  background-image: linear-gradient(135deg, rgba(63,63,70,0) 0%, rgba(63,63,70,0) 30%, #3F3F46 60%, #18181B 100%);
   animation: meeting-fill-join var(--fill-ms, 700ms) ease-out forwards;
 }
 @keyframes meeting-fill-lead { from { background-position: 100% 100%; } to { background-position: 0% 0%; } }
@@ -151,7 +155,7 @@
 
 /* ─────────────────────────────────────────────────────────
  * 有意保留的硬编码（豁免，不做 token 化）：
- *   - 召开会议按钮右半区石墨渐变（装饰性；左半区已改用主题 token）
+ *   - 召开会议按钮过渡区（石墨底 + 主题色渐隐，装饰性）
  * 这些颜色属于一次性装饰/固定深色组件，不参与主题与语义体系。
  * ───────────────────────────────────────────────────────── */
 
@@ -178,6 +182,8 @@
 
 /* ─────── 公开房间列表（等待中 / 游戏中） ─────── */
 .room-list-section { margin-bottom: 20rpx; flex-shrink: 0; }
+.room-panel { width: 100%; will-change: transform; }
+.room-panel-anim { transition: transform 0.18s ease-out; }
 .room-tabs { display: flex; justify-content: center; gap: 168rpx; padding: 18rpx 10rpx 22rpx; }
 .room-tab {
   position: relative; font-size: 32rpx; font-weight: 700;

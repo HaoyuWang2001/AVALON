@@ -9,6 +9,8 @@ page {
   --primary-bg: #F5F3FF;
   --gradient-start: #8B5CF6;
   --gradient-end: #6D28D9;
+  --meeting-lead-1: #6D28D9;
+  --meeting-lead-2: #4C1D95;
 
   /* 语义色（随主题；颜色可相同，按语义取用） */
   --danger: #EF4444;

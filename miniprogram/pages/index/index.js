@@ -34,6 +34,8 @@ Page({
     visibleRooms: [],
     roomCounts: { waiting: 0, playing: 0 },
     roomListLoading: false,
+    roomPanX: 0,
+    roomPanAnim: false,
 
     meetingPressStyle: '',
     meetingFillClass: '',
@@ -260,6 +262,11 @@ Page({
   onHide() {
     // 离开本页：窗口背景复位为默认亮色，避免暗色泄漏到 room/game 等亮色页面
     wx.setBackgroundColor({ backgroundColor: '#F5F5F5' });
+    this._clearRoomPan(true);
+  },
+
+  onUnload() {
+    this._clearRoomPan(false);
   },
 
   // 召开/加入会议合并按钮：缓存按钮位置，用于按压方向判定
@@ -409,21 +416,128 @@ Page({
     this.loadRoomList();
   },
 
-  // 房间列表左右滑动切换「等待中 / 游戏中」
+  // 房间列表左右滑动切换「等待中 / 游戏中」：内容面板跟手，松手滑出/滑入
   onRoomTouchStart(e) {
+    if (this._roomAnimating) return;
+    clearTimeout(this._roomPanTimer);
     const t = e.touches && e.touches[0];
-    this._roomSwipe = t ? { x: t.clientX, y: t.clientY } : null;
+    if (!t) { this._roomPanStart = null; return; }
+    let W = 375;
+    try {
+      const info = typeof wx.getWindowInfo === 'function' ? wx.getWindowInfo() : wx.getSystemInfoSync();
+      W = (info && info.windowWidth) || 375;
+    } catch (err) { /* 取不到时用默认宽度 */ }
+    this._roomW = W;
+    this._roomPanStart = { x: t.clientX, y: t.clientY };
+    this._roomPanLocked = false;
+    this._roomPanIgnore = false;
+    this._roomSwipeMoved = false;
+    this._roomPanLastSet = 0;
+    if (this.data.roomPanAnim || this.data.roomPanX) {
+      this.setData({ roomPanAnim: false, roomPanX: 0 });
+    }
   },
-  onRoomTouchEnd(e) {
-    const s = this._roomSwipe;
-    this._roomSwipe = null;
-    const t = e.changedTouches && e.changedTouches[0];
+
+  onRoomTouchMove(e) {
+    if (this._roomAnimating || this._roomPanIgnore) return;
+    const s = this._roomPanStart;
+    const t = e.touches && e.touches[0];
     if (!s || !t) return;
     const dx = t.clientX - s.x;
     const dy = t.clientY - s.y;
-    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
-    const tab = dx < 0 ? 'playing' : 'waiting';
-    if (tab !== this.data.roomTab) this.switchRoomTab({ currentTarget: { dataset: { tab } } });
+
+    if (!this._roomPanLocked) {
+      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+        this._roomPanLocked = true;
+      } else if (Math.abs(dy) > 10) {
+        this._roomPanIgnore = true; // 纵向滚动，不拦截
+        return;
+      } else {
+        return;
+      }
+    }
+
+    if (Math.abs(dx) > 10) this._roomSwipeMoved = true;
+    const W = this._roomW || 375;
+    const target = dx < 0 ? 'playing' : 'waiting';
+    let x = target === this.data.roomTab ? dx * 0.35 : dx; // 已到边缘时加阻尼
+    const max = W * 0.9;
+    if (x > max) x = max;
+    if (x < -max) x = -max;
+
+    const now = Date.now();
+    if (now - (this._roomPanLastSet || 0) < 16) return;
+    this._roomPanLastSet = now;
+    this.setData({ roomPanX: x });
+  },
+
+  onRoomTouchEnd(e) {
+    if (this._roomAnimating) return;
+    const s = this._roomPanStart;
+    this._roomPanStart = null;
+    this._roomPanLocked = false;
+    if (!s) return;
+    const t = e.changedTouches && e.changedTouches[0];
+    if (!t) { this._resetRoomPan(); return; }
+    const dx = t.clientX - s.x;
+    const dy = t.clientY - s.y;
+    const horizontal = !this._roomPanIgnore && Math.abs(dx) >= 60 && Math.abs(dx) > Math.abs(dy) * 1.2;
+    const target = dx < 0 ? 'playing' : 'waiting';
+    if (horizontal && target !== this.data.roomTab) {
+      this._animateRoomSwitch(target, dx < 0 ? -1 : 1);
+      return;
+    }
+    this._resetRoomPan();
+  },
+
+  onRoomTouchCancel() {
+    if (this._roomAnimating) return;
+    this._roomPanStart = null;
+    this._roomPanLocked = false;
+    this._resetRoomPan();
+  },
+
+  _resetRoomPan() {
+    clearTimeout(this._roomPanTimer);
+    this.setData({ roomPanAnim: true, roomPanX: 0 });
+    this._roomPanTimer = setTimeout(() => {
+      this._roomAnimating = false;
+      this._roomSwipeMoved = false;
+      this.setData({ roomPanAnim: false });
+    }, 200);
+  },
+
+  // 当前面板滑出 → 切换标签并拉取 → 新面板从反方向滑入
+  _animateRoomSwitch(tab, dir) {
+    clearTimeout(this._roomPanTimer);
+    this._roomAnimating = true;
+    this._roomSwipeMoved = true;
+    const W = this._roomW || 375;
+    this.setData({ roomPanAnim: true, roomPanX: dir * W });
+    this._roomPanTimer = setTimeout(() => {
+      this.switchRoomTab({ currentTarget: { dataset: { tab } } });
+      this.setData({ roomPanAnim: false, roomPanX: -dir * W });
+      wx.nextTick(() => {
+        this.setData({ roomPanAnim: true, roomPanX: 0 });
+        this._roomPanTimer = setTimeout(() => {
+          this._roomAnimating = false;
+          this._roomSwipeMoved = false;
+          this.setData({ roomPanAnim: false });
+        }, 200);
+      });
+    }, 180);
+  },
+
+  _clearRoomPan(applyData) {
+    clearTimeout(this._roomPanTimer);
+    this._roomAnimating = false;
+    this._roomSwipeMoved = false;
+    this._roomPanStart = null;
+    this._roomPanLocked = false;
+    this._roomPanIgnore = false;
+    if (applyData && (this.data.roomPanX || this.data.roomPanAnim)) {
+      this.setData({ roomPanX: 0, roomPanAnim: false });
+    }
   },
 
   toggleRoomTags(e) {
@@ -436,6 +550,7 @@ Page({
 
   // 点击公开房间卡：等待中→加入等待区进房间；游戏中→观战进对局
   onPublicRoomTap(e) {
+    if (this._roomAnimating || this._roomSwipeMoved) return;
     const id = e.currentTarget.dataset.id;
     if (!id) return;
     if (this.data.currentRoom && this.data.currentRoom.roomId === id) {

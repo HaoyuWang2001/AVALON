@@ -64,7 +64,7 @@
 
 
   <!-- 公开房间列表：等待中 / 游戏中 -->
-  <view class="room-list-section" bindtouchstart="onRoomTouchStart" bindtouchend="onRoomTouchEnd">
+  <view class="room-list-section" bindtouchstart="onRoomTouchStart" bindtouchmove="onRoomTouchMove" bindtouchend="onRoomTouchEnd" bindtouchcancel="onRoomTouchCancel">
     <view class="room-tabs">
       <view class="room-tab {{roomTab === 'waiting' ? 'room-tab-on' : ''}}" data-tab="waiting" bindtap="switchRoomTab">
         等待中<text class="room-tab-count">{{roomCounts.waiting}}</text>
@@ -73,6 +73,7 @@
         游戏中<text class="room-tab-count">{{roomCounts.playing}}</text>
       </view>
     </view>
+    <view class="room-panel {{roomPanAnim ? 'room-panel-anim' : ''}}" style="transform: translateX({{roomPanX}}px)">
     <view wx:if="{{visibleRooms.length === 0}}" class="room-list-empty">{{roomListLoading ? '加载中...' : '没得玩，速开！'}}</view>
     <view wx:for="{{visibleRooms}}" wx:key="roomId"
       class="room-card {{item.isMine ? 'room-card-featured' : ''}}"
@@ -99,6 +100,7 @@
         </view>
         <text class="room-card-count">{{item.playerCount}}/{{item.maxPlayers}}</text>
       </view>
+    </view>
     </view>
   </view>
 
