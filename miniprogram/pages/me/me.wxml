@@ -3,12 +3,10 @@
   <!-- 基本信息 + 数据（合并卡） -->
   <view class="card me-card">
     <view class="me-head">
-      <button class="me-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" bindtap="onAvatarTap">
-        <image class="me-avatar" src="{{me.avatarUrl || '/images/default-avatar.png'}}"/>
-      </button>
+      <image class="me-avatar" src="{{me.avatarUrl || '/images/default-avatar.png'}}"/>
       <view class="me-info">
         <view class="me-name-row">
-          <text class="me-name" bindtap="editNickName">{{me.nickName || '点击设置昵称'}}</text>
+          <text class="me-name">{{me.nickName || '未设置昵称'}}</text>
           <text wx:if="{{rank}}" class="me-rank">#{{rank}}</text>
         </view>
         <view wx:if="{{stats.titles && stats.titles.length > 0}}" class="me-titles">
@@ -16,9 +14,9 @@
         </view>
         <view class="me-sub">
           <text wx:if="{{me.uniqueId}}" class="me-uid">ID：{{me.uniqueId}}</text>
-          <text class="me-edit-hint" bindtap="editNickName">点头像换头像 · 点昵称改名</text>
         </view>
       </view>
+      <view class="me-edit-btn" bindtap="openEditProfile">编辑</view>
     </view>
 
     <view class="me-stats-row">
@@ -47,6 +45,38 @@
   </view>
 
   <view class="footer"><view class="footer-version">AVALON v1.4.2</view></view>
+
+  <!-- 编辑个人信息弹窗（每行独立保存） -->
+  <view class="me-edit-mask" wx:if="{{showEditProfile}}" bindtap="closeEditProfile" catchtouchmove="noop">
+    <view class="me-edit-panel" catchtap="noop">
+      <view class="me-edit-head">
+        <text class="me-edit-title">编辑信息</text>
+        <text class="me-edit-close" bindtap="closeEditProfile">✕</text>
+      </view>
+
+      <view class="me-edit-row">
+        <text class="me-edit-label">头像</text>
+        <button class="me-edit-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" bindtap="onAvatarTap">
+          <image class="me-edit-avatar" src="{{editAvatarUrl || me.avatarUrl || '/images/default-avatar.png'}}"/>
+        </button>
+      </view>
+
+      <view class="me-edit-row">
+        <text class="me-edit-label">昵称</text>
+        <input class="me-edit-input" type="text" maxlength="10" value="{{editNickName}}" bindinput="onEditNickInput" placeholder="请输入昵称（≤10字）"/>
+        <view class="me-edit-save {{editNickSaving ? 'me-edit-save-busy' : ''}}" catchtap="saveEditNickName">保存</view>
+      </view>
+
+      <view class="me-edit-row me-edit-row-id">
+        <text class="me-edit-label">ID</text>
+        <view class="me-edit-field">
+          <input class="me-edit-input" type="text" maxlength="16" value="{{editUniqueId}}" bindinput="onEditIdInput" placeholder="1-16位"/>
+          <text class="me-edit-hint">1-16位，支持中文/字母/数字/-/_，每天仅可修改一次</text>
+        </view>
+        <view class="me-edit-save {{editIdSaving ? 'me-edit-save-busy' : ''}}" catchtap="saveEditUniqueId">保存</view>
+      </view>
+    </view>
+  </view>
 
   <score-detail id="scoreDetail"/>
 </view>

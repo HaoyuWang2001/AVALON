@@ -14,11 +14,6 @@
 /* ─────── 基本信息 + 数据（合并卡） ─────── */
 .me-card { padding: 0; overflow: hidden; flex-shrink: 0; }
 .me-head { display: flex; align-items: center; gap: 28rpx; padding: 32rpx 28rpx; }
-.me-avatar-btn {
-  width: 132rpx !important; height: 132rpx !important; padding: 0 !important; margin: 0 !important;
-  border: none; background: transparent; border-radius: 50%; overflow: hidden; line-height: 1; flex-shrink: 0;
-}
-.me-avatar-btn::after { border: none; display: none; }
 .me-avatar { width: 132rpx; height: 132rpx; border-radius: 50%; display: block; background: var(--gray-100); }
 .me-info { flex: 1; min-width: 0; }
 .me-name-row { display: flex; align-items: center; gap: 12rpx; min-width: 0; }
@@ -30,6 +25,11 @@
 .me-sub { display: flex; flex-direction: column; gap: 6rpx; margin-top: 10rpx; }
 .me-uid { font-size: 24rpx; color: var(--text-muted); }
 .me-edit-hint { font-size: 22rpx; color: var(--text-muted); opacity: 0.8; }
+.me-edit-btn {
+  flex-shrink: 0; align-self: flex-start;
+  font-size: 24rpx; font-weight: 700; padding: 6rpx 20rpx; border-radius: 999rpx;
+  color: var(--primary); background: var(--primary-bg); border: 1rpx solid var(--primary);
+}
 
 /* ─────── 数据行 ─────── */
 .me-stats-row { display: flex; align-items: flex-start; padding: 32rpx 12rpx; }
@@ -48,6 +48,43 @@
 .me-evil { color: var(--evil); }
 .me-stat-label { font-size: 22rpx; color: var(--text-muted); margin-top: 6rpx; }
 .me-stat-div { width: 4rpx; height: 56rpx; background: var(--divider); align-self: center; flex-shrink: 0; }
+
+/* ─────── 编辑信息弹窗 ─────── */
+.me-edit-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1300;
+  background: var(--mask-light); display: flex; align-items: center; justify-content: center;
+}
+.me-edit-panel {
+  width: 92vw; max-width: 680rpx; box-sizing: border-box;
+  background: var(--bg-card); border-radius: 24rpx; padding: 30rpx 28rpx;
+  box-shadow: var(--shadow-lg);
+}
+.me-edit-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12rpx; }
+.me-edit-title { font-size: 32rpx; font-weight: 800; color: var(--text-title); }
+.me-edit-close { font-size: 30rpx; color: var(--text-muted); padding: 8rpx; }
+.me-edit-row { display: flex; align-items: center; gap: 16rpx; padding: 20rpx 0; }
+.me-edit-head + .me-edit-row { border-top: none; }
+.me-edit-row + .me-edit-row { border-top: 1rpx solid var(--divider); }
+.me-edit-label { width: 70rpx; flex-shrink: 0; font-size: 26rpx; color: var(--text-muted); }
+.me-edit-avatar-btn {
+  width: 96rpx !important; height: 96rpx !important; padding: 0 !important; margin: 0 !important;
+  border: none; background: transparent; border-radius: 50%; overflow: hidden; line-height: 1; flex-shrink: 0;
+}
+.me-edit-avatar-btn::after { border: none; display: none; }
+.me-edit-avatar { width: 96rpx; height: 96rpx; border-radius: 50%; display: block; background: var(--gray-100); }
+.me-edit-field { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.me-edit-input {
+  flex: 1; min-width: 0; height: 68rpx; box-sizing: border-box;
+  background: var(--bg-page); border-radius: 12rpx; padding: 0 20rpx;
+  font-size: 28rpx; color: var(--text-title);
+}
+.me-edit-field .me-edit-hint { font-size: 20rpx; opacity: 1; margin-top: 6rpx; line-height: 1.4; }
+.me-edit-save {
+  flex-shrink: 0; font-size: 24rpx; font-weight: 700; padding: 10rpx 24rpx; border-radius: 999rpx;
+  color: var(--on-primary);
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+}
+.me-edit-save-busy { opacity: 0.6; pointer-events: none; }
 
 /* 历史对局（外层卡片；内容由 history-card 组件渲染） */
 .history-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }

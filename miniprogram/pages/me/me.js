@@ -39,7 +39,13 @@ Page({
     summary: null,
     roleStats: [],
     historyList: [],
-    loading: true
+    loading: true,
+    showEditProfile: false,
+    editAvatarUrl: '',
+    editNickName: '',
+    editUniqueId: '',
+    editNickSaving: false,
+    editIdSaving: false
   },
 
   onLoad() {
@@ -92,24 +98,56 @@ Page({
     comp.open({ nickName: this.data.me.nickName || '玩家', detail: this.data.stats.scoreDetail || null });
   },
 
-  // 修改昵称（限 10 字）
-  editNickName() {
-    const current = this.data.me.nickName || '';
-    wx.showModal({
-      title: '修改昵称', editable: true, placeholderText: '请输入昵称（≤10字）', content: current,
-      success: (res) => {
-        if (!res.confirm) return;
-        const nickName = (res.content || '').trim();
-        if (!nickName) { wx.showToast({ title: '昵称不能为空', icon: 'none' }); return; }
-        if (nickName.length > 10) { wx.showToast({ title: '昵称最多 10 字', icon: 'none' }); return; }
-        wx.setStorageSync('customNickName', nickName);
-        this.setData({ 'me.nickName': nickName });
-        api.updateUserProfile(this._openId, { customNickName: nickName }).then(() => {
-          wx.showToast({ title: '已更新', icon: 'success' });
-        }).catch(err => {
-          wx.showToast({ title: (err && err.message) || '更新失败', icon: 'none' });
-        });
-      }
+  // ─── 编辑信息（每行独立保存） ───
+  openEditProfile() {
+    this.setData({
+      showEditProfile: true,
+      editAvatarUrl: this.data.me.avatarUrl || '',
+      editNickName: this.data.me.nickName || '',
+      editUniqueId: this.data.me.uniqueId || '',
+      editNickSaving: false,
+      editIdSaving: false
+    });
+  },
+  closeEditProfile() {
+    this.setData({ showEditProfile: false });
+  },
+  onEditNickInput(e) {
+    this.setData({ editNickName: e.detail.value });
+  },
+  onEditIdInput(e) {
+    this.setData({ editUniqueId: e.detail.value });
+  },
+  saveEditNickName() {
+    if (this.data.editNickSaving) return;
+    const nickName = (this.data.editNickName || '').trim();
+    if (!nickName) { wx.showToast({ title: '昵称不能为空', icon: 'none' }); return; }
+    if (nickName.length > 10) { wx.showToast({ title: '昵称最多 10 字', icon: 'none' }); return; }
+    if (nickName === this.data.me.nickName) { wx.showToast({ title: '昵称未修改', icon: 'none' }); return; }
+    this.setData({ editNickSaving: true });
+    api.updateUserProfile(this._openId, { customNickName: nickName }).then(() => {
+      wx.setStorageSync('customNickName', nickName);
+      this.setData({ editNickSaving: false, editNickName: nickName, 'me.nickName': nickName });
+      wx.showToast({ title: '昵称已更新', icon: 'success' });
+    }).catch(err => {
+      this.setData({ editNickSaving: false });
+      wx.showToast({ title: (err && err.message) || '更新失败', icon: 'none' });
+    });
+  },
+  saveEditUniqueId() {
+    if (this.data.editIdSaving) return;
+    const uniqueId = (this.data.editUniqueId || '').trim();
+    if (!uniqueId) { wx.showToast({ title: 'ID 不能为空', icon: 'none' }); return; }
+    if (uniqueId.length > 16) { wx.showToast({ title: 'ID 最多 16 位', icon: 'none' }); return; }
+    if (uniqueId === this.data.me.uniqueId) { wx.showToast({ title: 'ID 未修改', icon: 'none' }); return; }
+    this.setData({ editIdSaving: true });
+    api.setUniqueId(this._openId, uniqueId).then(res => {
+      const saved = (res && res.user && res.user.uniqueId) || uniqueId;
+      this.setData({ editIdSaving: false, editUniqueId: saved, 'me.uniqueId': saved });
+      wx.showToast({ title: 'ID 已更新', icon: 'success' });
+    }).catch(err => {
+      this.setData({ editIdSaving: false });
+      wx.showToast({ title: (err && err.message) || '更新失败', icon: 'none' });
     });
   },
 
@@ -123,13 +161,13 @@ Page({
     if (!e.detail || !e.detail.avatarUrl) return;
     const tempPath = e.detail.avatarUrl;
     const openId = this._openId || 'default';
-    this.setData({ 'me.avatarUrl': tempPath });
+    this.setData({ 'me.avatarUrl': tempPath, editAvatarUrl: tempPath });
 
     api.uploadAvatar(openId, tempPath).then((res) => {
       const url = (res && res.avatarUrl) || '';
       if (url) {
         wx.setStorageSync('avatarUrl', url);
-        this.setData({ 'me.avatarUrl': url });
+        this.setData({ 'me.avatarUrl': url, editAvatarUrl: url });
       }
     }).catch(() => {
       wx.showToast({ title: '头像上传失败', icon: 'none' });
@@ -140,10 +178,11 @@ Page({
         filePath: savedPath,
         success: () => {
           wx.setStorageSync('avatarUrl', savedPath);
-          this.setData({ 'me.avatarUrl': savedPath });
+          this.setData({ 'me.avatarUrl': savedPath, editAvatarUrl: savedPath });
         },
         fail: () => {
           wx.setStorageSync('avatarUrl', tempPath);
+          this.setData({ editAvatarUrl: tempPath });
         }
       });
     });
