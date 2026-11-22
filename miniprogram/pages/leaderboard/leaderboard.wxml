@@ -1,7 +1,10 @@
 <!--pages/leaderboard/leaderboard.wxml-->
 <view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
   <view class="lb-head">
-    <text class="lb-head-title">积分排行榜</text>
+    <view class="lb-head-row">
+      <text class="lb-head-title">积分排行榜</text>
+      <view class="lb-info-btn" catchtap="openFormula">i</view>
+    </view>
     <text class="lb-head-sub">积分 = 基础分 + 阵营胜负分 + 角色分 + 荣誉分（共 {{total}} 人）</text>
   </view>
 
@@ -43,4 +46,69 @@
 
   <view style="height: 40rpx"></view>
   <player-stats id="playerStats" />
+
+  <!-- 积分公式说明弹窗 -->
+  <view class="lb-formula-mask" wx:if="{{showFormula}}" bindtap="closeFormula" catchtouchmove="noop">
+    <view class="lb-formula" catchtap="noop">
+      <view class="lb-formula-head">
+        <text class="lb-formula-title">积分公式说明</text>
+        <text class="lb-formula-close" bindtap="closeFormula">✕</text>
+      </view>
+      <scroll-view scroll-y class="lb-formula-scroll" show-scrollbar="{{false}}">
+        <view class="f-sec">一、统计范围与资格</view>
+        <view class="f-p">· 仅统计线上对局（source=online），排除测试房 000000。</view>
+        <view class="f-p">· 仅 status=ended、有胜方（good/evil）且非 abandoned 的对局。</view>
+        <view class="f-p">· 每局每人一行明细；总分 = 全部合格对局 total 之和。</view>
+        <view class="f-p">· 榜单门槛：总场次 ≥ 动态阈值（10~50），且公开胜率；本人始终可见自己的分数。</view>
+
+        <view class="f-sec">二、记号</view>
+        <view class="f-p">· n：本局人数（5~12）；s：阵营（good/evil）。</view>
+        <view class="f-p">· W_g(n)、W_e(n)：该人数下历史胜场数；G(n)=W_g+W_e。</view>
+        <view class="f-p">· p_s = (W_s+1)/(G(n)+2)，再夹取到 [0.35, 0.65]（Laplace 平滑 + 边界钳制）。</view>
+        <view class="f-p">· ω_r：角色难度权重；角色胜率 q_r=(wins+1)/(games+2)，ω_r=clamp(0.5−q_r, 0, 0.15)。</view>
+        <view class="f-p">· m_p、v_p：该玩家在本局收到的 MVP / SVP 票数。</view>
+
+        <view class="f-sec">三、单局得分公式</view>
+        <view class="f-eq">1) Base(n) = clamp(0.80 − 0.05·(n−5), 0.45, 0.80)</view>
+        <view class="f-eq">2) 胜分 A_s = 0.45 × (0.5 / p_s)</view>
+        <view class="f-eq">3) 败分 L_s = 0.30 × (p_s / 0.5)（作为扣减量）</view>
+        <view class="f-eq">4) 角色分 R_p = ω_{r_p} − mean(ω over 胜方)（仅胜方，内部零和）</view>
+        <view class="f-eq">5) 荣誉分 H_p = (m_p + v_p) × 0.01</view>
+        <view class="f-eq">6) 胜方：total_p = Base + A_s + R_p + H_p</view>
+        <view class="f-eq">   败方：total_p = Base − L_s + H_p</view>
+        <view class="f-p">最终保留两位小数，且 total_p ≥ 0（数学上恒成立，无需截断）。</view>
+
+        <view class="f-sec">四、平衡定理（严格数学证明）</view>
+        <view class="f-eq">E_s = Base + p_s·A_s − (1−p_s)·L_s</view>
+        <view class="f-eq">= Base + p_s·0.45·(0.5/p_s) − (1−p_s)·0.30·(p_s/0.5)</view>
+        <view class="f-eq">= Base + 0.225 − 0.60·p_s·(1−p_s)</view>
+        <view class="f-p">因 p_good + p_evil = 1，故 p_good(1−p_good) = p_evil(1−p_evil)，于是：</view>
+        <view class="f-eq">E_good = E_evil（与阵营强弱无关）</view>
+        <view class="f-p">角色分仅在胜方内部零和转移（ΣR=0）；荣誉分每阵营各 0.01×票数（机制对称），均不破坏该恒等式。两位小数舍入使实际差异 ≤0.02/局。</view>
+
+        <view class="f-sec">五、非负性证明</view>
+        <view class="f-p">p_s∈[0.35,0.65] ⇒ A_s∈[0.346,0.643]，L_s∈[0.21,0.39]；Base(n)≥0.45；ω∈[0,0.15]。</view>
+        <view class="f-eq">胜方：Base + A + R ≥ 0.45 + 0.346 − 0.15 = 0.646 &gt; 0</view>
+        <view class="f-eq">败方：Base − L ≥ 0.45 − 0.39 = 0.06 &gt; 0</view>
+        <view class="f-p">叠加荣誉分（≥0）后仍恒正。</view>
+
+        <view class="f-sec">六、排序与同分</view>
+        <view class="f-p">排序：分数↓ → 场次↓ → 胜率↓ → openId 字典序（严格全序，无并列）；名次即排序序号。展示时以分数为主、胜率% 为辅。</view>
+
+        <view class="f-sec">七、更新与重算</view>
+        <view class="f-p">· 终局立即计算一次；MVP/SVP 每新增一票即重算该局（票分实时生效）。</view>
+        <view class="f-p">· 历史回填/校准：server/scripts/backfill-scores.js（幂等，全量重算，排除线下与测试房）。</view>
+        <view class="f-p">· 线下对局本期不计分（后续补充）。</view>
+
+        <view class="f-sec">八、数值示例（8 人局，p_good=0.55）</view>
+        <view class="f-p">Base = 0.80 − 0.05×3 = 0.65；p_evil = 0.45</view>
+        <view class="f-p">A_good = 0.45×(0.5/0.55) ≈ 0.41；L_evil = 0.30×(0.45/0.5) = 0.27</view>
+        <view class="f-p">蓝方胜：蓝方每人 0.65+0.41 = 1.06（再加减角色分）；红方每人 0.65−0.27 = 0.38</view>
+        <view class="f-p">若梅林(ω=0.08)、派西(ω=0.06)、3 忠臣(ω=0) 获胜：mean(ω)=0.028</view>
+        <view class="f-p">⇒ 梅林 +0.05、派西 +0.03、忠臣各 −0.03（胜方内部和为 0）</view>
+        <view class="f-p">梅林再获 2 张 MVP 票：0.65+0.41+0.05+0.02 = 1.13</view>
+        <view class="f-p">校验：E_good = 0.65+0.55×0.41−0.45×0.33 ≈ 0.727；E_evil = 0.65+0.45×0.50−0.55×0.27 ≈ 0.727 ✓</view>
+      </scroll-view>
+    </view>
+  </view>
 </view>

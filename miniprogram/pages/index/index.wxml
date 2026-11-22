@@ -34,7 +34,10 @@
           </view>
           <text class="podium-name">{{item.nickName}}</text>
           <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}" size="mini"></title-badge>
-          <text class="podium-rate">{{item.score}}·{{item.winRate}}%</text>
+          <view class="podium-rate">
+            <text class="podium-score">{{item.score}}</text>
+            <text class="podium-winrate">{{item.winRate}}%</text>
+          </view>
         </view>
       </view>
     </block>
@@ -43,13 +46,16 @@
   <!-- 当前房间（整卡点击=回到房间；退出/解散在房间内操作） -->
   <view class="card current-room-card" wx:if="{{currentRoom}}" bindtap="backToRoom">
     <view class="current-room-top">
-      <view class="current-room-label">我的房间 · {{currentRoom.roomId}}</view>
-      <view class="current-room-tags">
-        <text wx:if="{{currentRoom.gameStarted}}" class="current-room-tag current-room-tag-ingame">游戏中</text>
-        <text wx:else class="current-room-tag current-room-tag-wait">准备中</text>
-        <text wx:if="{{isCurrentRoomHost}}" class="current-room-tag current-room-tag-host">房主</text>
-        <text wx:if="{{myRoomInfo}}" class="current-room-tag current-room-tag-count">{{myRoomInfo.playerCount}}/{{myRoomInfo.maxPlayers}}</text>
+      <view class="current-room-label">
+        <text class="current-room-diamond">◆</text>
+        <text class="current-room-id">{{currentRoom.roomId}}</text>
       </view>
+      <text wx:if="{{myRoomInfo}}" class="current-room-count">{{myRoomInfo.playerCount}}/{{myRoomInfo.maxPlayers}}</text>
+    </view>
+    <view class="current-room-status">
+      <text wx:if="{{currentRoom.gameStarted}}" class="current-room-tag current-room-tag-ingame">游戏中</text>
+      <text wx:else class="current-room-tag current-room-tag-wait">准备中</text>
+      <text wx:if="{{isCurrentRoomHost}}" class="current-room-tag current-room-tag-host">房主</text>
     </view>
     <view class="room-tags-row" wx:if="{{myRoomInfo && myRoomInfo.tags.length > 0}}">
       <text wx:for="{{myRoomInfo.tags}}" wx:key="*this" class="room-tag">{{item}}</text>
@@ -97,6 +103,7 @@
       bindtap="onPublicRoomTap" data-id="{{item.roomId}}">
       <view class="room-card-top">
         <view class="room-card-id-wrap">
+          <text class="room-card-diamond {{item.gameStarted ? 'is-playing' : ''}}">◆</text>
           <text class="room-card-id">{{item.roomId}}</text>
           <text wx:if="{{item.isMine}}" class="room-card-mine-tag">我的房间</text>
         </view>
@@ -150,11 +157,11 @@
     <view class="weird-modal" catchtap="noop">
       <view class="weird-title">奇奇怪怪的设置们</view>
       <view class="weird-row">
-        <switch class="func-switch" checked="{{publicWinrate}}" bindchange="onPublicWinrateChange" color="#8B5CF6"/>
+        <switch class="func-switch" checked="{{publicWinrate}}" bindchange="onPublicWinrateChange" color="{{switchColor}}"/>
         <text class="func-label">公开胜率</text>
       </view>
       <view class="weird-row">
-        <switch class="func-switch" checked="{{compactGame}}" bindchange="onCompactGameChange" color="#8B5CF6"/>
+        <switch class="func-switch" checked="{{compactGame}}" bindchange="onCompactGameChange" color="{{switchColor}}"/>
         <text class="func-label">松弛压缩版</text>
       </view>
     </view>

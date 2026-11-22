@@ -16,6 +16,9 @@ const THEME_BG = {
   steel: '#171A1F'
 };
 
+// 各主题下原生 switch 的选中色（switch color 不支持 CSS 变量）
+const SWITCH_COLOR = { '': '#8B5CF6', torch: '#D4A052', aurora: '#A78BFA', steel: '#89A7CC' };
+
 const THEME_ORDER = ['', 'torch', 'aurora', 'steel'];
 const THEME_LABELS = ['🌅 黎明初现', '🔥 烛光殿堂', '🌌 暗夜圆桌', '⚔️ 锻造钢铁'];
 
@@ -23,6 +26,10 @@ const THEME_LABELS = ['🌅 黎明初现', '🔥 烛光殿堂', '🌌 暗夜圆�
 function getThemeClass() {
   const t = wx.getStorageSync(STORAGE_KEY);
   return Object.prototype.hasOwnProperty.call(THEME_BG, t) ? t : '';
+}
+
+function getSwitchColor(theme) {
+  return Object.prototype.hasOwnProperty.call(SWITCH_COLOR, theme) ? SWITCH_COLOR[theme] : SWITCH_COLOR[''];
 }
 
 function getThemeBg(theme) {
@@ -49,4 +56,4 @@ function pickTheme() {
   });
 }
 
-module.exports = { getThemeClass, getThemeBg, applyTheme, pickTheme, THEME_BG };
+module.exports = { getThemeClass, getThemeBg, getSwitchColor, applyTheme, pickTheme, THEME_BG };

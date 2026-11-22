@@ -65,13 +65,15 @@
 
 .current-room-card { background: var(--gold-bg); border-radius: 28rpx; padding: 40rpx 36rpx; margin-bottom: 20rpx; border-left: 8rpx solid var(--gold); flex-shrink: 0; }
 .current-room-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16rpx; }
-.current-room-label { font-size: 32rpx; color: var(--gold); font-weight: 600; }
-.current-room-id { display: block; text-align: center; font-size: 52rpx; font-weight: 800; color: var(--gold); letter-spacing: 8rpx; padding: 16rpx 0; margin-bottom: 12rpx; }
-.current-room-tags { display: flex; gap: 14rpx; flex-wrap: wrap; justify-content: flex-end; }
-.current-room-tag { font-size: 24rpx; padding: 6rpx 18rpx; border-radius: 8rpx; }
-.current-room-tag-ingame { background: var(--label-red-bg); color: var(--label-red); }
-.current-room-tag-wait { background: var(--label-blue-bg); color: var(--label-blue); }
-.current-room-tag-host { background: var(--label-orange-bg); color: var(--label-orange); }
+.current-room-label { display: flex; align-items: baseline; gap: 10rpx; color: var(--gold); font-weight: 800; min-width: 0; }
+.current-room-diamond { font-size: 24rpx; color: var(--gold); }
+.current-room-id { font-size: 56rpx; font-weight: 800; color: var(--gold); letter-spacing: 4rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.current-room-count { flex-shrink: 0; font-size: 46rpx; font-weight: 800; color: var(--text-title); }
+.current-room-status { display: flex; gap: 12rpx; flex-wrap: wrap; margin-bottom: 12rpx; }
+.current-room-tag { font-size: 24rpx; padding: 4rpx 16rpx; border-radius: 999rpx; background: transparent; border: 1rpx solid currentColor; }
+.current-room-tag-ingame { color: var(--label-red); }
+.current-room-tag-wait { color: var(--label-blue); }
+.current-room-tag-host { color: var(--label-orange); }
 .current-room-btns { display: flex; gap: 20rpx; }
 .room-btn { font-size: 30rpx !important; padding: 20rpx 16rpx !important; }
 
@@ -147,9 +149,11 @@
 .rank-2 .podium-badge { color: var(--medal-silver-text); border-color: var(--medal-silver); }
 .rank-3 .podium-badge { color: var(--medal-bronze-light); border-color: var(--medal-bronze); }
 .podium-name { font-size: 28rpx; color: var(--champion-fg); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
-.podium-rate { display: block; margin: 10rpx 0 0; font-size: 36rpx; font-weight: 800; color: var(--medal-gold); }
-.rank-2 .podium-rate { color: var(--medal-silver-text); }
-.rank-3 .podium-rate { color: var(--medal-bronze-light); }
+.podium-rate { display: flex; flex-direction: column; align-items: center; gap: 2rpx; margin-top: 10rpx; }
+.podium-score { font-size: 36rpx; font-weight: 800; color: var(--medal-gold); }
+.podium-winrate { font-size: 24rpx; color: var(--text-muted); }
+.rank-2 .podium-score { color: var(--medal-silver-text); }
+.rank-3 .podium-score { color: var(--medal-bronze-light); }
 
 @keyframes crown-float { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10rpx); } }
 @keyframes champ-glow { 0%, 100% { box-shadow: 0 0 18rpx rgba(255, 215, 0, 0.55); } 50% { box-shadow: 0 0 34rpx rgba(255, 215, 0, 0.95); } }
@@ -240,16 +244,12 @@
   position: relative; font-size: 32rpx; font-weight: 700;
   color: var(--text-muted); padding-bottom: 12rpx;
 }
-.room-tab-on { color: var(--text-title); }
+.room-tab-on { color: var(--primary); }
 .room-tab-on::after {
   content: ''; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
   width: 48rpx; height: 6rpx; border-radius: 3rpx; background: var(--primary);
 }
-.room-tab-count {
-  margin-left: 8rpx; font-size: 22rpx; font-weight: 700;
-  color: var(--text-muted); background: var(--gray-100);
-  border-radius: 999rpx; padding: 2rpx 12rpx;
-}
+.room-tab-count { margin-left: 8rpx; font-size: 26rpx; font-weight: 700; }
 .room-list-empty { text-align: center; color: var(--text-muted); font-size: 28rpx; padding: 48rpx 0; }
 .room-card {
   background: var(--bg-card); border-radius: 24rpx; padding: 24rpx;
@@ -259,24 +259,26 @@
 .room-card-is-mine { border-color: var(--primary); }
 .room-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12rpx; }
 .room-card-id-wrap { display: flex; align-items: center; gap: 12rpx; min-width: 0; }
-.room-card-id { font-size: 40rpx; font-weight: 800; color: var(--gold); letter-spacing: 4rpx; }
+.room-card-diamond { font-size: 22rpx; color: var(--gold); }
+.room-card-diamond.is-playing { color: var(--label-green); }
+.room-card-id { font-size: 52rpx; font-weight: 800; color: var(--gold); letter-spacing: 4rpx; }
 .room-card-mine-tag {
   flex-shrink: 0; font-size: 20rpx; font-weight: 700;
   color: var(--primary); background: var(--primary-bg);
   border-radius: 8rpx; padding: 4rpx 12rpx;
 }
-.room-card-count { flex-shrink: 0; font-size: 30rpx; font-weight: 800; color: var(--text-title); }
+.room-card-count { flex-shrink: 0; font-size: 46rpx; font-weight: 800; color: var(--text-title); }
 .room-tags-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10rpx; margin-bottom: 14rpx; }
 .room-tag {
-  font-size: 22rpx; color: var(--text-body);
-  background: var(--gray-100); border-radius: 999rpx; padding: 6rpx 16rpx;
+  font-size: 24rpx; color: var(--text-muted);
+  background: transparent; border: 1rpx solid var(--divider);
+  border-radius: 999rpx; padding: 6rpx 18rpx;
 }
 .room-tag-more { font-size: 22rpx; font-weight: 700; color: var(--primary); padding: 6rpx 12rpx; }
 .room-avatars-row { display: flex; align-items: center; }
 .room-avatar {
   width: 56rpx; height: 56rpx; border-radius: 50%;
   border: 3rpx solid var(--bg-page); background: var(--gray-100);
-  margin-left: -14rpx;
+  margin-left: -20rpx;
 }
 .room-avatar:first-child { margin-left: 0; }
-.current-room-tag-count { background: var(--gray-100); color: var(--text-body); }

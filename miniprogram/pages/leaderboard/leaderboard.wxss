@@ -1,6 +1,13 @@
 /* pages/leaderboard/leaderboard.wxss */
 .lb-head { padding: 28rpx 32rpx 8rpx; }
+.lb-head-row { display: flex; align-items: center; justify-content: space-between; }
 .lb-head-title { font-size: 40rpx; font-weight: 800; color: var(--text-title); display: block; }
+.lb-info-btn {
+  flex-shrink: 0; width: 48rpx; height: 48rpx; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28rpx; font-weight: 800; font-style: italic;
+  color: var(--primary); background: var(--primary-bg); border: 2rpx solid var(--primary);
+}
 .lb-head-sub { font-size: 24rpx; color: var(--text-muted); margin-top: 8rpx; display: block; }
 
 .lb-loading, .lb-empty { text-align: center; color: var(--text-muted); font-size: 28rpx; padding: 80rpx 0; }
@@ -17,9 +24,9 @@
   font-size: 28rpx; font-weight: 800; color: var(--text-title);
   background: var(--gray-200);
 }
-.lb-rank.r1 { background: var(--medal-gold); color: #4A3A00; }
-.lb-rank.r2 { background: var(--medal-silver); color: #2C333B; }
-.lb-rank.r3 { background: var(--medal-bronze); color: #3A2200; }
+.lb-rank.r1 { background: transparent; border: 3rpx solid var(--medal-gold); color: var(--medal-gold); }
+.lb-rank.r2 { background: transparent; border: 3rpx solid var(--medal-silver); color: var(--medal-silver-text); }
+.lb-rank.r3 { background: transparent; border: 3rpx solid var(--medal-bronze); color: var(--medal-bronze-light); }
 
 .lb-avatar { width: 76rpx; height: 76rpx; border-radius: 50%; background: var(--gray-100); flex-shrink: 0; }
 .lb-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6rpx; }
@@ -52,3 +59,26 @@
 }
 .lb-score-wrap { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; margin-left: 12rpx; }
 .lb-score { font-size: 34rpx; font-weight: 800; color: var(--primary); }
+
+/* 积分公式说明弹窗 */
+.lb-formula-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1300;
+  background: var(--mask-light); display: flex; align-items: center; justify-content: center;
+}
+.lb-formula {
+  width: 92vw; max-width: 680rpx; max-height: 84vh; box-sizing: border-box;
+  background: var(--bg-card); border-radius: 24rpx; display: flex; flex-direction: column;
+  box-shadow: var(--shadow-lg); overflow: hidden;
+}
+.lb-formula-head { display: flex; align-items: center; justify-content: space-between; padding: 28rpx 32rpx 16rpx; }
+.lb-formula-title { font-size: 32rpx; font-weight: 800; color: var(--text-title); }
+.lb-formula-close { font-size: 30rpx; color: var(--text-muted); padding: 8rpx; }
+.lb-formula-scroll { flex: 1; padding: 0 32rpx 32rpx; box-sizing: border-box; }
+.f-sec { font-size: 28rpx; font-weight: 800; color: var(--primary); margin: 24rpx 0 10rpx; }
+.f-p { font-size: 24rpx; color: var(--text-body); line-height: 1.65; margin-bottom: 6rpx; }
+.f-eq {
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 22rpx; color: var(--text-title); line-height: 1.7;
+  background: var(--bg-page); border-radius: 10rpx; padding: 8rpx 14rpx; margin: 6rpx 0;
+  word-break: break-all;
+}

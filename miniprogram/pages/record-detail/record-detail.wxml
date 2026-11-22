@@ -156,7 +156,7 @@
 
         <view class="rd-form-row">
           <text class="rd-form-label">强制车</text>
-          <switch checked="{{carForm.forced}}" bindchange="onForcedToggle" color="#8B5CF6"/>
+          <switch checked="{{carForm.forced}}" bindchange="onForcedToggle" color="{{switchColor}}"/>
         </view>
 
         <view class="rd-form-block" wx:if="{{!carForm.forced}}">
@@ -246,7 +246,7 @@
         </view>
         <view class="rd-form-row">
           <text class="rd-form-label">是否转换</text>
-          <switch checked="{{lanceForm.switched}}" bindchange="onLanceField" data-field="switched" color="#8B5CF6"/>
+          <switch checked="{{lanceForm.switched}}" bindchange="onLanceField" data-field="switched" color="{{switchColor}}"/>
         </view>
         <view class="rd-btn-row"><view class="rd-mini-btn rd-mini-primary" bindtap="addLance">＋ 添加记录</view></view>
         <view wx:for="{{lanceList}}" wx:key="idx" class="rd-car-line">

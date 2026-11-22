@@ -99,7 +99,7 @@
               <view class="section-title">🏞️ 湖中仙女</view>
               <view class="rule-row">
                 <text class="rule-label">启用湖中仙女</text>
-                <switch checked="{{ladyOfTheLake}}" bindchange="onLadyToggle" color="#8B5CF6"/>
+                <switch checked="{{ladyOfTheLake}}" bindchange="onLadyToggle" color="{{switchColor}}"/>
               </view>
               <view class="rule-row" wx:if="{{ladyOfTheLake}}">
                 <text class="rule-label">生效轮次</text>
@@ -135,7 +135,7 @@
                   <text class="rule-label">红方互知身份</text>
                   <text class="rule-desc">除奥伯伦外，红方互相知道对方具体身份</text>
                 </view>
-                <switch checked="{{rules.evilKnowsEachOther}}" data-field="evilKnowsEachOther" bindchange="onRuleToggle" color="#8B5CF6"/>
+                <switch checked="{{rules.evilKnowsEachOther}}" data-field="evilKnowsEachOther" bindchange="onRuleToggle" color="{{switchColor}}"/>
               </view>
               <view class="rule-row">
                 <view class="rule-col">
@@ -166,14 +166,14 @@
                   <text class="rule-label">奥伯伦必须任务失败</text>
                   <text class="rule-desc">若被选入任务队伍，必须投失败票</text>
                 </view>
-                <switch checked="{{rules.oberonMustFailMission}}" data-field="oberonMustFailMission" bindchange="onRuleToggle" color="#8B5CF6"/>
+                <switch checked="{{rules.oberonMustFailMission}}" data-field="oberonMustFailMission" bindchange="onRuleToggle" color="{{switchColor}}"/>
               </view>
               <view class="rule-row" hidden="{{!selectedRoles.lancelotBlue && !selectedRoles.lancelotRed}}">
                 <view class="rule-col">
                   <text class="rule-label">兰斯洛特必须任务失败</text>
                   <text class="rule-desc">当前为红方阵营的兰斯洛特若被选入任务队伍，必须投失败票</text>
                 </view>
-                <switch checked="{{rules.lancelotMustFail}}" data-field="lancelotMustFail" bindchange="onRuleToggle" color="#8B5CF6"/>
+                <switch checked="{{rules.lancelotMustFail}}" data-field="lancelotMustFail" bindchange="onRuleToggle" color="{{switchColor}}"/>
               </view>
             </view>
           </scroll-view>
@@ -189,7 +189,7 @@
                   <text class="rule-label">兰斯互认身份</text>
                   <text class="rule-desc">蓝兰与红兰在视野中知道对方身份</text>
                 </view>
-                <switch checked="{{rules.lancelotsKnowEachOther}}" data-field="lancelotsKnowEachOther" bindchange="onRuleToggle" color="#8B5CF6"/>
+                <switch checked="{{rules.lancelotsKnowEachOther}}" data-field="lancelotsKnowEachOther" bindchange="onRuleToggle" color="{{switchColor}}"/>
               </view>
               <view class="rule-row">
                 <view class="rule-col">
@@ -229,21 +229,21 @@
                   <text class="rule-label">睁眼狼知红兰</text>
                   <text class="rule-desc">睁眼狼（莫甘娜/刺客/爪牙/莫德雷德）是否知道红兰身份</text>
                 </view>
-                <switch checked="{{rules.evilsKnowRedLancelot}}" data-field="evilsKnowRedLancelot" bindchange="onRuleToggle" color="#8B5CF6"/>
+                <switch checked="{{rules.evilsKnowRedLancelot}}" data-field="evilsKnowRedLancelot" bindchange="onRuleToggle" color="{{switchColor}}"/>
               </view>
               <view class="rule-row" wx:if="{{selectedRoles.oberon}}">
                 <view class="rule-col">
                   <text class="rule-label">奥伯伦知红兰</text>
                   <text class="rule-desc">奥伯伦是否知道红兰身份</text>
                 </view>
-                <switch checked="{{rules.oberonKnowsRedLancelot}}" data-field="oberonKnowsRedLancelot" bindchange="onRuleToggle" color="#8B5CF6"/>
+                <switch checked="{{rules.oberonKnowsRedLancelot}}" data-field="oberonKnowsRedLancelot" bindchange="onRuleToggle" color="{{switchColor}}"/>
               </view>
               <view class="rule-row" wx:if="{{selectedRoles.lancelotBlue && selectedRoles.lancelotRed}}">
                 <view class="rule-col">
                   <text class="rule-label">梅林辨兰阵营</text>
                   <text class="rule-desc">梅林能否分辨蓝/红兰各自阵营（仍能看到双兰）</text>
                 </view>
-                <switch checked="{{rules.merlinKnowsLancelotSide}}" data-field="merlinKnowsLancelotSide" bindchange="onRuleToggle" color="#8B5CF6"/>
+                <switch checked="{{rules.merlinKnowsLancelotSide}}" data-field="merlinKnowsLancelotSide" bindchange="onRuleToggle" color="{{switchColor}}"/>
               </view>
             </view>
           </scroll-view>
@@ -291,7 +291,7 @@
               <view class="section-title">👁️ 观战设置</view>
               <view class="rule-row">
                 <text class="rule-label">允许观战</text>
-                <switch checked="{{allowSpectator}}" bindchange="onSpectatorToggle" color="#8B5CF6"/>
+                <switch checked="{{allowSpectator}}" bindchange="onSpectatorToggle" color="{{switchColor}}"/>
               </view>
             </view>
             <view style="height:60rpx"></view>

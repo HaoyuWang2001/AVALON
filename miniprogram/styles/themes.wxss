@@ -272,14 +272,41 @@
 /* ─────────── 主页"您当前处于房间"卡片：暗色下改主题卡底 + 主题强调色 ─────────── */
 .theme-torch .current-room-card { background: var(--bg-card); border-left-color: var(--warning); }
 .theme-torch .current-room-label,
-.theme-torch .current-room-id { color: var(--warning); }
+.theme-torch .current-room-id { color: var(--gold); }
 
 .theme-aurora .current-room-card { background: var(--bg-card); border-left-color: var(--card-border); }
 .theme-aurora .current-room-label,
-.theme-aurora .current-room-id { color: var(--text-title); }
+.theme-aurora .current-room-id { color: var(--gold); }
 
 .theme-steel .current-room-card { background: var(--bg-card); border-left-color: var(--card-border); }
 .theme-steel .current-room-label,
-.theme-steel .current-room-id { color: var(--text-title); }
+.theme-steel .current-room-id { color: var(--gold); }
 
-
+/* ─────────── 主题主色统一：紫 → 各主题代表色 / 标签暗色适配 ─────────── */
+.theme-torch {
+  --primary: #D4A052; --primary-dark: #B8860B; --primary-light: #F0C060;
+  --gradient-start: #E0B15C; --gradient-end: #B8863B; --confirm: #D4A052;
+  --label-blue: #7FA6D9; --label-blue-bg: #1F2A38;
+  --label-red: #E08A7A; --label-red-bg: #3A211C;
+  --label-orange: #D9A066; --label-orange-bg: #33261A;
+  --label-green: #7FC8A0; --label-green-bg: #1E3328;
+  --label-grey: #B0A493; --label-grey-bg: #2A251E;
+}
+.theme-aurora {
+  --primary: #A78BFA; --primary-dark: #8B5CF6; --primary-light: #C4B5FD;
+  --gradient-start: #A78BFA; --gradient-end: #7C5CFC; --confirm: #A78BFA;
+  --label-blue: #8FB4E8; --label-blue-bg: #1F2B47;
+  --label-red: #E89A86; --label-red-bg: #3A1F2A;
+  --label-orange: #E0A36A; --label-orange-bg: #2E2440;
+  --label-green: #7FC8A0; --label-green-bg: #1E2F38;
+  --label-grey: #B0A8C8; --label-grey-bg: #2A2440;
+}
+.theme-steel {
+  --primary: #89A7CC; --primary-dark: #5F83AC; --primary-light: #B3CCE6;
+  --gradient-start: #8FB6E0; --gradient-end: #5F83AC; --confirm: #89A7CC;
+  --label-blue: #9DB8D6; --label-blue-bg: #1E2A3A;
+  --label-red: #E09085; --label-red-bg: #3A2226;
+  --label-orange: #D9A066; --label-orange-bg: #332A22;
+  --label-green: #8FC8A8; --label-green-bg: #1E2E2C;
+  --label-grey: #9AA6B2; --label-grey-bg: #2A2F36;
+}

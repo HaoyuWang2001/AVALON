@@ -2,7 +2,7 @@
 // 配置页（index 创建房间 / room 配置房间 共用）
 // 无状态：onLoad 时从事件通道/参数初始化（默认值或传入 roomConfig 覆盖），不保留上次修改
 const api = require('../../services/api.js');
-const { getThemeClass } = require('../../utils/theme.js');
+const { getThemeClass, getSwitchColor } = require('../../utils/theme.js');
 const {
   CONFIG_GOOD_ROLES, CONFIG_EVIL_ROLES, CONFIG_FORCED_ROLES,
   DEFAULT_CONFIGS, SPEECH_OPTIONS, ROUND_OPTIONS, VOTE_OPTIONS, VOTE_REVEAL_OPTIONS,
@@ -56,7 +56,8 @@ Page({
   onLoad(options) {
     const { mode = 'create', roomId = '' } = options || {};
     const confirmText = CONFIG_TITLE[mode] || '完成';
-    this.setData({ mode, roomId, confirmText, themeClass: getThemeClass() });
+    const tc = getThemeClass();
+    this.setData({ mode, roomId, confirmText, themeClass: tc, switchColor: getSwitchColor(tc) });
     wx.setNavigationBarTitle({ title: confirmText });
     const ch = this.getOpenerEventChannel && this.getOpenerEventChannel();
     if (ch) {
@@ -87,7 +88,8 @@ Page({
     // update 模式：必须等 init 事件带来 roomConfig 后再初始化（避免误报配置错误）
     if (this.data.mode === 'update' && !this.data.roomConfig) return;
     // 永远进入第一个配置页
-    this.setData({ logicalPage: 0, swiperPage: 0, themeClass: getThemeClass(), boardType: BOARD_TYPES.STANDARD });
+    const tc = getThemeClass();
+    this.setData({ logicalPage: 0, swiperPage: 0, themeClass: tc, switchColor: getSwitchColor(tc), boardType: BOARD_TYPES.STANDARD });
     if (this.data.mode === 'update') {
       try {
         this._applyConfig(this.data.roomConfig);

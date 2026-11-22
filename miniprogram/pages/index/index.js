@@ -1,6 +1,6 @@
 // pages/index/index.js
 const api = require('../../services/api.js');
-const { getThemeClass, getThemeBg, pickTheme, applyTheme } = require('../../utils/theme.js');
+const { getThemeClass, getThemeBg, getSwitchColor, pickTheme, applyTheme } = require('../../utils/theme.js');
 const { DEFAULT_AVATAR } = require('../../utils/constants.js');
 const { buildRoomTags } = require('../../utils/roomTags.js');
 
@@ -24,6 +24,7 @@ Page({
     publicWinrate: true,
     compactGame: false,
     showWeirdSettings: false,
+    switchColor: '#8B5CF6',
 
     // 首登资料完善
     showProfileSetup: false,
@@ -81,7 +82,7 @@ Page({
 
     // 主题初始化
     const tc = getThemeClass();
-    this.setData({ themeClass: tc });
+    this.setData({ themeClass: tc, switchColor: getSwitchColor(tc) });
     wx.setBackgroundColor({ backgroundColor: getThemeBg(tc) });
 
     // 开启原生分享：发送给朋友 + 分享到朋友圈
@@ -689,7 +690,7 @@ Page({
     pickTheme().then(picked => {
       if (picked === null) return;
       applyTheme(picked);
-      this.setData({ themeClass: picked });
+      this.setData({ themeClass: picked, switchColor: getSwitchColor(picked) });
     });
   },
 

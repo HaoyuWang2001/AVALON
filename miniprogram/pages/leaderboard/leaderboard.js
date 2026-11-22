@@ -12,7 +12,8 @@ Page({
     pageSize: 20,
     total: 0,
     totalPages: 1,
-    jumpTo: ''
+    jumpTo: '',
+    showFormula: false
   },
 
   onLoad() {
@@ -44,6 +45,14 @@ Page({
       }
     }).catch(() => this.setData({ loading: false }));
   },
+
+  openFormula() {
+    this.setData({ showFormula: true });
+  },
+  closeFormula() {
+    this.setData({ showFormula: false });
+  },
+  noop() {},
 
   prevPage() {
     if (this.data.page > 1) this.loadPage(this.data.page - 1);

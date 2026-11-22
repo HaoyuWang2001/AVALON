@@ -6,7 +6,7 @@
 //  - 游戏内一律以「座位号」标识玩家（表单/票型/车辆列表不出现昵称，与玩家是谁解耦）
 const api = require('../../services/api.js');
 const app = getApp();
-const { getThemeClass, getThemeBg } = require('../../utils/theme.js');
+const { getThemeClass, getThemeBg, getSwitchColor } = require('../../utils/theme.js');
 const { TEAM_SIZES, ROLE_NAMES_SHORT, ROLE_EMOJIS, BOARD_TYPE_LABELS } = require('../../utils/constants.js');
 
 
@@ -81,7 +81,8 @@ Page({
     this._inviteSeat = seat ? parseInt(seat, 10) : 0;
     this._draftInited = false;
     this._prevMe = null;
-    this.setData({ themeClass: getThemeClass(), recordId });
+    const tc = getThemeClass();
+    this.setData({ themeClass: tc, switchColor: getSwitchColor(tc), recordId });
     this.load(true);
   },
 
