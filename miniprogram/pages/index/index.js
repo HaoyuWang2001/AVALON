@@ -343,13 +343,39 @@ Page({
     const all = this._allRooms || [];
     const myId = this.data.currentRoom ? this.data.currentRoom.roomId : '';
     const myOpenId = getApp().globalData.openId || wx.getStorageSync('openId') || '';
+    const mySeat = this.data.currentRoom && this.data.currentRoom.seatNumber != null
+      ? this.data.currentRoom.seatNumber : null;
     const expanded = this._expandedTags || {};
     const mapped = all.map(r => {
       const showAllTags = !!expanded[r.roomId];
+      const isMine = r.roomId === myId;
+      const isMineHost = !!myOpenId && r.ownerId === myOpenId;
+      const full = r.maxPlayers > 0 && r.playerCount >= r.maxPlayers;
+      let statusText = '准备中';
+      let statusClass = 'room-status-wait';
+      if (r.gameStarted) {
+        statusText = '游戏中';
+        statusClass = 'room-status-ingame';
+      } else if (full) {
+        statusText = '即将开始';
+        statusClass = 'room-status-soon';
+      }
+      let identityText = '';
+      let identityClass = '';
+      if (isMine) {
+        if (isMineHost) { identityText = '房主'; identityClass = 'room-status-host'; }
+        else if (mySeat === -1) { identityText = '观众'; identityClass = 'room-status-spectator'; }
+        else if (mySeat === 0) { identityText = '等待'; identityClass = 'room-status-waiting'; }
+        else if (mySeat >= 1) { identityText = '玩家'; identityClass = 'room-status-player'; }
+      }
       return {
         ...r,
-        isMine: r.roomId === myId,
-        isMineHost: !!myOpenId && r.ownerId === myOpenId,
+        isMine,
+        isMineHost,
+        statusText,
+        statusClass,
+        identityText,
+        identityClass,
         showAllTags,
         displayTags: showAllTags ? (r.tags || []) : (r.tags || []).slice(0, 3)
       };

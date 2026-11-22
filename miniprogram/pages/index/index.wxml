@@ -83,11 +83,8 @@
           <text class="room-card-id">{{item.roomId}}</text>
         </view>
         <view class="room-card-right">
-          <block wx:if="{{item.isMine}}">
-            <text wx:if="{{item.gameStarted}}" class="room-status-tag room-status-ingame">游戏中</text>
-            <text wx:else class="room-status-tag room-status-wait">准备中</text>
-            <text wx:if="{{item.isMineHost}}" class="room-status-tag room-status-host">房主</text>
-          </block>
+          <text class="room-status-tag {{item.statusClass}}">{{item.statusText}}</text>
+          <text wx:if="{{item.identityText}}" class="room-status-tag {{item.identityClass}}">{{item.identityText}}</text>
         </view>
       </view>
       <view class="room-tags-row" wx:if="{{item.tags.length > 0}}" catchtap="noop">

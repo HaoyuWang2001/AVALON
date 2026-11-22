@@ -199,7 +199,11 @@
 .room-status-tag { font-size: 24rpx; padding: 4rpx 16rpx; border-radius: 999rpx; background: transparent; border: 1rpx solid currentColor; }
 .room-status-ingame { color: var(--label-red); }
 .room-status-wait { color: var(--label-blue); }
+.room-status-soon { color: var(--label-orange); }
 .room-status-host { color: var(--label-orange); }
+.room-status-player { color: var(--label-green); }
+.room-status-spectator { color: var(--label-violet); }
+.room-status-waiting { color: var(--label-grey); }
 .room-card-id-wrap { display: flex; align-items: center; gap: 12rpx; min-width: 0; }
 .room-card-id { font-size: 52rpx; font-weight: 800; color: var(--gold); letter-spacing: 4rpx; }
 .room-card-count { flex-shrink: 0; font-size: 46rpx; font-weight: normal; font-style: normal; font-family: 'RoomCount', Baskerville, 'Times New Roman', serif; color: var(--text-title); }
