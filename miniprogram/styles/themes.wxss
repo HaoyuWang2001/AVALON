@@ -22,6 +22,7 @@
   --bg-card: #2E281F;
   --bg-card-solid: #2E281F;
   --primary-bg: #2A241C;
+  --func-icon-bg: #2A241C;
   --gold: #D4A052;
 
   --text-title: #F7F1E8;
@@ -105,6 +106,7 @@
   --bg-card: #29223E;
   --bg-card-solid: #29223E;
   --primary-bg: #241E36;
+  --func-icon-bg: #241E36;
   --gold: #A78BFA;
 
   --text-title: #D8D2EE;
@@ -188,6 +190,7 @@
   --bg-card: linear-gradient(160deg, #2C333B, #242A31);
   --bg-card-solid: #262B33;
   --primary-bg: #262B32;
+  --func-icon-bg: #262B32;
   --gold: #D4A052;
 
   --text-title: #C7D2DD;

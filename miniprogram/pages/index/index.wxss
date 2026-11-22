@@ -68,26 +68,28 @@
 
 
 /* ─────── 召开/加入会议（合并按钮·对角全切） ─────── */
+/* 默认（黎明初现）：浅色配色 + 深色文字/图标，图标加主题色圆底 */
 .meeting-btn {
   position: relative; width: 100%; height: 220rpx; margin-bottom: 20rpx;
   border-radius: 24rpx; overflow: hidden; box-sizing: border-box;
+  border: 1rpx solid rgba(109,40,217,0.14);
   background:
-    linear-gradient(135deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.07) 40%, rgba(0,0,0,0) 100%),
-    linear-gradient(135deg, var(--meeting-lead-1) 0%, var(--meeting-lead-2) 34%, rgba(63,63,70,0) 78%, rgba(63,63,70,0) 100%),
-    linear-gradient(135deg, #3F3F46 0%, #2A2A2F 55%, #18181B 100%);
-  box-shadow: 0 12rpx 32rpx rgba(30,41,59,0.35), inset 0 2rpx 0 rgba(255,255,255,0.35);
+    linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.28) 40%, rgba(255,255,255,0) 100%),
+    linear-gradient(135deg, #F1ECFF 0%, #DCD0FF 34%, rgba(238,242,246,0) 78%, rgba(238,242,246,0) 100%),
+    linear-gradient(135deg, #F8FAFC 0%, #EEF2F6 55%, #DDE4EC 100%);
+  box-shadow: 0 12rpx 30rpx rgba(76,29,149,0.14), inset 0 2rpx 0 rgba(255,255,255,0.9);
   transition: transform 0.2s ease;
 }
 /* 点击后该半区颜色软边铺满（对角线渐变扫过，无硬边界） */
 .meeting-fill { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; background-repeat: no-repeat; background-size: 260% 260%; }
 .meeting-btn.filling-lead .meeting-fill {
   background-image:
-    linear-gradient(135deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.07) 40%, rgba(0,0,0,0) 70%),
-    linear-gradient(135deg, var(--meeting-lead-1) 0%, var(--meeting-lead-2) 34%, rgba(63,63,70,0) 78%);
+    linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.28) 40%, rgba(255,255,255,0) 70%),
+    linear-gradient(135deg, #F1ECFF 0%, #DCD0FF 34%, rgba(238,242,246,0) 78%);
   animation: meeting-fill-lead var(--fill-ms, 700ms) ease-out forwards;
 }
 .meeting-btn.filling-join .meeting-fill {
-  background-image: linear-gradient(135deg, rgba(63,63,70,0) 0%, rgba(63,63,70,0) 30%, #3F3F46 60%, #18181B 100%);
+  background-image: linear-gradient(135deg, rgba(238,242,246,0) 0%, rgba(238,242,246,0) 30%, #EEF2F6 60%, #DDE4EC 100%);
   animation: meeting-fill-join var(--fill-ms, 700ms) ease-out forwards;
 }
 @keyframes meeting-fill-lead { from { background-position: 100% 100%; } to { background-position: 0% 0%; } }
@@ -98,8 +100,52 @@
 .meeting-content { position: absolute; display: flex; flex-direction: row; align-items: center; gap: 14rpx; white-space: nowrap; }
 .meeting-zone.lead .meeting-content { left: 25%; top: 33%; transform: translate(-50%, -50%); }
 .meeting-zone.join .meeting-content { right: 25%; top: 67%; transform: translate(50%, -50%); }
-.meeting-icon { width: 56rpx; height: 56rpx; flex-shrink: 0; }
-.meeting-label { font-size: 34rpx; font-weight: 800; color: var(--on-primary); white-space: nowrap; text-shadow: 0 2rpx 10rpx rgba(0,0,0,0.55); }
+.meeting-icon-chip { width: 76rpx; height: 76rpx; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.meeting-zone.lead .meeting-icon-chip { background: var(--primary-dark); }
+.meeting-zone.join .meeting-icon-chip { background: #475569; }
+.meeting-icon { width: 48rpx; height: 48rpx; flex-shrink: 0; }
+.meeting-zone.lead .meeting-label { color: #4C1D95; }
+.meeting-zone.join .meeting-label { color: #334155; }
+.meeting-label { font-size: 34rpx; font-weight: 800; white-space: nowrap; }
+
+/* 深色主题（烛光/暗夜/钢铁）：恢复深色方案，图标底透明、白字白图标 */
+.theme-torch .meeting-btn,
+.theme-aurora .meeting-btn,
+.theme-steel .meeting-btn {
+  border: none;
+  background:
+    linear-gradient(135deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.07) 40%, rgba(0,0,0,0) 100%),
+    linear-gradient(135deg, var(--meeting-lead-1) 0%, var(--meeting-lead-2) 34%, rgba(63,63,70,0) 78%, rgba(63,63,70,0) 100%),
+    linear-gradient(135deg, #3F3F46 0%, #2A2A2F 55%, #18181B 100%);
+  box-shadow: 0 12rpx 32rpx rgba(30,41,59,0.35), inset 0 2rpx 0 rgba(255,255,255,0.35);
+}
+.theme-torch .meeting-btn.filling-lead .meeting-fill,
+.theme-aurora .meeting-btn.filling-lead .meeting-fill,
+.theme-steel .meeting-btn.filling-lead .meeting-fill {
+  background-image:
+    linear-gradient(135deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.07) 40%, rgba(0,0,0,0) 70%),
+    linear-gradient(135deg, var(--meeting-lead-1) 0%, var(--meeting-lead-2) 34%, rgba(63,63,70,0) 78%);
+}
+.theme-torch .meeting-btn.filling-join .meeting-fill,
+.theme-aurora .meeting-btn.filling-join .meeting-fill,
+.theme-steel .meeting-btn.filling-join .meeting-fill {
+  background-image: linear-gradient(135deg, rgba(63,63,70,0) 0%, rgba(63,63,70,0) 30%, #3F3F46 60%, #18181B 100%);
+}
+.theme-torch .meeting-icon-chip,
+.theme-aurora .meeting-icon-chip,
+.theme-steel .meeting-icon-chip { width: 56rpx; height: 56rpx; background: transparent; }
+.theme-torch .meeting-icon,
+.theme-aurora .meeting-icon,
+.theme-steel .meeting-icon { width: 56rpx; height: 56rpx; }
+.theme-torch .meeting-zone.lead .meeting-label,
+.theme-torch .meeting-zone.join .meeting-label,
+.theme-aurora .meeting-zone.lead .meeting-label,
+.theme-aurora .meeting-zone.join .meeting-label,
+.theme-steel .meeting-zone.lead .meeting-label,
+.theme-steel .meeting-zone.join .meeting-label {
+  color: var(--on-primary);
+  text-shadow: 0 2rpx 10rpx rgba(0,0,0,0.55);
+}
 
 .footer { margin-top: auto; text-align: center; padding: 16rpx 0; color: var(--text-muted); font-size: 22rpx; flex-shrink: 0; }
 
@@ -162,7 +208,7 @@
 /* ─────── 品牌菜单（点击圆徽触发） ─────── */
 .brand-emblem-hover { transform: scale(0.94); opacity: 0.9; }
 .func-icon { width: 48rpx; height: 48rpx; }
-.func-icon-box { width: 72rpx; height: 72rpx; border-radius: 16rpx; background: var(--primary-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.func-icon-box { width: 72rpx; height: 72rpx; border-radius: 16rpx; background: var(--func-icon-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .func-label { font-size: 30rpx; font-weight: 800; }
 .func-switch { transform: scale(0.9); }
 .brand-menu-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1300; background: var(--mask-light); display: flex; align-items: center; justify-content: center; }

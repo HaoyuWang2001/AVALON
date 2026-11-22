@@ -43,20 +43,20 @@
     </block>
   </view>
 
-  <!-- 召开会议 / 加入会议（合并按钮：(A) 对角全切；左上靛青=召开，右下银=加入） -->
+  <!-- 召开会议 / 加入会议（合并按钮：(A) 对角全切；默认浅色，深色主题覆盖） -->
   <view class="meeting-btn {{meetingFillClass}}" style="--fill-ms:{{meetingFillMs}}ms;{{meetingPressStyle}}" wx:if="{{!currentRoom}}">
     <view class="meeting-fill"></view>
     <view class="meeting-zone lead" data-side="lead"
           bindtouchstart="onMeetingTouchStart" bindtouchmove="onMeetingTouchMove" bindtouchend="onMeetingTouchEnd" bindtouchcancel="onMeetingTouchCancel">
       <view class="meeting-content">
-        <image class="meeting-icon" src="/images/sword.png" mode="aspectFit"/>
+        <view class="meeting-icon-chip"><image class="meeting-icon" src="/images/sword.png" mode="aspectFit"/></view>
         <text class="meeting-label">召开会议</text>
       </view>
     </view>
     <view class="meeting-zone join" data-side="join"
           bindtouchstart="onMeetingTouchStart" bindtouchmove="onMeetingTouchMove" bindtouchend="onMeetingTouchEnd" bindtouchcancel="onMeetingTouchCancel">
       <view class="meeting-content">
-        <image class="meeting-icon" src="/images/door.png" mode="aspectFit"/>
+        <view class="meeting-icon-chip"><image class="meeting-icon" src="/images/door.png" mode="aspectFit"/></view>
         <text class="meeting-label">加入会议</text>
       </view>
     </view>

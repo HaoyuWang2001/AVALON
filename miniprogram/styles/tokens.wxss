@@ -24,6 +24,7 @@ page {
   --warning: #F59E0B;
   --link: #2563EB;
   --btn-icon-bg: #F3F4F6;
+  --func-icon-bg: linear-gradient(135deg, var(--primary), var(--primary-dark));
 
   /* 玩家卡片状态标识（车队/已投/确认/赞成/反对）渐变端色 */
   --state-team: #FEF3C7;
