@@ -327,12 +327,15 @@ Page({
 
   // ─── 公开房间列表（等待中 / 游戏中） ───
   loadRoomList() {
+    const seq = (this._roomSeq = (this._roomSeq || 0) + 1);
     this.setData({ roomListLoading: true });
     api.getPublicRooms().then(res => {
+      if (seq !== this._roomSeq) return;
       this._allRooms = (res && res.rooms) || [];
       this.setData({ roomListLoading: false });
       this._applyRoomData();
     }).catch(() => {
+      if (seq !== this._roomSeq) return;
       this._allRooms = [];
       this.setData({ roomListLoading: false });
       this._applyRoomData();
@@ -399,9 +402,11 @@ Page({
 
   switchRoomTab(e) {
     const tab = e.currentTarget.dataset.tab === 'playing' ? 'playing' : 'waiting';
-    if (tab === this.data.roomTab) return;
-    this.setData({ roomTab: tab });
-    this._setVisibleRooms();
+    if (tab !== this.data.roomTab) {
+      this.setData({ roomTab: tab });
+      this._setVisibleRooms();
+    }
+    this.loadRoomList();
   },
 
   // 房间列表左右滑动切换「等待中 / 游戏中」
