@@ -1,3 +1,4 @@
+const db = require('../config/db');
 const {
   makeUserId, createRoom, createRoomWithConfig, buildConfigWithSpectator,
   buildStandardRoomConfig, withConfigOverrides,
@@ -695,6 +696,16 @@ describe('02 — Room Management', () => {
       expect(room).toBeDefined();
       expect(room.gameStarted).toBe(true);
       expect(room.activeGameId).toBe(gameId);
+    });
+
+    it('02.44c 公开房间列表：长时间无更新仍展示（不按活跃时间过滤）', async () => {
+      await db.initPool();
+      const result = await createRoomWithConfig(makeUserId(), 'OldHost', buildConfigWithSpectator({ allow: true }));
+      const roomId = result.roomId;
+      await db.query('UPDATE rooms SET updated_at = DATE_SUB(NOW(), INTERVAL 2 HOUR) WHERE id = ?', [roomId]);
+      const res = await apiGet('/api/rooms/public-list?limit=100');
+      const room = (res.body.rooms || []).find(r => r.roomId === roomId);
+      expect(room).toBeDefined();
     });
 
     it('02.45 stats 返回结构', async () => {

@@ -716,7 +716,7 @@ class RoomModel {
               p.open_id as openId, p.nick_name as nickName, p.avatar_url as avatarUrl, p.seat_number as seatNumber
        FROM rooms r
        LEFT JOIN room_players p ON p.room_id = r.id AND p.seat_number >= 1
-       WHERE r.updated_at > DATE_SUB(NOW(), INTERVAL 1 HOUR) AND r.id <> '000000'
+       WHERE r.id <> '000000'
        ORDER BY r.updated_at DESC
        LIMIT ${parseInt(limit, 10) || 50}`,
       []
