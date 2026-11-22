@@ -210,7 +210,8 @@
   border-radius: 999rpx; padding: 6rpx 18rpx;
 }
 .room-tag-more { font-size: 22rpx; font-weight: 700; color: var(--primary); padding: 6rpx 12rpx; }
-.room-avatars-row { display: flex; align-items: center; }
+.room-avatars-row { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; }
+.room-avatars-group { display: flex; align-items: center; min-width: 0; }
 .room-avatar {
   width: 56rpx; height: 56rpx; border-radius: 50%;
   border: 3rpx solid var(--bg-page); background: var(--gray-100);
