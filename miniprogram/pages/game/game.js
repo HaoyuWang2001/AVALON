@@ -1059,7 +1059,20 @@ Page({
   },
 
   measureBottomBar() {
-    const windowWidth = (wx.getWindowInfo && wx.getWindowInfo().windowWidth) || wx.getSystemInfoSync().windowWidth || 375;
+    // 开发者工具/部分基础库下系统信息可能取不到（null），getSystemInfoSync 会抛
+    // "Cannot read properties of null (reading 'screenHeight')"；统一 try/catch 兜底
+    let windowWidth = 375;
+    try {
+      if (typeof wx.getWindowInfo === 'function') {
+        const info = wx.getWindowInfo();
+        if (info && info.windowWidth) windowWidth = info.windowWidth;
+      } else {
+        const info = wx.getSystemInfoSync();
+        if (info && info.windowWidth) windowWidth = info.windowWidth;
+      }
+    } catch (e) {
+      windowWidth = 375;
+    }
     const rpxToPx = windowWidth / 750;
     wx.createSelectorQuery().select('.bottom-bar').boundingClientRect(rect => {
       if (rect && rect.height) {
