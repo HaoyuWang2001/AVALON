@@ -150,7 +150,7 @@
 .podium-rate { display: block; margin: 10rpx 0 0; font-size: 36rpx; font-weight: 800; color: var(--medal-gold); }
 .rank-2 .podium-rate { color: var(--medal-silver-text); }
 .rank-3 .podium-rate { color: var(--medal-bronze-light); }
-.rank-1 .rank-2 .rank-3 
+
 @keyframes crown-float { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10rpx); } }
 @keyframes champ-glow { 0%, 100% { box-shadow: 0 0 18rpx rgba(255, 215, 0, 0.55); } 50% { box-shadow: 0 0 34rpx rgba(255, 215, 0, 0.95); } }
 

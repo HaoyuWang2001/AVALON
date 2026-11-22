@@ -169,7 +169,22 @@ const lineAt = (src, idx) => src.slice(0, idx).split('\n').length;
 for (const f of wxssFiles) {
   const src = fs.readFileSync(f, 'utf8');
   if (postcss) {
-    try { postcss.parse(src, { from: f }); }
+    try {
+      const root = postcss.parse(src, { from: f });
+      // 选择器里混入 @ 规则（典型：删除样式后残留 ".rank-1 .rank-2 .rank-3"）
+      root.walkRules(rule => {
+        if (rule.selector && rule.selector.includes('@')) {
+          const line = rule.source && rule.source.start ? rule.source.start.line : '?';
+          errors.push(`WXSS 选择器异常（缺少 {} 块）: ${rel(f)}:${line} "${rule.selector.replace(/\s+/g, ' ').trim().slice(0, 80)}"`);
+          rule.walkDecls(() => {}); // noop
+        }
+        // 空选择器（如孤立的 "}" 前残留）
+        if (!rule.selector || !rule.selector.trim()) {
+          const line = rule.source && rule.source.start ? rule.source.start.line : '?';
+          errors.push(`WXSS 空选择器: ${rel(f)}:${line}`);
+        }
+      });
+    }
     catch (e) {
       const line = e.line || (e.input && e.input.line) || '?';
       errors.push(`WXSS 解析失败: ${rel(f)}:${line} — ${e.reason || e.message}`);

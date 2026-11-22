@@ -48,6 +48,8 @@ cd preview && npm run check     # 等价于 node preview/check-miniprogram.js
 > 事故记录（2026-11-21）：两张共 1.3MB 的参考截图被放入 `miniprogram/images/`，项目体积达 2.60MB，导致编译报体积超限；截图已移出仓库（现存于仓库外 `~/avalon-screenshots/`，从未提交到 git/origin），体积恢复为 1.34MB。
 >
 > 事故记录（2026-11-21 二次）：titles 合并产生 `min-width: 0;;` 多余分号，`friends` / `leaderboard` 的 WXSS 编译报 `unexpected token ;`；自检脚本已加入 WXSS 连续分号检测。
+>
+> 事故记录（2026-11-21 三次）：删除领奖台方块样式时正则误删，残留 `.rank-1 .rank-2 .rank-3` 选择器，WXSS 报 `unexpected token @keyframes`；自检脚本已加入「选择器包含 @ 规则」检测。
 
 ## 架构
 
