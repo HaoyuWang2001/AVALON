@@ -142,7 +142,7 @@ class RoomModel {
           [roomId, hostOpenId, roomConfig ? JSON.stringify(roomConfig) : null]
         );
         await connection.execute(
-          'INSERT INTO room_players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_ready, created_at) VALUES (?, ?, ?, ?, ?, 1, FALSE, NOW())',
+          'INSERT INTO room_players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_ready, created_at) VALUES (?, ?, ?, ?, ?, 1, TRUE, NOW())',
           [roomId, hostOpenId, hostNickName, hostWxNickName, hostAvatarUrl]
         );
         await connection.execute(
@@ -363,9 +363,10 @@ class RoomModel {
           if (occupiedSeats[0].count > 0) throw new Error(`${effectiveSeat}号座位已被占用`);
         }
         
+        const initialReady = (isRoomOwner && effectiveSeat >= 1) ? 1 : 0;
         await connection.execute(
-          'INSERT INTO room_players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_ready, created_at) VALUES (?, ?, ?, ?, ?, ?, FALSE, NOW())',
-          [roomId, openId, finalNickName, finalWxNickName, finalAvatarUrl, effectiveSeat]
+          'INSERT INTO room_players (room_id, open_id, nick_name, wx_nick_name, avatar_url, seat_number, is_ready, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+          [roomId, openId, finalNickName, finalWxNickName, finalAvatarUrl, effectiveSeat, initialReady]
         );
         await connection.execute(
           'INSERT INTO users (open_id, current_room_id, updated_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE current_room_id = VALUES(current_room_id), updated_at = NOW()',
@@ -435,9 +436,12 @@ class RoomModel {
    */
   static async toggleReady(roomId, openId, isReady) {
     try {
+      const [ownerRow] = await db.query('SELECT owner_id FROM rooms WHERE id = ?', [roomId]);
+      const isOwner = !!(ownerRow && ownerRow.owner_id === openId);
+      const value = isOwner ? true : isReady;
       await db.query(
         'UPDATE room_players SET is_ready = ? WHERE room_id = ? AND open_id = ?',
-        [isReady, roomId, openId]
+        [value, roomId, openId]
       );
       
       // 更新房间更新时间
@@ -463,9 +467,10 @@ class RoomModel {
   static async updateSeatNumber(roomId, openId, newSeatNumber) {
     try {
       await db.transaction(async (connection) => {
-        const [rooms] = await connection.execute('SELECT room_config FROM rooms WHERE id = ? FOR UPDATE', [roomId]);
+        const [rooms] = await connection.execute('SELECT room_config, owner_id FROM rooms WHERE id = ? FOR UPDATE', [roomId]);
         if (rooms.length === 0) throw new Error('房间不存在');
         const roomConfig = rooms[0].room_config ? (typeof rooms[0].room_config === 'string' ? JSON.parse(rooms[0].room_config) : rooms[0].room_config) : null;
+        const seatOwnerId = rooms[0].owner_id;
 
         if (newSeatNumber === -1) {
           this._assertSpectatorAllowed(roomConfig);
@@ -486,9 +491,10 @@ class RoomModel {
           if (occupiedSeats[0].count > 0) throw new Error('座位已被占用');
         }
         
+        const seatReady = (seatOwnerId === openId && newSeatNumber >= 1) ? 1 : 0;
         await connection.execute(
-          'UPDATE room_players SET seat_number = ?, is_ready = FALSE WHERE room_id = ? AND open_id = ?',
-          [newSeatNumber, roomId, openId]
+          'UPDATE room_players SET seat_number = ?, is_ready = ? WHERE room_id = ? AND open_id = ?',
+          [newSeatNumber, seatReady, roomId, openId]
         );
         
         await connection.execute(
@@ -556,6 +562,10 @@ class RoomModel {
     if (!room) throw new Error('房间不存在');
     if (room.ownerId !== currentOwnerId) throw new Error('仅房主可转让');
     await db.query('UPDATE rooms SET owner_id = ?, updated_at = NOW() WHERE id = ? AND owner_id = ?', [newOwnerId, roomId, currentOwnerId]);
+    await db.query(
+      'UPDATE room_players SET is_ready = TRUE WHERE room_id = ? AND open_id = ? AND seat_number >= 1',
+      [roomId, newOwnerId]
+    );
     return await this.getById(roomId);
   }
   
@@ -623,6 +633,13 @@ class RoomModel {
         );
       }
     });
+    await db.query(
+      `UPDATE room_players rp
+       JOIN rooms r ON r.id = rp.room_id AND r.owner_id = rp.open_id
+       SET rp.is_ready = TRUE
+       WHERE rp.room_id = ? AND rp.seat_number >= 1`,
+      [roomId]
+    );
     await db.query('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
     return await this.getById(roomId);
   }

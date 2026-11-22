@@ -27,6 +27,10 @@ Page({
     startHint: '',
     seatsFull: false,
     currentUserReady: false,
+    showBottomBar: false,
+    readyCharging: false,
+    readyProgress: 0,
+    readyCharged: false,
     startGameCharging: false,
     startGameProgress: 0,
     startGameCharged: false,
@@ -77,6 +81,8 @@ Page({
   onUnload() {
     if (this.roomPolling) clearInterval(this.roomPolling);
     if (this._startGameTimer) clearInterval(this._startGameTimer);
+    if (this._readyTimer) clearInterval(this._readyTimer);
+    this._stopVibration();
     if (this._launchTimer) clearTimeout(this._launchTimer);
     if (this.leaving) this.leaveRoom();
   },
@@ -172,7 +178,8 @@ Page({
           seatedSeats: seats,
           spectatorAllowed: spectatorAllowed,
           seatsFull: seats.length > 0 && seats.every(s => s.occupied),
-          currentUserReady: currentUser ? readyPlayers.includes(currentUser.openId) : false
+          currentUserReady: currentUser ? readyPlayers.includes(currentUser.openId) : false,
+          showBottomBar: (room.ownerId === app.globalData.openId) || !!(currentUser && currentUser.seatNumber >= 1)
         });
 
         let canStart = playerCount > 0;
@@ -245,13 +252,71 @@ Page({
 
   // ─── Ready / Start / Disband ───
 
-  toggleReady() {
+  setReady(value) {
     if (!this._guard()) return;
-    const isReady = this.data.readyPlayers.includes(app.globalData.openId);
     wx.showLoading({ title: '请稍候...', mask: true });
-    api.toggleReady(this.data.roomId, !isReady).then(() => {
+    api.toggleReady(this.data.roomId, !!value).then(() => {
       this.fetchRoomInfo();
     }).finally(() => wx.hideLoading());
+  },
+
+  // ─── 低频振动（长按充电期间） ───
+  _vibeOnce() {
+    try {
+      wx.vibrateShort({ type: 'light' });
+    } catch (e) {
+      try { wx.vibrateShort(); } catch (e2) {}
+    }
+  },
+  _startVibration() {
+    if (this._vibeTimer) return;
+    this._vibeOnce();
+    this._vibeTimer = setInterval(() => this._vibeOnce(), 180);
+  },
+  _stopVibration() {
+    if (this._vibeTimer) { clearInterval(this._vibeTimer); this._vibeTimer = null; }
+  },
+
+  // ─── 准备长按（1s）：未准备长按满格松手→准备；已准备点击→取消 ───
+  onReadyTouchStart() {
+    if (!this._guard()) return;
+    if (this.data.currentUserReady) { this._readyTapCancel = true; return; }
+    if (this._readyTimer || this.data.readyCharged || this.data.readyCharging) return;
+    this._readyTapCancel = false;
+    this.setData({ readyCharging: true, readyCharged: false, readyProgress: 0 });
+    this._startVibration();
+    let p = 0;
+    this._readyTimer = setInterval(() => {
+      p += 2;
+      if (p >= 100) {
+        clearInterval(this._readyTimer);
+        this._readyTimer = null;
+        this.setData({ readyProgress: 100, readyCharged: true });
+      } else {
+        this.setData({ readyProgress: p });
+      }
+    }, 20);
+  },
+
+  onReadyTouchEnd() {
+    if (this.data.currentUserReady) {
+      if (this._readyTapCancel) {
+        this._readyTapCancel = false;
+        this.setReady(false);
+      }
+      return;
+    }
+    this._stopVibration();
+    if (this._readyTimer) { clearInterval(this._readyTimer); this._readyTimer = null; }
+    if (this.data.readyCharged) this.setReady(true);
+    this.setData({ readyCharging: false, readyCharged: false, readyProgress: 0 });
+  },
+
+  onReadyTouchCancel() {
+    this._readyTapCancel = false;
+    this._stopVibration();
+    if (this._readyTimer) { clearInterval(this._readyTimer); this._readyTimer = null; }
+    this.setData({ readyCharging: false, readyCharged: false, readyProgress: 0 });
   },
 
   startGame() {
@@ -276,6 +341,7 @@ Page({
     if (!this.data.canStartGame) return;
     if (this._startGameTimer || this.data.startGameCharged || this.data.startGameLaunching || this.data.dissolving) return;
     this.setData({ startGameCharging: true, startGameCharged: false, startGameProgress: 0 });
+    this._startVibration();
     let p = 0;
     this._startGameTimer = setInterval(() => {
       p += 1;
@@ -291,6 +357,7 @@ Page({
   },
 
   onStartGameTouchEnd() {
+    this._stopVibration();
     if (this.data.startGameLaunching) return;
     if (this._startGameTimer) { clearInterval(this._startGameTimer); this._startGameTimer = null; }
     if (this.data.startGameCharged) {
@@ -303,6 +370,7 @@ Page({
   },
 
   onStartGameTouchCancel() {
+    this._stopVibration();
     if (this.data.startGameLaunching) return;
     if (this._startGameTimer) { clearInterval(this._startGameTimer); this._startGameTimer = null; }
     this.setData({ startGameCharging: false, startGameCharged: false, startGameProgress: 0, dissolving: false });

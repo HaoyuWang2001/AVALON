@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const RoomModel = require('../models/RoomModel');
 const {
   makeUserId, createRoom, createRoomWithConfig, buildConfigWithSpectator,
   buildStandardRoomConfig, withConfigOverrides,
@@ -390,6 +391,56 @@ describe('02 — Room Management', () => {
     });
   });
 
+  // ─────────────── 房主自动准备 ───────────────
+  describe('房主自动准备', () => {
+    it('02.26c 房主入座即已准备；取消准备无效', async () => {
+      const hostId = makeUserId();
+      const result = await createRoom(hostId, 'Host');
+      const roomId = result.roomId;
+      let room = await getRoom(roomId);
+      expect(room.room.readyPlayers).toContain(hostId);
+      await toggleReady(roomId, hostId, false);
+      room = await getRoom(roomId);
+      expect(room.room.readyPlayers).toContain(hostId);
+    });
+
+    it('02.26d 房主离开座位 ready 清除，重新上座恢复', async () => {
+      const hostId = makeUserId();
+      const result = await createRoom(hostId, 'Host');
+      const roomId = result.roomId;
+      let res = await updateSeatNumber(roomId, hostId, 0);
+      expect(res.room.readyPlayers).not.toContain(hostId);
+      res = await updateSeatNumber(roomId, hostId, 1);
+      expect(res.room.readyPlayers).toContain(hostId);
+    });
+
+    it('02.26e 房主无需准备即可开局（其余玩家准备）', async () => {
+      const hostId = makeUserId();
+      const result = await createRoomWithConfig(hostId, 'Host', validConfig());
+      const roomId = result.roomId;
+      for (let i = 2; i <= 5; i++) {
+        const uid = makeUserId();
+        await joinRoom(roomId, uid, i, `P${i}`);
+        await toggleReady(roomId, uid, true);
+      }
+      const res = await startGame(roomId, hostId);
+      expect(res.success).toBe(true);
+      expect(res.gameId).toBeDefined();
+    });
+
+    it('02.33a 转让房主后新房主自动准备', async () => {
+      const hostId = makeUserId();
+      const result = await createRoom(hostId, 'Host');
+      const roomId = result.roomId;
+      const uid = makeUserId();
+      await joinRoom(roomId, uid, 2, 'P2');
+      await transferOwner(roomId, hostId, uid);
+      const room = await getRoom(roomId);
+      expect(room.room.readyPlayers).toContain(uid);
+      expect(room.room.players.find(p => p.openId === uid).isReady).toBe(true);
+    });
+  });
+
   // ─────────────── 8. 踢人（房主） ───────────────
   describe('踢人', () => {
     it('02.27 房主踢出房间（room）', async () => {
@@ -703,8 +754,9 @@ describe('02 — Room Management', () => {
       const result = await createRoomWithConfig(makeUserId(), 'OldHost', buildConfigWithSpectator({ allow: true }));
       const roomId = result.roomId;
       await db.query('UPDATE rooms SET updated_at = DATE_SUB(NOW(), INTERVAL 2 HOUR) WHERE id = ?', [roomId]);
-      const res = await apiGet('/api/rooms/public-list?limit=100');
-      const room = (res.body.rooms || []).find(r => r.roomId === roomId);
+      // 直接走模型（大 limit），避免测试库房间数超过路由 100 条上限影响断言
+      const list = await RoomModel.getPublicRoomList(500);
+      const room = (list || []).find(r => r.roomId === roomId);
       expect(room).toBeDefined();
     });
 
