@@ -24,7 +24,7 @@
             <text wx:if="{{item.isFriend}}" class="lb-tag lb-friend">好友</text>
             <text wx:if="{{item.isSelf}}" class="lb-tag lb-me">我</text>
           </view>
-          <text class="lb-sub">{{item.games}} 场 · {{item.wins}} 胜 · {{item.winRate}}% · MVP {{item.mvpCount}} · SVP {{item.svpCount}}</text>
+          <text class="lb-sub">{{item.games}} 场 · {{item.winRate}}% · MVP {{item.mvpCount}} · SVP {{item.svpCount}}</text>
         </view>
         <view class="lb-score-wrap">
           <text class="lb-score">{{item.score}}</text>
