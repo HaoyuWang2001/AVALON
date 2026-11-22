@@ -42,6 +42,7 @@
 .ps-private { text-align: center; color: var(--text-muted); font-size: 26rpx; padding: 40rpx 0; }
 .ps-actions { display: flex; justify-content: center; margin-top: 30rpx; }
 .ps-action-btn { width: 60%; }
+.ps-enter-btn { box-shadow: none; }
 .ps-score-row { display: flex; align-items: center; justify-content: space-between; margin-top: 16rpx; padding: 14rpx 20rpx; background: var(--bg-page); border-radius: 16rpx; }
 .ps-score-label { font-size: 24rpx; color: var(--text-muted); }
 .ps-score-right { display: flex; align-items: center; gap: 8rpx; }

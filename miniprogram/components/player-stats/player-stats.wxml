@@ -47,7 +47,7 @@
     </block>
 
     <view class="ps-actions" wx:if="{{!isSelf}}">
-      <button wx:if="{{isFriend}}" class="btn btn-primary ps-action-btn" bindtap="goDetail">进入主页</button>
+      <button wx:if="{{isFriend}}" class="btn btn-primary ps-action-btn ps-enter-btn" bindtap="goDetail">进入主页</button>
       <button wx:else class="btn ps-action-btn {{requested ? 'btn-disabled' : 'btn-primary'}}"
               disabled="{{requested}}" bindtap="addFriend">{{requested ? '已申请' : '申请好友'}}</button>
     </view>
