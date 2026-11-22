@@ -44,7 +44,7 @@
     <history-card title="历史对局" games="{{historyList}}" />
   </view>
 
-  <view class="footer"><view class="footer-version">AVALON v1.4.2</view></view>
+  <view class="footer"><view class="footer-version">AVALON v2.0.0</view></view>
 
   <!-- 编辑个人信息弹窗（每行独立保存） -->
   <view class="me-edit-mask" wx:if="{{showEditProfile}}" bindtap="closeEditProfile" catchtouchmove="noop">

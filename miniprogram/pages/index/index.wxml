@@ -104,7 +104,7 @@
     </view>
   </view>
 
-  <view class="footer"><view class="footer-version">AVALON v1.4.2</view></view>
+  <view class="footer"><view class="footer-version">AVALON v2.0.0</view></view>
 
 
   <!-- 奇奇怪怪的设置们：中部弹窗（点遮罩关闭） -->
