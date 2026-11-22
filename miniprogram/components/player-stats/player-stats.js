@@ -69,6 +69,7 @@ Component({
             goodWinRate: s.goodGames > 0 ? s.goodWinRate + '%' : '—',
             evilWinRate: s.evilGames > 0 ? s.evilWinRate + '%' : '—',
             score: s.score != null ? s.score : 0,
+            scoreDetail: s.scoreDetail || null,
             mvpCount: s.mvpCount || 0,
             svpCount: s.svpCount || 0,
             titles: Array.isArray(s.titles) ? s.titles : []
@@ -80,6 +81,11 @@ Component({
     close() {
       this.setData({ show: false });
       this.triggerEvent('close');
+    },
+    openScoreDetail() {
+      const comp = this.selectComponent('#scoreDetail');
+      if (!comp) return;
+      comp.open({ nickName: this.data.nickName, detail: this.data.stats && this.data.stats.scoreDetail ? this.data.stats.scoreDetail : null });
     },
     noop() {},
     goDetail() {

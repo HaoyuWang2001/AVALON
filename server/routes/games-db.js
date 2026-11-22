@@ -154,10 +154,16 @@ function createRouter() {
       // 总胜率排名（与 champions 同口径；不在榜 = null）
       stats.rank = await GameModel.getWinRateRank(openId);
 
-      // 总分（跟随胜率可见性，不可见时不下发）
+      // 积分 + 求和明细（跟随胜率可见性，不可见时不下发）
       if (stats.rateVisible) {
         const [scoreRow] = await db.query(
-          `SELECT COALESCE(SUM(s.total), 0) AS score
+          `SELECT COUNT(*) AS games,
+                  SUM(CASE WHEN s.win_score > 0 THEN 1 ELSE 0 END) AS wins,
+                  COALESCE(SUM(s.base), 0) AS baseSum,
+                  COALESCE(SUM(s.win_score), 0) AS winSum,
+                  COALESCE(SUM(s.role_score), 0) AS roleSum,
+                  COALESCE(SUM(s.award_score), 0) AS awardSum,
+                  COALESCE(SUM(s.total), 0) AS total
            FROM game_player_scores s
            JOIN games gs ON gs.id = s.game_id
            WHERE s.open_id = ?
@@ -166,7 +172,22 @@ function createRouter() {
              AND COALESCE(gs.source, 'online') <> 'offline'`,
           [openId]
         );
-        stats.score = Math.round(Number(scoreRow.score) * 100) / 100;
+        const r2 = n => Math.round(Number(n) * 100) / 100;
+        const games = Number(scoreRow.games) || 0;
+        const wins = Number(scoreRow.wins) || 0;
+        const total = r2(scoreRow.total);
+        stats.score = total;
+        stats.scoreDetail = {
+          games,
+          wins,
+          losses: games - wins,
+          baseSum: r2(scoreRow.baseSum),
+          winSum: r2(scoreRow.winSum),
+          roleSum: r2(scoreRow.roleSum),
+          awardSum: r2(scoreRow.awardSum),
+          total,
+          avg: games > 0 ? r2(Number(scoreRow.total) / games) : 0
+        };
       }
 
       // MVP/SVP 获得数（收到的票数累计；跟随胜率可见性，不可见时不下发）

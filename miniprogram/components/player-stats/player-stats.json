@@ -1,6 +1,7 @@
 {
   "component": true,
   "usingComponents": {
-    "title-badge": "/components/title-badge/title-badge"
+    "title-badge": "/components/title-badge/title-badge",
+    "score-detail": "/components/score-detail/score-detail"
   }
 }

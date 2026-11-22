@@ -21,6 +21,15 @@
       <view class="more-btn" bindtap="moreActions">···</view>
     </view>
 
+    <!-- 积分 -->
+    <view class="card score-card" wx:if="{{scoreVisible}}">
+      <view class="score-card-left">
+        <text class="score-card-label">积分</text>
+        <text class="score-card-num">{{score}}</text>
+      </view>
+      <view class="score-help-btn" catchtap="openScoreDetail">?</view>
+    </view>
+
     <!-- 状态卡：空闲（可邀请） / 房间等待中(进房间) / 对局中(观战) -->
     <view class="card status-card">
       <block wx:if="{{!friend.room}}">
@@ -50,4 +59,6 @@
 
     <view style="height: 40rpx"></view>
   </block>
+
+  <score-detail id="scoreDetail"/>
 </view>

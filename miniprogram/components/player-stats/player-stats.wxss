@@ -44,4 +44,10 @@
 .ps-action-btn { width: 60%; }
 .ps-score-row { display: flex; align-items: center; justify-content: space-between; margin-top: 16rpx; padding: 14rpx 20rpx; background: var(--bg-page); border-radius: 16rpx; }
 .ps-score-label { font-size: 24rpx; color: var(--text-muted); }
+.ps-score-right { display: flex; align-items: center; gap: 8rpx; }
 .ps-score-num { font-size: 34rpx; font-weight: 800; color: var(--primary); }
+.ps-help-btn {
+  width: 26rpx; height: 26rpx; border-radius: 50%;
+  border: 1rpx solid var(--text-muted); color: var(--text-muted);
+  font-size: 18rpx; line-height: 1; display: flex; align-items: center; justify-content: center;
+}

@@ -26,3 +26,14 @@
 
 /* 历史对局外层（内容由 history-card 组件渲染） */
 .history-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); }
+
+/* 积分 */
+.score-card { display: flex; align-items: center; justify-content: space-between; padding: 24rpx 28rpx; }
+.score-card-left { display: flex; align-items: baseline; gap: 14rpx; }
+.score-card-label { font-size: 26rpx; color: var(--text-muted); }
+.score-card-num { font-size: 44rpx; font-weight: 800; color: var(--primary); }
+.score-help-btn {
+  width: 30rpx; height: 30rpx; border-radius: 50%;
+  border: 1rpx solid var(--text-muted); color: var(--text-muted);
+  font-size: 20rpx; line-height: 1; display: flex; align-items: center; justify-content: center;
+}

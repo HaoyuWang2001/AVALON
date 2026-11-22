@@ -24,7 +24,13 @@
   <view class="card me-stats">
     <view class="me-stat"><text class="me-stat-num">{{stats.totalGames}}</text><text class="me-stat-label">场次</text></view>
     <view class="me-stat-div"></view>
-    <view class="me-stat"><text class="me-stat-num me-score">{{stats.score}}</text><text class="me-stat-label">总分</text></view>
+    <view class="me-stat">
+      <view class="me-score-row">
+        <text class="me-stat-num me-score">{{stats.score}}</text>
+        <view class="score-help-btn" catchtap="openScoreDetail">?</view>
+      </view>
+      <text class="me-stat-label">积分</text>
+    </view>
     <view class="me-stat-div"></view>
     <view class="me-stat"><text class="me-stat-num">{{stats.totalGames ? stats.totalWinRate + '%' : '—'}}</text><text class="me-stat-label">总胜率</text></view>
     <view class="me-stat-div"></view>
@@ -47,4 +53,5 @@
 
   <view class="footer"><view class="footer-version">AVALON v1.4.2</view></view>
 
+  <score-detail id="scoreDetail"/>
 </view>

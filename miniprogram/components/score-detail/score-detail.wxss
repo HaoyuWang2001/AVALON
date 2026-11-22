@@ -1,0 +1,28 @@
+.sd-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1400;
+  background: var(--mask-light); display: flex; align-items: center; justify-content: center;
+}
+.sd-panel {
+  width: 92vw; max-width: 660rpx; max-height: 84vh; box-sizing: border-box;
+  background: var(--bg-card); border-radius: 24rpx; display: flex; flex-direction: column;
+  box-shadow: var(--shadow-lg); overflow: hidden;
+}
+.sd-head { display: flex; align-items: center; justify-content: space-between; padding: 28rpx 32rpx 12rpx; }
+.sd-title { flex: 1; min-width: 0; font-size: 32rpx; font-weight: 800; color: var(--text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sd-close { flex-shrink: 0; font-size: 30rpx; color: var(--text-muted); padding: 8rpx; }
+.sd-scroll { flex: 1; padding: 0 32rpx 32rpx; box-sizing: border-box; }
+.sd-hero { display: flex; flex-direction: column; align-items: center; padding: 16rpx 0 20rpx; }
+.sd-hero-num { font-size: 64rpx; font-weight: 800; color: var(--primary); }
+.sd-hero-label { font-size: 24rpx; color: var(--text-muted); margin-top: 4rpx; }
+.sd-grid { display: flex; background: var(--bg-page); border-radius: 18rpx; padding: 18rpx 0; }
+.sd-cell { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.sd-cell-num { font-size: 34rpx; font-weight: 800; color: var(--text-title); }
+.sd-cell-label { font-size: 22rpx; color: var(--text-muted); margin-top: 4rpx; }
+.sd-sec { font-size: 28rpx; font-weight: 800; color: var(--primary); margin: 26rpx 0 10rpx; }
+.sd-line { display: flex; align-items: center; justify-content: space-between; padding: 10rpx 0; font-size: 26rpx; color: var(--text-body); }
+.sd-line-label { color: var(--text-muted); }
+.sd-plus { color: var(--label-green); font-weight: 700; }
+.sd-minus { color: var(--label-red); font-weight: 700; }
+.sd-total { border-top: 1rpx solid var(--divider); margin-top: 8rpx; padding-top: 16rpx; font-weight: 800; color: var(--text-title); }
+.sd-p { font-size: 24rpx; color: var(--text-body); line-height: 1.65; margin-bottom: 6rpx; }
+.sd-empty { text-align: center; color: var(--text-muted); font-size: 26rpx; padding: 60rpx 0; }

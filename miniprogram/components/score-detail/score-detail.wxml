@@ -1,0 +1,39 @@
+<view class="sd-mask" wx:if="{{show}}" bindtap="close" catchtouchmove="noop">
+  <view class="sd-panel" catchtap="noop">
+    <view class="sd-head">
+      <text class="sd-title">{{nickName}} 的积分明细</text>
+      <text class="sd-close" bindtap="close">✕</text>
+    </view>
+    <scroll-view scroll-y class="sd-scroll" show-scrollbar="{{false}}">
+      <block wx:if="{{detail}}">
+        <view class="sd-hero">
+          <text class="sd-hero-num">{{detail.total}}</text>
+          <text class="sd-hero-label">积分合计</text>
+        </view>
+        <view class="sd-grid">
+          <view class="sd-cell"><text class="sd-cell-num">{{detail.games}}</text><text class="sd-cell-label">计分局数</text></view>
+          <view class="sd-cell"><text class="sd-cell-num">{{detail.wins}}</text><text class="sd-cell-label">胜</text></view>
+          <view class="sd-cell"><text class="sd-cell-num">{{detail.losses}}</text><text class="sd-cell-label">负</text></view>
+          <view class="sd-cell"><text class="sd-cell-num">{{detail.avg}}</text><text class="sd-cell-label">场均</text></view>
+        </view>
+
+        <view class="sd-sec">积分求和明细</view>
+        <view class="sd-line"><text class="sd-line-label">基础分合计</text><text class="sd-plus">+{{detail.baseSum}}</text></view>
+        <view class="sd-line"><text class="sd-line-label">胜负分合计</text><text class="{{detail.winSum >= 0 ? 'sd-plus' : 'sd-minus'}}">{{detail.winSum >= 0 ? '+' : ''}}{{detail.winSum}}</text></view>
+        <view class="sd-line"><text class="sd-line-label">角色分合计</text><text class="{{detail.roleSum >= 0 ? 'sd-plus' : 'sd-minus'}}">{{detail.roleSum >= 0 ? '+' : ''}}{{detail.roleSum}}</text></view>
+        <view class="sd-line"><text class="sd-line-label">荣誉分合计（MVP/SVP 票）</text><text class="sd-plus">+{{detail.awardSum}}</text></view>
+        <view class="sd-line sd-total"><text>积分合计</text><text>{{detail.total}}</text></view>
+
+        <view class="sd-sec">计算公式</view>
+        <view class="sd-p">积分 = Σ 单局积分</view>
+        <view class="sd-p">单局积分 = Base(n) + 胜负分 + 角色分 + 荣誉分</view>
+        <view class="sd-p">· Base(n) = clamp(0.80 − 0.05×(n−5), 0.45, 0.80)，n 为人数</view>
+        <view class="sd-p">· 胜负分：胜 +0.45×(0.5/p)；负 −0.30×(p/0.5)；p 为该人数下阵营历史胜率（钳制 0.35~0.65）</view>
+        <view class="sd-p">· 角色分：仅胜方内部零和再分配，难角色获得更多</view>
+        <view class="sd-p">· 荣誉分：每张 MVP/SVP 票 +0.01</view>
+        <view class="sd-p">· 仅统计线上、正常结束、非测试房的对局；线下局暂不计分</view>
+      </block>
+      <view wx:else class="sd-empty">该玩家未公开积分明细</view>
+    </scroll-view>
+  </view>
+</view>

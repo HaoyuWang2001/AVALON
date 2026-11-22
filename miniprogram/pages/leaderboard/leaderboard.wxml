@@ -58,7 +58,7 @@
         <view class="f-sec">一、统计范围与资格</view>
         <view class="f-p">· 仅统计线上对局（source=online），排除测试房 000000。</view>
         <view class="f-p">· 仅 status=ended、有胜方（good/evil）且非 abandoned 的对局。</view>
-        <view class="f-p">· 每局每人一行明细；总分 = 全部合格对局 total 之和。</view>
+        <view class="f-p">· 每局每人一行明细；积分 = 全部合格对局积分之和。</view>
         <view class="f-p">· 榜单门槛：总场次 ≥ 动态阈值（10~50），且公开胜率；本人始终可见自己的分数。</view>
 
         <view class="f-sec">二、记号</view>

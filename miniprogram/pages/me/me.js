@@ -86,6 +86,12 @@ Page({
     }).catch(() => this.setData({ loading: false }));
   },
 
+  openScoreDetail() {
+    const comp = this.selectComponent('#scoreDetail');
+    if (!comp) return;
+    comp.open({ nickName: this.data.me.nickName || '玩家', detail: this.data.stats.scoreDetail || null });
+  },
+
   // 修改昵称（限 10 字）
   editNickName() {
     const current = this.data.me.nickName || '';
@@ -155,6 +161,7 @@ Page({
           stats: {
             totalGames: s.totalGames || 0,
             score: s.score != null ? s.score : 0,
+            scoreDetail: s.scoreDetail || null,
             totalWinRate: s.totalWinRate || 0,
             goodWinRate: s.goodWinRate || 0,
             evilWinRate: s.evilWinRate || 0,

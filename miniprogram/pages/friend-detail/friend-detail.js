@@ -37,6 +37,9 @@ Page({
     roleStats: [],
     summary: null,
     historyList: [],
+    scoreVisible: false,
+    score: 0,
+    scoreDetail: null,
     myInvite: '',           // '' | 'room' | 'game'
     myRoomId: '',
     myGameId: '',
@@ -130,10 +133,19 @@ Page({
             totalGames: s.totalGames,
             goodWinRate: s.goodWinRate + '%',
             evilWinRate: s.evilWinRate + '%'
-          }
+          },
+          scoreVisible: s.score != null,
+          score: s.score != null ? s.score : 0,
+          scoreDetail: s.scoreDetail || null
         });
       }
     }).catch(() => {});
+  },
+
+  openScoreDetail() {
+    const comp = this.selectComponent('#scoreDetail');
+    if (!comp) return;
+    comp.open({ nickName: this.data.friend.nickName || '玩家', detail: this.data.scoreDetail || null });
   },
 
   loadHistory() {

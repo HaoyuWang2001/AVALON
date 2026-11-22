@@ -3,6 +3,7 @@
   "enablePullDownRefresh": true,
   "usingComponents": {
     "role-stats-card": "/components/role-stats-card/role-stats-card",
+    "score-detail": "/components/score-detail/score-detail",
     "history-card": "/components/history-card/history-card",
     "title-badge": "/components/title-badge/title-badge"
   }

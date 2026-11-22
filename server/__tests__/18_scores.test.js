@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const scoring = require('../utils/scoring');
 const ScoreModel = require('../models/ScoreModel');
+const { apiGet } = require('./helpers/testHelper');
 
 const TS = Date.now();
 const gid = `score_game_${TS}`;
@@ -166,6 +167,21 @@ describe('18 — 计分制', () => {
       expect(r.skipped).toBe(true);
       const rows = await db.query('SELECT * FROM game_player_scores WHERE game_id = ?', [offId]);
       expect(rows.length).toBe(0);
+    });
+
+    it('18-11 个人 stats 下发积分明细（scoreDetail 与求和一致）', async () => {
+      const res = await apiGet('/api/games/stats?subjectOpenId=sco_m&viewerOpenId=sco_m');
+      expect(res.status).toBe(200);
+      const s = res.body.stats;
+      expect(s.score).toBeGreaterThan(0);
+      const d = s.scoreDetail;
+      expect(d).toBeTruthy();
+      expect(d.games).toBeGreaterThanOrEqual(1);
+      expect(d.wins + d.losses).toBe(d.games);
+      const sum = Math.round((d.baseSum + d.winSum + d.roleSum + d.awardSum) * 100) / 100;
+      expect(Math.abs(sum - d.total)).toBeLessThanOrEqual(0.02);
+      expect(d.total).toBe(s.score);
+      expect(typeof d.avg).toBe('number');
     });
 
     it('18-10 backfillAll 可全量重算', async () => {
