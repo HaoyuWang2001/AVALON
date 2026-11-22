@@ -1,6 +1,13 @@
 <!--components/role-stats-card/role-stats-card.wxml-->
 <view class="rsc">
   <view class="rsc-title">{{title}}</view>
+  <view class="rsc-summary-row" wx:if="{{summary && summary.totalGames > 0}}">
+    <view class="rsc-summary-item"><text class="rsc-summary-num">{{summary.totalWinRate}}</text><text class="rsc-summary-label">总胜率</text></view>
+    <view class="rsc-summary-div"></view>
+    <view class="rsc-summary-item"><text class="rsc-summary-num rsc-good">{{summary.goodWinRate}}</text><text class="rsc-summary-label">蓝方</text></view>
+    <view class="rsc-summary-div"></view>
+    <view class="rsc-summary-item"><text class="rsc-summary-num rsc-evil">{{summary.evilWinRate}}</text><text class="rsc-summary-label">红方</text></view>
+  </view>
   <view wx:if="{{roles.length === 0}}" class="rsc-empty">暂无数据</view>
   <swiper wx:else class="rsc-swiper"
           bindchange="onSwiperChange"

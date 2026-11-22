@@ -135,11 +135,11 @@ Page({
             winRate: r.winRate + '%'
           })),
           summary: {
-            totalWinRate: s.totalWinRate,
+            totalWinRate: s.totalGames > 0 ? s.totalWinRate + '%' : '—',
             totalWins: s.totalWins,
             totalGames: s.totalGames,
-            goodWinRate: s.goodWinRate + '%',
-            evilWinRate: s.evilWinRate + '%'
+            goodWinRate: s.goodGames > 0 ? s.goodWinRate + '%' : '—',
+            evilWinRate: s.evilGames > 0 ? s.evilWinRate + '%' : '—'
           },
           scoreVisible: s.score != null,
           score: s.score != null ? s.score : 0,

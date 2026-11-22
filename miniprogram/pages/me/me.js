@@ -170,11 +170,11 @@ Page({
             titles: Array.isArray(s.titles) ? s.titles : []
           },
           summary: {
-            totalWinRate: s.totalWinRate,
+            totalWinRate: s.totalGames > 0 ? s.totalWinRate + '%' : '—',
             totalWins: s.totalWins,
             totalGames: s.totalGames,
-            goodWinRate: s.goodWinRate + '%',
-            evilWinRate: s.evilWinRate + '%'
+            goodWinRate: s.goodGames > 0 ? s.goodWinRate + '%' : '—',
+            evilWinRate: s.evilGames > 0 ? s.evilWinRate + '%' : '—'
           },
           roleStats: (s.roles || []).filter(r => r.games > 0).map(r => ({
             role: r.role,

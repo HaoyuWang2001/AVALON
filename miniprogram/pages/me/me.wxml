@@ -31,18 +31,12 @@
           <view class="score-help-btn" catchtap="openScoreDetail">?</view>
         </view>
       </view>
-      <view class="me-stat-div"></view>
+    </view>
+
+    <view class="me-stats-row me-stats-row-2">
       <view class="me-stat"><text class="me-stat-num">{{stats.mvpCount}}</text><text class="me-stat-label">MVP</text></view>
       <view class="me-stat-div"></view>
       <view class="me-stat"><text class="me-stat-num">{{stats.svpCount}}</text><text class="me-stat-label">SVP</text></view>
-    </view>
-
-    <view class="me-stats-row me-stats-row-3">
-      <view class="me-stat"><text class="me-stat-num">{{stats.totalGames ? stats.totalWinRate + '%' : '—'}}</text><text class="me-stat-label">总胜率</text></view>
-      <view class="me-stat-div"></view>
-      <view class="me-stat"><text class="me-stat-num me-good">{{stats.totalGames ? stats.goodWinRate + '%' : '—'}}</text><text class="me-stat-label">蓝方</text></view>
-      <view class="me-stat-div"></view>
-      <view class="me-stat"><text class="me-stat-num me-evil">{{stats.totalGames ? stats.evilWinRate + '%' : '—'}}</text><text class="me-stat-label">红方</text></view>
     </view>
   </view>
 
