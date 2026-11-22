@@ -4,7 +4,8 @@ Component({
   data: {
     show: false,
     nickName: '',
-    detail: null
+    detail: null,
+    formulaOpen: false
   },
   methods: {
     open(opts) {
@@ -12,12 +13,16 @@ Component({
       this.setData({
         show: true,
         nickName: o.nickName || '玩家',
-        detail: o.detail || null
+        detail: o.detail || null,
+        formulaOpen: false
       });
     },
     close() {
-      this.setData({ show: false });
+      this.setData({ show: false, formulaOpen: false });
       this.triggerEvent('close');
+    },
+    toggleFormula() {
+      this.setData({ formulaOpen: !this.data.formulaOpen });
     },
     noop() {}
   }

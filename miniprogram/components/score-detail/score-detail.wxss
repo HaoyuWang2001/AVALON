@@ -19,6 +19,12 @@
 .sd-cell-num { font-size: 34rpx; font-weight: 800; color: var(--text-title); }
 .sd-cell-label { font-size: 22rpx; color: var(--text-muted); margin-top: 4rpx; }
 .sd-sec { font-size: 28rpx; font-weight: 800; color: var(--primary); margin: 26rpx 0 10rpx; }
+.sd-sec-toggle { display: flex; align-items: center; justify-content: space-between; padding: 6rpx 0; }
+.sd-sec-right { display: flex; align-items: center; gap: 8rpx; }
+.sd-sec-action { font-size: 24rpx; font-weight: 600; color: var(--text-muted); }
+.sd-sec-arrow { font-size: 24rpx; color: var(--text-muted); transition: transform 0.2s ease; }
+.sd-sec-arrow-open { transform: rotate(180deg); }
+.sd-formula { padding-bottom: 8rpx; }
 .sd-line { display: flex; align-items: center; justify-content: space-between; padding: 10rpx 0; font-size: 26rpx; color: var(--text-body); }
 .sd-line-label { color: var(--text-muted); }
 .sd-plus { color: var(--label-green); font-weight: 700; }

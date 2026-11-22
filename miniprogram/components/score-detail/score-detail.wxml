@@ -26,7 +26,14 @@
         <view wx:if="{{detail.floored}}" class="sd-p">累计保底：原始合计为负，积分按 0 计</view>
         <view class="sd-line sd-total"><text>积分合计</text><text>{{detail.total}}</text></view>
 
-        <view class="sd-sec">计算公式</view>
+        <view class="sd-sec sd-sec-toggle" bindtap="toggleFormula">
+          <text>计算公式</text>
+          <view class="sd-sec-right">
+            <text class="sd-sec-action">{{formulaOpen ? '收起' : '展开'}}</text>
+            <text class="sd-sec-arrow {{formulaOpen ? 'sd-sec-arrow-open' : ''}}">▾</text>
+          </view>
+        </view>
+        <view wx:if="{{formulaOpen}}" class="sd-formula">
         <view class="sd-p">积分 = max(0, Σ 单局积分)（累计保底）</view>
         <view class="sd-p">单局积分 = Base(n) + 胜负分 + 角色分 + 荣誉分（允许负值）</view>
         <view class="sd-p">· Base(n)：5:0.20 / 6:0.25 / 7:0.30 / 8:0.35 / 9:0.45 / 10~12:0.50</view>
@@ -36,6 +43,7 @@
         <view class="sd-p">· 角色分：仅胜方内部零和再分配，难角色获得更多</view>
         <view class="sd-p">· 荣誉分：每张 MVP/SVP 票 +0.01</view>
         <view class="sd-p">· 仅统计线上、正常结束、非测试房的对局；线下局暂不计分</view>
+        </view>
       </block>
       <view wx:else class="sd-empty">该玩家未公开积分明细</view>
     </scroll-view>
