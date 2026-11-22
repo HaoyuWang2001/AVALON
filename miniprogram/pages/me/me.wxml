@@ -21,8 +21,6 @@
       </view>
     </view>
 
-    <view class="me-divider"></view>
-
     <view class="me-stats-row">
       <view class="me-stat"><text class="me-stat-num">{{stats.totalGames}}</text><text class="me-stat-label">场次</text></view>
       <view class="me-stat-div"></view>
@@ -38,8 +36,6 @@
       <view class="me-stat-div"></view>
       <view class="me-stat"><text class="me-stat-num">{{stats.svpCount}}</text><text class="me-stat-label">SVP</text></view>
     </view>
-
-    <view class="me-stats-line"></view>
 
     <view class="me-stats-row me-stats-row-3">
       <view class="me-stat"><text class="me-stat-num">{{stats.totalGames ? stats.totalWinRate + '%' : '—'}}</text><text class="me-stat-label">总胜率</text></view>

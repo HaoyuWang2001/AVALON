@@ -22,8 +22,6 @@
         <view class="more-btn" bindtap="moreActions">···</view>
       </view>
 
-      <view class="hd-divider"></view>
-
       <view class="hd-stats-row">
         <view class="hd-stat"><text class="hd-stat-num">{{totalGames}}</text><text class="hd-stat-label">场次</text></view>
         <view class="hd-stat-div"></view>
@@ -39,8 +37,6 @@
         <view class="hd-stat-div"></view>
         <view class="hd-stat"><text class="hd-stat-num">{{rateVisible ? svpCount : '—'}}</text><text class="hd-stat-label">SVP</text></view>
       </view>
-
-      <view class="hd-stats-line"></view>
 
       <view class="hd-stats-row hd-stats-row-3">
         <view class="hd-stat"><text class="hd-stat-num">{{totalGames ? totalWinRate + '%' : '—'}}</text><text class="hd-stat-label">总胜率</text></view>

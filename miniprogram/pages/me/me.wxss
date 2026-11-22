@@ -14,7 +14,6 @@
 /* ─────── 基本信息 + 数据（合并卡） ─────── */
 .me-card { padding: 0; overflow: hidden; flex-shrink: 0; }
 .me-head { display: flex; align-items: center; gap: 28rpx; padding: 32rpx 28rpx; }
-.me-divider { width: 60%; height: 1rpx; background: var(--divider); margin: 0 auto; }
 .me-avatar-btn {
   width: 132rpx !important; height: 132rpx !important; padding: 0 !important; margin: 0 !important;
   border: none; background: transparent; border-radius: 50%; overflow: hidden; line-height: 1; flex-shrink: 0;
@@ -48,8 +47,7 @@
 .me-good { color: var(--good); }
 .me-evil { color: var(--evil); }
 .me-stat-label { font-size: 22rpx; color: var(--text-muted); margin-top: 6rpx; }
-.me-stats-line { width: 60%; height: 1rpx; background: var(--divider); margin: 0 auto; }
-.me-stat-div { width: 2rpx; height: 56rpx; background: var(--divider); align-self: center; flex-shrink: 0; }
+.me-stat-div { width: 4rpx; height: 56rpx; background: var(--divider); align-self: center; flex-shrink: 0; }
 
 /* 历史对局（外层卡片；内容由 history-card 组件渲染） */
 .history-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }
