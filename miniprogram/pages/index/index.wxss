@@ -178,7 +178,7 @@
 
 /* ─────── 公开房间列表（等待中 / 游戏中） ─────── */
 .room-list-section { margin-bottom: 20rpx; flex-shrink: 0; }
-.room-tabs { display: flex; justify-content: center; gap: 96rpx; padding: 18rpx 10rpx 22rpx; }
+.room-tabs { display: flex; justify-content: center; gap: 168rpx; padding: 18rpx 10rpx 22rpx; }
 .room-tab {
   position: relative; font-size: 32rpx; font-weight: 700;
   color: var(--text-muted); padding-bottom: 16rpx;

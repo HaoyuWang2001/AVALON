@@ -404,6 +404,23 @@ Page({
     this._setVisibleRooms();
   },
 
+  // 房间列表左右滑动切换「等待中 / 游戏中」
+  onRoomTouchStart(e) {
+    const t = e.touches && e.touches[0];
+    this._roomSwipe = t ? { x: t.clientX, y: t.clientY } : null;
+  },
+  onRoomTouchEnd(e) {
+    const s = this._roomSwipe;
+    this._roomSwipe = null;
+    const t = e.changedTouches && e.changedTouches[0];
+    if (!s || !t) return;
+    const dx = t.clientX - s.x;
+    const dy = t.clientY - s.y;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    const tab = dx < 0 ? 'playing' : 'waiting';
+    if (tab !== this.data.roomTab) this.switchRoomTab({ currentTarget: { dataset: { tab } } });
+  },
+
   toggleRoomTags(e) {
     const id = e.currentTarget.dataset.id;
     if (!id) return;

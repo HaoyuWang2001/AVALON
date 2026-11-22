@@ -64,7 +64,7 @@
 
 
   <!-- 公开房间列表：等待中 / 游戏中 -->
-  <view class="room-list-section">
+  <view class="room-list-section" bindtouchstart="onRoomTouchStart" bindtouchend="onRoomTouchEnd">
     <view class="room-tabs">
       <view class="room-tab {{roomTab === 'waiting' ? 'room-tab-on' : ''}}" data-tab="waiting" bindtap="switchRoomTab">
         等待中<text class="room-tab-count">{{roomCounts.waiting}}</text>
