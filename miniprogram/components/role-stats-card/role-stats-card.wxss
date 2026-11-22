@@ -60,7 +60,7 @@
 /* 总胜率 / 蓝方 / 红方 摘要行 */
 .rsc-summary-row { display: flex; align-items: center; justify-content: space-around; padding: 18rpx 8rpx 8rpx; }
 .rsc-summary-item { flex: 1; display: flex; flex-direction: column; align-items: center; }
-.rsc-summary-num { font-size: 30rpx; font-weight: 800; color: var(--text-title); }
+.rsc-summary-num { font-size: 30rpx; font-weight: 800; color: var(--primary); }
 .rsc-summary-label { font-size: 20rpx; color: var(--text-muted); margin-top: 4rpx; }
 .rsc-summary-div { width: 2rpx; height: 44rpx; background: var(--divider); align-self: center; flex-shrink: 0; }
 .rsc-good { color: var(--good); }

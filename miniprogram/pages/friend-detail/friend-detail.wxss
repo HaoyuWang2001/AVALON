@@ -8,7 +8,7 @@
 .hd-stats-row { display: flex; align-items: flex-start; padding: 30rpx 0 0; }
 .hd-stats-row-2 { padding-top: 8rpx; padding-bottom: 12rpx; }
 .hd-stat { flex: 1; display: flex; flex-direction: column; align-items: center; }
-.hd-stat-num { font-size: 34rpx; font-weight: 800; color: var(--text-title); }
+.hd-stat-num { font-size: 34rpx; font-weight: 800; color: var(--primary); }
 .hd-stat-label { font-size: 22rpx; color: var(--text-muted); margin-top: 6rpx; }
 .hd-stat-label-row { display: flex; align-items: center; gap: 6rpx; margin-top: 6rpx; }
 .hd-stat-label-row .hd-stat-label { margin-top: 0; }
