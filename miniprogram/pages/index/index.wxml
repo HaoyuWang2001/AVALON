@@ -74,6 +74,12 @@
       </view>
     </view>
     <view class="room-panel {{roomPanAnim ? 'room-panel-anim' : ''}}" style="transform: translateX({{roomPanX}}px)">
+    <view wx:if="{{roomSwitchLoading}}" class="room-switch-loading">
+      <view class="room-switch-dot d1"></view>
+      <view class="room-switch-dot d2"></view>
+      <view class="room-switch-dot d3"></view>
+    </view>
+    <block wx:else>
     <view wx:if="{{visibleRooms.length === 0}}" class="room-list-empty">{{roomListLoading ? '加载中...' : '没得玩，速开！'}}</view>
     <view wx:for="{{visibleRooms}}" wx:key="roomId"
       class="room-card {{item.isMine ? 'room-card-featured' : ''}}"
@@ -101,6 +107,7 @@
         <text class="room-card-count">{{item.playerCount}}/{{item.maxPlayers}}</text>
       </view>
     </view>
+    </block>
     </view>
   </view>
 

@@ -232,6 +232,14 @@
 .room-list-section { margin-bottom: 20rpx; flex-shrink: 0; }
 .room-panel { width: 100%; will-change: transform; }
 .room-panel-anim { transition: transform 0.18s ease-out; }
+.room-switch-loading { display: flex; align-items: center; justify-content: center; gap: 14rpx; padding: 72rpx 0; }
+.room-switch-dot { width: 14rpx; height: 14rpx; border-radius: 50%; background: var(--primary); opacity: 0.35; animation: room-dot-bounce 0.9s infinite ease-in-out; }
+.room-switch-dot.d2 { animation-delay: 0.15s; }
+.room-switch-dot.d3 { animation-delay: 0.3s; }
+@keyframes room-dot-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.35; }
+  40% { transform: translateY(-10rpx); opacity: 1; }
+}
 .room-tabs { display: flex; justify-content: center; gap: 168rpx; padding: 18rpx 10rpx 22rpx; }
 .room-tab {
   position: relative; font-size: 32rpx; font-weight: 700;

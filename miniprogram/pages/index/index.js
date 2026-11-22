@@ -34,6 +34,7 @@ Page({
     visibleRooms: [],
     roomCounts: { waiting: 0, playing: 0 },
     roomListLoading: false,
+    roomSwitchLoading: false,
     roomPanX: 0,
     roomPanAnim: false,
 
@@ -333,20 +334,31 @@ Page({
   },
 
   // ─── 公开房间列表（等待中 / 游戏中） ───
-  loadRoomList() {
+  loadRoomList(options) {
+    const opts = options || {};
+    const minMs = opts.minMs || 0;
+    const switchLoading = !!opts.switchLoading;
     const seq = (this._roomSeq = (this._roomSeq || 0) + 1);
-    this.setData({ roomListLoading: true });
-    api.getPublicRooms().then(res => {
+    const startedAt = Date.now();
+    clearTimeout(this._roomLoadTimer);
+    this.setData(switchLoading
+      ? { roomSwitchLoading: true, roomListLoading: false }
+      : { roomListLoading: true, roomSwitchLoading: false });
+
+    const finish = (rooms) => {
       if (seq !== this._roomSeq) return;
-      this._allRooms = (res && res.rooms) || [];
-      this.setData({ roomListLoading: false });
+      this._allRooms = rooms;
+      this.setData({ roomListLoading: false, roomSwitchLoading: false });
       this._applyRoomData();
-    }).catch(() => {
-      if (seq !== this._roomSeq) return;
-      this._allRooms = [];
-      this.setData({ roomListLoading: false });
-      this._applyRoomData();
-    });
+    };
+    const finishWithMin = (rooms) => {
+      const wait = Math.max(0, minMs - (Date.now() - startedAt));
+      if (wait > 0) this._roomLoadTimer = setTimeout(() => finish(rooms), wait);
+      else finish(rooms);
+    };
+
+    api.getPublicRooms().then(res => finishWithMin((res && res.rooms) || []))
+      .catch(() => finishWithMin([]));
   },
 
   _applyRoomData() {
@@ -408,17 +420,19 @@ Page({
   },
 
   switchRoomTab(e) {
+    if (this._roomAnimating || this.data.roomSwitchLoading) return;
     const tab = e.currentTarget.dataset.tab === 'playing' ? 'playing' : 'waiting';
-    if (tab !== this.data.roomTab) {
-      this.setData({ roomTab: tab });
-      this._setVisibleRooms();
+    if (tab === this.data.roomTab) {
+      this.loadRoomList();
+      return;
     }
-    this.loadRoomList();
+    this.setData({ roomTab: tab });
+    this.loadRoomList({ minMs: 500, switchLoading: true });
   },
 
-  // 房间列表左右滑动切换「等待中 / 游戏中」：内容面板跟手，松手滑出/滑入
+  // 房间列表左右滑动切换「等待中 / 游戏中」：内容面板跟手，松手仅滑出
   onRoomTouchStart(e) {
-    if (this._roomAnimating) return;
+    if (this._roomAnimating || this.data.roomSwitchLoading) return;
     clearTimeout(this._roomPanTimer);
     const t = e.touches && e.touches[0];
     if (!t) { this._roomPanStart = null; return; }
@@ -439,7 +453,7 @@ Page({
   },
 
   onRoomTouchMove(e) {
-    if (this._roomAnimating || this._roomPanIgnore) return;
+    if (this._roomAnimating || this._roomPanIgnore || this.data.roomSwitchLoading) return;
     const s = this._roomPanStart;
     const t = e.touches && e.touches[0];
     if (!s || !t) return;
@@ -472,7 +486,7 @@ Page({
   },
 
   onRoomTouchEnd(e) {
-    if (this._roomAnimating) return;
+    if (this._roomAnimating || this.data.roomSwitchLoading) return;
     const s = this._roomPanStart;
     this._roomPanStart = null;
     this._roomPanLocked = false;
@@ -491,7 +505,7 @@ Page({
   },
 
   onRoomTouchCancel() {
-    if (this._roomAnimating) return;
+    if (this._roomAnimating || this.data.roomSwitchLoading) return;
     this._roomPanStart = null;
     this._roomPanLocked = false;
     this._resetRoomPan();
@@ -507,7 +521,7 @@ Page({
     }, 200);
   },
 
-  // 当前面板滑出 → 切换标签并拉取 → 新面板从反方向滑入
+  // 仅切出：当前面板滑出后立即归位，切换标签并进入最短 500ms 的加载态
   _animateRoomSwitch(tab, dir) {
     clearTimeout(this._roomPanTimer);
     this._roomAnimating = true;
@@ -515,28 +529,23 @@ Page({
     const W = this._roomW || 375;
     this.setData({ roomPanAnim: true, roomPanX: dir * W });
     this._roomPanTimer = setTimeout(() => {
+      this.setData({ roomPanAnim: false, roomPanX: 0 });
+      this._roomAnimating = false;
+      this._roomSwipeMoved = false;
       this.switchRoomTab({ currentTarget: { dataset: { tab } } });
-      this.setData({ roomPanAnim: false, roomPanX: -dir * W });
-      wx.nextTick(() => {
-        this.setData({ roomPanAnim: true, roomPanX: 0 });
-        this._roomPanTimer = setTimeout(() => {
-          this._roomAnimating = false;
-          this._roomSwipeMoved = false;
-          this.setData({ roomPanAnim: false });
-        }, 200);
-      });
     }, 180);
   },
 
   _clearRoomPan(applyData) {
     clearTimeout(this._roomPanTimer);
+    clearTimeout(this._roomLoadTimer);
     this._roomAnimating = false;
     this._roomSwipeMoved = false;
     this._roomPanStart = null;
     this._roomPanLocked = false;
     this._roomPanIgnore = false;
-    if (applyData && (this.data.roomPanX || this.data.roomPanAnim)) {
-      this.setData({ roomPanX: 0, roomPanAnim: false });
+    if (applyData && (this.data.roomPanX || this.data.roomPanAnim || this.data.roomSwitchLoading)) {
+      this.setData({ roomPanX: 0, roomPanAnim: false, roomSwitchLoading: false });
     }
   },
 
