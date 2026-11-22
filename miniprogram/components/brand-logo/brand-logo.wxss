@@ -1,11 +1,3 @@
-.bl {
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 50%; border: 4rpx solid var(--gold);
-  background: transparent; box-shadow: 0 0 18rpx rgba(212, 160, 82, 0.38);
-  flex-shrink: 0;
-}
+.bl { display: block; flex-shrink: 0; }
 .bl-normal { width: 96rpx; height: 96rpx; }
-.bl-normal .bl-char { font-size: 50rpx; }
-.bl-mini { width: 46rpx; height: 46rpx; border-width: 2rpx; box-shadow: none; }
-.bl-mini .bl-char { font-size: 26rpx; }
-.bl-char { font-weight: 900; color: var(--gold); line-height: 1; }
+.bl-mini { width: 46rpx; height: 46rpx; }

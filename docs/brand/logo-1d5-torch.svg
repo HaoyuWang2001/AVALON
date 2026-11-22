@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="48" y1="48" x2="464" y2="464"><stop offset="0" stop-color="#F0C060"/><stop offset="0.55" stop-color="#D4A052"/><stop offset="1" stop-color="#A97A2F"/></linearGradient></defs>
+<circle cx="256" cy="256" r="234" fill="none" stroke="url(#g)" stroke-width="6"/>
+<g fill="#D4A052"><rect x="409.2" y="409.2" width="16" height="16" transform="rotate(45 417.2 417.2)"/><rect x="86.8" y="409.2" width="16" height="16" transform="rotate(45 94.8 417.2)"/><rect x="86.8" y="86.8" width="16" height="16" transform="rotate(45 94.8 94.8)"/><rect x="409.2" y="86.8" width="16" height="16" transform="rotate(45 417.2 94.8)"/></g>
+<circle cx="256" cy="256" r="112" fill="none" stroke="url(#g)" stroke-width="4"/>
+<g stroke="url(#g)" stroke-linecap="round">
+  <g transform="rotate(42 256 256)">
+    <line x1="256" y1="64" x2="256" y2="296" stroke-width="7"/>
+    <path d="M256 52 l-8 20 h16 z" fill="#D4A052" stroke="none"/>
+    <line x1="224" y1="296" x2="288" y2="296" stroke-width="7"/>
+    <line x1="256" y1="296" x2="256" y2="336" stroke-width="5"/>
+    <circle cx="256" cy="346" r="7" fill="#D4A052" stroke="none"/>
+  </g><g transform="translate(512,0) scale(-1,1)">
+  <g transform="rotate(42 256 256)">
+    <line x1="256" y1="64" x2="256" y2="296" stroke-width="7"/>
+    <path d="M256 52 l-8 20 h16 z" fill="#D4A052" stroke="none"/>
+    <line x1="224" y1="296" x2="288" y2="296" stroke-width="7"/>
+    <line x1="256" y1="296" x2="256" y2="336" stroke-width="5"/>
+    <circle cx="256" cy="346" r="7" fill="#D4A052" stroke="none"/>
+  </g></g></g></svg>

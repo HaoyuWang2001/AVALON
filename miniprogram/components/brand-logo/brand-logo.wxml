@@ -1,1 +1,1 @@
-<view class="bl {{size === 'mini' ? 'bl-mini' : 'bl-normal'}}"><text class="bl-char">瓦</text></view>
+<image class="bl {{size === 'mini' ? 'bl-mini' : 'bl-normal'}}" src="{{src}}" mode="aspectFit"/>

@@ -3,7 +3,7 @@
   <!-- 品牌栏（单行）：左圆徽+字标，最右为个人头像（点击进入个人页） -->
   <view class="brand-bar">
     <view class="brand-main">
-      <view class="brand-emblem-tap" hover-class="brand-emblem-hover" hover-stay-time="60" bindtap="openBrandMenu"><brand-logo size="normal"/></view>
+      <view class="brand-emblem-tap" hover-class="brand-emblem-hover" hover-stay-time="60" bindtap="openBrandMenu"><brand-logo size="normal" theme="{{themeClass}}"/></view>
       <text class="brand-title">练秋湖的瓦协会</text>
     </view>
     <view class="brand-avatar" hover-class="brand-avatar-hover" hover-stay-time="60" bindtap="goToMe">
@@ -79,7 +79,7 @@
       bindtap="onPublicRoomTap" data-id="{{item.roomId}}">
       <view class="room-card-top">
         <view class="room-card-id-wrap">
-          <brand-logo size="mini"/>
+          <brand-logo size="mini" theme="{{themeClass}}"/>
           <text class="room-card-id">{{item.roomId}}</text>
         </view>
         <view class="room-card-right">
