@@ -26,7 +26,7 @@ Page({
     searchResult: null,      // {openId, nickName, avatarUrl, uniqueId, isFriend, hasPending}
     searchError: '',
     // 列表
-    tab: 'friends',           // 'friends' | 'requests'
+    showRequests: false,
     friends: [],
     requestCount: 0,
     requests: [],
@@ -174,6 +174,15 @@ Page({
 
   noop() {},
 
+  // ─── 申请弹窗 ───
+  openRequests() {
+    this.setData({ showRequests: true });
+    this.loadRequests();
+  },
+  closeRequests() {
+    this.setData({ showRequests: false });
+  },
+
   // ─── 申请列表 ───
   loadRequests() {
     if (!this._openId) return;
@@ -216,11 +225,4 @@ Page({
     });
   },
 
-  // ─── tab 切换 ───
-  switchTab(e) {
-    const tab = e.currentTarget.dataset.tab;
-    this.setData({ tab });
-    if (tab === 'friends') this.loadFriends();
-    else this.loadRequests();
-  }
 });

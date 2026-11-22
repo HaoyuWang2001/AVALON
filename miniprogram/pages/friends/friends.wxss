@@ -11,17 +11,38 @@
 .setup-tip { margin-top: 24rpx; font-size: 24rpx; color: var(--text-muted); }
 
 /* ─── 我的ID条 ─── */
-.my-id-bar { display: flex; align-items: center; background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); }
+.my-card { padding: 0; overflow: hidden; }
+.my-id-bar { display: flex; align-items: center; padding: 24rpx; }
+.my-divider { height: 1rpx; background: var(--divider); margin: 0 24rpx; }
 .my-avatar { width: 88rpx; height: 88rpx; border-radius: 50%; flex-shrink: 0; }
 .my-info { margin-left: 20rpx; min-width: 0; flex: 1; }
+.req-entry {
+  flex-shrink: 0; display: flex; align-items: center; gap: 6rpx; margin-left: 16rpx;
+  padding: 8rpx 22rpx; border-radius: 999rpx;
+  color: var(--primary); background: var(--primary-bg); border: 2rpx solid var(--primary);
+  font-size: 26rpx; font-weight: 700;
+}
+.req-entry-hover { transform: scale(0.95); opacity: 0.9; }
+.req-badge {
+  min-width: 30rpx; height: 30rpx; padding: 0 8rpx; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 999rpx; background: var(--danger); color: #FFFFFF; font-size: 20rpx; font-weight: 800;
+}
 .my-nick { font-size: 32rpx; font-weight: 700; color: var(--text-title); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .my-id { font-size: 24rpx; color: var(--primary); margin-top: 6rpx; display: block; }
 
 /* ─── 搜索 ─── */
-.search-card { padding: 24rpx; }
+.search-area { padding: 24rpx; }
 .search-row { display: flex; align-items: center; }
 .search-input { flex: 1; height: 72rpx; background: var(--gray-50); border-radius: 14rpx; padding: 0 20rpx; font-size: 28rpx; }
-.search-btn { margin-left: 16rpx; }
+.search-btn {
+  margin-left: 16rpx; height: 72rpx; line-height: 72rpx; padding: 0 30rpx;
+  border-radius: 14rpx; font-size: 26rpx; font-weight: 700;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: var(--on-primary);
+}
+.search-btn::after { border: none; }
+.search-btn[disabled] { opacity: 0.6; }
 .search-error { font-size: 24rpx; color: var(--danger); margin-top: 16rpx; }
 .search-result { display: flex; align-items: center; margin-top: 20rpx; padding-top: 20rpx; border-top: 1rpx solid var(--divider); }
 .sr-avatar { width: 72rpx; height: 72rpx; border-radius: 50%; flex-shrink: 0; }
@@ -32,13 +53,6 @@
 .sr-state { flex-shrink: 0; font-size: 26rpx; color: var(--text-muted); }
 .sr-state-ok { color: var(--success); }
 
-/* ─── Tab ─── */
-.tabs { display: flex; margin-bottom: 20rpx; }
-.tab-item { flex: 1; text-align: center; padding: 20rpx 0; font-size: 30rpx; font-weight: 600; color: var(--text-muted); position: relative; }
-.tab-item.tab-on { color: var(--primary); }
-.tab-item.tab-on::after { content: ''; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 48rpx; height: 6rpx; border-radius: 3rpx; background: var(--primary); }
-.tab-count { margin-left: 8rpx; background: var(--gray-100); color: var(--text-muted); font-size: 20rpx; padding: 2rpx 10rpx; border-radius: 20rpx; }
-.tab-count-red { background: var(--danger-soft-bg); color: var(--danger-soft-text); }
 
 /* ─── 列表 ─── */
 .list-card { padding: 12rpx 24rpx; }
@@ -66,3 +80,19 @@
 .req-btn { flex-shrink: 0; margin-left: 12rpx; }
 .req-ok { background: var(--success); color: var(--on-primary); }
 .req-no { background: var(--gray-100); color: var(--text-body); }
+
+/* 好友申请弹窗 */
+.req-modal-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1300;
+  background: var(--mask-light); display: flex; align-items: center; justify-content: center;
+}
+.req-modal {
+  width: 92vw; max-width: 660rpx; max-height: 76vh; box-sizing: border-box;
+  background: var(--bg-card); border-radius: 24rpx; display: flex; flex-direction: column;
+  box-shadow: var(--shadow-lg); overflow: hidden;
+}
+.req-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 28rpx 32rpx 12rpx; }
+.req-modal-title { font-size: 32rpx; font-weight: 800; color: var(--text-title); }
+.req-modal-close { font-size: 30rpx; color: var(--text-muted); padding: 8rpx; }
+.req-modal-scroll { flex: 1; padding: 0 24rpx 24rpx; box-sizing: border-box; }
+.req-modal-scroll .req-item:last-child { border-bottom: none; }

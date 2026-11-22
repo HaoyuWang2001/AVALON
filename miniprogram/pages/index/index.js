@@ -24,6 +24,7 @@ Page({
     publicWinrate: true,
     compactGame: false,
     showWeirdSettings: false,
+    showBrandMenu: false,
     switchColor: '#8B5CF6',
 
     // 首登资料完善
@@ -791,6 +792,21 @@ Page({
   },
 
   noop() {},
+
+  // ─── 品牌菜单（点击圆徽触发） ───
+  openBrandMenu() {
+    this.setData({ showBrandMenu: true });
+  },
+  closeBrandMenu() {
+    this.setData({ showBrandMenu: false });
+  },
+  onBrandMenuAction(e) {
+    const action = e.currentTarget.dataset.action;
+    this.setData({ showBrandMenu: false });
+    if (action && typeof this[action] === 'function') {
+      setTimeout(() => { this[action](); }, 60);
+    }
+  },
 
   // ─────────── 配置页（pages/configs/configs） ───────────
   openConfigs() {

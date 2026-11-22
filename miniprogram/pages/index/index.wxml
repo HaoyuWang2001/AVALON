@@ -3,7 +3,7 @@
   <!-- 品牌栏（单行）：左圆徽+字标，最右为个人头像（点击进入个人页） -->
   <view class="brand-bar">
     <view class="brand-main">
-      <view class="brand-emblem"><text class="brand-emblem-char">瓦</text></view>
+      <view class="brand-emblem" hover-class="brand-emblem-hover" hover-stay-time="60" bindtap="openBrandMenu"><text class="brand-emblem-char">瓦</text></view>
       <text class="brand-title">练秋湖的瓦协会</text>
     </view>
     <view class="brand-avatar" hover-class="brand-avatar-hover" hover-stay-time="60" bindtap="goToMe">
@@ -46,16 +46,13 @@
   <!-- 当前房间（整卡点击=回到房间；退出/解散在房间内操作） -->
   <view class="card current-room-card" wx:if="{{currentRoom}}" bindtap="backToRoom">
     <view class="current-room-top">
-      <view class="current-room-label">
-        <text class="current-room-diamond">◆</text>
-        <text class="current-room-id">{{currentRoom.roomId}}</text>
+      <text class="current-room-id">{{currentRoom.roomId}}</text>
+      <view class="current-room-right">
+        <text wx:if="{{currentRoom.gameStarted}}" class="current-room-tag current-room-tag-ingame">游戏中</text>
+        <text wx:else class="current-room-tag current-room-tag-wait">准备中</text>
+        <text wx:if="{{isCurrentRoomHost}}" class="current-room-tag current-room-tag-host">房主</text>
+        <text wx:if="{{myRoomInfo}}" class="current-room-count">{{myRoomInfo.playerCount}}/{{myRoomInfo.maxPlayers}}</text>
       </view>
-      <text wx:if="{{myRoomInfo}}" class="current-room-count">{{myRoomInfo.playerCount}}/{{myRoomInfo.maxPlayers}}</text>
-    </view>
-    <view class="current-room-status">
-      <text wx:if="{{currentRoom.gameStarted}}" class="current-room-tag current-room-tag-ingame">游戏中</text>
-      <text wx:else class="current-room-tag current-room-tag-wait">准备中</text>
-      <text wx:if="{{isCurrentRoomHost}}" class="current-room-tag current-room-tag-host">房主</text>
     </view>
     <view class="room-tags-row" wx:if="{{myRoomInfo && myRoomInfo.tags.length > 0}}">
       <text wx:for="{{myRoomInfo.tags}}" wx:key="*this" class="room-tag">{{item}}</text>
@@ -103,7 +100,6 @@
       bindtap="onPublicRoomTap" data-id="{{item.roomId}}">
       <view class="room-card-top">
         <view class="room-card-id-wrap">
-          <text class="room-card-diamond {{item.gameStarted ? 'is-playing' : ''}}">◆</text>
           <text class="room-card-id">{{item.roomId}}</text>
           <text wx:if="{{item.isMine}}" class="room-card-mine-tag">我的房间</text>
         </view>
@@ -121,34 +117,6 @@
     </view>
   </view>
 
-  <!-- 功能入口（2×3）：房间卡下方 -->
-  <view class="func-grid">
-    <view class="func-item func-egg" hover-class="func-hover" hover-stay-time="80" bindtap="goToGlobalStats">
-      <view class="func-icon-box"><image src="/images/medal.png" class="func-icon" mode="aspectFit"/></view>
-      <text class="func-label">全局统计</text>
-      <view class="func-badge">彩蛋</view>
-    </view>
-    <view class="func-item func-egg" hover-class="func-hover" hover-stay-time="80" bindtap="goToFriends">
-      <view class="func-icon-box"><image src="/images/fossa.png" class="func-icon" mode="aspectFit"/></view>
-      <text class="func-label">牛马朋友</text>
-      <view class="func-badge">彩蛋</view>
-    </view>
-    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="onChangeTheme">
-      <view class="func-icon-box"><image src="/images/themes.png" class="func-icon" mode="aspectFit"/></view>
-      <text class="func-label">更改主题</text>
-    </view>
-    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="showWeirdSettings">
-      <text class="func-label">奇奇怪怪的设置们</text>
-    </view>
-    <view class="func-item func-glass" hover-class="func-hover" hover-stay-time="80" bindtap="goToRecords">
-      <view class="func-icon-box"><image src="/images/stopwatch.png" class="func-icon" mode="aspectFit"/></view>
-      <text class="func-label">线下记录</text>
-    </view>
-    <view class="func-item func-glass func-disabled">
-      <text class="func-label">开发中...</text>
-    </view>
-  </view>
-
   <view class="footer"><view class="footer-version">AVALON v1.4.2</view></view>
 
 
@@ -163,6 +131,37 @@
       <view class="weird-row">
         <switch class="func-switch" checked="{{compactGame}}" bindchange="onCompactGameChange" color="{{switchColor}}"/>
         <text class="func-label">松弛压缩版</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 品牌菜单（点击圆徽触发，无提示） -->
+  <view class="brand-menu-mask" wx:if="{{showBrandMenu}}" bindtap="closeBrandMenu" catchtouchmove="noop">
+    <view class="brand-menu" catchtap="noop">
+      <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="goToGlobalStats">
+        <view class="func-icon-box"><image src="/images/medal.png" class="func-icon" mode="aspectFit"/></view>
+        <text class="brand-menu-label">全局统计</text>
+        <text class="brand-menu-arrow">›</text>
+      </view>
+      <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="goToFriends">
+        <view class="func-icon-box"><image src="/images/fossa.png" class="func-icon" mode="aspectFit"/></view>
+        <text class="brand-menu-label">牛马朋友</text>
+        <text class="brand-menu-arrow">›</text>
+      </view>
+      <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="onChangeTheme">
+        <view class="func-icon-box"><image src="/images/themes.png" class="func-icon" mode="aspectFit"/></view>
+        <text class="brand-menu-label">更改主题</text>
+        <text class="brand-menu-arrow">›</text>
+      </view>
+      <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="showWeirdSettings">
+        <view class="func-icon-box"><text class="brand-menu-emoji">⚙️</text></view>
+        <text class="brand-menu-label">奇奇怪怪的设置们</text>
+        <text class="brand-menu-arrow">›</text>
+      </view>
+      <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="goToRecords">
+        <view class="func-icon-box"><image src="/images/stopwatch.png" class="func-icon" mode="aspectFit"/></view>
+        <text class="brand-menu-label">线下记录</text>
+        <text class="brand-menu-arrow">›</text>
       </view>
     </view>
   </view>

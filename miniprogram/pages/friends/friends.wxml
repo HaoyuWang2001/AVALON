@@ -12,46 +12,43 @@
     </view>
   </view>
 
-  <!-- 我的ID条 -->
-  <view class="my-id-bar">
-    <image src="{{me.avatarUrl}}" class="my-avatar"></image>
-    <view class="my-info">
-      <text class="my-nick">{{me.nickName}}</text>
-      <text class="my-id" bindtap="copyMyId">{{me.uniqueId ? ('ID: ' + me.uniqueId + ' (点击复制)') : '未设置ID'}}</text>
-    </view>
-  </view>
-
-  <!-- 搜索 -->
-  <view class="card search-card">
-    <view class="search-row">
-      <input class="search-input" type="text" confirm-type="search" placeholder="输入对方ID精确搜索" value="{{searchKeyword}}" bindinput="onSearchInput" bindconfirm="doSearch"/>
-      <button size="mini" class="search-btn" bindtap="doSearch" disabled="{{searching}}">搜索</button>
-    </view>
-    <view class="search-error" wx:if="{{searchError}}">{{searchError}}</view>
-    <view class="search-result" wx:if="{{searchResult}}">
-      <image src="{{searchResult.avatarUrl || '/images/default-avatar.png'}}" class="sr-avatar"></image>
-      <view class="sr-info">
-        <text class="sr-name">{{searchResult.nickName}}</text>
-        <text class="sr-id">{{searchResult.uniqueId}}</text>
+  <!-- 个人信息 + 搜索（合并卡，中间实线分割） -->
+  <view class="card my-card">
+    <view class="my-id-bar">
+      <image src="{{me.avatarUrl}}" class="my-avatar"></image>
+      <view class="my-info">
+        <text class="my-nick">{{me.nickName}}</text>
+        <text class="my-id" bindtap="copyMyId">{{me.uniqueId ? ('ID: ' + me.uniqueId + ' (点击复制)') : '未设置ID'}}</text>
       </view>
-      <button wx:if="{{!searchResult.isFriend && !searchResult.hasPending}}" size="mini" class="sr-btn" bindtap="sendRequestFromSearch">+ 申请</button>
-      <text wx:elif="{{searchResult.hasPending}}" class="sr-state">已申请</text>
-      <text wx:else class="sr-state sr-state-ok">已是好友</text>
+      <view class="req-entry" hover-class="req-entry-hover" hover-stay-time="60" bindtap="openRequests">
+        <text>申请</text>
+        <text wx:if="{{requestCount > 0}}" class="req-badge">{{requestCount}}</text>
+      </view>
     </view>
-  </view>
 
-  <!-- Tab -->
-  <view class="tabs">
-    <view class="tab-item {{tab === 'friends' ? 'tab-on' : ''}}" data-tab="friends" bindtap="switchTab">
-      好友<text wx:if="{{friends.length > 0}}" class="tab-count">{{friends.length}}</text>
-    </view>
-    <view class="tab-item {{tab === 'requests' ? 'tab-on' : ''}}" data-tab="requests" bindtap="switchTab">
-      申请<text wx:if="{{requestCount > 0}}" class="tab-count tab-count-red">{{requestCount}}</text>
+    <view class="my-divider"></view>
+
+    <view class="search-area">
+      <view class="search-row">
+        <input class="search-input" type="text" confirm-type="search" placeholder="输入对方ID精确搜索" value="{{searchKeyword}}" bindinput="onSearchInput" bindconfirm="doSearch"/>
+        <button size="mini" class="search-btn" bindtap="doSearch" disabled="{{searching}}">搜索</button>
+      </view>
+      <view class="search-error" wx:if="{{searchError}}">{{searchError}}</view>
+      <view class="search-result" wx:if="{{searchResult}}">
+        <image src="{{searchResult.avatarUrl || '/images/default-avatar.png'}}" class="sr-avatar"></image>
+        <view class="sr-info">
+          <text class="sr-name">{{searchResult.nickName}}</text>
+          <text class="sr-id">{{searchResult.uniqueId}}</text>
+        </view>
+        <button wx:if="{{!searchResult.isFriend && !searchResult.hasPending}}" size="mini" class="sr-btn" bindtap="sendRequestFromSearch">+ 申请</button>
+        <text wx:elif="{{searchResult.hasPending}}" class="sr-state">已申请</text>
+        <text wx:else class="sr-state sr-state-ok">已是好友</text>
+      </view>
     </view>
   </view>
 
   <!-- 好友列表 -->
-  <view class="card list-card" wx:if="{{tab === 'friends'}}">
+  <view class="card list-card">
     <view wx:if="{{friends.length === 0}}" class="list-empty">{{loadingFriends ? '加载中...' : '还没有好友，去搜索添加吧'}}</view>
     <view wx:for="{{friends}}" wx:key="openId" class="friend-item" bindtap="onFriendTap"
       data-id="{{item.openId}}" data-name="{{item.nickName}}" data-avatar="{{item.avatarUrl}}">
@@ -71,21 +68,29 @@
     </view>
   </view>
 
-  <!-- 申请列表 -->
-  <view class="card list-card" wx:if="{{tab === 'requests'}}">
-    <view wx:if="{{requests.length === 0}}" class="list-empty">暂无待处理申请</view>
-    <view wx:for="{{requests}}" wx:key="id" class="req-item">
-      <image src="{{item.fromAvatarUrl || '/images/default-avatar.png'}}" class="f-avatar"></image>
-      <view class="f-info">
-        <text class="f-name">{{item.fromNickName}}</text>
-        <text class="f-sub">{{item.fromUniqueId}}</text>
+  <view style="height: 40rpx"></view>
+  <!-- 好友申请弹窗 -->
+  <view class="req-modal-mask" wx:if="{{showRequests}}" bindtap="closeRequests" catchtouchmove="noop">
+    <view class="req-modal" catchtap="noop">
+      <view class="req-modal-head">
+        <text class="req-modal-title">好友申请</text>
+        <text class="req-modal-close" bindtap="closeRequests">✕</text>
       </view>
-      <button size="mini" class="req-btn req-ok" data-id="{{item.id}}" data-accept="true" bindtap="respond">同意</button>
-      <button size="mini" class="req-btn req-no" data-id="{{item.id}}" data-accept="false" bindtap="respond">拒绝</button>
+      <scroll-view scroll-y class="req-modal-scroll" show-scrollbar="{{false}}">
+        <view wx:if="{{requests.length === 0}}" class="list-empty">暂无待处理申请</view>
+        <view wx:for="{{requests}}" wx:key="id" class="req-item">
+          <image src="{{item.fromAvatarUrl || '/images/default-avatar.png'}}" class="f-avatar"></image>
+          <view class="f-info">
+            <text class="f-name">{{item.fromNickName}}</text>
+            <text class="f-sub">{{item.fromUniqueId}}</text>
+          </view>
+          <button size="mini" class="req-btn req-ok" data-id="{{item.id}}" data-accept="true" bindtap="respond">同意</button>
+          <button size="mini" class="req-btn req-no" data-id="{{item.id}}" data-accept="false" bindtap="respond">拒绝</button>
+        </view>
+      </scroll-view>
     </view>
   </view>
 
-  <view style="height: 40rpx"></view>
 
   <!-- 玩家胜率信息弹窗（公共组件） -->
   <player-stats id="playerStats" />
