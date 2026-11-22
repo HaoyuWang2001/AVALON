@@ -33,15 +33,8 @@
       </view>
     </view>
 
-    <view wx:if="{{totalPages > 1}}" class="lb-pager">
-      <button size="mini" class="lb-pg-btn" disabled="{{page <= 1}}" bindtap="prevPage">上一页</button>
-      <text class="lb-pg-info">{{page}} / {{totalPages}}</text>
-      <button size="mini" class="lb-pg-btn" disabled="{{page >= totalPages}}" bindtap="nextPage">下一页</button>
-      <view class="lb-jump">
-        <input class="lb-jump-input" type="number" placeholder="页码" value="{{jumpTo}}" bindinput="onJumpInput"/>
-        <button size="mini" class="lb-pg-btn" bindtap="jumpPage">跳转</button>
-      </view>
-    </view>
+    <view wx:if="{{loadingMore}}" class="lb-more">加载中...</view>
+    <view wx:elif="{{players.length > 0 && page >= totalPages}}" class="lb-more">没有更多了</view>
   </block>
 
   <view style="height: 40rpx"></view>

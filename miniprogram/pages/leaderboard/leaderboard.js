@@ -12,7 +12,7 @@ Page({
     pageSize: 20,
     total: 0,
     totalPages: 1,
-    jumpTo: '',
+    loadingMore: false,
     showFormula: false
   },
 
@@ -27,23 +27,58 @@ Page({
     wx.setBackgroundColor({ backgroundColor: getThemeBg(this.data.themeClass) });
   },
 
-  loadPage(page) {
-    this.setData({ loading: true });
+  onReachBottom() {
+    this.loadMore();
+  },
+
+  onPullDownRefresh() {
+    this.loadPage(1, false, true);
+  },
+
+  loadPage(page, append, fromPullDown) {
+    if (this._fetching) {
+      if (fromPullDown && wx.stopPullDownRefresh) wx.stopPullDownRefresh();
+      return;
+    }
+    this._fetching = true;
+    this.setData(append ? { loadingMore: true } : { loading: true });
+
     api.getLeaderboard(page, this.data.pageSize, this._openId).then(res => {
+      this._fetching = false;
+      if (fromPullDown && wx.stopPullDownRefresh) wx.stopPullDownRefresh();
       if (res && res.success) {
+        const incoming = res.players || [];
+        let players = incoming;
+        if (append) {
+          const seen = {};
+          this.data.players.forEach(p => { seen[p.openId] = true; });
+          players = this.data.players.concat(incoming.filter(p => !seen[p.openId]));
+        }
         this.setData({
           loading: false,
-          players: res.players || [],
+          loadingMore: false,
+          players,
           page: res.page,
           pageSize: res.pageSize,
           total: res.total,
           totalPages: res.totalPages
         });
-        if (wx.pageScrollTo) wx.pageScrollTo({ scrollTop: 0, duration: 0 });
+        if (!append && wx.pageScrollTo) wx.pageScrollTo({ scrollTop: 0, duration: 0 });
       } else {
-        this.setData({ loading: false });
+        this.setData({ loading: false, loadingMore: false });
       }
-    }).catch(() => this.setData({ loading: false }));
+    }).catch(() => {
+      this._fetching = false;
+      if (fromPullDown && wx.stopPullDownRefresh) wx.stopPullDownRefresh();
+      this.setData({ loading: false, loadingMore: false });
+      wx.showToast({ title: '加载失败，请重试', icon: 'none' });
+    });
+  },
+
+  loadMore() {
+    if (this._fetching || this.data.loading || this.data.loadingMore) return;
+    if (this.data.page >= this.data.totalPages) return;
+    this.loadPage(this.data.page + 1, true);
   },
 
   openFormula() {
@@ -53,28 +88,6 @@ Page({
     this.setData({ showFormula: false });
   },
   noop() {},
-
-  prevPage() {
-    if (this.data.page > 1) this.loadPage(this.data.page - 1);
-  },
-
-  nextPage() {
-    if (this.data.page < this.data.totalPages) this.loadPage(this.data.page + 1);
-  },
-
-  onJumpInput(e) {
-    this.setData({ jumpTo: e.detail.value });
-  },
-
-  jumpPage() {
-    const n = parseInt(this.data.jumpTo, 10);
-    if (!n || n < 1 || n > this.data.totalPages) {
-      wx.showToast({ title: `请输入 1-${this.data.totalPages}`, icon: 'none' });
-      return;
-    }
-    this.setData({ jumpTo: '' });
-    this.loadPage(n);
-  },
 
   onPlayerTap(e) {
     const { id, name, avatar, friend } = e.currentTarget.dataset;
