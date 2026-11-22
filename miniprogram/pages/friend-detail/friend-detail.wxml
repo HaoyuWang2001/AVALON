@@ -4,30 +4,46 @@
   <view wx:if="{{loading}}" class="page-loading">加载中...</view>
 
   <block wx:if="{{friend}}">
-    <!-- 基本信息 -->
+    <!-- 基本信息 + 数据（合并卡） -->
     <view class="card head-card">
-      <image src="{{friend.avatarUrl || '/images/default-avatar.png'}}" class="hd-avatar"></image>
-      <view class="hd-info">
-        <view class="hd-name-row">
-          <text class="hd-name">{{friend.nickName}}</text>
-          <text class="hd-id">{{friend.uniqueId}}</text>
+      <view class="head-top">
+        <image src="{{friend.avatarUrl || '/images/default-avatar.png'}}" class="hd-avatar"></image>
+        <view class="hd-info">
+          <view class="hd-name-row">
+            <text class="hd-name">{{friend.nickName}}</text>
+            <text class="hd-id">{{friend.uniqueId}}</text>
+          </view>
+          <title-badge wx:if="{{friend.titles && friend.titles.length > 0}}" titles="{{friend.titles}}"></title-badge>
+          <view class="hd-status-row">
+            <view class="hd-dot {{friend.online ? 'st-online' : 'st-offline'}}"></view>
+            <text class="hd-status {{friend.online ? 'st-online' : 'st-offline'}}">{{friend.online ? '在线' : '离线'}}</text>
+          </view>
         </view>
-        <title-badge wx:if="{{friend.titles && friend.titles.length > 0}}" titles="{{friend.titles}}"></title-badge>
-        <view class="hd-status-row">
-          <view class="hd-dot {{friend.online ? 'st-online' : 'st-offline'}}"></view>
-          <text class="hd-status {{friend.online ? 'st-online' : 'st-offline'}}">{{friend.online ? '在线' : '离线'}}</text>
-        </view>
+        <view class="more-btn" bindtap="moreActions">···</view>
       </view>
-      <view class="more-btn" bindtap="moreActions">···</view>
-    </view>
 
-    <!-- 积分 -->
-    <view class="card score-card" wx:if="{{scoreVisible}}">
-      <view class="score-card-left">
-        <text class="score-card-label">积分</text>
-        <text class="score-card-num">{{score}}</text>
+      <view class="hd-divider"></view>
+
+      <view class="hd-stats-row">
+        <view class="hd-stat"><text class="hd-stat-num">{{totalGames}}</text><text class="hd-stat-label">场次</text></view>
+        <view class="hd-stat">
+          <text class="hd-stat-num hd-score">{{scoreVisible ? score : '—'}}</text>
+          <view class="hd-stat-label-row">
+            <text class="hd-stat-label">积分</text>
+            <view wx:if="{{scoreVisible}}" class="score-help-btn" catchtap="openScoreDetail">?</view>
+          </view>
+        </view>
+        <view class="hd-stat"><text class="hd-stat-num">{{rateVisible ? mvpCount : '—'}}</text><text class="hd-stat-label">MVP</text></view>
+        <view class="hd-stat"><text class="hd-stat-num">{{rateVisible ? svpCount : '—'}}</text><text class="hd-stat-label">SVP</text></view>
       </view>
-      <view class="score-help-btn" catchtap="openScoreDetail">?</view>
+
+      <view class="hd-stats-line"></view>
+
+      <view class="hd-stats-row hd-stats-row-3">
+        <view class="hd-stat"><text class="hd-stat-num">{{totalGames ? totalWinRate + '%' : '—'}}</text><text class="hd-stat-label">总胜率</text></view>
+        <view class="hd-stat"><text class="hd-stat-num hd-good">{{totalGames ? goodWinRate + '%' : '—'}}</text><text class="hd-stat-label">蓝方</text></view>
+        <view class="hd-stat"><text class="hd-stat-num hd-evil">{{totalGames ? evilWinRate + '%' : '—'}}</text><text class="hd-stat-label">红方</text></view>
+      </view>
     </view>
 
     <!-- 状态卡：空闲（可邀请） / 房间等待中(进房间) / 对局中(观战) -->

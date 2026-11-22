@@ -11,12 +11,10 @@
   overflow-y: auto;
 }
 
-/* ─────── 基本信息卡 ─────── */
-.me-head {
-  display: flex; align-items: center; gap: 28rpx;
-  background: var(--bg-card); border-radius: 28rpx; padding: 32rpx 28rpx;
-  margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0;
-}
+/* ─────── 基本信息 + 数据（合并卡） ─────── */
+.me-card { padding: 0; overflow: hidden; flex-shrink: 0; }
+.me-head { display: flex; align-items: center; gap: 28rpx; padding: 32rpx 28rpx 24rpx; }
+.me-divider { height: 1rpx; background: var(--divider); margin: 0 28rpx; }
 .me-avatar-btn {
   width: 132rpx !important; height: 132rpx !important; padding: 0 !important; margin: 0 !important;
   border: none; background: transparent; border-radius: 50%; overflow: hidden; line-height: 1; flex-shrink: 0;
@@ -34,16 +32,14 @@
 .me-uid { font-size: 24rpx; color: var(--text-muted); }
 .me-edit-hint { font-size: 22rpx; color: var(--text-muted); opacity: 0.8; }
 
-/* ─────── 统计卡 ─────── */
-.me-stats {
-  display: flex; align-items: center;
-  background: var(--bg-card); border-radius: 28rpx; padding: 30rpx 20rpx;
-  margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0;
-}
+/* ─────── 数据行 ─────── */
+.me-stats-row { display: flex; align-items: flex-start; padding: 24rpx 12rpx; }
+.me-stats-row-3 { padding-top: 8rpx; padding-bottom: 28rpx; }
 .me-stat { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .me-stat-num { font-size: 36rpx; font-weight: 800; color: var(--text-title); }
 .me-score { color: var(--primary); }
-.me-score-row { display: flex; align-items: center; gap: 6rpx; }
+.me-stat-label-row { display: flex; align-items: center; gap: 6rpx; margin-top: 6rpx; }
+.me-stat-label-row .me-stat-label { margin-top: 0; }
 .score-help-btn {
   width: 26rpx; height: 26rpx; border-radius: 50%;
   border: 1rpx solid var(--text-muted); color: var(--text-muted);
@@ -52,16 +48,7 @@
 .me-good { color: var(--good); }
 .me-evil { color: var(--evil); }
 .me-stat-label { font-size: 22rpx; color: var(--text-muted); margin-top: 6rpx; }
-.me-stat-div { width: 2rpx; height: 56rpx; background: var(--divider); }
-
-.me-awards {
-  display: flex; align-items: center; justify-content: space-around;
-  background: var(--bg-card); border-radius: 28rpx; padding: 24rpx;
-  margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0;
-}
-.me-award { display: flex; flex-direction: column; align-items: center; }
-.me-award-num { font-size: 40rpx; font-weight: 800; color: var(--text-title); }
-.me-award-label { font-size: 22rpx; color: var(--text-muted); margin-top: 6rpx; }
+.me-stats-line { height: 1rpx; background: var(--divider); margin: 0 28rpx; }
 
 /* 历史对局（外层卡片；内容由 history-card 组件渲染） */
 .history-card { background: var(--bg-card); border-radius: 24rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0; }

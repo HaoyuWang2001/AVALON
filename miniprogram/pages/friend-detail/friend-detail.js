@@ -40,6 +40,13 @@ Page({
     scoreVisible: false,
     score: 0,
     scoreDetail: null,
+    rateVisible: false,
+    totalGames: 0,
+    totalWinRate: 0,
+    goodWinRate: 0,
+    evilWinRate: 0,
+    mvpCount: 0,
+    svpCount: 0,
     myInvite: '',           // '' | 'room' | 'game'
     myRoomId: '',
     myGameId: '',
@@ -136,7 +143,14 @@ Page({
           },
           scoreVisible: s.score != null,
           score: s.score != null ? s.score : 0,
-          scoreDetail: s.scoreDetail || null
+          scoreDetail: s.scoreDetail || null,
+          rateVisible: !!s.rateVisible,
+          totalGames: s.totalGames || 0,
+          totalWinRate: s.totalWinRate || 0,
+          goodWinRate: s.goodWinRate || 0,
+          evilWinRate: s.evilWinRate || 0,
+          mvpCount: s.mvpCount || 0,
+          svpCount: s.svpCount || 0
         });
       }
     }).catch(() => {});

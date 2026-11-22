@@ -1,46 +1,48 @@
 <!--pages/me/me.wxml-->
 <view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
-  <!-- 基本信息 -->
-  <view class="card me-head">
-    <button class="me-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" bindtap="onAvatarTap">
-      <image class="me-avatar" src="{{me.avatarUrl || '/images/default-avatar.png'}}"/>
-    </button>
-    <view class="me-info">
-      <view class="me-name-row">
-        <text class="me-name" bindtap="editNickName">{{me.nickName || '点击设置昵称'}}</text>
-        <text wx:if="{{rank}}" class="me-rank">#{{rank}}</text>
-      </view>
-      <view wx:if="{{stats.titles && stats.titles.length > 0}}" class="me-titles">
-        <title-badge titles="{{stats.titles}}"></title-badge>
-      </view>
-      <view class="me-sub">
-        <text wx:if="{{me.uniqueId}}" class="me-uid">ID：{{me.uniqueId}}</text>
-        <text class="me-edit-hint" bindtap="editNickName">点头像换头像 · 点昵称改名</text>
+  <!-- 基本信息 + 数据（合并卡） -->
+  <view class="card me-card">
+    <view class="me-head">
+      <button class="me-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" bindtap="onAvatarTap">
+        <image class="me-avatar" src="{{me.avatarUrl || '/images/default-avatar.png'}}"/>
+      </button>
+      <view class="me-info">
+        <view class="me-name-row">
+          <text class="me-name" bindtap="editNickName">{{me.nickName || '点击设置昵称'}}</text>
+          <text wx:if="{{rank}}" class="me-rank">#{{rank}}</text>
+        </view>
+        <view wx:if="{{stats.titles && stats.titles.length > 0}}" class="me-titles">
+          <title-badge titles="{{stats.titles}}"></title-badge>
+        </view>
+        <view class="me-sub">
+          <text wx:if="{{me.uniqueId}}" class="me-uid">ID：{{me.uniqueId}}</text>
+          <text class="me-edit-hint" bindtap="editNickName">点头像换头像 · 点昵称改名</text>
+        </view>
       </view>
     </view>
-  </view>
 
-  <!-- 统计 -->
-  <view class="card me-stats">
-    <view class="me-stat"><text class="me-stat-num">{{stats.totalGames}}</text><text class="me-stat-label">场次</text></view>
-    <view class="me-stat-div"></view>
-    <view class="me-stat">
-      <view class="me-score-row">
+    <view class="me-divider"></view>
+
+    <view class="me-stats-row">
+      <view class="me-stat"><text class="me-stat-num">{{stats.totalGames}}</text><text class="me-stat-label">场次</text></view>
+      <view class="me-stat">
         <text class="me-stat-num me-score">{{stats.score}}</text>
-        <view class="score-help-btn" catchtap="openScoreDetail">?</view>
+        <view class="me-stat-label-row">
+          <text class="me-stat-label">积分</text>
+          <view class="score-help-btn" catchtap="openScoreDetail">?</view>
+        </view>
       </view>
-      <text class="me-stat-label">积分</text>
+      <view class="me-stat"><text class="me-stat-num">{{stats.mvpCount}}</text><text class="me-stat-label">MVP</text></view>
+      <view class="me-stat"><text class="me-stat-num">{{stats.svpCount}}</text><text class="me-stat-label">SVP</text></view>
     </view>
-    <view class="me-stat-div"></view>
-    <view class="me-stat"><text class="me-stat-num">{{stats.totalGames ? stats.totalWinRate + '%' : '—'}}</text><text class="me-stat-label">总胜率</text></view>
-    <view class="me-stat-div"></view>
-    <view class="me-stat"><text class="me-stat-num me-good">{{stats.totalGames ? stats.goodWinRate + '%' : '—'}}</text><text class="me-stat-label">蓝方</text></view>
-    <view class="me-stat-div"></view>
-    <view class="me-stat"><text class="me-stat-num me-evil">{{stats.totalGames ? stats.evilWinRate + '%' : '—'}}</text><text class="me-stat-label">红方</text></view>
-  </view>
-  <view class="card me-awards">
-    <view class="me-award"><text class="me-award-num">{{stats.mvpCount}}</text><text class="me-award-label">MVP</text></view>
-    <view class="me-award"><text class="me-award-num">{{stats.svpCount}}</text><text class="me-award-label">SVP</text></view>
+
+    <view class="me-stats-line"></view>
+
+    <view class="me-stats-row me-stats-row-3">
+      <view class="me-stat"><text class="me-stat-num">{{stats.totalGames ? stats.totalWinRate + '%' : '—'}}</text><text class="me-stat-label">总胜率</text></view>
+      <view class="me-stat"><text class="me-stat-num me-good">{{stats.totalGames ? stats.goodWinRate + '%' : '—'}}</text><text class="me-stat-label">蓝方</text></view>
+      <view class="me-stat"><text class="me-stat-num me-evil">{{stats.totalGames ? stats.evilWinRate + '%' : '—'}}</text><text class="me-stat-label">红方</text></view>
+    </view>
   </view>
 
   <!-- 角色胜率（公共组件，角色卡可点开对局弹窗） -->
