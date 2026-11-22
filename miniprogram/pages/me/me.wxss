@@ -41,10 +41,11 @@
   margin-bottom: 20rpx; box-shadow: var(--shadow-sm); flex-shrink: 0;
 }
 .me-stat { flex: 1; display: flex; flex-direction: column; align-items: center; }
-.me-stat-num { font-size: 44rpx; font-weight: 800; color: var(--text-title); }
+.me-stat-num { font-size: 36rpx; font-weight: 800; color: var(--text-title); }
+.me-score { color: var(--primary); }
 .me-good { color: var(--good); }
 .me-evil { color: var(--evil); }
-.me-stat-label { font-size: 24rpx; color: var(--text-muted); margin-top: 6rpx; }
+.me-stat-label { font-size: 22rpx; color: var(--text-muted); margin-top: 6rpx; }
 .me-stat-div { width: 2rpx; height: 56rpx; background: var(--divider); }
 
 .me-awards {

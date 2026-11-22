@@ -1,8 +1,8 @@
 <!--pages/leaderboard/leaderboard.wxml-->
 <view class="page {{themeClass ? 'theme-' + themeClass : ''}}">
   <view class="lb-head">
-    <text class="lb-head-title">总胜率排行榜</text>
-    <text class="lb-head-sub">仅含达到最小局数且公开胜率的玩家（共 {{total}} 人）</text>
+    <text class="lb-head-title">积分排行榜</text>
+    <text class="lb-head-sub">积分 = 基础分 + 阵营胜负分 + 角色分 + 荣誉分（共 {{total}} 人）</text>
   </view>
 
   <view wx:if="{{loading}}" class="lb-loading">加载中...</view>
@@ -23,7 +23,10 @@
           </view>
           <text class="lb-sub">{{item.games}} 场 · {{item.wins}} 胜<text wx:if="{{item.mvpCount > 0 || item.svpCount > 0}}" class="lb-awards">MVP {{item.mvpCount}} SVP {{item.svpCount}}</text></text>
         </view>
-        <text class="lb-rate">{{item.winRate}}%</text>
+        <view class="lb-score-wrap">
+          <text class="lb-score">{{item.score}}</text>
+          <text class="lb-rate">{{item.winRate}}%</text>
+        </view>
       </view>
     </view>
 

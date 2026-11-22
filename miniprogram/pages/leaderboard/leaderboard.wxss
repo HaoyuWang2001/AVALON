@@ -50,3 +50,5 @@
   background: var(--bg-card); color: var(--text-title);
   border: 2rpx solid var(--divider-strong); border-radius: 12rpx;
 }
+.lb-score-wrap { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; margin-left: 12rpx; }
+.lb-score { font-size: 34rpx; font-weight: 800; color: var(--primary); }

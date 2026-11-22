@@ -2436,15 +2436,18 @@ class GameModel {
     if (!openId) return null;
     const threshold = await GameModel.getWinRateThreshold();
     const rows = await db.query(
-      `SELECT t.openId, t.games, t.wins
+      `SELECT t.openId, t.score, t.games, t.wins
        FROM (
-         SELECT gp.open_id as openId,
-                COUNT(DISTINCT g.id) as games,
-                COUNT(DISTINCT CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN g.id END) as wins
-         FROM game_players gp
-         JOIN games g ON g.id = gp.game_id
-         WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
-         GROUP BY gp.open_id
+         SELECT s.open_id as openId,
+                SUM(s.total) as score,
+                COUNT(*) as games,
+                SUM(CASE WHEN s.win_score > 0 THEN 1 ELSE 0 END) as wins
+         FROM game_player_scores s
+         JOIN games gs ON gs.id = s.game_id
+         WHERE gs.status = 'ended'
+           AND COALESCE(gs.room_number, gs.room_id, '') <> '000000'
+           AND COALESCE(gs.source, 'online') <> 'offline'
+         GROUP BY s.open_id
          HAVING games >= ?
        ) t
        JOIN users u ON u.open_id = t.openId
@@ -2452,25 +2455,31 @@ class GameModel {
       [threshold]
     );
     const list = rows
-      .map(r => ({ openId: r.openId, games: parseInt(r.games, 10) || 0, wins: parseInt(r.wins, 10) || 0 }))
+      .map(r => ({
+        openId: r.openId,
+        score: Math.round(Number(r.score) * 100) / 100,
+        games: parseInt(r.games, 10) || 0,
+        wins: parseInt(r.wins, 10) || 0
+      }))
       .filter(r => r.games > 0);
-    return GameModel._computeWinRateRank(list, openId);
+    return GameModel._computeScoreRank(list, openId);
   }
 
   /**
-   * 纯计算名次：并列同名次（competition ranking）。名次 = 严格优于者人数 + 1。
-   * 比较用交叉相乘避免浮点误差；胜率与场次均相同 → 并列同名次。
+   * 纯计算积分名次（严格序）：分数↓ → 场次↓ → 胜率↓ → openId 字典序。
+   * 不在榜（未公开胜率 / 场次不足）返回 null。
    */
-  static _computeWinRateRank(list, openId) {
+  static _computeScoreRank(list, openId) {
     const me = list.find(r => r.openId === openId);
     if (!me) return null;
-    let better = 0;
-    for (const r of list) {
-      if (r.openId === openId) continue;
-      const diff = r.wins * me.games - me.wins * r.games; // >0 表示对方胜率更高
-      if (diff > 0 || (diff === 0 && r.games > me.games)) better++;
-    }
-    return better + 1;
+    const sorted = [...list].sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (b.games !== a.games) return b.games - a.games;
+      const diff = b.wins * a.games - a.wins * b.games;
+      if (diff !== 0) return diff;
+      return String(a.openId).localeCompare(String(b.openId));
+    });
+    return sorted.findIndex(r => r.openId === openId) + 1;
   }
 
   /**
@@ -2487,18 +2496,21 @@ class GameModel {
 
     const threshold = await GameModel.getWinRateThreshold();
     const rows = await db.query(
-      `SELECT t.openId, t.games, t.wins,
+      `SELECT t.openId, t.score, t.games, t.wins,
               COALESCE(av.mvp, 0) as mvpCount, COALESCE(av.svp, 0) as svpCount,
               u.custom_nick_name as customNickName, u.wx_nick_name as wxNickName,
               u.avatar_url as avatarUrl, u.unique_id as uniqueId, u.titles
        FROM (
-         SELECT gp.open_id as openId,
-                COUNT(DISTINCT g.id) as games,
-                COUNT(DISTINCT CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN g.id END) as wins
-         FROM game_players gp
-         JOIN games g ON g.id = gp.game_id
-         WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
-         GROUP BY gp.open_id
+         SELECT s.open_id as openId,
+                SUM(s.total) as score,
+                COUNT(*) as games,
+                SUM(CASE WHEN s.win_score > 0 THEN 1 ELSE 0 END) as wins
+         FROM game_player_scores s
+         JOIN games gs ON gs.id = s.game_id
+         WHERE gs.status = 'ended'
+           AND COALESCE(gs.room_number, gs.room_id, '') <> '000000'
+           AND COALESCE(gs.source, 'online') <> 'offline'
+         GROUP BY s.open_id
          HAVING games >= ?
        ) t
        JOIN users u ON u.open_id = t.openId
@@ -2521,6 +2533,7 @@ class GameModel {
         nickName: r.customNickName || r.wxNickName || '玩家',
         avatarUrl: r.avatarUrl || '',
         uniqueId: r.uniqueId || '',
+        score: Math.round(Number(r.score) * 100) / 100,
         games: parseInt(r.games, 10) || 0,
         wins: parseInt(r.wins, 10) || 0,
         mvpCount: parseInt(r.mvpCount, 10) || 0,
@@ -2529,22 +2542,17 @@ class GameModel {
       }))
       .filter(r => r.games > 0);
 
-    // 排序：胜率 desc → 场次 desc（交叉相乘避免浮点误差）
+    // 严格排序：分数↓ → 场次↓ → 胜率↓ → openId 字典序
     list.sort((a, b) => {
-      const diff = b.wins * a.games - a.wins * b.games; // >0 → b 胜率更高
+      if (b.score !== a.score) return b.score - a.score;
+      if (b.games !== a.games) return b.games - a.games;
+      const diff = b.wins * a.games - a.wins * b.games;
       if (diff !== 0) return diff;
-      return b.games - a.games;
+      return String(a.openId).localeCompare(String(b.openId));
     });
 
-    // 并列同名次（competition ranking）：胜率与场次都相同 → 与前者同名次
     for (let i = 0; i < list.length; i++) {
-      if (i > 0) {
-        const prev = list[i - 1];
-        const sameRate = (list[i].wins * prev.games === prev.wins * list[i].games);
-        list[i].rank = (sameRate && list[i].games === prev.games) ? prev.rank : (i + 1);
-      } else {
-        list[i].rank = 1;
-      }
+      list[i].rank = i + 1;
       list[i].winRate = list[i].games > 0 ? Math.round(list[i].wins / list[i].games * 1000) / 10 : 0;
     }
 
@@ -2591,6 +2599,19 @@ class GameModel {
     const publicById = new Map(userRows.map(u => [u.openId, u.publicWinrate]));
     const titlesById = new Map(userRows.map(u => [u.openId, parseTitles(u.titles)]));
 
+    const scoreRows = await db.query(
+      `SELECT s.open_id AS openId, SUM(s.total) AS score
+       FROM game_player_scores s
+       JOIN games gs ON gs.id = s.game_id
+       WHERE s.open_id IN (${placeholders})
+         AND gs.status = 'ended'
+         AND COALESCE(gs.room_number, gs.room_id, '') <> '000000'
+         AND COALESCE(gs.source, 'online') <> 'offline'
+       GROUP BY s.open_id`,
+      ids
+    );
+    const scoreById = new Map(scoreRows.map(r => [r.openId, Math.round(Number(r.score) * 100) / 100]));
+
     const leaderboard = await GameModel.getWinRateLeaderboard();
     const rankById = new Map(leaderboard.map(r => [r.openId, r.rank]));
 
@@ -2619,6 +2640,7 @@ class GameModel {
         evilGames,
         evilWins,
         evilWinRate: evilGames > 0 ? round1(evilWins / evilGames * 100) : 0,
+        score: scoreById.has(openId) ? scoreById.get(openId) : 0,
         rank,
         rateVisible,
         publicWinrate,

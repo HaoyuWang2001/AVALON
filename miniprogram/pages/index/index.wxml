@@ -34,7 +34,7 @@
           </view>
           <text class="podium-name">{{item.nickName}}</text>
           <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}" size="mini"></title-badge>
-          <text class="podium-rate">{{item.winRate}}%</text>
+          <text class="podium-rate">{{item.score}}·{{item.winRate}}%</text>
         </view>
       </view>
     </block>

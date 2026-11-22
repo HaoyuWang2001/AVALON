@@ -25,21 +25,21 @@ describe('13 — 总胜率排名', () => {
     expect(res.body.stats.rank).toBe(1);
   });
 
-  it('13-3 并列同名次 + 场次多者靠前（纯计算）', () => {
+  it('13-3 积分严格排序：分数→场次→胜率→openId（纯计算）', () => {
     const list = [
-      { openId: 'A', games: 2, wins: 2 }, // 100%
-      { openId: 'B', games: 2, wins: 2 }, // 100%（与 A 完全并列）
-      { openId: 'C', games: 2, wins: 1 }, // 50%
-      { openId: 'D', games: 4, wins: 2 }, // 50%，场次更多 → 优于 C
-      { openId: 'E', games: 3, wins: 0 }  // 0%
+      { openId: 'A', score: 10, games: 4, wins: 3 },
+      { openId: 'B', score: 10, games: 2, wins: 2 }, // 同分，场次少 → 靠后
+      { openId: 'C', score: 12, games: 1, wins: 1 }, // 分最高 → 第 1
+      { openId: 'D', score: 8, games: 5, wins: 2 },
+      { openId: 'E', score: 8, games: 5, wins: 2 }   // 完全同分同场同胜率 → openId 字典序
     ];
-    const R = (id) => GameModel._computeWinRateRank(list, id);
-    expect(R('A')).toBe(1);
-    expect(R('B')).toBe(1);        // 胜率与场次都相同 → 并列同名次
-    expect(R('D')).toBe(3);        // 同为 50%，场次多者靠前
-    expect(R('C')).toBe(4);
+    const R = (id) => GameModel._computeScoreRank(list, id);
+    expect(R('C')).toBe(1);
+    expect(R('A')).toBe(2);
+    expect(R('B')).toBe(3);
+    expect(R('D')).toBe(4);
     expect(R('E')).toBe(5);
-    expect(R('ZZZ')).toBeNull();   // 不在榜
+    expect(R('ZZZ')).toBeNull();
   });
 
   it('13-4 机器人房(000000)对局不计入统计与排名', async () => {
@@ -97,6 +97,18 @@ describe('13 — 总胜率排名', () => {
       `INSERT INTO game_players (game_id, open_id, role, side, nick_name, seat_number)
        VALUES (?, ?, 'loyal', 'good', 'B', 1)`,
       [`bt${tag}b0`, botId]
+    );
+
+    // 计分榜依赖 game_player_scores：为可见/隐藏玩家写入分数行（机器人房不写）
+    await db.query(
+      `INSERT INTO game_player_scores (game_id, open_id, side, role, base, win_score, role_score, award_score, total)
+       SELECT id, ?, 'good', 'loyal', 0.50, 0.45, 0, 0, 5.00 FROM games WHERE id LIKE ?`,
+      [visibleId, `bt${tag}v%`]
+    );
+    await db.query(
+      `INSERT INTO game_player_scores (game_id, open_id, side, role, base, win_score, role_score, award_score, total)
+       VALUES (?, ?, 'good', 'loyal', 0.50, 0.45, 0, 0, 1.00)`,
+      [`bt${tag}h0`, hiddenId]
     );
 
     const res = await apiGet(`/api/games/stats/batch?openIds=${visibleId},${hiddenId},${botId}&viewerOpenId=${visibleId}`);
@@ -167,6 +179,11 @@ describe('13 — 总胜率排名', () => {
          VALUES (?, ?, 'loyal', 'good', 'L', 1)`,
         [gid, openId]
       );
+      await db.query(
+        `INSERT INTO game_player_scores (game_id, open_id, side, role, base, win_score, role_score, award_score, total)
+         VALUES (?, ?, 'good', 'loyal', 0.50, 0.45, 0, 0, 5.00)`,
+        [gid, openId]
+      );
     }
   }
 
@@ -195,18 +212,15 @@ describe('13 — 总胜率排名', () => {
     const neg = await apiGet('/api/games/stats/leaderboard?page=-3&pageSize=2');
     expect(neg.body.page).toBe(1);
 
-    // 全量：排序 + 并列名次
+    // 全量：积分↓ → 场次↓ 严格序（rank 连续递增）
     const all = await fetchLeaderboardAll(50);
     expect(all.length).toBe(p1.body.total);
     for (let i = 1; i < all.length; i++) {
       const a = all[i - 1];
       const b = all[i];
-      const diff = b.wins * a.games - a.wins * b.games; // >0 → b 胜率更高（不应发生）
-      expect(diff).toBeLessThanOrEqual(0);
-      if (diff === 0) expect(b.games).toBeLessThanOrEqual(a.games);
-      const sameRate = (b.wins * a.games === a.wins * b.games);
-      if (sameRate && b.games === a.games) expect(b.rank).toBe(a.rank);
-      else expect(b.rank).toBeGreaterThan(a.rank);
+      expect(b.score).toBeLessThanOrEqual(a.score);
+      if (b.score === a.score) expect(b.games).toBeLessThanOrEqual(a.games);
+      expect(b.rank).toBe(a.rank + 1);
     }
     all.forEach(r => expect(typeof r.rank).toBe('number'));
 

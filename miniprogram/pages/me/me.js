@@ -154,6 +154,7 @@ Page({
           rank: s.rank || 0,
           stats: {
             totalGames: s.totalGames || 0,
+            score: s.score != null ? s.score : 0,
             totalWinRate: s.totalWinRate || 0,
             goodWinRate: s.goodWinRate || 0,
             evilWinRate: s.evilWinRate || 0,

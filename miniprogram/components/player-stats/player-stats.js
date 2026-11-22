@@ -68,6 +68,7 @@ Component({
             totalWinRate: s.totalGames > 0 ? s.totalWinRate + '%' : '—',
             goodWinRate: s.goodGames > 0 ? s.goodWinRate + '%' : '—',
             evilWinRate: s.evilGames > 0 ? s.evilWinRate + '%' : '—',
+            score: s.score != null ? s.score : 0,
             mvpCount: s.mvpCount || 0,
             svpCount: s.svpCount || 0,
             titles: Array.isArray(s.titles) ? s.titles : []

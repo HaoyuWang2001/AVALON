@@ -21,6 +21,10 @@
           <view class="ps-stat"><text class="ps-num ps-evil">{{stats.evilWinRate}}</text><text class="ps-label">红方</text></view>
           <view class="ps-stat"><text class="ps-num">{{stats.totalGames}}</text><text class="ps-label">场次</text></view>
         </view>
+        <view class="ps-score-row">
+          <text class="ps-score-label">总分</text>
+          <text class="ps-score-num">{{stats.score != null ? stats.score : '—'}}</text>
+        </view>
         <view class="ps-awards">
           <view class="ps-award"><text class="ps-award-num">{{stats.mvpCount || 0}}</text><text class="ps-award-label">MVP</text></view>
           <view class="ps-award"><text class="ps-award-num">{{stats.svpCount || 0}}</text><text class="ps-award-label">SVP</text></view>

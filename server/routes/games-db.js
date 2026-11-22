@@ -154,6 +154,21 @@ function createRouter() {
       // 总胜率排名（与 champions 同口径；不在榜 = null）
       stats.rank = await GameModel.getWinRateRank(openId);
 
+      // 总分（跟随胜率可见性，不可见时不下发）
+      if (stats.rateVisible) {
+        const [scoreRow] = await db.query(
+          `SELECT COALESCE(SUM(s.total), 0) AS score
+           FROM game_player_scores s
+           JOIN games gs ON gs.id = s.game_id
+           WHERE s.open_id = ?
+             AND gs.status = 'ended'
+             AND COALESCE(gs.room_number, gs.room_id, '') <> '000000'
+             AND COALESCE(gs.source, 'online') <> 'offline'`,
+          [openId]
+        );
+        stats.score = Math.round(Number(scoreRow.score) * 100) / 100;
+      }
+
       // MVP/SVP 获得数（收到的票数累计；跟随胜率可见性，不可见时不下发）
       if (stats.rateVisible) {
         const avRows = await db.query(
@@ -243,6 +258,7 @@ function createRouter() {
         uniqueId: p.uniqueId,
         games: p.games,
         wins: p.wins,
+        score: p.score || 0,
         winRate: p.winRate,
         mvpCount: p.mvpCount || 0,
         svpCount: p.svpCount || 0,
@@ -993,22 +1009,25 @@ function createRouter() {
       const viewerOpenId = req.query.openId || null;
 
       const rows = await db.query(
-        `SELECT t.openId, t.games, t.wins,
+        `SELECT t.openId, t.score, t.games, t.wins,
                 u.custom_nick_name as customNickName, u.wx_nick_name as wxNickName,
                 u.avatar_url as avatarUrl, u.unique_id as uniqueId, u.titles
          FROM (
-           SELECT gp.open_id as openId,
-                  COUNT(DISTINCT g.id) as games,
-                  COUNT(DISTINCT CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(g.game_result, '$.winner')) = gp.side THEN g.id END) as wins
-           FROM game_players gp
-           JOIN games g ON g.id = gp.game_id
-           WHERE g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
-           GROUP BY gp.open_id
+           SELECT s.open_id as openId,
+                  SUM(s.total) as score,
+                  COUNT(*) as games,
+                  SUM(CASE WHEN s.win_score > 0 THEN 1 ELSE 0 END) as wins
+           FROM game_player_scores s
+           JOIN games gs ON gs.id = s.game_id
+           WHERE gs.status = 'ended'
+             AND COALESCE(gs.room_number, gs.room_id, '') <> '000000'
+             AND COALESCE(gs.source, 'online') <> 'offline'
+           GROUP BY s.open_id
            HAVING games >= ?
          ) t
          JOIN users u ON u.open_id = t.openId
          WHERE u.public_winrate <> 0
-         ORDER BY (t.wins / t.games) DESC, t.games DESC
+         ORDER BY t.score DESC, t.games DESC, (t.wins / t.games) DESC
          LIMIT ${limit}`,
         [minGames]
       );
@@ -1030,6 +1049,7 @@ function createRouter() {
           nickName: r.customNickName || r.wxNickName || '玩家',
           avatarUrl: r.avatarUrl || '',
           uniqueId: r.uniqueId || '',
+          score: Math.round(Number(r.score) * 100) / 100,
           games,
           wins,
           winRate: games > 0 ? Math.round(wins / games * 1000) / 10 : 0,
