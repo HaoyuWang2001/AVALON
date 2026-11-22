@@ -125,10 +125,10 @@ function enrichTablePlayer(p, ctx) {
       : 'ptag-grey';
     tags.push({ text, cls });
   }
-  // 游戏结束：本局 MVP/SVP 获得票数标签（🏅N=胜方最佳 / 💠N=败方最佳；0 票不显示）
+  // 游戏结束：本局 MVP/SVP 获得票数标签（MVP·N / SVP·N；0 票不显示）
   if (currentPhase === 'gameEnd') {
-    if (p.mvpVotes > 0) tags.push({ text: '🏅' + p.mvpVotes, cls: TAG_STYLES.gold });
-    if (p.svpVotes > 0) tags.push({ text: '💠' + p.svpVotes, cls: TAG_STYLES.purple });
+    if (p.mvpVotes > 0) tags.push({ text: 'MVP·' + p.mvpVotes, cls: TAG_STYLES.gold });
+    if (p.svpVotes > 0) tags.push({ text: 'SVP·' + p.svpVotes, cls: TAG_STYLES.purple });
   }
 
   return {

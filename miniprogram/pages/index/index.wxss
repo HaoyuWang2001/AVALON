@@ -13,26 +13,26 @@
 
 /* ─────── 品牌栏（单行：圆徽 + 字标 + 右侧个人头像） ─────── */
 .brand-bar {
-  display: flex; align-items: center; justify-content: space-between; gap: 16rpx;
-  padding: 6rpx 0 18rpx; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 20rpx;
+  padding: 22rpx 0 28rpx; flex-shrink: 0;
 }
 .brand-main { display: flex; align-items: center; gap: 16rpx; flex: 1; min-width: 0; }
 .brand-emblem {
-  width: 64rpx; height: 64rpx; border-radius: 50%;
-  border: 3rpx solid var(--gold); flex-shrink: 0;
+  width: 96rpx; height: 96rpx; border-radius: 50%;
+  border: 4rpx solid var(--gold); flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 12rpx rgba(212, 160, 82, 0.35);
+  box-shadow: 0 0 18rpx rgba(212, 160, 82, 0.38);
 }
-.brand-emblem-char { font-size: 34rpx; font-weight: 900; color: var(--gold); line-height: 1; }
+.brand-emblem-char { font-size: 50rpx; font-weight: 900; color: var(--gold); line-height: 1; }
 .brand-title {
-  font-size: 42rpx; font-weight: 900; letter-spacing: 4rpx;
+  font-size: 50rpx; font-weight: 900; letter-spacing: 4rpx;
   color: var(--brand-1, var(--gold));
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .brand-avatar {
   position: relative; z-index: 5;
-  width: 84rpx; height: 84rpx; border-radius: 50%; flex-shrink: 0;
-  overflow: hidden; border: 3rpx solid var(--gold); background: var(--bg-page);
+  width: 104rpx; height: 104rpx; border-radius: 50%; flex-shrink: 0;
+  overflow: hidden; border: 4rpx solid var(--gold); background: var(--bg-page);
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.18);
 }
 .brand-avatar-img { width: 100%; height: 100%; display: block; }
@@ -51,9 +51,17 @@
   0%, 100% { background-position: 15% 15%; }
   50%      { background-position: 85% 85%; }
 }
-.profile-rank-row { display: flex; align-items: center; justify-content: space-between; padding: 4rpx 8rpx 12rpx; }
+.profile-rank-row { display: flex; align-items: center; justify-content: space-between; padding: 2rpx 6rpx 14rpx; }
+.profile-rank-left { display: flex; align-items: baseline; gap: 12rpx; min-width: 0; }
 .profile-rank-label { font-size: 28rpx; font-weight: 600; color: var(--text-muted); }
-.profile-rank { font-size: 42rpx; font-weight: 800; color: var(--primary); }
+.profile-rank { font-size: 44rpx; font-weight: 800; color: var(--primary); }
+.profile-rank-btn {
+  flex-shrink: 0; font-size: 26rpx; font-weight: 700;
+  padding: 10rpx 24rpx; border-radius: 999rpx;
+  color: var(--primary); background: var(--primary-bg);
+  border: 2rpx solid var(--primary);
+}
+.profile-rank-btn-hover { transform: scale(0.94); opacity: 0.88; }
 
 .current-room-card { background: var(--gold-bg); border-radius: 28rpx; padding: 40rpx 36rpx; margin-bottom: 20rpx; border-left: 8rpx solid var(--gold); flex-shrink: 0; }
 .current-room-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16rpx; }
@@ -127,9 +135,9 @@
 .setup-btn[disabled] { opacity: 0.45; color: var(--on-primary); background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); }
 
 /* ─────── 胜率冠军（领奖台） ─────── */
-.podium { display: flex; align-items: flex-end; justify-content: center; gap: 16rpx; padding-top: 0; margin-bottom: 8rpx; }
+.podium { display: flex; align-items: flex-start; justify-content: center; gap: 16rpx; padding-top: 0; margin-bottom: 4rpx; }
 .podium-item { flex: 1; max-width: 190rpx; display: flex; flex-direction: column; align-items: center; }
-.podium-avatar-wrap { position: relative; margin-bottom: 10rpx; }
+.podium-avatar-wrap { position: relative; width: 100%; height: 156rpx; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 8rpx; }
 .podium-avatar { width: 112rpx; height: 112rpx; border-radius: 50%; border: 4rpx solid var(--gray-300); background: var(--gray-100); }
 .rank-1 .podium-avatar { width: 148rpx; height: 148rpx; border-color: var(--medal-gold); animation: champ-glow 2.2s ease-in-out infinite; }
 .rank-2 .podium-avatar { border-color: var(--medal-silver); }
@@ -139,14 +147,10 @@
 .rank-2 .podium-badge { color: var(--medal-silver-text); border-color: var(--medal-silver); }
 .rank-3 .podium-badge { color: var(--medal-bronze-light); border-color: var(--medal-bronze); }
 .podium-name { font-size: 28rpx; color: var(--champion-fg); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6rpx; }
-.podium-rate { display: block; margin: 14rpx 0; font-size: 38rpx; font-weight: 800; color: var(--medal-gold); }
+.podium-rate { display: block; margin: 10rpx 0 0; font-size: 36rpx; font-weight: 800; color: var(--medal-gold); }
 .rank-2 .podium-rate { color: var(--medal-silver-text); }
 .rank-3 .podium-rate { color: var(--medal-bronze-light); }
-.podium-stand { width: 100%; margin-top: 10rpx; border-radius: 14rpx 14rpx 0 0; display: flex; align-items: center; justify-content: center; font-size: 40rpx; font-weight: 800; color: rgba(255, 255, 255, 0.85); }
-.rank-1 .podium-stand { height: 96rpx; background: linear-gradient(180deg, var(--medal-gold), var(--medal-gold-deep)); }
-.rank-2 .podium-stand { height: 66rpx; background: linear-gradient(180deg, var(--medal-silver-light), var(--medal-silver-deep)); }
-.rank-3 .podium-stand { height: 48rpx; background: linear-gradient(180deg, var(--medal-bronze), var(--medal-bronze-deep)); }
-
+.rank-1 .rank-2 .rank-3 
 @keyframes crown-float { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10rpx); } }
 @keyframes champ-glow { 0%, 100% { box-shadow: 0 0 18rpx rgba(255, 215, 0, 0.55); } 50% { box-shadow: 0 0 34rpx rgba(255, 215, 0, 0.95); } }
 
@@ -164,6 +168,7 @@
   padding: 0 22rpx; position: relative; overflow: hidden; color: var(--on-primary);
 }
 .func-hover { transform: scale(0.96); opacity: 0.92; }
+.func-disabled { opacity: 0.45; pointer-events: none; }
 .func-icon { width: 48rpx; height: 48rpx; }
 .func-emoji { font-size: 48rpx; }
 .func-icon-box { width: 72rpx; height: 72rpx; border-radius: 16rpx; background: rgba(255, 255, 255, 0.16); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.18); }

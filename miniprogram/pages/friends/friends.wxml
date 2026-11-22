@@ -67,9 +67,7 @@
           <text class="f-status-text {{item.online ? 'st-online' : 'st-offline'}}">{{item.online ? '在线' : '离线'}}</text>
           <text wx:if="{{item.room}}" class="f-room-text {{item.room.gameStarted ? 'st-ingame' : 'st-inroom'}}">· {{item.room.gameStarted ? '对局中' : '房间等待中'}}</text>
         </view>
-        <text wx:if="{{item.qualified}}" class="f-rate">胜率 {{item.winRate}}% · {{item.games}} 场</text>
       </view>
-      <text class="f-arrow">›</text>
     </view>
   </view>
 

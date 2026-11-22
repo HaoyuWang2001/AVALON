@@ -31,8 +31,8 @@
     <view class="me-stat"><text class="me-stat-num me-evil">{{stats.totalGames ? stats.evilWinRate + '%' : '—'}}</text><text class="me-stat-label">红方</text></view>
   </view>
   <view class="card me-awards">
-    <view class="me-award"><text class="me-award-num">🏅 {{stats.mvpCount}}</text><text class="me-award-label">MVP</text></view>
-    <view class="me-award"><text class="me-award-num">💠 {{stats.svpCount}}</text><text class="me-award-label">SVP</text></view>
+    <view class="me-award"><text class="me-award-num">{{stats.mvpCount}}</text><text class="me-award-label">MVP</text></view>
+    <view class="me-award"><text class="me-award-num">{{stats.svpCount}}</text><text class="me-award-label">SVP</text></view>
   </view>
 
   <!-- 角色胜率（公共组件，角色卡可点开对局弹窗） -->

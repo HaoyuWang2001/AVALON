@@ -595,7 +595,7 @@
     <view class="award-mask" bindtap="closeAwardModal"></view>
     <view class="award-panel">
       <view class="award-head">
-        <text class="award-title">{{awardModal.step === 'mvp' ? '🏅 MVP' : '💠 SVP'}}</text>
+        <text class="award-title">{{awardModal.step === 'mvp' ? 'MVP' : 'SVP'}}</text>
         <text class="award-close" bindtap="closeAwardModal">✕</text>
       </view>
       <view class="award-status">

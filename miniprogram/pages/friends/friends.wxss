@@ -48,21 +48,19 @@
 .f-avatar { width: 80rpx; height: 80rpx; border-radius: 50%; flex-shrink: 0; background: var(--gray-100); }
 .f-info { flex: 1; margin-left: 18rpx; min-width: 0; }
 .f-name-row { display: flex; align-items: baseline; gap: 8rpx; min-width: 0; flex-wrap: wrap; }
-.f-name { font-size: 30rpx; font-weight: 600; color: var(--text-title); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.f-name { font-size: 34rpx; font-weight: 600; color: var(--text-title); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .f-rank { flex-shrink: 0; font-size: 24rpx; font-weight: 800; color: var(--primary); }
 .f-status-row { display: flex; align-items: center; margin-top: 6rpx; }
 .f-dot { width: 14rpx; height: 14rpx; border-radius: 50%; margin-right: 8rpx; flex-shrink: 0; }
-.f-status-text { font-size: 24rpx; }
-.f-room-text { font-size: 24rpx; margin-left: 10rpx; }
+.f-status-text { font-size: 26rpx; }
+.f-room-text { font-size: 26rpx; margin-left: 10rpx; }
 .f-dot.st-online { background: var(--label-green); }
 .f-dot.st-offline { background: var(--label-grey); }
 .st-online { color: var(--label-green); }
 .st-offline { color: var(--label-grey); }
 .st-inroom { color: var(--label-blue); }
 .st-ingame { color: var(--label-red); }
-.f-rate { font-size: 22rpx; color: var(--primary); margin-top: 4rpx; display: block; font-weight: 600; }
 .f-sub { font-size: 24rpx; color: var(--text-muted); margin-top: 6rpx; display: block; }
-.f-arrow { font-size: 36rpx; color: var(--text-muted); }
 .req-item { display: flex; align-items: center; padding: 20rpx 0; border-bottom: 1rpx solid var(--divider); }
 .req-item:last-child { border-bottom: none; }
 .req-btn { flex-shrink: 0; margin-left: 12rpx; }
