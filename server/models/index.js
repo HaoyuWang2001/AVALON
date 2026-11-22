@@ -2,6 +2,7 @@
 const RoomModel = require('./RoomModel');
 const GameModel = require('./GameModel');
 const UserModel = require('./UserModel');
+const ScoreModel = require('./ScoreModel');
 
 // 数据库状态管理器
 class ModelManager {
@@ -146,6 +147,7 @@ module.exports = {
   RoomModel,
   GameModel,
   UserModel,
+  ScoreModel,
   modelManager,
   ModelManager
 };

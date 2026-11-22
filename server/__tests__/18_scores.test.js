@@ -1,0 +1,179 @@
+const db = require('../config/db');
+const scoring = require('../utils/scoring');
+const ScoreModel = require('../models/ScoreModel');
+
+const TS = Date.now();
+const gid = `score_game_${TS}`;
+
+describe('18 — 计分制', () => {
+  beforeAll(async () => {
+    await db.initPool();
+  });
+
+  describe('18-A 纯函数与数学性质', () => {
+    it('18-1 基础分随人数递减且在 [0.45, 0.80]', () => {
+      let prev = Infinity;
+      for (let n = 5; n <= 12; n++) {
+        const b = scoring.baseScore(n);
+        expect(b).toBeGreaterThanOrEqual(0.45);
+        expect(b).toBeLessThanOrEqual(0.80);
+        expect(b).toBeLessThan(prev);
+        prev = b;
+      }
+    });
+
+    it('18-2 胜分/败分落在规则区间（p∈[0.35,0.65]）', () => {
+      for (let p = 0.35; p <= 0.6501; p += 0.05) {
+        const a = scoring.winScore(p);
+        const l = scoring.lossScore(p);
+        expect(a).toBeGreaterThanOrEqual(0.34);
+        expect(a).toBeLessThanOrEqual(0.65);
+        expect(l).toBeGreaterThanOrEqual(0.20);
+        expect(l).toBeLessThanOrEqual(0.40);
+      }
+    });
+
+    it('18-3 平衡定理：两侧期望得分相等（舍入误差 ≤0.02）', () => {
+      for (let n = 5; n <= 12; n++) {
+        for (let p = 0.35; p <= 0.6501; p += 0.05) {
+          const base = scoring.baseScore(n);
+          const pGood = p;
+          const pEvil = 1 - p;
+          const Egood = base + pGood * scoring.winScore(pGood) - (1 - pGood) * scoring.lossScore(pGood);
+          const Eevil = base + pEvil * scoring.winScore(pEvil) - (1 - pEvil) * scoring.lossScore(pEvil);
+          expect(Math.abs(Egood - Eevil)).toBeLessThanOrEqual(0.02);
+        }
+      }
+    });
+
+    it('18-4 非负性：极端角色/阵营参数下单局得分仍 ≥0，且两位小数', () => {
+      const factionStats = { 5: { good: { wins: 1, games: 9 }, evil: { wins: 8, games: 9 } } };
+      const roleStats = { merlin: { wins: 0, games: 100 }, loyal: { wins: 100, games: 100 }, assassin: { wins: 100, games: 100 } };
+      const players = [
+        { openId: 'a', side: 'good', role: 'merlin' },
+        { openId: 'b', side: 'good', role: 'loyal' },
+        { openId: 'c', side: 'evil', role: 'assassin' }
+      ];
+      const rows = scoring.scoreGame({ n: 5, winner: 'good', players, factionStats, roleStats, mvpVotes: {}, svpVotes: {} });
+      rows.forEach(r => {
+        expect(r.total).toBeGreaterThanOrEqual(0);
+        expect(Math.round(r.total * 100) / 100).toBe(r.total);
+      });
+    });
+
+    it('18-5 荣誉分：每票 0.01', () => {
+      const rows = scoring.scoreGame({
+        n: 5, winner: 'good',
+        players: [
+          { openId: 'a', side: 'good', role: 'loyal' },
+          { openId: 'b', side: 'evil', role: 'minion' }
+        ],
+        factionStats: {}, roleStats: {},
+        mvpVotes: { a: 3 }, svpVotes: { b: 2 }
+      });
+      const a = rows.find(r => r.openId === 'a');
+      const b = rows.find(r => r.openId === 'b');
+      expect(a.awardScore).toBe(0.03);
+      expect(b.awardScore).toBe(0.02);
+    });
+  });
+
+  describe('18-B 落库与回填', () => {
+    beforeAll(async () => {
+      await db.query(
+        `INSERT INTO games (id, room_id, room_number, source, owner_id, current_phase, game_result, status, ended_at)
+         VALUES (?, NULL, '987654', 'online', 'score_host', 'gameEnd', ?, 'ended', NOW())`,
+        [gid, JSON.stringify({ winner: 'good', reason: 'test' })]
+      );
+      const players = [
+        ['sco_m', 'merlin', 'good'],
+        ['sco_l', 'loyal', 'good'],
+        ['sco_a', 'assassin', 'evil'],
+        ['sco_g', 'morgana', 'evil']
+      ];
+      for (const [oid, role, side] of players) {
+        await db.query(
+          `INSERT INTO game_players (game_id, open_id, role, side, nick_name, seat_number)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [gid, oid, role, side, oid, 1]
+        );
+      }
+      // 2 张 MVP 票投给梅林，1 张 SVP 票给刺客
+      await db.query(
+        `INSERT INTO game_award_votes (game_id, voter_open_id, award, state, target_open_id) VALUES
+         (?, 'sco_l', 'mvp', 'voted', 'sco_m'),
+         (?, 'sco_a', 'mvp', 'voted', 'sco_m'),
+         (?, 'sco_m', 'svp', 'voted', 'sco_a')`,
+        [gid, gid, gid]
+      );
+    });
+
+    it('18-6 computeAndSave 写入明细（胜负分方向/票分/两位小数）', async () => {
+      const r = await ScoreModel.computeAndSave(gid);
+      expect(r.skipped).toBe(false);
+      expect(r.count).toBe(4);
+      const rows = await db.query('SELECT open_id AS openId, side, win_score AS winScore, role_score AS roleScore, award_score AS awardScore, total FROM game_player_scores WHERE game_id = ? ORDER BY open_id', [gid]);
+      expect(rows.length).toBe(4);
+      rows.forEach(row => {
+        expect(Math.round(Number(row.total) * 100) / 100).toBe(Number(row.total));
+        expect(Number(row.total)).toBeGreaterThanOrEqual(0);
+      });
+      const merlin = rows.find(x => x.openId === 'sco_m');
+      const assassin = rows.find(x => x.openId === 'sco_a');
+      const loyal = rows.find(x => x.openId === 'sco_l');
+      expect(Number(merlin.winScore)).toBeGreaterThan(0);
+      expect(Number(assassin.winScore)).toBeLessThan(0);
+      expect(Number(merlin.awardScore)).toBe(0.02);
+      expect(Number(assassin.awardScore)).toBe(0.01);
+      // 胜方角色分内部零和（舍入误差 ≤0.02）
+      const winnersRoleSum = rows.filter(x => x.side === 'good').reduce((a, x) => a + Number(x.roleScore), 0);
+      expect(Math.abs(winnersRoleSum)).toBeLessThanOrEqual(0.02);
+      expect(Number(loyal.winScore)).toBeGreaterThan(0);
+    });
+
+    it('18-7 幂等：重复计算不产生重复行且数值一致', async () => {
+      const before = await db.query('SELECT open_id, total FROM game_player_scores WHERE game_id = ? ORDER BY open_id', [gid]);
+      await ScoreModel.computeAndSave(gid);
+      const after = await db.query('SELECT open_id, total FROM game_player_scores WHERE game_id = ? ORDER BY open_id', [gid]);
+      expect(after.length).toBe(before.length);
+      expect(after.map(r => Number(r.total))).toEqual(before.map(r => Number(r.total)));
+    });
+
+    it('18-8 新增票后重算，票分增加 0.01', async () => {
+      const before = await db.query("SELECT award_score AS a FROM game_player_scores WHERE game_id = ? AND open_id = 'sco_m'", [gid]);
+      await db.query(
+        `INSERT INTO game_award_votes (game_id, voter_open_id, award, state, target_open_id)
+         VALUES (?, 'sco_g', 'mvp', 'voted', 'sco_m')`,
+        [gid]
+      );
+      await ScoreModel.computeAndSave(gid);
+      const after = await db.query("SELECT award_score AS a FROM game_player_scores WHERE game_id = ? AND open_id = 'sco_m'", [gid]);
+      expect(Number(after[0].a) - Number(before[0].a)).toBeCloseTo(0.01, 5);
+    });
+
+    it('18-9 线下/异常局不计分', async () => {
+      const offId = `score_off_${TS}`;
+      await db.query(
+        `INSERT INTO games (id, room_id, room_number, source, owner_id, current_phase, game_result, status, ended_at)
+         VALUES (?, NULL, '987655', 'offline', 'score_host', 'gameEnd', ?, 'ended', NOW())`,
+        [offId, JSON.stringify({ winner: 'good', reason: 'offline' })]
+      );
+      await db.query(
+        `INSERT INTO game_players (game_id, open_id, role, side) VALUES (?, 'off_a', 'merlin', 'good'), (?, 'off_b', 'assassin', 'evil')`,
+        [offId, offId]
+      );
+      const r = await ScoreModel.computeAndSave(offId);
+      expect(r.skipped).toBe(true);
+      const rows = await db.query('SELECT * FROM game_player_scores WHERE game_id = ?', [offId]);
+      expect(rows.length).toBe(0);
+    });
+
+    it('18-10 backfillAll 可全量重算', async () => {
+      const res = await ScoreModel.backfillAll();
+      expect(res.total).toBeGreaterThanOrEqual(1);
+      expect(res.games).toBeGreaterThanOrEqual(1);
+      const rows = await db.query('SELECT COUNT(*) AS c FROM game_player_scores WHERE game_id = ?', [gid]);
+      expect(Number(rows[0].c)).toBe(4);
+    });
+  });
+});

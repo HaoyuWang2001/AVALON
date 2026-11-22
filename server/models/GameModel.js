@@ -1538,7 +1538,11 @@ class GameModel {
         }
       });
       
-      return await this.getState(gameId);
+      const state = await this.getState(gameId);
+      if (state && state.basic && state.basic.status === 'ended') {
+        await this._tryScoreAfterEnd(gameId);
+      }
+      return state;
     } catch (error) {
       console.error('任务投票失败:', error);
       throw error;
@@ -1857,6 +1861,7 @@ class GameModel {
         }
       });
       
+      await this._tryScoreAfterEnd(gameId);
       return true;
     } catch (error) {
       console.error('结束游戏失败:', error);
@@ -2115,7 +2120,9 @@ class GameModel {
         await this._resetRoomAfterEnd(connection, game[0].room_id);
       });
 
-      return await this.getState(gameId);
+      const state = await this.getState(gameId);
+      await this._tryScoreAfterEnd(gameId);
+      return state;
     } catch (error) {
       console.error('刺杀失败:', error);
       throw error;
@@ -2185,7 +2192,9 @@ class GameModel {
         await this._resetRoomAfterEnd(connection, game[0].room_id);
       });
 
-      return await this.getState(gameId);
+      const state = await this.getState(gameId);
+      await this._tryScoreAfterEnd(gameId);
+      return state;
     } catch (error) {
       console.error('梅林翻牌失败:', error);
       throw error;
@@ -2253,6 +2262,18 @@ class GameModel {
       if (awards[r.award]) awards[r.award] = { state: r.state, target: r.target || null };
     }
     return { awards };
+  }
+
+  /**
+   * 终局后触发计分（best-effort，不阻断主流程）
+   */
+  static async _tryScoreAfterEnd(gameId) {
+    try {
+      const ScoreModel = require('./ScoreModel');
+      await ScoreModel.computeAndSave(gameId);
+    } catch (e) {
+      console.error('计分失败:', e && e.message);
+    }
   }
 
   // =============== 工具方法 ===============

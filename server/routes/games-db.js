@@ -12,7 +12,7 @@ function parseTitles(v) {
     return [];
   }
 }
-const { GameModel, RoomModel } = require('../models');
+const { GameModel, RoomModel, ScoreModel } = require('../models');
 const socket = require('../config/socket');
 
 // mysql2 默认会把 JSON 列解析为 JS 对象，因此读取时需兼容 string 与 object
@@ -776,6 +776,8 @@ function createRouter() {
         return res.status(400).json({ success: false, message: '缺少必要参数' });
       }
       const result = await GameModel.submitAwardVote(gameId, openId, award, action, targetOpenId);
+      // 票型变化会影响计分（每票 0.01），重算本局
+      try { await ScoreModel.computeAndSave(gameId); } catch (e) { console.error('计分失败:', e.message); }
       // 广播刷新：结束页玩家标签的本局 MVP/SVP 票数实时更新
       emitGameForGame(gameId);
       res.json({ success: true, awards: result.awards });
