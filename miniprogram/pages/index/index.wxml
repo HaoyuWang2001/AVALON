@@ -3,7 +3,7 @@
   <!-- 品牌栏（单行）：左圆徽+字标，最右为个人头像（点击进入个人页） -->
   <view class="brand-bar">
     <view class="brand-main">
-      <view class="brand-emblem" hover-class="brand-emblem-hover" hover-stay-time="60" bindtap="openBrandMenu"><text class="brand-emblem-char">瓦</text></view>
+      <view class="brand-emblem-tap" hover-class="brand-emblem-hover" hover-stay-time="60" bindtap="openBrandMenu"><brand-logo size="normal"/></view>
       <text class="brand-title">练秋湖的瓦协会</text>
     </view>
     <view class="brand-avatar" hover-class="brand-avatar-hover" hover-stay-time="60" bindtap="goToMe">
@@ -43,27 +43,6 @@
     </block>
   </view>
 
-  <!-- 当前房间（整卡点击=回到房间；退出/解散在房间内操作） -->
-  <view class="card current-room-card" wx:if="{{currentRoom}}" bindtap="backToRoom">
-    <view class="current-room-top">
-      <text class="current-room-id">{{currentRoom.roomId}}</text>
-      <view class="current-room-right">
-        <text wx:if="{{currentRoom.gameStarted}}" class="current-room-tag current-room-tag-ingame">游戏中</text>
-        <text wx:else class="current-room-tag current-room-tag-wait">准备中</text>
-        <text wx:if="{{isCurrentRoomHost}}" class="current-room-tag current-room-tag-host">房主</text>
-        <text wx:if="{{myRoomInfo}}" class="current-room-count">{{myRoomInfo.playerCount}}/{{myRoomInfo.maxPlayers}}</text>
-      </view>
-    </view>
-    <view class="room-tags-row" wx:if="{{myRoomInfo && myRoomInfo.tags.length > 0}}">
-      <text wx:for="{{myRoomInfo.tags}}" wx:key="*this" class="room-tag">{{item}}</text>
-    </view>
-    <view class="room-avatars-row" wx:if="{{myRoomInfo && myRoomInfo.players.length > 0}}">
-      <block wx:for="{{myRoomInfo.players}}" wx:key="openId">
-        <image class="room-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"/>
-      </block>
-    </view>
-  </view>
-
   <!-- 召开会议 / 加入会议（合并按钮：(A) 对角全切；左上靛青=召开，右下银=加入） -->
   <view class="meeting-btn {{meetingFillClass}}" style="--fill-ms:{{meetingFillMs}}ms;{{meetingPressStyle}}" wx:if="{{!currentRoom}}">
     <view class="meeting-fill"></view>
@@ -96,13 +75,21 @@
     </view>
     <view wx:if="{{visibleRooms.length === 0}}" class="room-list-empty">{{roomListLoading ? '加载中...' : '没得玩，速开！'}}</view>
     <view wx:for="{{visibleRooms}}" wx:key="roomId"
-      class="room-card {{item.isMine ? 'room-card-is-mine' : ''}}"
+      class="room-card {{item.isMine ? 'room-card-featured' : ''}}"
       bindtap="onPublicRoomTap" data-id="{{item.roomId}}">
       <view class="room-card-top">
         <view class="room-card-id-wrap">
+          <brand-logo size="mini"/>
           <text class="room-card-id">{{item.roomId}}</text>
         </view>
-        <text class="room-card-count">{{item.playerCount}}/{{item.maxPlayers}}</text>
+        <view class="room-card-right">
+          <block wx:if="{{item.isMine}}">
+            <text wx:if="{{item.gameStarted}}" class="room-status-tag room-status-ingame">游戏中</text>
+            <text wx:else class="room-status-tag room-status-wait">准备中</text>
+            <text wx:if="{{item.isMineHost}}" class="room-status-tag room-status-host">房主</text>
+          </block>
+          <text class="room-card-count">{{item.playerCount}}/{{item.maxPlayers}}</text>
+        </view>
       </view>
       <view class="room-tags-row" wx:if="{{item.tags.length > 0}}" catchtap="noop">
         <text wx:for="{{item.displayTags}}" wx:for-item="tg" wx:key="*this" class="room-tag">{{tg}}</text>
@@ -138,7 +125,7 @@
   <view class="brand-menu-mask" wx:if="{{showBrandMenu}}" bindtap="closeBrandMenu" catchtouchmove="noop">
     <view class="brand-menu" catchtap="noop">
       <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="goToGlobalStats">
-        <view class="func-icon-box"><image src="/images/medal.png" class="func-icon" mode="aspectFit"/></view>
+        <view class="func-icon-box"><image src="/images/analysis.png" class="func-icon" mode="aspectFit"/></view>
         <text class="brand-menu-label">全局统计</text>
       </view>
       <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="goToFriends">
@@ -150,11 +137,11 @@
         <text class="brand-menu-label">更改主题</text>
       </view>
       <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="showWeirdSettings">
-        <view class="func-icon-box"><text class="brand-menu-emoji">⚙️</text></view>
+        <view class="func-icon-box"><image src="/images/strange.png" class="func-icon" mode="aspectFit"/></view>
         <text class="brand-menu-label">奇奇怪怪的设置们</text>
       </view>
       <view class="brand-menu-row" hover-class="brand-menu-row-hover" bindtap="onBrandMenuAction" data-action="goToRecords">
-        <view class="func-icon-box"><image src="/images/stopwatch.png" class="func-icon" mode="aspectFit"/></view>
+        <view class="func-icon-box"><image src="/images/record.png" class="func-icon" mode="aspectFit"/></view>
         <text class="brand-menu-label">线下记录</text>
       </view>
     </view>

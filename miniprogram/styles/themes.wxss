@@ -270,17 +270,11 @@
 .page.theme-steel, .room-page.theme-steel, .game-page.theme-steel { background-color: #171A1F; }
 
 /* ─────────── 主页"您当前处于房间"卡片：暗色下改主题卡底 + 主题强调色 ─────────── */
-.theme-torch .current-room-card { background: var(--bg-card); border-left-color: var(--warning); }
-.theme-torch .current-room-label,
-.theme-torch .current-room-id { color: var(--gold); }
+.theme-torch .room-card-featured { background: var(--bg-card); border-left-color: var(--warning); }
 
-.theme-aurora .current-room-card { background: var(--bg-card); border-left-color: var(--card-border); }
-.theme-aurora .current-room-label,
-.theme-aurora .current-room-id { color: var(--gold); }
+.theme-aurora .room-card-featured { background: var(--bg-card); border-left-color: var(--card-border); }
 
-.theme-steel .current-room-card { background: var(--bg-card); border-left-color: var(--card-border); }
-.theme-steel .current-room-label,
-.theme-steel .current-room-id { color: var(--gold); }
+.theme-steel .room-card-featured { background: var(--bg-card); border-left-color: var(--card-border); }
 
 /* ─────────── 主题主色统一：紫 → 各主题代表色 / 标签暗色适配 ─────────── */
 .theme-torch {

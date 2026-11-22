@@ -11,10 +11,6 @@ Page({
     userInfo: { avatarUrl: '', nickName: '' },
     customNickName: '',
     currentRoom: null,
-    currentSeat: null,
-    isCurrentRoomHost: false,
-    userStatusText: '在线',
-    userStatusClass: 'status-online',
 
     themeClass: '',
     myRank: 0,
@@ -38,7 +34,6 @@ Page({
     visibleRooms: [],
     roomCounts: { waiting: 0, playing: 0 },
     roomListLoading: false,
-    myRoomInfo: null,
 
     meetingPressStyle: '',
     meetingFillClass: '',
@@ -347,12 +342,14 @@ Page({
   _applyRoomData() {
     const all = this._allRooms || [];
     const myId = this.data.currentRoom ? this.data.currentRoom.roomId : '';
+    const myOpenId = getApp().globalData.openId || wx.getStorageSync('openId') || '';
     const expanded = this._expandedTags || {};
     const mapped = all.map(r => {
       const showAllTags = !!expanded[r.roomId];
       return {
         ...r,
         isMine: r.roomId === myId,
+        isMineHost: !!myOpenId && r.ownerId === myOpenId,
         showAllTags,
         displayTags: showAllTags ? (r.tags || []) : (r.tags || []).slice(0, 3)
       };
@@ -406,33 +403,6 @@ Page({
     this.doShareJoinFromRoom(id);
   },
 
-  // 我的房间信息（人数/标签/头像行）
-  _loadMyRoomInfo(roomId) {
-    if (!roomId) return;
-    api.getRoom(roomId).then(res => {
-      const room = res && res.room;
-      if (!room) return;
-      const cfg = room.roomConfig || {};
-      const good = (cfg.roles && cfg.roles.good) || [];
-      const evil = (cfg.roles && cfg.roles.evil) || [];
-      const players = (room.players || [])
-        .filter(p => p.seatNumber >= 1)
-        .sort((a, b) => a.seatNumber - b.seatNumber)
-        .slice(0, 12)
-        .map(p => ({ openId: p.openId, nickName: p.nickName, avatarUrl: p.avatarUrl }));
-      this.setData({
-        myRoomInfo: {
-          roomId,
-          gameStarted: !!room.gameStarted,
-          maxPlayers: good.length + evil.length,
-          playerCount: (room.players || []).filter(p => p.seatNumber >= 1).length,
-          tags: buildRoomTags(cfg),
-          players
-        }
-      });
-    }).catch(() => {});
-  },
-
   onPullDownRefresh() {
     this.checkCurrentRoom();
     this.loadRoomList();
@@ -448,21 +418,10 @@ Page({
     if (!openId) return;
     api.getCurrentRoom(openId).then(res => {
       if (res && res.success && res.room) {
-        this.setData({
-          currentRoom: res.room,
-          currentSeat: res.room.seatNumber !== undefined ? res.room.seatNumber : null,
-          isCurrentRoomHost: !!(res.room.ownerId && res.room.ownerId === openId)
-        });
-        this._loadMyRoomInfo(res.room.roomId);
+        this.setData({ currentRoom: res.room });
         this._applyRoomData();
-        // 状态：游戏中(红) / 房间中(蓝)
-        if (res.room.gameStarted) {
-          this.setData({ userStatusText: '游戏中', userStatusClass: 'status-ingame' });
-        } else {
-          this.setData({ userStatusText: '房间中', userStatusClass: 'status-inroom' });
-        }
       } else if (res && res.success) {
-        this.setData({ currentRoom: null, isCurrentRoomHost: false, userStatusText: '在线', userStatusClass: 'status-online', myRoomInfo: null });
+        this.setData({ currentRoom: null });
         this._applyRoomData();
       }
     }).catch(() => {});
@@ -477,53 +436,6 @@ Page({
     } else {
       wx.navigateTo({ url: `/pages/room/room?roomId=${room.roomId}` });
     }
-  },
-
-  exitCurrentRoom() {
-    const room = this.data.currentRoom;
-    if (!room) return;
-    // 游戏中仅入座玩家（seat>=1）不可退出；观战/等待可退出
-    if (room.gameStarted && this.data.currentSeat >= 1) {
-      wx.showToast({ title: '游戏进行中，无法退出房间', icon: 'none' });
-      return;
-    }
-    wx.showModal({
-      title: '退出房间',
-      content: `确定退出房间 ${room.roomId} 吗？`,
-      success: (res) => {
-        if (res.confirm) {
-          api.leaveRoom(room.roomId).then(() => {
-            this.setData({ currentRoom: null, currentSeat: null, isCurrentRoomHost: false, userStatusText: '在线', userStatusClass: 'status-online' });
-            getApp().globalData.roomId = null;
-            wx.showToast({ title: '已退出', icon: 'success' });
-          }).catch(() => {});
-        }
-      }
-    });
-  },
-
-  disbandCurrentRoom() {
-    const room = this.data.currentRoom;
-    if (!room) return;
-    if (room.gameStarted) {
-      wx.showToast({ title: '游戏进行中，无法解散房间', icon: 'none' });
-      return;
-    }
-    wx.showModal({
-      title: '解散房间',
-      content: `确定解散房间 ${room.roomId} 吗？此操作不可恢复。`,
-      success: (res) => {
-        if (res.confirm) {
-          api.disbandRoom(room.roomId).then(() => {
-            this.setData({ currentRoom: null, isCurrentRoomHost: false, userStatusText: '在线', userStatusClass: 'status-online' });
-            getApp().globalData.roomId = null;
-            wx.showToast({ title: '已解散', icon: 'success' });
-          }).catch((err) => {
-            wx.showToast({ title: (err && err.message) || '解散失败', icon: 'none' });
-          });
-        }
-      }
-    });
   },
 
   loadUserProfile() {
