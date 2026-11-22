@@ -24,7 +24,6 @@
 
       <view class="hd-stats-row">
         <view class="hd-stat"><text class="hd-stat-num">{{totalGames}}</text><text class="hd-stat-label">场次</text></view>
-        <view class="hd-stat-div"></view>
         <view class="hd-stat">
           <text class="hd-stat-num hd-score">{{scoreVisible ? score : '—'}}</text>
           <view class="hd-stat-label-row">
@@ -36,7 +35,6 @@
 
       <view class="hd-stats-row hd-stats-row-2">
         <view class="hd-stat"><text class="hd-stat-num">{{rateVisible ? mvpCount : '—'}}</text><text class="hd-stat-label">MVP</text></view>
-        <view class="hd-stat-div"></view>
         <view class="hd-stat"><text class="hd-stat-num">{{rateVisible ? svpCount : '—'}}</text><text class="hd-stat-label">SVP</text></view>
       </view>
     </view>

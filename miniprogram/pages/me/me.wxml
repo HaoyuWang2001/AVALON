@@ -23,7 +23,6 @@
 
     <view class="me-stats-row">
       <view class="me-stat"><text class="me-stat-num">{{stats.totalGames}}</text><text class="me-stat-label">场次</text></view>
-      <view class="me-stat-div"></view>
       <view class="me-stat">
         <text class="me-stat-num me-score">{{stats.score}}</text>
         <view class="me-stat-label-row">
@@ -35,7 +34,6 @@
 
     <view class="me-stats-row me-stats-row-2">
       <view class="me-stat"><text class="me-stat-num">{{stats.mvpCount}}</text><text class="me-stat-label">MVP</text></view>
-      <view class="me-stat-div"></view>
       <view class="me-stat"><text class="me-stat-num">{{stats.svpCount}}</text><text class="me-stat-label">SVP</text></view>
     </view>
   </view>
