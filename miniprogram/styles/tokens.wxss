@@ -80,8 +80,11 @@ page {
   --card-border: #8B5CF6;
   --role-card-bg: linear-gradient(160deg, #4C1D95, #1E1B4B);
   --role-card-rate: #C4B5FD;
-  --champion-fg: #FFFFFF;
-  --profile-bg: linear-gradient(135deg, #2E1065 0%, #3B0764 45%, #5B21B6 100%);
+  --champion-fg: #4C1D95;
+  --podium-rate-1: #B8860B;
+  --podium-rate-2: #64748B;
+  --podium-rate-3: #B45309;
+  --profile-bg: #FFFFFF;
   --profile-fg: #FFFFFF;
   --divider-strong: #C4B5FD;
   --divider: rgba(196, 181, 253, 0.45);

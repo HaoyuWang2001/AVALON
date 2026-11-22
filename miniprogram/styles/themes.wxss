@@ -287,6 +287,7 @@
   --label-grey: #B0A493; --label-grey-bg: #2A251E;
   --label-violet: #C9A9E8;
   --seat-glow: rgba(212, 160, 82, 0.42);
+  --podium-rate-1: #FFD700; --podium-rate-2: #CDD5DD; --podium-rate-3: #E8A56A;
 }
 .theme-aurora {
   --primary: #A78BFA; --primary-dark: #8B5CF6; --primary-light: #C4B5FD;
@@ -298,6 +299,7 @@
   --label-grey: #B0A8C8; --label-grey-bg: #2A2440;
   --label-violet: #C4B5FD;
   --seat-glow: rgba(167, 139, 250, 0.45);
+  --podium-rate-1: #FFD700; --podium-rate-2: #CDD5DD; --podium-rate-3: #E8A56A;
 }
 .theme-steel {
   --primary: #89A7CC; --primary-dark: #5F83AC; --primary-light: #B3CCE6;
@@ -309,4 +311,5 @@
   --label-grey: #9AA6B2; --label-grey-bg: #2A2F36;
   --label-violet: #B3C0D8;
   --seat-glow: rgba(137, 167, 204, 0.45);
+  --podium-rate-1: #FFD700; --podium-rate-2: #CDD5DD; --podium-rate-3: #E8A56A;
 }
