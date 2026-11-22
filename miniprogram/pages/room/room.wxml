@@ -42,7 +42,7 @@
       <view class="stat-divider"></view>
       <view class="info-stat-item">
         <text class="stat-label">观战</text>
-        <text class="stat-value">{{spectatorAllowed ? (spectatorPlayers.length + (spectatorMax > 0 ? '/' + spectatorMax : '')) : '-/-'}}</text>
+        <text class="stat-value">{{spectatorAllowed ? spectatorPlayers.length : '-'}}</text>
       </view>
     </view>
   </view>

@@ -76,8 +76,7 @@ function buildConfigSummary(cfg) {
   groups.push({
     title: '观战设置',
     lines: [
-      '允许观战：' + (spec.allow !== false ? '开' : '关'),
-      '观战人数上限：' + (spec.max > 0 ? spec.max : '不限')
+      '允许观战：' + (spec.allow !== false ? '开（不限人数）' : '关')
     ]
   });
 

@@ -82,9 +82,7 @@ class RoomModel {
       if (typeof roomConfig.spectator.allow !== 'boolean') {
         throw new Error('spectator.allow 必须是布尔值');
       }
-      if (typeof roomConfig.spectator.max !== 'number' || roomConfig.spectator.max < 0 || !Number.isInteger(roomConfig.spectator.max)) {
-        throw new Error('spectator.max 必须是非负整数');
-      }
+      // 观战不设人数上限：兼容旧配置里的 max 字段但忽略
     }
 
     // 可选布尔配置（红兰可见性 / 梅林兰斯洛特阵营）
@@ -298,17 +296,13 @@ class RoomModel {
   }
   
   /**
-   * 校验观战（seat=-1）是否允许：根据 roomConfig.spectator 判定
+   * 校验观战（seat=-1）是否允许：仅判断房间是否允许观战（不设人数上限）
    * @param {Object|null} roomConfig 房间配置
-   * @param {number} observerCount 当前观战人数
    */
-  static _assertSpectatorAllowed(roomConfig, observerCount) {
+  static _assertSpectatorAllowed(roomConfig) {
     const spectator = roomConfig && roomConfig.spectator;
     if (spectator && spectator.allow === false) {
       throw new Error('该房间不允许观战');
-    }
-    if (spectator && typeof spectator.max === 'number' && spectator.max > 0 && observerCount >= spectator.max) {
-      throw new Error('观战区已满');
     }
   }
 
@@ -359,19 +353,9 @@ class RoomModel {
 
         const roomConfig = rooms[0].room_config ? (typeof rooms[0].room_config === 'string' ? JSON.parse(rooms[0].room_config) : rooms[0].room_config) : null;
         
-        if (effectiveSeat === -1) {
-          // 观战名额排除房主；房主总能进入观战区、不占名额
-          const [observerCount] = await connection.execute(
-            'SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND seat_number = -1 AND open_id != ?',
-            [roomId, roomOwnerId]
-          );
-          if (!isRoomOwner) {
-            try {
-              this._assertSpectatorAllowed(roomConfig, observerCount[0].count);
-            } catch (e) {
-              throw new Error(gameStarted ? '游戏已开始且观战区已满' : e.message);
-            }
-          }
+        if (effectiveSeat === -1 && !isRoomOwner) {
+          // 房主总能进入观战区
+          this._assertSpectatorAllowed(roomConfig);
         }
         
         if (effectiveSeat >= 1) {
@@ -484,8 +468,7 @@ class RoomModel {
         const roomConfig = rooms[0].room_config ? (typeof rooms[0].room_config === 'string' ? JSON.parse(rooms[0].room_config) : rooms[0].room_config) : null;
 
         if (newSeatNumber === -1) {
-          const [observerCount] = await connection.execute('SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND seat_number = -1', [roomId]);
-          this._assertSpectatorAllowed(roomConfig, observerCount[0].count);
+          this._assertSpectatorAllowed(roomConfig);
         }
 
         if (newSeatNumber >= 1) {

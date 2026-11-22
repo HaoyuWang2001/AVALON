@@ -40,9 +40,6 @@ Page({
     voteOptions: VOTE_OPTIONS,
     voteRevealOptions: VOTE_REVEAL_OPTIONS,
     allowSpectator: true,
-    spectatorLimited: false,
-    maxSpectators: '',
-    spectatorLimitInvalid: false,
     roomName: '',
     roomDescription: 'Welcome to Join the Conference!',
     swiperPage: 0,
@@ -106,7 +103,6 @@ Page({
         this.setData({ roomName: (ui.customNickName || ui.nickName || '房主') + '的会议' });
       }
     }
-    this.setData({ spectatorLimitInvalid: false });
   },
   // 关闭：丢弃所有修改（返回上一页）
   close() {
@@ -147,10 +143,9 @@ Page({
       req(rc.meta && typeof rc.meta === 'object', '会议信息缺失');
       req(isStr(rc.meta.roomName), '会议名称缺失');
       req(isStr(rc.meta.roomDescription), '会议描述缺失');
-      // spectator
+      // spectator（观战不设人数上限，仅保留开关；兼容旧配置中的 max 字段并忽略）
       req(rc.spectator && typeof rc.spectator === 'object', '观战设置缺失');
       req(isBool(rc.spectator.allow), '观战开关缺失');
-      req(isNum(rc.spectator.max) && rc.spectator.max >= 0, '观战上限缺失');
 
       // 校验通过，直接用传入值初始化（无 fallback）
       const n = rc.roles.good.length + rc.roles.evil.length;
@@ -164,10 +159,7 @@ Page({
       patch.rules = { ...rc.rules };
       patch.ladyOfTheLake = !!rc.rules.ladyOfTheLake;
       patch.ladyOfTheLakeRound = rc.rules.ladyOfTheLakeRound;
-      const max = rc.spectator.max || 0;
       patch.allowSpectator = rc.spectator.allow !== false;
-      patch.spectatorLimited = max > 0;
-      patch.maxSpectators = max > 0 ? max : '';
       patch.roomName = rc.meta.roomName;
       patch.roomDescription = rc.meta.roomDescription;
       // limits → index（0=不限 → '不限' → index 0）
@@ -322,16 +314,6 @@ Page({
     onSpectatorToggle() {
       this.setData({ allowSpectator: !this.data.allowSpectator });
     },
-    onSpectatorLimitMode(e) {
-      const limited = e.currentTarget.dataset.val === 'true';
-      this.setData({ spectatorLimited: limited });
-    },
-    onSpectatorLimitInput(e) {
-      const val = e.detail.value;
-      const num = parseInt(val, 10);
-      const invalid = val !== '' && (isNaN(num) || num < 1 || num > 100);
-      this.setData({ maxSpectators: val, spectatorLimitInvalid: invalid });
-    },
     onLimitChange(e) {
       const { field } = e.currentTarget.dataset;
       const data = {};
@@ -426,7 +408,7 @@ Page({
       }, this.data.playerCount);
 
       const speech = this.data.speechTimeoutIndex > 0 ? SPEECH_OPTIONS[this.data.speechTimeoutIndex] : '不限';
-      const spec = this.data.allowSpectator ? (this.data.spectatorLimited ? '允许（上限' + this.data.maxSpectators + '人）' : '允许（不限人数）') : '不允许';
+      const spec = this.data.allowSpectator ? '允许（不限人数）' : '不允许';
       const lady = this.data.ladyOfTheLake ? '启用（第' + this.data.ladyOfTheLakeRound + '轮）' : '未启用';
 
       this.setData({
@@ -469,21 +451,12 @@ Page({
         limits,
         meta,
         spectator: {
-          allow: this.data.allowSpectator,
-          max: this.data.spectatorLimited ? (Number(this.data.maxSpectators) || 0) : 0
+          allow: this.data.allowSpectator
         }
       };
     },
     // 提交：mode=create → /rooms/create；mode=update → updateRoomConfig
     submit() {
-      if (this.data.spectatorLimited) {
-        const n = Number(this.data.maxSpectators);
-        if (!n || n < 1 || n > 100) {
-          this.setData({ spectatorLimitInvalid: true });
-          wx.showToast({ title: '观战人数需在 1-100 之间', icon: 'none' });
-          return;
-        }
-      }
       const config = this.getRoomConfig();
       if (this.data.mode === 'update') {
         wx.showLoading({ title: '保存中...', mask: true });

@@ -370,13 +370,14 @@ describe('02 — Room Management', () => {
       expect(res.body.message).toMatch(/禁止上座/);
     });
 
-    it('02.26a 观战区满 → 400', async () => {
+    it('02.26a 观战不设人数上限 → 多人观战成功（忽略旧 max 字段）', async () => {
       const result = await createRoomWithConfig(makeUserId(), 'OHost', buildConfigWithSpectator(SPECTATOR_1));
       const roomId = result.roomId;
       await joinRoom(roomId, makeUserId(), -1, 'A');
-      const res = await joinRoom(roomId, makeUserId(), -1, 'B');
-      expect(res.success).toBe(false);
-      expect(res.message).toMatch(/观战区已满/);
+      const r2 = await joinRoom(roomId, makeUserId(), -1, 'B');
+      const r3 = await joinRoom(roomId, makeUserId(), -1, 'C');
+      expect(r2.success).toBe(true);
+      expect(r3.success).toBe(true);
     });
 
     it('02.26b 房间不允许观战 → 400', async () => {

@@ -293,17 +293,6 @@
                 <text class="rule-label">允许观战</text>
                 <switch checked="{{allowSpectator}}" bindchange="onSpectatorToggle" color="#8B5CF6"/>
               </view>
-              <view class="rule-row" wx:if="{{allowSpectator}}">
-                <text class="rule-label">观战人数上限</text>
-                <view class="segment">
-                  <view class="segment-item {{!spectatorLimited ? 'segment-active' : ''}}" data-val="false" bindtap="onSpectatorLimitMode">不限</view>
-                  <view class="segment-item {{spectatorLimited ? 'segment-active' : ''}}" data-val="true" bindtap="onSpectatorLimitMode">有限制</view>
-                </view>
-              </view>
-              <view class="rule-row" wx:if="{{allowSpectator && spectatorLimited}}">
-                <text class="rule-label">上限人数</text>
-                <input class="spectator-input {{spectatorLimitInvalid ? 'input-invalid' : ''}}" type="number" maxlength="3" placeholder="1-100" value="{{maxSpectators || ''}}" bindinput="onSpectatorLimitInput"/>
-              </view>
             </view>
             <view style="height:60rpx"></view>
           </scroll-view>

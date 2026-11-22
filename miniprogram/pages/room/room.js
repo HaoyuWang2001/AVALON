@@ -32,7 +32,6 @@ Page({
     startGameCharged: false,
     startGameLaunching: false,
     dissolving: false,
-    spectatorMax: 0,
     spectatorAllowed: true,
 
     showConfigView: false,
@@ -133,10 +132,8 @@ Page({
           playerCount = good.length + evil.length;
         }
 
-        let specMax = 0;
         let spectatorAllowed = true;
         if (room.roomConfig && room.roomConfig.spectator) {
-          specMax = room.roomConfig.spectator.max || 0;
           spectatorAllowed = room.roomConfig.spectator.allow !== false;
         }
 
@@ -173,7 +170,6 @@ Page({
           isHost: room.ownerId === app.globalData.openId,
           gameStarted: room.gameStarted || false,
           seatedSeats: seats,
-          spectatorMax: specMax,
           spectatorAllowed: spectatorAllowed,
           seatsFull: seats.length > 0 && seats.every(s => s.occupied),
           currentUserReady: currentUser ? readyPlayers.includes(currentUser.openId) : false

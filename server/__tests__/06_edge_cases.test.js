@@ -272,14 +272,15 @@ describe('06 — Edge Cases & Validation', () => {
       await endGame(gameId);
     });
 
-    it('游戏中：观战区满时提示"游戏已开始且观战区已满"', async () => {
+    it('游戏中：观战人数无上限（旧 max=1 配置也允许多人观战）', async () => {
       const cfg = buildConfigWithSpectator({ allow: true, max: 1 });
       const { roomId, gameId } = await createRoomAndStartGame(5, cfg);
-      // 已有一个观战者占满（max=1）
-      await apiPost('/api/rooms/join', { roomId, userInfo: { openId: makeUserId(), nickName: 'O1', avatarUrl: '' }, seatNumber: -1, customNickName: 'O1' });
-      const res = await apiPost('/api/rooms/join', { roomId, userInfo: { openId: makeUserId(), nickName: 'O2', avatarUrl: '' }, seatNumber: -1, customNickName: 'O2' });
-      expect(res.body.success).toBe(false);
-      expect(res.body.message || '').toMatch(/游戏已开始且观战区已满/);
+      const r1 = await apiPost('/api/rooms/join', { roomId, userInfo: { openId: makeUserId(), nickName: 'O1', avatarUrl: '' }, seatNumber: -1, customNickName: 'O1' });
+      const r2 = await apiPost('/api/rooms/join', { roomId, userInfo: { openId: makeUserId(), nickName: 'O2', avatarUrl: '' }, seatNumber: -1, customNickName: 'O2' });
+      const r3 = await apiPost('/api/rooms/join', { roomId, userInfo: { openId: makeUserId(), nickName: 'O3', avatarUrl: '' }, seatNumber: -1, customNickName: 'O3' });
+      expect(r1.body.success).toBe(true);
+      expect(r2.body.success).toBe(true);
+      expect(r3.body.success).toBe(true);
       await endGame(gameId);
     });
 
