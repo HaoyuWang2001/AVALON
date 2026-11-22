@@ -41,8 +41,6 @@
   letter-spacing: 1rpx; box-shadow: 0 2rpx 8rpx var(--primary-veil);
 }
 .lb-sub { font-size: 24rpx; color: var(--text-muted); }
-.lb-awards { font-size: 22rpx; font-weight: 700; color: var(--gold); margin-left: 10rpx; }
-.lb-rate { flex-shrink: 0; font-size: 34rpx; font-weight: 800; color: var(--primary); }
 
 .lb-more { text-align: center; font-size: 24rpx; color: var(--text-muted); padding: 28rpx 0 8rpx; }
 .lb-score-wrap { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; margin-left: 12rpx; }
