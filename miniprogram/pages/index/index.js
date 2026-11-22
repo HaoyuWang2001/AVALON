@@ -427,7 +427,7 @@ Page({
       return;
     }
     this.setData({ roomTab: tab });
-    this.loadRoomList({ minMs: 500, switchLoading: true });
+    this.loadRoomList({ minMs: 1000, switchLoading: true });
   },
 
   // 房间列表左右滑动切换「等待中 / 游戏中」：内容面板跟手，松手仅滑出
@@ -521,7 +521,7 @@ Page({
     }, 200);
   },
 
-  // 仅切出：当前面板滑出后立即归位，切换标签并进入最短 500ms 的加载态
+  // 仅切出：当前面板滑出后立即归位，切换标签并进入最短 1s 的加载态
   _animateRoomSwitch(tab, dir) {
     clearTimeout(this._roomPanTimer);
     this._roomAnimating = true;
