@@ -170,7 +170,7 @@ class GameModel {
         const [roomInfo] = await connection.execute(
           `SELECT r.owner_id, r.room_config,
                   COUNT(p.open_id) as player_count,
-                  SUM(CASE WHEN p.is_ready THEN 1 ELSE 0 END) as ready_count
+                  SUM(CASE WHEN p.is_ready OR p.open_id = r.owner_id THEN 1 ELSE 0 END) as ready_count
            FROM rooms r
            LEFT JOIN room_players p ON r.id = p.room_id AND p.seat_number >= 1
            WHERE r.id = ? AND r.game_started = FALSE

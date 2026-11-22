@@ -277,6 +277,9 @@ class RoomModel {
       );
       
       const readyPlayers = readyPlayersResult.map(row => row.open_id);
+      // 房主若已上座，视为已准备（防存量脏数据/历史路径把 ready 置回 false）
+      const ownerSeated = players.some(p => p.openId === room.ownerId && p.seatNumber >= 1);
+      if (ownerSeated && !readyPlayers.includes(room.ownerId)) readyPlayers.push(room.ownerId);
       
       return {
         ...room,
@@ -286,7 +289,7 @@ class RoomModel {
           ...player,
           titles: parseTitles(player.titles),
           isHost: player.openId === room.ownerId,
-          isReady: player.isReady === 1 || player.isReady === true
+          isReady: player.isReady === 1 || player.isReady === true || (player.openId === room.ownerId && player.seatNumber >= 1)
         }))
       };
     } catch (error) {
