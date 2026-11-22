@@ -58,42 +58,44 @@
         <view class="f-sec">一、统计范围与资格</view>
         <view class="f-p">· 仅统计线上对局（source=online），排除测试房 000000。</view>
         <view class="f-p">· 仅 status=ended、有胜方（good/evil）且非 abandoned 的对局。</view>
-        <view class="f-p">· 每局每人一行明细；积分 = 全部合格对局积分之和。</view>
-        <view class="f-p">· 榜单门槛：总场次 ≥ 动态阈值（10~50），且公开胜率；本人始终可见自己的分数。</view>
+        <view class="f-p">· 每局每人一行明细；积分 = 全部合格对局积分之和（累计保底 ≥ 0）。</view>
+        <view class="f-p">· 榜单门槛（暂时取消）：只要参加过至少 1 局即上榜；公开胜率仍作为隐私条件（本人始终可见自己的分数）。</view>
 
         <view class="f-sec">二、记号</view>
         <view class="f-p">· n：本局人数（5~12）；s：阵营（good/evil）。</view>
         <view class="f-p">· W_g(n)、W_e(n)：该人数下历史胜场数；G(n)=W_g+W_e。</view>
         <view class="f-p">· p_s = (W_s+1)/(G(n)+2)，再夹取到 [0.35, 0.65]（Laplace 平滑 + 边界钳制）。</view>
-        <view class="f-p">· ω_r：角色难度权重；角色胜率 q_r=(wins+1)/(games+2)，ω_r=clamp(0.5−q_r, 0, 0.15)。</view>
+        <view class="f-p">· SW(n)：胜分人数系数；SL(n)：败分人数系数（见第三节）。</view>
+        <view class="f-p">· ω_r：角色难度权重；q_r=(wins+1)/(games+2)，ω_r=clamp(0.5−q_r, 0, 0.15)。</view>
         <view class="f-p">· m_p、v_p：该玩家在本局收到的 MVP / SVP 票数。</view>
 
         <view class="f-sec">三、单局得分公式</view>
-        <view class="f-eq">1) Base(n) = clamp(0.80 − 0.05·(n−5), 0.45, 0.80)</view>
-        <view class="f-eq">2) 胜分 A_s = 0.45 × (0.5 / p_s)</view>
-        <view class="f-eq">3) 败分 L_s = 0.30 × (p_s / 0.5)（作为扣减量）</view>
-        <view class="f-eq">4) 角色分 R_p = ω_{r_p} − mean(ω over 胜方)（仅胜方，内部零和）</view>
-        <view class="f-eq">5) 荣誉分 H_p = (m_p + v_p) × 0.01</view>
-        <view class="f-eq">6) 胜方：total_p = Base + A_s + R_p + H_p</view>
-        <view class="f-eq">   败方：total_p = Base − L_s + H_p</view>
-        <view class="f-p">最终保留两位小数，且 total_p ≥ 0（数学上恒成立，无需截断）。</view>
+        <view class="f-eq">1) Base(n)：5人0.20 / 6人0.25 / 7人0.30 / 8人0.35 / 9人0.45 / 10~12人0.50</view>
+        <view class="f-eq">2) SW(n)：0.75 / 0.80 / 0.85 / 1.00 / 1.10 / 1.25 / 1.40 / 1.55（5→12人）</view>
+        <view class="f-eq">3) SL(n)：0.95 / 0.97 / 0.99 / 1.00 / 1.01 / 1.03 / 1.04 / 1.05（5→12人）</view>
+        <view class="f-eq">4) 胜分 A = 0.45 × (0.5 / p_s) × SW(n)</view>
+        <view class="f-eq">5) 败分 L = 0.30 × (p_s / 0.5) × SL(n)（作为扣减量）</view>
+        <view class="f-eq">6) 角色分 R_p = ω_{r_p} − mean(ω over 胜方)（仅胜方，内部零和）</view>
+        <view class="f-eq">7) 荣誉分 H_p = (m_p + v_p) × 0.01</view>
+        <view class="f-eq">8) 胜方：total_p = Base + A + R_p + H_p</view>
+        <view class="f-eq">   败方：total_p = Base − L + H_p</view>
+        <view class="f-p">最终保留两位小数；单局允许为负（小人数局败场可能倒扣）。</view>
 
         <view class="f-sec">四、平衡定理（严格数学证明）</view>
-        <view class="f-eq">E_s = Base + p_s·A_s − (1−p_s)·L_s</view>
-        <view class="f-eq">= Base + p_s·0.45·(0.5/p_s) − (1−p_s)·0.30·(p_s/0.5)</view>
-        <view class="f-eq">= Base + 0.225 − 0.60·p_s·(1−p_s)</view>
-        <view class="f-p">因 p_good + p_evil = 1，故 p_good(1−p_good) = p_evil(1−p_evil)，于是：</view>
+        <view class="f-eq">E_s = Base + p_s·A − (1−p_s)·L</view>
+        <view class="f-eq">= Base + p_s·0.45·(0.5/p_s)·SW − (1−p_s)·0.30·(p_s/0.5)·SL</view>
+        <view class="f-eq">= Base + 0.225·SW − 0.60·p_s·(1−p_s)·SL</view>
+        <view class="f-p">SW、SL 仅与人数 n 有关；又因 p_good + p_evil = 1，p_good(1−p_good) = p_evil(1−p_evil)，于是：</view>
         <view class="f-eq">E_good = E_evil（与阵营强弱无关）</view>
         <view class="f-p">角色分仅在胜方内部零和转移（ΣR=0）；荣誉分每阵营各 0.01×票数（机制对称），均不破坏该恒等式。两位小数舍入使实际差异 ≤0.02/局。</view>
 
-        <view class="f-sec">五、非负性证明</view>
-        <view class="f-p">p_s∈[0.35,0.65] ⇒ A_s∈[0.346,0.643]，L_s∈[0.21,0.39]；Base(n)≥0.45；ω∈[0,0.15]。</view>
-        <view class="f-eq">胜方：Base + A + R ≥ 0.45 + 0.346 − 0.15 = 0.646 &gt; 0</view>
-        <view class="f-eq">败方：Base − L ≥ 0.45 − 0.39 = 0.06 &gt; 0</view>
-        <view class="f-p">叠加荣誉分（≥0）后仍恒正。</view>
+        <view class="f-sec">五、负分与累计保底</view>
+        <view class="f-p">· 单局可为负（如 5 人局基础 0.20、败分约 0.29）。</view>
+        <view class="f-p">· 积分 = max(0, Σ单局积分)：原始合计为负时按 0 计（“累计保底”）。</view>
+        <view class="f-p">· 明细弹窗仍展示原始合计（可能为负）；计分局数/胜负判定不受影响。</view>
 
         <view class="f-sec">六、排序与同分</view>
-        <view class="f-p">排序：分数↓ → 场次↓ → 胜率↓ → openId 字典序（严格全序，无并列）；名次即排序序号。展示时以分数为主、胜率% 为辅。</view>
+        <view class="f-p">排序：积分（保底后）↓ → 场次↓ → 胜率↓ → openId 字典序（严格全序，无并列）；名次即排序序号。展示时以积分为主、胜率% 为辅。</view>
 
         <view class="f-sec">七、更新与重算</view>
         <view class="f-p">· 终局立即计算一次；MVP/SVP 每新增一票即重算该局（票分实时生效）。</view>
@@ -101,13 +103,13 @@
         <view class="f-p">· 线下对局本期不计分（后续补充）。</view>
 
         <view class="f-sec">八、数值示例（8 人局，p_good=0.55）</view>
-        <view class="f-p">Base = 0.80 − 0.05×3 = 0.65；p_evil = 0.45</view>
+        <view class="f-p">Base = 0.35；SW = SL = 1.00；p_evil = 0.45</view>
         <view class="f-p">A_good = 0.45×(0.5/0.55) ≈ 0.41；L_evil = 0.30×(0.45/0.5) = 0.27</view>
-        <view class="f-p">蓝方胜：蓝方每人 0.65+0.41 = 1.06（再加减角色分）；红方每人 0.65−0.27 = 0.38</view>
+        <view class="f-p">蓝方胜：蓝方每人 0.35+0.41 = 0.76（再加减角色分）；红方每人 0.35−0.27 = 0.08</view>
         <view class="f-p">若梅林(ω=0.08)、派西(ω=0.06)、3 忠臣(ω=0) 获胜：mean(ω)=0.028</view>
         <view class="f-p">⇒ 梅林 +0.05、派西 +0.03、忠臣各 −0.03（胜方内部和为 0）</view>
-        <view class="f-p">梅林再获 2 张 MVP 票：0.65+0.41+0.05+0.02 = 1.13</view>
-        <view class="f-p">校验：E_good = 0.65+0.55×0.41−0.45×0.33 ≈ 0.727；E_evil = 0.65+0.45×0.50−0.55×0.27 ≈ 0.727 ✓</view>
+        <view class="f-p">梅林再获 2 张 MVP 票：0.35+0.41+0.05+0.02 = 0.83</view>
+        <view class="f-p">校验：E_good = 0.35+0.55×0.41−0.45×0.33 ≈ 0.427；E_evil = 0.35+0.45×0.50−0.55×0.27 ≈ 0.427 ✓</view>
       </scroll-view>
     </view>
   </view>

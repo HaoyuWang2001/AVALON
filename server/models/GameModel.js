@@ -2434,12 +2434,12 @@ class GameModel {
    */
   static async getWinRateRank(openId) {
     if (!openId) return null;
-    const threshold = await GameModel.getWinRateThreshold();
+    // 暂时取消「最小局数门槛」：只要参加过 1 局即上榜（阈值函数保留，用于胜率可见性/冠军榜）
     const rows = await db.query(
       `SELECT t.openId, t.score, t.games, t.wins
        FROM (
          SELECT s.open_id as openId,
-                SUM(s.total) as score,
+                GREATEST(COALESCE(SUM(s.total), 0), 0) as score,
                 COUNT(*) as games,
                 SUM(CASE WHEN s.win_score > 0 THEN 1 ELSE 0 END) as wins
          FROM game_player_scores s
@@ -2448,11 +2448,9 @@ class GameModel {
            AND COALESCE(gs.room_number, gs.room_id, '') <> '000000'
            AND COALESCE(gs.source, 'online') <> 'offline'
          GROUP BY s.open_id
-         HAVING games >= ?
        ) t
        JOIN users u ON u.open_id = t.openId
-       WHERE u.public_winrate <> 0`,
-      [threshold]
+       WHERE u.public_winrate <> 0`
     );
     const list = rows
       .map(r => ({
@@ -2494,7 +2492,7 @@ class GameModel {
       if (cache && (now - cache.at) < 60 * 1000) return cache.value;
     }
 
-    const threshold = await GameModel.getWinRateThreshold();
+    // 暂时取消「最小局数门槛」：只要参加过 1 局即上榜（阈值函数保留，用于胜率可见性/冠军榜）
     const rows = await db.query(
       `SELECT t.openId, t.score, t.games, t.wins,
               COALESCE(av.mvp, 0) as mvpCount, COALESCE(av.svp, 0) as svpCount,
@@ -2502,7 +2500,7 @@ class GameModel {
               u.avatar_url as avatarUrl, u.unique_id as uniqueId, u.titles
        FROM (
          SELECT s.open_id as openId,
-                SUM(s.total) as score,
+                GREATEST(COALESCE(SUM(s.total), 0), 0) as score,
                 COUNT(*) as games,
                 SUM(CASE WHEN s.win_score > 0 THEN 1 ELSE 0 END) as wins
          FROM game_player_scores s
@@ -2511,7 +2509,6 @@ class GameModel {
            AND COALESCE(gs.room_number, gs.room_id, '') <> '000000'
            AND COALESCE(gs.source, 'online') <> 'offline'
          GROUP BY s.open_id
-         HAVING games >= ?
        ) t
        JOIN users u ON u.open_id = t.openId
        LEFT JOIN (
@@ -2523,8 +2520,7 @@ class GameModel {
          WHERE v.state = 'voted' AND g.status = 'ended' AND COALESCE(g.room_number, g.room_id, '') <> '000000'
          GROUP BY v.target_open_id
        ) av ON av.openId = t.openId
-       WHERE u.public_winrate <> 0`,
-      [threshold]
+       WHERE u.public_winrate <> 0`
     );
 
     const list = rows
@@ -2600,7 +2596,7 @@ class GameModel {
     const titlesById = new Map(userRows.map(u => [u.openId, parseTitles(u.titles)]));
 
     const scoreRows = await db.query(
-      `SELECT s.open_id AS openId, SUM(s.total) AS score
+      `SELECT s.open_id AS openId, GREATEST(COALESCE(SUM(s.total), 0), 0) AS score
        FROM game_player_scores s
        JOIN games gs ON gs.id = s.game_id
        WHERE s.open_id IN (${placeholders})

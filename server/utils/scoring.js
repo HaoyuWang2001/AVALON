@@ -1,21 +1,24 @@
 // utils/scoring.js —— 计分纯函数（无 DB 依赖，便于单测与证明）
 //
 // 计分模型（两位小数）：
-//   Base(n) = clamp(0.80 - 0.05*(n-5), 0.45, 0.80)              —— 人数越少基础分越高
-//   p_s(n)  = clamp(Laplace((wins+1)/(games+2)), 0.35, 0.65)     —— 该人数下阵营历史胜率
-//   A_s     = 0.45 * (0.5 / p_s)                                 —— 胜分：强阵营加分更少
-//   L_s     = 0.30 * (p_s / 0.5)                                 —— 败分：强阵营扣分更多
-//   角色分   = 仅胜方：ω_r - mean(ω)，ω_r = clamp(0.5 - roleWinRate, 0, 0.15)
-//   荣誉分   = (MVP票数 + SVP票数) * 0.01
+//   基础分 Base(n)：按人数查表（人数越少基础分越低）
+//     { 5:0.20, 6:0.25, 7:0.30, 8:0.35, 9:0.45, 10:0.50, 11:0.50, 12:0.50 }
+//   阵营胜率 p_s(n) = clamp(Laplace((wins+1)/(games+2)), 0.35, 0.65)
+//   胜分 A = 0.45 × (0.5/p) × WIN_SIZE[n]     —— 人数越多、胜利奖励越高
+//   败分 L = 0.30 × (p/0.5) × LOSS_SIZE[n]     —— 失败扣分随人数仅极温和变化
+//   角色分 = 仅胜方：ω_r − mean(ω)，ω_r = clamp(0.5 - roleWinRate, 0, 0.15)
+//   荣誉分 = (MVP票数 + SVP票数) * 0.01
+//   单局：胜 = Base + A + 角色分 + 荣誉分；负 = Base − L + 荣誉分
+//   单局允许为负（小人数局败场可能倒扣）；累计总分在下游读取时做 GREATEST(SUM,0) 保底
 //
-// 平衡定理（数学恒等）：E_s = Base + 0.5*0.45 - 2*0.30*p_s*(1-p_s)
-//   因 p_good(1-p_good) = p_evil(1-p_evil)，两侧期望严格相等（忽略两位小数舍入 ≤0.02）。
-// 非负性：胜方 ≥ 0.45+0.35-0.15 = 0.65；败方 ≥ 0.45-0.39 = 0.06；荣誉分 ≥ 0。
+// 平衡定理（数学恒等）：E_s = Base + 0.225·WIN_SIZE[n] − 0.6·p_s·(1−p_s)·LOSS_SIZE[n]
+//   因 WIN_SIZE/LOSS_SIZE 只与人数 n 有关、且 p_good(1−p_good)=p_evil(1−p_evil)，
+//   两侧期望严格相等（忽略两位小数舍入 ≤0.02）。
 
-const BASE_INTERCEPT = 0.80;
-const BASE_STEP = 0.05;
-const BASE_MIN = 0.45;
-const BASE_MAX = 0.80;
+const BASE_BY_N = { 5: 0.20, 6: 0.25, 7: 0.30, 8: 0.35, 9: 0.45, 10: 0.50, 11: 0.50, 12: 0.50 };
+const WIN_SIZE  = { 5: 0.75, 6: 0.80, 7: 0.85, 8: 1.00, 9: 1.10, 10: 1.25, 11: 1.40, 12: 1.55 };
+const LOSS_SIZE = { 5: 0.95, 6: 0.97, 7: 0.99, 8: 1.00, 9: 1.01, 10: 1.03, 11: 1.04, 12: 1.05 };
+
 const WIN_COEF = 0.45;
 const LOSS_COEF = 0.30;
 const P_MIN = 0.35;
@@ -26,10 +29,15 @@ const AWARD_PER_VOTE = 0.01;
 
 const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
 const round2 = x => Math.round((Number(x) + Number.EPSILON) * 100) / 100;
+const byN = (table, n) => {
+  const count = Number(n) || 5;
+  if (count <= 5) return table[5];
+  if (count >= 12) return table[12];
+  return table[count] != null ? table[count] : table[5];
+};
 
 function baseScore(n) {
-  const count = Number(n) || 0;
-  return round2(clamp(BASE_INTERCEPT - BASE_STEP * (count - 5), BASE_MIN, BASE_MAX));
+  return byN(BASE_BY_N, n);
 }
 
 // Laplace 平滑胜率（0 场 = 0.5）
@@ -38,17 +46,17 @@ function smoothedRate(wins, games) {
 }
 
 function factionProb(side, n, factionStats) {
-  const byN = (factionStats || {})[Number(n)] || {};
-  const row = byN[side] || { wins: 0, games: 0 };
+  const byCount = (factionStats || {})[Number(n)] || {};
+  const row = byCount[side] || { wins: 0, games: 0 };
   return clamp(smoothedRate(row.wins, row.games), P_MIN, P_MAX);
 }
 
-function winScore(p) {
-  return round2(WIN_COEF * (0.5 / clamp(Number(p) || 0.5, P_MIN, P_MAX)));
+function winScore(p, n) {
+  return round2(WIN_COEF * (0.5 / clamp(Number(p) || 0.5, P_MIN, P_MAX)) * byN(WIN_SIZE, n));
 }
 
-function lossScore(p) {
-  return round2(LOSS_COEF * (clamp(Number(p) || 0.5, P_MIN, P_MAX) / 0.5));
+function lossScore(p, n) {
+  return round2(LOSS_COEF * (clamp(Number(p) || 0.5, P_MIN, P_MAX) / 0.5) * byN(LOSS_SIZE, n));
 }
 
 function roleWeight(role, roleStats) {
@@ -58,7 +66,7 @@ function roleWeight(role, roleStats) {
 }
 
 /**
- * 计算单局所有玩家的得分明细（两位小数，保证非负）
+ * 计算单局所有玩家的得分明细（两位小数；允许负分）
  * @param {Object} opts
  * @param {number} opts.n 人数
  * @param {'good'|'evil'} opts.winner 胜方
@@ -78,8 +86,8 @@ function scoreGame(opts) {
   const base = baseScore(n);
   const pWin = factionProb(winSide, n, factionStats);
   const pLose = factionProb(loseSide, n, factionStats);
-  const A = winScore(pWin);
-  const L = lossScore(pLose);
+  const A = winScore(pWin, n);
+  const L = lossScore(pLose, n);
 
   const weights = winners.map(p => roleWeight(p.role, roleStats));
   const meanW = weights.length > 0 ? weights.reduce((a, b) => a + b, 0) / weights.length : 0;
@@ -99,7 +107,6 @@ function scoreGame(opts) {
     }
     const votes = (Number(mvp[p.openId]) || 0) + (Number(svp[p.openId]) || 0);
     const awardPart = votes * AWARD_PER_VOTE;
-    const rawTotal = base + winPart + rolePart + awardPart;
     return {
       openId: p.openId,
       side: p.side,
@@ -108,12 +115,15 @@ function scoreGame(opts) {
       winScore: round2(winPart),
       roleScore: round2(rolePart),
       awardScore: round2(awardPart),
-      total: Math.max(0, round2(rawTotal))
+      total: round2(base + winPart + rolePart + awardPart)
     };
   });
 }
 
 module.exports = {
+  BASE_BY_N,
+  WIN_SIZE,
+  LOSS_SIZE,
   baseScore,
   smoothedRate,
   factionProb,

@@ -12,43 +12,44 @@ describe('18 — 计分制', () => {
   });
 
   describe('18-A 纯函数与数学性质', () => {
-    it('18-1 基础分随人数递减且在 [0.45, 0.80]', () => {
-      let prev = Infinity;
+    it('18-1 基础分按人数查表（人少更低）', () => {
+      const expected = { 5: 0.20, 6: 0.25, 7: 0.30, 8: 0.35, 9: 0.45, 10: 0.50, 11: 0.50, 12: 0.50 };
       for (let n = 5; n <= 12; n++) {
-        const b = scoring.baseScore(n);
-        expect(b).toBeGreaterThanOrEqual(0.45);
-        expect(b).toBeLessThanOrEqual(0.80);
-        expect(b).toBeLessThan(prev);
-        prev = b;
+        expect(scoring.baseScore(n)).toBe(expected[n]);
+      }
+      expect(scoring.baseScore(4)).toBe(0.20);
+      expect(scoring.baseScore(13)).toBe(0.50);
+    });
+
+    it('18-2 胜/败分含人数系数（p∈[0.35,0.65]）', () => {
+      for (let n = 5; n <= 12; n++) {
+        expect(scoring.winScore(0.5, n)).toBe(Math.round(0.45 * scoring.WIN_SIZE[n] * 100) / 100);
+        for (let p = 0.35; p <= 0.6501; p += 0.05) {
+          const a = scoring.winScore(p, n);
+          const l = scoring.lossScore(p, n);
+          expect(a).toBeGreaterThanOrEqual(0.26);
+          expect(a).toBeLessThanOrEqual(1.00);
+          expect(l).toBeGreaterThanOrEqual(0.20);
+          expect(l).toBeLessThanOrEqual(0.41);
+        }
       }
     });
 
-    it('18-2 胜分/败分落在规则区间（p∈[0.35,0.65]）', () => {
-      for (let p = 0.35; p <= 0.6501; p += 0.05) {
-        const a = scoring.winScore(p);
-        const l = scoring.lossScore(p);
-        expect(a).toBeGreaterThanOrEqual(0.34);
-        expect(a).toBeLessThanOrEqual(0.65);
-        expect(l).toBeGreaterThanOrEqual(0.20);
-        expect(l).toBeLessThanOrEqual(0.40);
-      }
-    });
-
-    it('18-3 平衡定理：两侧期望得分相等（舍入误差 ≤0.02）', () => {
+    it('18-3 平衡定理：两侧期望得分相等（舍入误差 ≤0.03）', () => {
       for (let n = 5; n <= 12; n++) {
         for (let p = 0.35; p <= 0.6501; p += 0.05) {
           const base = scoring.baseScore(n);
           const pGood = p;
           const pEvil = 1 - p;
-          const Egood = base + pGood * scoring.winScore(pGood) - (1 - pGood) * scoring.lossScore(pGood);
-          const Eevil = base + pEvil * scoring.winScore(pEvil) - (1 - pEvil) * scoring.lossScore(pEvil);
-          expect(Math.abs(Egood - Eevil)).toBeLessThanOrEqual(0.02);
+          const Egood = base + pGood * scoring.winScore(pGood, n) - (1 - pGood) * scoring.lossScore(pGood, n);
+          const Eevil = base + pEvil * scoring.winScore(pEvil, n) - (1 - pEvil) * scoring.lossScore(pEvil, n);
+          expect(Math.abs(Egood - Eevil)).toBeLessThanOrEqual(0.03);
         }
       }
     });
 
-    it('18-4 非负性：极端角色/阵营参数下单局得分仍 ≥0，且两位小数', () => {
-      const factionStats = { 5: { good: { wins: 1, games: 9 }, evil: { wins: 8, games: 9 } } };
+    it('18-4 允许单局负分：小局败场可倒扣，且两位小数', () => {
+      const factionStats = { 5: { good: { wins: 0, games: 100 }, evil: { wins: 100, games: 100 } } };
       const roleStats = { merlin: { wins: 0, games: 100 }, loyal: { wins: 100, games: 100 }, assassin: { wins: 100, games: 100 } };
       const players = [
         { openId: 'a', side: 'good', role: 'merlin' },
@@ -56,8 +57,9 @@ describe('18 — 计分制', () => {
         { openId: 'c', side: 'evil', role: 'assassin' }
       ];
       const rows = scoring.scoreGame({ n: 5, winner: 'good', players, factionStats, roleStats, mvpVotes: {}, svpVotes: {} });
+      const loser = rows.find(r => r.side === 'evil');
+      expect(loser.total).toBeLessThan(0); // 5 人局 Base 0.20 < 败分
       rows.forEach(r => {
-        expect(r.total).toBeGreaterThanOrEqual(0);
         expect(Math.round(r.total * 100) / 100).toBe(r.total);
       });
     });
@@ -117,7 +119,6 @@ describe('18 — 计分制', () => {
       expect(rows.length).toBe(4);
       rows.forEach(row => {
         expect(Math.round(Number(row.total) * 100) / 100).toBe(Number(row.total));
-        expect(Number(row.total)).toBeGreaterThanOrEqual(0);
       });
       const merlin = rows.find(x => x.openId === 'sco_m');
       const assassin = rows.find(x => x.openId === 'sco_a');
@@ -126,6 +127,7 @@ describe('18 — 计分制', () => {
       expect(Number(assassin.winScore)).toBeLessThan(0);
       expect(Number(merlin.awardScore)).toBe(0.02);
       expect(Number(assassin.awardScore)).toBe(0.01);
+      expect(Number(assassin.total)).toBeLessThan(Number(merlin.total));
       // 胜方角色分内部零和（舍入误差 ≤0.02）
       const winnersRoleSum = rows.filter(x => x.side === 'good').reduce((a, x) => a + Number(x.roleScore), 0);
       expect(Math.abs(winnersRoleSum)).toBeLessThanOrEqual(0.02);
@@ -169,7 +171,7 @@ describe('18 — 计分制', () => {
       expect(rows.length).toBe(0);
     });
 
-    it('18-11 个人 stats 下发积分明细（scoreDetail 与求和一致）', async () => {
+    it('18-11 个人 stats 下发积分明细（rawTotal/保底/求和一致）', async () => {
       const res = await apiGet('/api/games/stats?subjectOpenId=sco_m&viewerOpenId=sco_m');
       expect(res.status).toBe(200);
       const s = res.body.stats;
@@ -179,7 +181,9 @@ describe('18 — 计分制', () => {
       expect(d.games).toBeGreaterThanOrEqual(1);
       expect(d.wins + d.losses).toBe(d.games);
       const sum = Math.round((d.baseSum + d.winSum + d.roleSum + d.awardSum) * 100) / 100;
-      expect(Math.abs(sum - d.total)).toBeLessThanOrEqual(0.02);
+      expect(Math.abs(sum - d.rawTotal)).toBeLessThanOrEqual(0.02);
+      expect(d.total).toBe(Math.max(0, d.rawTotal));
+      expect(d.floored).toBe(d.rawTotal < 0);
       expect(d.total).toBe(s.score);
       expect(typeof d.avg).toBe('number');
     });
@@ -190,6 +194,29 @@ describe('18 — 计分制', () => {
       expect(res.games).toBeGreaterThanOrEqual(1);
       const rows = await db.query('SELECT COUNT(*) AS c FROM game_player_scores WHERE game_id = ?', [gid]);
       expect(Number(rows[0].c)).toBe(4);
+    });
+
+    it('18-12 累计保底：原始合计为负时积分按 0 计（明细保留原始值）', async () => {
+      const negId = `score_neg_${TS}`;
+      const uid = `sco_neg_${TS}`;
+      await db.query('INSERT INTO users (open_id, public_winrate) VALUES (?, 1) ON DUPLICATE KEY UPDATE public_winrate = 1', [uid]);
+      await db.query('DELETE FROM game_player_scores WHERE open_id = ?', [uid]);
+      await db.query(
+        `INSERT INTO games (id, room_id, room_number, source, owner_id, current_phase, game_result, status, ended_at)
+         VALUES (?, NULL, '987656', 'online', ?, 'gameEnd', ?, 'ended', NOW())`,
+        [negId, uid, JSON.stringify({ winner: 'good' })]
+      );
+      await db.query(
+        `INSERT INTO game_player_scores (game_id, open_id, side, role, base, win_score, role_score, award_score, total)
+         VALUES (?, ?, 'evil', 'assassin', 0.20, -0.29, 0, 0, -0.09)`,
+        [negId, uid]
+      );
+      const res = await apiGet(`/api/games/stats?subjectOpenId=${uid}&viewerOpenId=${uid}`);
+      const s = res.body.stats;
+      expect(s.score).toBe(0);
+      expect(s.scoreDetail.rawTotal).toBeCloseTo(-0.09, 2);
+      expect(s.scoreDetail.total).toBe(0);
+      expect(s.scoreDetail.floored).toBe(true);
     });
   });
 });

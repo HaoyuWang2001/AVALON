@@ -175,18 +175,26 @@ function createRouter() {
         const r2 = n => Math.round(Number(n) * 100) / 100;
         const games = Number(scoreRow.games) || 0;
         const wins = Number(scoreRow.wins) || 0;
-        const total = r2(scoreRow.total);
+        const baseSum = r2(scoreRow.baseSum);
+        const winSum = r2(scoreRow.winSum);
+        const roleSum = r2(scoreRow.roleSum);
+        const awardSum = r2(scoreRow.awardSum);
+        const rawTotal = r2(baseSum + winSum + roleSum + awardSum);
+        // 累计保底：原始合计为负时，积分按 0 计（明细仍展示原始值）
+        const total = Math.max(0, rawTotal);
         stats.score = total;
         stats.scoreDetail = {
           games,
           wins,
           losses: games - wins,
-          baseSum: r2(scoreRow.baseSum),
-          winSum: r2(scoreRow.winSum),
-          roleSum: r2(scoreRow.roleSum),
-          awardSum: r2(scoreRow.awardSum),
+          baseSum,
+          winSum,
+          roleSum,
+          awardSum,
+          rawTotal,
           total,
-          avg: games > 0 ? r2(Number(scoreRow.total) / games) : 0
+          floored: rawTotal < 0,
+          avg: games > 0 ? r2(rawTotal / games) : 0
         };
       }
 
@@ -1035,7 +1043,7 @@ function createRouter() {
                 u.avatar_url as avatarUrl, u.unique_id as uniqueId, u.titles
          FROM (
            SELECT s.open_id as openId,
-                  SUM(s.total) as score,
+                  GREATEST(COALESCE(SUM(s.total), 0), 0) as score,
                   COUNT(*) as games,
                   SUM(CASE WHEN s.win_score > 0 THEN 1 ELSE 0 END) as wins
            FROM game_player_scores s
