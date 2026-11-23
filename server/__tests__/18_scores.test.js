@@ -50,7 +50,7 @@ describe('18 — 计分制', () => {
 
     it('18-4 允许单局负分：小局败场可倒扣，且两位小数', () => {
       const factionStats = { 5: { good: { wins: 0, games: 100 }, evil: { wins: 100, games: 100 } } };
-      const roleStats = { merlin: { wins: 0, games: 100 }, loyal: { wins: 100, games: 100 }, assassin: { wins: 100, games: 100 } };
+      const roleStats = { 5: { merlin: { wins: 0, games: 100 }, loyal: { wins: 100, games: 100 }, assassin: { wins: 100, games: 100 } } };
       const players = [
         { openId: 'a', side: 'good', role: 'merlin' },
         { openId: 'b', side: 'good', role: 'loyal' },
@@ -78,6 +78,65 @@ describe('18 — 计分制', () => {
       const b = rows.find(r => r.openId === 'b');
       expect(a.awardScore).toBe(0.03);
       expect(b.awardScore).toBe(0.02);
+    });
+
+    it('18-13 角色难度按人数分组', () => {
+      const roleStats = {
+        6: { merlin: { wins: 15, games: 33 } },
+        7: { merlin: { wins: 12, games: 23 } },
+        8: { merlin: { wins: 8, games: 17 } }
+      };
+      expect(scoring.roleWeight('merlin', 6, roleStats)).toBeCloseTo(0.0429, 3);
+      expect(scoring.roleWeight('merlin', 8, roleStats)).toBeCloseTo(0.0263, 3);
+      expect(scoring.roleWeight('merlin', 7, roleStats)).toBe(0);
+      expect(scoring.roleWeight('merlin', 9, roleStats)).toBe(0);
+    });
+
+    it('18-14 挡刀分按人数缩放，且只给被刺好人', () => {
+      const players = () => [
+        { openId: 'm', side: 'good', role: 'merlin' },
+        { openId: 'p', side: 'good', role: 'percival' },
+        { openId: 'l', side: 'good', role: 'loyal' },
+        { openId: 'o', side: 'evil', role: 'oberon' },
+        { openId: 'a', side: 'evil', role: 'assassin' }
+      ];
+      const expected = { 5: 0.02, 6: 0.02, 7: 0.03, 8: 0.03, 9: 0.04, 10: 0.04, 11: 0.05, 12: 0.05 };
+      for (const n of Object.keys(expected)) {
+        const rows = scoring.scoreGame({
+          n: Number(n), winner: 'good', players: players(),
+          factionStats: {}, roleStats: {},
+          assassination: { target: 'p', correct: false }
+        });
+        expect(rows.find(r => r.openId === 'p').blockScore).toBe(expected[n]);
+        expect(rows.find(r => r.openId === 'm').blockScore).toBe(0);
+        expect(rows.find(r => r.openId === 'l').blockScore).toBe(0);
+      }
+    });
+
+    it('18-15 挡刀分仅蓝方胜利且未命中梅林时生效', () => {
+      const players = [
+        { openId: 'm', side: 'good', role: 'merlin' },
+        { openId: 'p', side: 'good', role: 'percival' },
+        { openId: 'l', side: 'good', role: 'loyal' },
+        { openId: 'o', side: 'evil', role: 'oberon' },
+        { openId: 'a', side: 'evil', role: 'assassin' }
+      ];
+      const baseOpts = { n: 8, players, factionStats: {}, roleStats: {}, mvpVotes: {}, svpVotes: {} };
+      const hit = scoring.scoreGame({ ...baseOpts, winner: 'evil', assassination: { target: 'm', correct: true } });
+      expect(hit.every(r => r.blockScore === 0)).toBe(true);
+
+      const evilTarget = scoring.scoreGame({ ...baseOpts, winner: 'good', assassination: { target: 'o', correct: false } });
+      expect(evilTarget.every(r => r.blockScore === 0)).toBe(true);
+
+      const noShot = scoring.scoreGame({ ...baseOpts, winner: 'good' });
+      expect(noShot.every(r => r.blockScore === 0)).toBe(true);
+
+      const blocked = scoring.scoreGame({ ...baseOpts, winner: 'good', assassination: { target: 'p', correct: false } });
+      const plain = scoring.scoreGame({ ...baseOpts, winner: 'good' });
+      const pBlocked = blocked.find(r => r.openId === 'p');
+      const pPlain = plain.find(r => r.openId === 'p');
+      expect(pBlocked.blockScore).toBe(0.03);
+      expect(pBlocked.total - pPlain.total).toBeCloseTo(0.03, 5);
     });
   });
 
@@ -180,7 +239,8 @@ describe('18 — 计分制', () => {
       expect(d).toBeTruthy();
       expect(d.games).toBeGreaterThanOrEqual(1);
       expect(d.wins + d.losses).toBe(d.games);
-      const sum = Math.round((d.baseSum + d.winSum + d.roleSum + d.awardSum) * 100) / 100;
+      expect(typeof d.blockSum).toBe('number');
+      const sum = Math.round((d.baseSum + d.winSum + d.roleSum + d.awardSum + d.blockSum) * 100) / 100;
       expect(Math.abs(sum - d.rawTotal)).toBeLessThanOrEqual(0.02);
       expect(d.total).toBe(Math.max(0, d.rawTotal));
       expect(d.floored).toBe(d.rawTotal < 0);
@@ -217,6 +277,47 @@ describe('18 — 计分制', () => {
       expect(s.scoreDetail.rawTotal).toBeCloseTo(-0.09, 2);
       expect(s.scoreDetail.total).toBe(0);
       expect(s.scoreDetail.floored).toBe(true);
+    });
+
+    it('18-16 computeAndSave 写入挡刀分（蓝方未命中好人）', async () => {
+      const bid = `score_block_${TS}`;
+      await db.query(
+        `INSERT INTO games (id, room_id, room_number, source, owner_id, current_phase, game_result, assassination, status, ended_at)
+         VALUES (?, NULL, '987657', 'online', 'score_host', 'gameEnd', ?, ?, 'ended', NOW())`,
+        [bid, JSON.stringify({ winner: 'good' }), JSON.stringify({ target: 'blk_p', correct: false })]
+      );
+      const players = [
+        ['blk_m', 'merlin', 'good'],
+        ['blk_p', 'percival', 'good'],
+        ['blk_l1', 'loyal', 'good'],
+        ['blk_l2', 'loyal', 'good'],
+        ['blk_a', 'assassin', 'evil']
+      ];
+      for (const [oid, role, side] of players) {
+        await db.query(
+          `INSERT INTO game_players (game_id, open_id, role, side, nick_name, seat_number)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [bid, oid, role, side, oid, 1]
+        );
+      }
+      const r = await ScoreModel.computeAndSave(bid);
+      expect(r.skipped).toBe(false);
+      const rows = await db.query(
+        `SELECT open_id AS openId, base, win_score AS winScore, role_score AS roleScore,
+                award_score AS awardScore, block_score AS blockScore, total
+         FROM game_player_scores WHERE game_id = ?`,
+        [bid]
+      );
+      const p = rows.find(x => x.openId === 'blk_p');
+      expect(Number(p.blockScore)).toBe(0.02); // 5 人局
+      rows.forEach(x => {
+        if (x.openId !== 'blk_p') expect(Number(x.blockScore)).toBe(0);
+        const expected = Math.round((
+          Number(x.base) + Number(x.winScore) + Number(x.roleScore) +
+          Number(x.awardScore) + Number(x.blockScore)
+        ) * 100) / 100;
+        expect(Number(x.total)).toBeCloseTo(expected, 5);
+      });
     });
   });
 });

@@ -163,6 +163,7 @@ function createRouter() {
                   COALESCE(SUM(s.win_score), 0) AS winSum,
                   COALESCE(SUM(s.role_score), 0) AS roleSum,
                   COALESCE(SUM(s.award_score), 0) AS awardSum,
+                  COALESCE(SUM(s.block_score), 0) AS blockSum,
                   COALESCE(SUM(s.total), 0) AS total
            FROM game_player_scores s
            JOIN games gs ON gs.id = s.game_id
@@ -179,7 +180,8 @@ function createRouter() {
         const winSum = r2(scoreRow.winSum);
         const roleSum = r2(scoreRow.roleSum);
         const awardSum = r2(scoreRow.awardSum);
-        const rawTotal = r2(baseSum + winSum + roleSum + awardSum);
+        const blockSum = r2(scoreRow.blockSum);
+        const rawTotal = r2(baseSum + winSum + roleSum + awardSum + blockSum);
         // 累计保底：原始合计为负时，积分按 0 计（明细仍展示原始值）
         const total = Math.max(0, rawTotal);
         stats.score = total;
@@ -191,6 +193,7 @@ function createRouter() {
           winSum,
           roleSum,
           awardSum,
+          blockSum,
           rawTotal,
           total,
           floored: rawTotal < 0,

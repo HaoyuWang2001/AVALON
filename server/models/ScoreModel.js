@@ -39,22 +39,33 @@ class ScoreModel {
   }
 
   /**
-   * 角色战绩：{ [role]: {wins,games} }
+   * 角色战绩（按人数分组）：{ [n]: { [role]: {wins,games} } }
    */
   static async getRoleStats() {
     const rows = await db.query(
-      `SELECT gp.role AS role,
+      `SELECT t.n AS n, gp.role AS role,
               COUNT(*) AS games,
               SUM(CASE WHEN ${WINNER_EXPR} = gp.side THEN 1 ELSE 0 END) AS wins
        FROM game_players gp
        JOIN games g ON g.id = gp.game_id
+       JOIN (
+         SELECT g2.id AS id, COUNT(*) AS n
+         FROM games g2
+         JOIN game_players gp2 ON gp2.game_id = g2.id
+         WHERE g2.status = 'ended' AND COALESCE(g2.room_number, g2.room_id, '') <> '000000'
+           AND COALESCE(g2.source, 'online') <> 'offline'
+           AND JSON_UNQUOTE(JSON_EXTRACT(g2.game_result, '$.winner')) IN ('good', 'evil')
+         GROUP BY g2.id
+       ) t ON t.id = g.id
        WHERE g.status = 'ended' AND ${NOT_BOT_ROOM} AND ${ONLINE_ONLY}
          AND ${WINNER_EXPR} IN ('good', 'evil')
-       GROUP BY gp.role`
+       GROUP BY t.n, gp.role`
     );
     const map = {};
     for (const r of rows) {
-      map[r.role] = { wins: Number(r.wins) || 0, games: Number(r.games) || 0 };
+      const n = Number(r.n);
+      if (!map[n]) map[n] = {};
+      map[n][r.role] = { wins: Number(r.wins) || 0, games: Number(r.games) || 0 };
     }
     return map;
   }
@@ -62,7 +73,7 @@ class ScoreModel {
   // 读取对局并判断是否可计分（线上、正常结束、有胜方、非 000000）
   static async _loadEligibleGame(gameId) {
     const [game] = await db.query(
-      `SELECT id, status, source, room_number, room_id, game_result FROM games WHERE id = ?`,
+      `SELECT id, status, source, room_number, room_id, game_result, assassination FROM games WHERE id = ?`,
       [gameId]
     );
     if (!game) return null;
@@ -70,11 +81,15 @@ class ScoreModel {
     if (typeof result === 'string') {
       try { result = JSON.parse(result); } catch (e) { result = null; }
     }
+    let assassination = game.assassination;
+    if (typeof assassination === 'string') {
+      try { assassination = JSON.parse(assassination); } catch (e) { assassination = null; }
+    }
     const eligible = game.status === 'ended'
       && (game.source || 'online') !== 'offline'
       && String(game.room_number || game.room_id || '') !== '000000'
       && !!(result && result.winner && !result.abandoned);
-    return { game, result, eligible };
+    return { game, result, assassination, eligible };
   }
 
   static async _loadPlayersAndVotes(gameId) {
@@ -123,7 +138,8 @@ class ScoreModel {
       factionStats,
       roleStats,
       mvpVotes,
-      svpVotes
+      svpVotes,
+      assassination: loaded.assassination
     });
     await this._writeRows(gameId, rows);
     return { skipped: false, count: rows.length };
@@ -135,9 +151,9 @@ class ScoreModel {
       for (const r of rows) {
         await connection.execute(
           `INSERT INTO game_player_scores
-             (game_id, open_id, side, role, base, win_score, role_score, award_score, total, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-          [gameId, r.openId, r.side, r.role, r.base, r.winScore, r.roleScore, r.awardScore, r.total]
+             (game_id, open_id, side, role, base, win_score, role_score, award_score, block_score, total, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          [gameId, r.openId, r.side, r.role, r.base, r.winScore, r.roleScore, r.awardScore, r.blockScore, r.total]
         );
       }
     });
@@ -149,7 +165,7 @@ class ScoreModel {
    */
   static async backfillAll() {
     const games = await db.query(
-      `SELECT g.id AS id, ${WINNER_EXPR} AS winner
+      `SELECT g.id AS id, ${WINNER_EXPR} AS winner, g.assassination
        FROM games g
        WHERE g.status = 'ended' AND ${NOT_BOT_ROOM} AND ${ONLINE_ONLY}
          AND ${WINNER_EXPR} IN ('good', 'evil')`
@@ -198,6 +214,10 @@ class ScoreModel {
       const players = playersByGame.get(g.id) || [];
       if (players.length < 2) continue;
       const votes = votesByGame.get(g.id) || { mvpVotes: {}, svpVotes: {} };
+      let assassination = g.assassination;
+      if (typeof assassination === 'string') {
+        try { assassination = JSON.parse(assassination); } catch (e) { assassination = null; }
+      }
       const rows = scoring.scoreGame({
         n: players.length,
         winner: g.winner,
@@ -205,7 +225,8 @@ class ScoreModel {
         factionStats,
         roleStats,
         mvpVotes: votes.mvpVotes,
-        svpVotes: votes.svpVotes
+        svpVotes: votes.svpVotes,
+        assassination
       });
       rows.forEach(r => allRows.push({ gameId: g.id, ...r }));
     }
@@ -215,9 +236,9 @@ class ScoreModel {
       for (const r of allRows) {
         await connection.execute(
           `INSERT INTO game_player_scores
-             (game_id, open_id, side, role, base, win_score, role_score, award_score, total, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-          [r.gameId, r.openId, r.side, r.role, r.base, r.winScore, r.roleScore, r.awardScore, r.total]
+             (game_id, open_id, side, role, base, win_score, role_score, award_score, block_score, total, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          [r.gameId, r.openId, r.side, r.role, r.base, r.winScore, r.roleScore, r.awardScore, r.blockScore, r.total]
         );
       }
     });
