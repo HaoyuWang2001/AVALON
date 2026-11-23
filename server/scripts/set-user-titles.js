@@ -10,6 +10,8 @@
  * titles.json：
  *   [{ "target": "rjdimo", "titles": ["奥博专家"] }, ...]
  *   target 为 users.unique_id（精确匹配）。
+ *   无 unique_id 的用户可用 openId：
+ *   [{ "openId": "ovrr0x...", "titles": ["姐姐"] }]
  *
  * 默认追加（去重、保留原顺序）；--replace 覆盖；--clear 清空。
  * --dry-run / --dry 只读预览，不写库。
@@ -90,94 +92,124 @@ function loadBatch(file) {
   if (!Array.isArray(data) || data.length === 0) throw new Error('JSON 必须是非空数组');
   return data.map((item, i) => {
     const target = item && typeof item.target === 'string' ? item.target.trim() : '';
-    if (!target) throw new Error(`第 ${i + 1} 项缺少 target`);
+    const openId = item && typeof item.openId === 'string' ? item.openId.trim() : '';
+    if (!target && !openId) throw new Error(`第 ${i + 1} 项缺少 target 或 openId`);
+    if (target && openId) throw new Error(`第 ${i + 1} 项 target 与 openId 只能二选一`);
     const titles = item.titles === undefined ? [] : normalizeTitles(item.titles);
-    return { target, titles };
+    return { keyType: openId ? 'oid' : 'uid', key: openId || target, titles };
   });
 }
 
-function validateWarnings(target, titles) {
+function itemLabel(item) {
+  return item.keyType === 'oid' ? `openId ${item.key.slice(0, 10)}…` : item.key;
+}
+
+function validateWarnings(label, titles) {
   if (titles.length > MAX_TITLES) {
-    console.log(`  ⚠ ${target}: 头衔数量 ${titles.length} 超过建议上限 ${MAX_TITLES}`);
+    console.log(`  ⚠ ${label}: 头衔数量 ${titles.length} 超过建议上限 ${MAX_TITLES}`);
   }
   titles.forEach(t => {
     if (t.length > MAX_TITLE_LEN) {
-      console.log(`  ⚠ ${target}: 头衔「${t}」长度 ${t.length} 超过建议上限 ${MAX_TITLE_LEN}`);
+      console.log(`  ⚠ ${label}: 头衔「${t}」长度 ${t.length} 超过建议上限 ${MAX_TITLE_LEN}`);
     }
   });
 }
 
 function describe(row) {
   const name = row.custom_nick_name || row.wx_nick_name || '(无昵称)';
-  return `${row.unique_id}（${name}）`;
+  const id = row.unique_id || `${String(row.open_id).slice(0, 10)}…`;
+  return `${id}（${name}）`;
+}
+
+function mergeTitles(before, item, opts) {
+  if (opts.clear) return [];
+  if (opts.replace) return item.titles;
+  return Array.from(new Set([...before, ...item.titles]));
+}
+
+async function loadRows(queryFn, batch, forUpdate) {
+  const uids = batch.filter(b => b.keyType === 'uid').map(b => b.key);
+  const oids = batch.filter(b => b.keyType === 'oid').map(b => b.key);
+  const conds = [];
+  const params = [];
+  if (uids.length) {
+    conds.push(`unique_id IN (${uids.map(() => '?').join(',')})`);
+    params.push(...uids);
+  }
+  if (oids.length) {
+    conds.push(`open_id IN (${oids.map(() => '?').join(',')})`);
+    params.push(...oids);
+  }
+  const sql = `SELECT open_id, unique_id, custom_nick_name, wx_nick_name, titles
+               FROM users WHERE ${conds.join(' OR ')}${forUpdate ? ' FOR UPDATE' : ''}`;
+  return queryFn(sql, params);
+}
+
+function resolveRow(rows, item) {
+  if (item.keyType === 'oid') return rows.find(r => r.open_id === item.key) || null;
+  return rows.find(r => r.unique_id === item.key) || null;
 }
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   const batch = loadBatch(opts.file);
 
-  const seenTargets = new Set();
+  const seenKeys = new Set();
   for (const item of batch) {
-    if (seenTargets.has(item.target)) throw new Error(`target 重复: ${item.target}`);
-    seenTargets.add(item.target);
+    const k = `${item.keyType}:${item.key}`;
+    if (seenKeys.has(k)) throw new Error(`目标重复: ${itemLabel(item)}`);
+    seenKeys.add(k);
     if (!opts.clear && item.titles.length === 0) {
-      throw new Error(`${item.target}: 未提供头衔（清空请使用 --clear）`);
+      throw new Error(`${itemLabel(item)}: 未提供头衔（清空请使用 --clear）`);
     }
   }
 
   await db.initPool();
   try {
     if (opts.dry) {
-      const targets = batch.map(b => b.target);
-      const rows = await db.query(
-        `SELECT unique_id, custom_nick_name, wx_nick_name, titles
-         FROM users WHERE unique_id IN (${targets.map(() => '?').join(',')})`,
-        targets
-      );
-      const byId = new Map(rows.map(r => [r.unique_id, r]));
-      const missing = targets.filter(t => !byId.has(t));
-      if (missing.length) throw new Error(`未找到用户: ${missing.join(', ')}`);
+      const rows = await loadRows((sql, params) => db.query(sql, params), batch, false);
+      const missing = batch.filter(item => !resolveRow(rows, item));
+      if (missing.length) throw new Error(`未找到用户: ${missing.map(itemLabel).join(', ')}`);
 
       console.log('[dry-run] 预览（不写库）:');
       for (const item of batch) {
-        const row = byId.get(item.target);
+        const row = resolveRow(rows, item);
         const before = parseTitles(row.titles);
-        let after;
-        if (opts.clear) after = [];
-        else if (opts.replace) after = item.titles;
-        else after = Array.from(new Set([...before, ...item.titles]));
+        const after = mergeTitles(before, item, opts);
         console.log(`- ${describe(row)}: [${before.join(', ')}] → [${after.join(', ')}]`);
-        validateWarnings(item.target, after);
+        validateWarnings(itemLabel(item), after);
       }
       console.log(`[dry-run] 共 ${batch.length} 人，未做任何修改`);
       return;
     }
 
     const result = await db.transaction(async (conn) => {
-      const targets = batch.map(b => b.target);
-      const [rows] = await conn.execute(
-        `SELECT unique_id, custom_nick_name, wx_nick_name, titles
-         FROM users WHERE unique_id IN (${targets.map(() => '?').join(',')}) FOR UPDATE`,
-        targets
+      const rows = await loadRows(
+        (sql, params) => conn.execute(sql, params).then(([r]) => r),
+        batch,
+        true
       );
-      const byId = new Map(rows.map(r => [r.unique_id, r]));
-      const missing = targets.filter(t => !byId.has(t));
-      if (missing.length) throw new Error(`未找到用户: ${missing.join(', ')}`);
+      const missing = batch.filter(item => !resolveRow(rows, item));
+      if (missing.length) throw new Error(`未找到用户: ${missing.map(itemLabel).join(', ')}`);
 
       const changes = [];
       for (const item of batch) {
-        const row = byId.get(item.target);
+        const row = resolveRow(rows, item);
         const before = parseTitles(row.titles);
-        let after;
-        if (opts.clear) after = [];
-        else if (opts.replace) after = item.titles;
-        else after = Array.from(new Set([...before, ...item.titles]));
+        const after = mergeTitles(before, item, opts);
 
-        await conn.execute(
-          'UPDATE users SET titles = ? WHERE unique_id = ?',
-          [after.length ? JSON.stringify(after) : null, item.target]
-        );
-        changes.push({ row, before, after });
+        if (item.keyType === 'oid') {
+          await conn.execute(
+            'UPDATE users SET titles = ? WHERE open_id = ?',
+            [after.length ? JSON.stringify(after) : null, item.key]
+          );
+        } else {
+          await conn.execute(
+            'UPDATE users SET titles = ? WHERE unique_id = ?',
+            [after.length ? JSON.stringify(after) : null, item.key]
+          );
+        }
+        changes.push({ row, before, after, item });
       }
       return changes;
     });
@@ -185,7 +217,7 @@ async function main() {
     console.log('[set-user-titles] 已提交:');
     for (const c of result) {
       console.log(`- ${describe(c.row)}: [${c.before.join(', ')}] → [${c.after.join(', ')}]`);
-      validateWarnings(c.row.unique_id, c.after);
+      validateWarnings(itemLabel(c.item), c.after);
     }
     console.log(`[set-user-titles] 共更新 ${result.length} 人`);
   } finally {
