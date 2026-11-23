@@ -30,7 +30,7 @@
   background: var(--bg-page); font-size: 30rpx; font-weight: 700; color: var(--text-muted);
   transition: all 0.2s;
 }
-.board-active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: var(--on-primary); box-shadow: var(--shadow-primary); }
+.board-active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: var(--on-primary); }
 /* 自定义板只读角标（不可点）：手动改角色后自动降级显示 */
 .board-custom { opacity: 0.55; }
 
@@ -43,7 +43,7 @@
   font-size: 32rpx; font-weight: 700; color: var(--text-muted);
   transition: all 0.2s;
 }
-.count-active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: var(--on-primary); box-shadow: var(--shadow-primary); }
+.count-active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: var(--on-primary); }
 
 /* ─────── Team sizes badge ─────── */
 .team-sizes { padding: 12rpx 0 0; }
@@ -151,7 +151,6 @@
   width: 100%; padding: 28rpx; border-radius: 20rpx;
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: var(--on-primary);
   font-size: 34rpx; font-weight: 700; text-align: center;
-  box-shadow: var(--shadow-primary);
 }
 .create-btn::after { border: none; }
 .create-btn-disabled { background: var(--disabled-bg-strong); color: var(--disabled-fg); box-shadow: none; }
