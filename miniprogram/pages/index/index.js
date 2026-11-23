@@ -338,18 +338,21 @@ Page({
     const opts = options || {};
     const minMs = opts.minMs || 0;
     const switchLoading = !!opts.switchLoading;
+    const skipLoadingState = !!opts.skipLoadingState;
     const seq = (this._roomSeq = (this._roomSeq || 0) + 1);
     const startedAt = Date.now();
     clearTimeout(this._roomLoadTimer);
-    this.setData(switchLoading
-      ? { roomSwitchLoading: true, roomListLoading: false }
-      : { roomListLoading: true, roomSwitchLoading: false });
+    if (!skipLoadingState) {
+      this.setData(switchLoading
+        ? { roomSwitchLoading: true, roomListLoading: false }
+        : { roomListLoading: true, roomSwitchLoading: false });
+    }
 
     const finish = (rooms) => {
       if (seq !== this._roomSeq) return;
       this._allRooms = rooms;
-      this.setData({ roomListLoading: false, roomSwitchLoading: false });
-      this._applyRoomData();
+      // 隐藏加载态与更新列表必须同帧完成，否则会闪出旧卡片
+      this._applyRoomData({ roomListLoading: false, roomSwitchLoading: false });
     };
     const finishWithMin = (rooms) => {
       const wait = Math.max(0, minMs - (Date.now() - startedAt));
@@ -361,7 +364,7 @@ Page({
       .catch(() => finishWithMin([]));
   },
 
-  _applyRoomData() {
+  _applyRoomData(extra) {
     const all = this._allRooms || [];
     const myId = this.data.currentRoom ? this.data.currentRoom.roomId : '';
     const myOpenId = getApp().globalData.openId || wx.getStorageSync('openId') || '';
@@ -406,17 +409,25 @@ Page({
     mapped.sort((a, b) => (b.isMine ? 1 : 0) - (a.isMine ? 1 : 0));
     const waiting = mapped.filter(r => !r.gameStarted).length;
     const playing = mapped.length - waiting;
+    const wantPlaying = this.data.roomTab === 'playing';
+    const visibleRooms = mapped.filter(r => !!r.gameStarted === wantPlaying);
     this.setData({
       publicRooms: mapped,
-      roomCounts: { waiting, playing }
+      roomCounts: { waiting, playing },
+      visibleRooms,
+      ...(extra || {})
     });
-    this._setVisibleRooms();
   },
 
-  _setVisibleRooms() {
-    const wantPlaying = this.data.roomTab === 'playing';
-    const list = (this.data.publicRooms || []).filter(r => !!r.gameStarted === wantPlaying);
-    this.setData({ visibleRooms: list });
+  // 原子切换：标签 + 三点加载态（滑动时同时复位面板），避免闪出旧列表
+  _switchToTab(tab, resetPan) {
+    const patch = { roomTab: tab, roomSwitchLoading: true, roomListLoading: false };
+    if (resetPan) {
+      patch.roomPanAnim = false;
+      patch.roomPanX = 0;
+    }
+    this.setData(patch);
+    this.loadRoomList({ minMs: 500, switchLoading: true, skipLoadingState: true });
   },
 
   switchRoomTab(e) {
@@ -426,8 +437,7 @@ Page({
       this.loadRoomList();
       return;
     }
-    this.setData({ roomTab: tab });
-    this.loadRoomList({ minMs: 1000, switchLoading: true });
+    this._switchToTab(tab, false);
   },
 
   // 房间列表左右滑动切换「等待中 / 游戏中」：内容面板跟手，松手仅滑出
@@ -521,7 +531,7 @@ Page({
     }, 200);
   },
 
-  // 仅切出：当前面板滑出后立即归位，切换标签并进入最短 1s 的加载态
+  // 仅切出：当前面板滑出后立即归位，切换标签并进入最短 0.5s 的加载态
   _animateRoomSwitch(tab, dir) {
     clearTimeout(this._roomPanTimer);
     this._roomAnimating = true;
@@ -529,10 +539,9 @@ Page({
     const W = this._roomW || 375;
     this.setData({ roomPanAnim: true, roomPanX: dir * W });
     this._roomPanTimer = setTimeout(() => {
-      this.setData({ roomPanAnim: false, roomPanX: 0 });
       this._roomAnimating = false;
       this._roomSwipeMoved = false;
-      this.switchRoomTab({ currentTarget: { dataset: { tab } } });
+      this._switchToTab(tab, true);
     }, 180);
   },
 

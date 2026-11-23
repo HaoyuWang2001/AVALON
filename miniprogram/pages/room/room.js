@@ -253,11 +253,17 @@ Page({
   // ─── Ready / Start / Disband ───
 
   setReady(value) {
-    if (!this._guard()) return;
+    // 使用独立的准备锁：不占用 _guard 的 500ms 定时锁，
+    // 避免刚变为已准备后立即点击取消被误拦截。
+    if (this._readyBusy) return;
+    this._readyBusy = true;
     wx.showLoading({ title: '请稍候...', mask: true });
     api.toggleReady(this.data.roomId, !!value).then(() => {
       this.fetchRoomInfo();
-    }).finally(() => wx.hideLoading());
+    }).finally(() => {
+      this._readyBusy = false;
+      wx.hideLoading();
+    });
   },
 
   // ─── 低频振动（长按充电期间） ───
@@ -279,7 +285,8 @@ Page({
 
   // ─── 准备长按（1s）：未准备长按满格松手→准备；已准备点击→取消 ───
   onReadyTouchStart() {
-    if (!this._guard()) return;
+    // 这里只是 UI 读条/记录取消意图，不能占用 _guard 的 500ms 网络锁，
+    // 否则快速点击「已准备·点击取消」时 touchend 会被 _busy 拦截。
     if (this.data.currentUserReady) { this._readyTapCancel = true; return; }
     if (this._readyTimer || this.data.readyCharged || this.data.readyCharging) return;
     this._readyTapCancel = false;
