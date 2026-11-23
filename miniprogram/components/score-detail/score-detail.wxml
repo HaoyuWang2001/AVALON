@@ -22,6 +22,7 @@
         <view class="sd-line"><text class="sd-line-label">胜负分合计</text><text class="{{detail.winSum >= 0 ? 'sd-plus' : 'sd-minus'}}">{{detail.winSum >= 0 ? '+' : ''}}{{detail.winSum}}</text></view>
         <view class="sd-line"><text class="sd-line-label">角色分合计</text><text class="{{detail.roleSum >= 0 ? 'sd-plus' : 'sd-minus'}}">{{detail.roleSum >= 0 ? '+' : ''}}{{detail.roleSum}}</text></view>
         <view class="sd-line"><text class="sd-line-label">荣誉分合计（MVP/SVP 票）</text><text class="sd-plus">+{{detail.awardSum}}</text></view>
+        <view class="sd-line"><text class="sd-line-label">挡刀分合计</text><text class="sd-plus">+{{detail.blockSum || 0}}</text></view>
         <view class="sd-line"><text class="sd-line-label">原始合计</text><text class="{{detail.rawTotal >= 0 ? 'sd-plus' : 'sd-minus'}}">{{detail.rawTotal >= 0 ? '+' : ''}}{{detail.rawTotal}}</text></view>
         <view wx:if="{{detail.floored}}" class="sd-p">累计保底：原始合计为负，积分按 0 计</view>
         <view class="sd-line sd-total"><text>积分合计</text><text>{{detail.total}}</text></view>
@@ -35,13 +36,14 @@
         </view>
         <view wx:if="{{formulaOpen}}" class="sd-formula">
         <view class="sd-p">积分 = max(0, Σ 单局积分)（累计保底）</view>
-        <view class="sd-p">单局积分 = Base(n) + 胜负分 + 角色分 + 荣誉分（允许负值）</view>
+        <view class="sd-p">单局积分 = Base(n) + 胜负分 + 角色分 + 荣誉分 + 挡刀分（允许负值）</view>
         <view class="sd-p">· Base(n)：5:0.20 / 6:0.25 / 7:0.30 / 8:0.35 / 9:0.45 / 10~12:0.50</view>
         <view class="sd-p">· 胜分：+0.45×(0.5/p)×SW(n)；SW：0.75/0.80/0.85/1.00/1.10/1.25/1.40/1.55</view>
         <view class="sd-p">· 败分：−0.30×(p/0.5)×SL(n)；SL：0.95/0.97/0.99/1.00/1.01/1.03/1.04/1.05</view>
         <view class="sd-p">· p 为该人数下阵营历史胜率（钳制 0.35~0.65）；p=0.5 时数值见上方档位</view>
-        <view class="sd-p">· 角色分：仅胜方内部零和再分配，难角色获得更多</view>
+        <view class="sd-p">· 角色分：按该人数下的角色胜率计算；仅胜方内部零和再分配，难角色获得更多</view>
         <view class="sd-p">· 荣誉分：每张 MVP/SVP 票 +0.01</view>
+        <view class="sd-p">· 挡刀分：蓝方胜利且刺杀未命中梅林时，被刺杀的好人获得 +0.02/0.03/0.04/0.05（5-6/7-8/9-10/11-12 人）</view>
         <view class="sd-p">· 仅统计线上、正常结束、非测试房的对局；线下局暂不计分</view>
         </view>
       </block>

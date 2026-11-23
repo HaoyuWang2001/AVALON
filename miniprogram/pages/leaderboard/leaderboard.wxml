@@ -5,7 +5,7 @@
       <text class="lb-head-title">积分排行榜</text>
       <view class="lb-info-btn" catchtap="openFormula">i</view>
     </view>
-    <text class="lb-head-sub">积分 = 基础分 + 阵营胜负分 + 角色分 + 荣誉分（共 {{total}} 人）</text>
+    <text class="lb-head-sub">积分 = 基础分 + 阵营胜负分 + 角色分 + 荣誉分 + 挡刀分（共 {{total}} 人）</text>
   </view>
 
   <view wx:if="{{loading}}" class="lb-loading">加载中...</view>
@@ -58,7 +58,7 @@
         <view class="f-p">· W_g(n)、W_e(n)：该人数下历史胜场数；G(n)=W_g+W_e。</view>
         <view class="f-p">· p_s = (W_s+1)/(G(n)+2)，再夹取到 [0.35, 0.65]（Laplace 平滑 + 边界钳制）。</view>
         <view class="f-p">· SW(n)：胜分人数系数；SL(n)：败分人数系数（见第三节）。</view>
-        <view class="f-p">· ω_r：角色难度权重；q_r=(wins+1)/(games+2)，ω_r=clamp(0.5−q_r, 0, 0.15)。</view>
+        <view class="f-p">· ω_r(n)：该人数下的角色难度权重；q_r=(该人数 wins+1)/(games+2)，ω_r=clamp(0.5−q_r, 0, 0.15)。</view>
         <view class="f-p">· m_p、v_p：该玩家在本局收到的 MVP / SVP 票数。</view>
 
         <view class="f-sec">三、单局得分公式</view>
@@ -67,9 +67,11 @@
         <view class="f-eq">3) SL(n)：0.95 / 0.97 / 0.99 / 1.00 / 1.01 / 1.03 / 1.04 / 1.05（5→12人）</view>
         <view class="f-eq">4) 胜分 A = 0.45 × (0.5 / p_s) × SW(n)</view>
         <view class="f-eq">5) 败分 L = 0.30 × (p_s / 0.5) × SL(n)（作为扣减量）</view>
-        <view class="f-eq">6) 角色分 R_p = ω_{r_p} − mean(ω over 胜方)（仅胜方，内部零和）</view>
+        <view class="f-eq">6) 角色分 R_p = ω_{r_p}(n) − mean(ω over 胜方)（仅胜方，内部零和）</view>
         <view class="f-eq">7) 荣誉分 H_p = (m_p + v_p) × 0.01</view>
-        <view class="f-eq">8) 胜方：total_p = Base + A + R_p + H_p</view>
+        <view class="f-eq">8) 挡刀分 B(n)：5-6人0.02 / 7-8人0.03 / 9-10人0.04 / 11-12人0.05</view>
+        <view class="f-p">   仅蓝方胜利且刺杀未命中梅林时，被刺杀的好人获得 B(n)，额外叠加。</view>
+        <view class="f-eq">9) 胜方：total_p = Base + A + R_p + H_p + B_p</view>
         <view class="f-eq">   败方：total_p = Base − L + H_p</view>
         <view class="f-p">最终保留两位小数；单局允许为负（小人数局败场可能倒扣）。</view>
 
@@ -79,7 +81,7 @@
         <view class="f-eq">= Base + 0.225·SW − 0.60·p_s·(1−p_s)·SL</view>
         <view class="f-p">SW、SL 仅与人数 n 有关；又因 p_good + p_evil = 1，p_good(1−p_good) = p_evil(1−p_evil)，于是：</view>
         <view class="f-eq">E_good = E_evil（与阵营强弱无关）</view>
-        <view class="f-p">角色分仅在胜方内部零和转移（ΣR=0）；荣誉分每阵营各 0.01×票数（机制对称），均不破坏该恒等式。两位小数舍入使实际差异 ≤0.02/局。</view>
+        <view class="f-p">角色分仅在胜方内部零和转移（ΣR=0）；荣誉分每阵营各 0.01×票数（机制对称），均不破坏该恒等式。挡刀分是蓝方胜利且刺杀未命中的特殊事件奖励，不属于对称平衡项；两位小数舍入使实际差异 ≤0.02/局。</view>
 
         <view class="f-sec">五、负分与累计保底</view>
         <view class="f-p">· 单局可为负（如 5 人局基础 0.20、败分约 0.29）。</view>
@@ -98,9 +100,9 @@
         <view class="f-p">Base = 0.35；SW = SL = 1.00；p_evil = 0.45</view>
         <view class="f-p">A_good = 0.45×(0.5/0.55) ≈ 0.41；L_evil = 0.30×(0.45/0.5) = 0.27</view>
         <view class="f-p">蓝方胜：蓝方每人 0.35+0.41 = 0.76（再加减角色分）；红方每人 0.35−0.27 = 0.08</view>
-        <view class="f-p">若梅林(ω=0.08)、派西(ω=0.06)、3 忠臣(ω=0) 获胜：mean(ω)=0.028</view>
-        <view class="f-p">⇒ 梅林 +0.05、派西 +0.03、忠臣各 −0.03（胜方内部和为 0）</view>
-        <view class="f-p">梅林再获 2 张 MVP 票：0.35+0.41+0.05+0.02 = 0.83</view>
+        <view class="f-p">若刺客误刺好人（非梅林）：被刺者再 +B(8)=0.03</view>
+        <view class="f-p">角色分按该人数下的 ω 逐人计算；示意：梅林 +0.01、派西 0、忠臣各 −0.01（胜方内部和为 0）</view>
+        <view class="f-p">梅林再获 2 张 MVP 票：0.35+0.41+0.01+0.02 = 0.79</view>
         <view class="f-p">校验：E_good = 0.35+0.55×0.41−0.45×0.33 ≈ 0.427；E_evil = 0.35+0.45×0.50−0.55×0.27 ≈ 0.427 ✓</view>
       </scroll-view>
     </view>
