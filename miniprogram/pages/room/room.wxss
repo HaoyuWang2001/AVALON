@@ -5,6 +5,24 @@
 button { margin: 0; padding: 0; width: auto; }
 button::after { border: none; }
 
+.room-loading-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 400;
+  background: var(--bg-page);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20rpx;
+}
+.room-loading-dots { display: flex; align-items: center; gap: 12rpx; }
+.room-loading-dot {
+  width: 14rpx; height: 14rpx; border-radius: 50%; background: var(--primary);
+  opacity: 0.35; animation: room-loading-bounce 0.9s infinite ease-in-out;
+}
+.room-loading-dot.d2 { animation-delay: 0.15s; }
+.room-loading-dot.d3 { animation-delay: 0.3s; }
+.room-loading-text { font-size: 24rpx; color: var(--text-muted); }
+@keyframes room-loading-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.35; }
+  40% { transform: translateY(-10rpx); opacity: 1; }
+}
+
 .container { padding: 24rpx; }
 .container.with-start-bar { padding-bottom: calc(168rpx + env(safe-area-inset-bottom)); }
 

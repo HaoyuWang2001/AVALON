@@ -19,6 +19,16 @@
     </view>
   </top-bar>
 
+  <!-- 首次进入：覆盖空布局，避免先闪 0/0 与空座位再填充 -->
+  <view class="room-loading-mask" wx:if="{{roomLoading}}">
+    <view class="room-loading-dots">
+      <view class="room-loading-dot d1"></view>
+      <view class="room-loading-dot d2"></view>
+      <view class="room-loading-dot d3"></view>
+    </view>
+    <text class="room-loading-text">加载房间...</text>
+  </view>
+
   <view class="container {{showBottomBar ? 'with-start-bar' : ''}}">
 
   <!-- Card 1: Room Info -->

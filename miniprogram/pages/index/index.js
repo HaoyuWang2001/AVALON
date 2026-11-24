@@ -204,32 +204,42 @@ Page({
         content: '退出当前房间并加入新房间？',
         confirmText: '退出并加入',
         success: (r) => {
-          if (r.confirm) {
-            if (cur && cur.roomId) {
-              api.leaveRoom(cur.roomId).then(leaveRes => {
-                if (leaveRes.success) {
-                  wx.showLoading({ title: '加入房间...', mask: true });
-                  api.joinRoom(roomId, DEFAULT_SEAT_NUMBER).then(res2 => {
-                    wx.hideLoading();
-                    if (res2.success) {
-                      app.globalData.roomId = roomId;
-                      if (gameId) {
-                        wx.navigateTo({ url: `/pages/game/game?gameId=${gameId}&roomId=${roomId}` });
-                      } else {
-                        wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}` });
-                      }
-                    } else {
-                      wx.showToast({ title: (res2 && res2.message) || '加入失败', icon: 'none' });
-                    }
-                  }).catch(() => wx.hideLoading());
-                } else {
-                  wx.showToast({ title: (leaveRes && leaveRes.message) || '退出房间失败', icon: 'none' });
+          if (!r.confirm) return;
+
+          const joinTarget = () => {
+            api.joinRoom(roomId, DEFAULT_SEAT_NUMBER, this.data.userInfo || {}).then(res2 => {
+              if (!res2.success) throw new Error((res2 && res2.message) || '加入失败');
+              app.globalData.roomId = roomId;
+              const url = gameId
+                ? `/pages/game/game?gameId=${gameId}&roomId=${roomId}`
+                : `/pages/room/room?roomId=${roomId}`;
+              wx.navigateTo({
+                url,
+                success: () => wx.hideLoading(),
+                fail: () => {
+                  wx.hideLoading();
+                  wx.showToast({ title: '页面跳转失败', icon: 'none' });
                 }
               });
-            } else {
-              // 无旧房间信息，直接重新加入
-              this.dispatchShareJoin(roomId, gameId);
-            }
+            }).catch(err => {
+              wx.hideLoading();
+              wx.showToast({ title: (err && err.message) || '加入失败', icon: 'none' });
+            });
+          };
+
+          // 保持 loading 遮罩覆盖「退出旧房 + 加入 + 页面切换」全过程
+          wx.showLoading({ title: '加入房间...', mask: true });
+          if (cur && cur.roomId) {
+            api.leaveRoom(cur.roomId).then(leaveRes => {
+              if (!leaveRes.success) throw new Error((leaveRes && leaveRes.message) || '退出房间失败');
+              joinTarget();
+            }).catch(err => {
+              wx.hideLoading();
+              wx.showToast({ title: (err && err.message) || '退出房间失败', icon: 'none' });
+            });
+          } else {
+            // 无旧房间信息，直接重新加入
+            joinTarget();
           }
         }
       });
@@ -263,8 +273,8 @@ Page({
   },
 
   onHide() {
-    // 离开本页：窗口背景复位为默认亮色，避免暗色泄漏到 room/game 等亮色页面
-    wx.setBackgroundColor({ backgroundColor: '#F5F5F5' });
+    // 不再强制复位亮色：各目标页 onShow 会设置自己的主题背景，
+    // 否则深色主题跳转时会先闪一下浅色窗口背景。
     this._clearRoomPan(true);
   },
 

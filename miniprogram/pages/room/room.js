@@ -28,6 +28,7 @@ Page({
     seatsFull: false,
     currentUserReady: false,
     showBottomBar: false,
+    roomLoading: true,
     readyCharging: false,
     readyProgress: 0,
     readyCharged: false,
@@ -179,7 +180,8 @@ Page({
           spectatorAllowed: spectatorAllowed,
           seatsFull: seats.length > 0 && seats.every(s => s.occupied),
           currentUserReady: currentUser ? readyPlayers.includes(currentUser.openId) : false,
-          showBottomBar: (room.ownerId === app.globalData.openId) || !!(currentUser && currentUser.seatNumber >= 1)
+          showBottomBar: (room.ownerId === app.globalData.openId) || !!(currentUser && currentUser.seatNumber >= 1),
+          roomLoading: false
         });
 
         let canStart = playerCount > 0;
@@ -204,6 +206,7 @@ Page({
           }, 5000);
         }
       } else {
+        this.setData({ roomLoading: false });
         const msg = (res && res.message) || '';
         if (msg.includes('房间不存在')) {
           // 房间不存在：停止轮询 + 回首页
@@ -213,7 +216,9 @@ Page({
           setTimeout(() => { wx.navigateBack(); }, 1500);
         }
       }
-    }).catch(() => {});
+    }).catch(() => {
+      this.setData({ roomLoading: false });
+    });
   },
 
   // 房间不存在：停止轮询 + 提示 + 回首页
