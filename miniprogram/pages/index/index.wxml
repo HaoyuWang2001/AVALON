@@ -64,7 +64,7 @@
 
 
   <!-- 公开房间列表：等待中 / 游戏中 -->
-  <view class="room-list-section">
+  <view class="room-list-section" bindtouchstart="onRoomTouchStart" bindtouchmove="onRoomTouchMove" bindtouchend="onRoomTouchEnd" bindtouchcancel="onRoomTouchCancel">
     <view class="room-tabs">
       <view class="room-tab {{roomTab === 'waiting' ? 'room-tab-on' : ''}}" data-tab="waiting" bindtap="switchRoomTab">
         等待中<text class="room-tab-count">{{roomCounts.waiting}}</text>
@@ -73,6 +73,7 @@
         游戏中<text class="room-tab-count">{{roomCounts.playing}}</text>
       </view>
     </view>
+    <view class="room-panel {{roomPanAnim ? 'room-panel-anim' : ''}}" style="transform: translateX({{roomPanX}}px)">
     <view wx:if="{{roomSwitchLoading}}" class="room-switch-loading">
       <view class="room-switch-dot d1"></view>
       <view class="room-switch-dot d2"></view>
@@ -93,7 +94,7 @@
           <text wx:if="{{item.identityText}}" class="room-status-tag {{item.identityClass}}">{{item.identityText}}</text>
         </view>
       </view>
-      <view class="room-tags-row" wx:if="{{item.tags.length > 0}}" catchtap="noop">
+      <view class="room-tags-row" wx:if="{{item.tags.length > 0}}">
         <text wx:for="{{item.displayTags}}" wx:for-item="tg" wx:key="*this" class="room-tag">{{tg}}</text>
         <text wx:if="{{item.tags.length > 3}}" class="room-tag-more" data-id="{{item.roomId}}" catchtap="toggleRoomTags">{{item.showAllTags ? '收起' : '…'}}</text>
       </view>
@@ -107,6 +108,7 @@
       </view>
     </view>
     </block>
+    </view>
   </view>
 
   <view class="footer"><view class="footer-version">AVALON v2.0.0</view></view>

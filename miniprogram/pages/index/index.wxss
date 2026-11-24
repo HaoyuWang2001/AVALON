@@ -17,6 +17,7 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* ─────── 品牌栏（单行：圆徽 + 字标 + 右侧个人头像） ─────── */
@@ -240,6 +241,8 @@
 
 /* ─────── 公开房间列表（等待中 / 游戏中） ─────── */
 .room-list-section { margin-bottom: 20rpx; flex-shrink: 0; }
+.room-panel { width: 100%; will-change: transform; }
+.room-panel-anim { transition: transform 0.18s ease-out; }
 .room-switch-loading { display: flex; align-items: center; justify-content: center; gap: 14rpx; padding: 72rpx 0; }
 .room-switch-dot { width: 14rpx; height: 14rpx; border-radius: 50%; background: var(--primary); opacity: 0.35; animation: room-dot-bounce 0.9s infinite ease-in-out; }
 .room-switch-dot.d2 { animation-delay: 0.15s; }
@@ -259,7 +262,7 @@
   width: 48rpx; height: 6rpx; border-radius: 3rpx; background: var(--primary);
 }
 .room-tab-count { margin-left: 8rpx; font-size: 26rpx; font-weight: 700; }
-.room-list-empty { text-align: center; color: var(--text-muted); font-size: 28rpx; padding: 48rpx 0; }
+.room-list-empty { min-height: 360rpx; padding: 0 32rpx; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text-muted); font-size: 28rpx; }
 .room-card {
   background: var(--bg-card); border-radius: 24rpx; padding: 24rpx;
   margin: 0 0 16rpx; box-shadow: var(--shadow-sm);
