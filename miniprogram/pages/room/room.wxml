@@ -87,29 +87,11 @@
     <view wx:else class="empty-hint">等待配置房间...</view>
   </view>
 
-  <!-- Card 4: Waiting Area（等待区永远存在） -->
-  <view class="card waiting-card">
-    <view class="card-header">
-      <text class="card-title">等待区 ({{unseatedPlayers.length}})</text>
-      <text wx:if="{{currentUser && (currentUser.seatNumber > 0 && !currentUser.isReady || currentUser.seatNumber < 0)}}" class="btn-round btn-purple" bindtap="leaveSeat">进入等待区</text>
-    </view>
-    <scroll-view scroll-x class="waiting-scroll" wx:if="{{unseatedPlayers.length > 0}}">
-      <view class="waiting-list">
-      <view wx:for="{{unseatedPlayers}}" wx:key="openId" class="waiting-item" bindtap="onPlayerTap" bindlongpress="onPlayerAction" data-id="{{item.openId}}">
-        <image src="{{item.avatarUrl || '/images/default-avatar.png'}}" class="waiting-avatar"></image>
-        <text class="waiting-name">{{item.nickName || item.wxNickName || '玩家'}}</text>
-        <title-badge wx:if="{{item.titles && item.titles.length > 0}}" titles="{{item.titles}}" size="mini"></title-badge>
-      </view>
-    </view>
-    </scroll-view>
-    <view wx:else class="empty-hint">暂无等待玩家</view>
-  </view>
-
   <!-- Card 5: Spectator Area -->
   <view class="card spectator-card" wx:if="{{spectatorAllowed}}">
     <view class="card-header">
       <text class="card-title">观战区 ({{spectatorPlayers.length}})</text>
-      <text wx:if="{{currentUser && currentUser.seatNumber >= 0 && !currentUserReady}}" class="btn-round btn-purple" bindtap="becomeSpectator">进入观战区</text>
+      <text wx:if="{{!currentUser || (currentUser.seatNumber >= 0 && !currentUserReady)}}" class="btn-round btn-purple" bindtap="becomeSpectator">进入观战区</text>
     </view>
     <scroll-view scroll-x class="waiting-scroll" wx:if="{{spectatorPlayers.length > 0}}">
       <view class="waiting-list">
@@ -137,7 +119,7 @@
   </view>
 
   <!-- 开始游戏：长按读条，满格按住呼吸，松手播放所选启动动画后开局（仅房主；不可点时灰色） -->
-  <view class="start-game-bar" wx:if="{{currentUser && isHost}}">
+  <view class="start-game-bar" wx:if="{{isHost && !gameStarted}}">
     <view class="start-game-btn {{startGameCharging ? 'charging' : ''}} {{startGameCharged ? 'charged' : ''}} {{dissolving ? 'dissolving' : ''}} {{canStartGame ? '' : 'start-game-disabled'}}"
       bindtouchstart="onStartGameTouchStart" bindtouchend="onStartGameTouchEnd" bindtouchcancel="onStartGameTouchCancel">
       <view class="start-game-progress" style="width: {{startGameProgress}}%"></view>

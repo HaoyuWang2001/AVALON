@@ -81,7 +81,7 @@
     <block wx:else>
     <view wx:if="{{visibleRooms.length === 0}}" class="room-list-empty">{{roomListLoading ? '加载中...' : '没得玩，速开！'}}</view>
     <view wx:for="{{visibleRooms}}" wx:key="roomId"
-      class="room-card {{item.isMine ? 'room-card-featured' : ''}}"
+      class="room-card {{item.isPinned ? 'room-card-featured' : ''}}"
       bindtap="onPublicRoomTap" data-id="{{item.roomId}}">
       <view class="room-card-top">
         <view class="room-card-id-wrap">

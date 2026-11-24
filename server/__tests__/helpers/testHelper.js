@@ -186,13 +186,8 @@ async function updateSeatNumber(roomId, userId, newSeatNumber) {
   return res.body;
 }
 
-async function kickPlayer(roomId, playerId, mode, openId) {
-  const res = await apiPost('/api/rooms/kickPlayer', { roomId, playerId, mode: mode || 'room', openId });
-  return res.body;
-}
-
-async function banSeat(roomId, playerId, banned, openId) {
-  const res = await apiPost(`/api/rooms/${roomId}/banSeat`, { playerId, banned, openId });
+async function kickPlayer(roomId, playerId, _mode, openId) {
+  const res = await apiPost('/api/rooms/kickPlayer', { roomId, playerId, openId });
   return res.body;
 }
 
@@ -558,7 +553,6 @@ module.exports = {
   leaveRoom,
   updateSeatNumber,
   kickPlayer,
-  banSeat,
   updateRoomConfig,
   transferOwner,
   disband,

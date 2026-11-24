@@ -4,8 +4,8 @@ const {
   makeUserId, createRoom, createRoomWithConfig, buildConfigWithSpectator,
   buildStandardRoomConfig, withConfigOverrides,
   joinRoom, getRoom, toggleReady, leaveRoom, updateSeatNumber,
-  kickPlayer, banSeat, updateRoomConfig, transferOwner, disband,
-  randomSeats, roomStats, cleanupRooms, startGame, apiGet, apiPost,
+  kickPlayer, updateRoomConfig, transferOwner, disband,
+  randomSeats, roomStats, cleanupRooms, startGame, getGameState, apiGet, apiPost,
   createRoomWithPlayers, createRoomAndStartGame
 } = require('./helpers/testHelper');
 
@@ -140,14 +140,12 @@ describe('02 — Room Management', () => {
       expect(result.seatNumber).toBe(2);
     });
 
-    it('02.6 未指定座位 → 默认 0（等待区）', async () => {
+    it('02.6 未指定座位 → 400（等待区已移除）', async () => {
       const uid = makeUserId();
       const res = await apiPost('/api/rooms/join', { roomId, userInfo: { openId: uid, nickName: 'Wait', avatarUrl: '' } });
-      expect(res.body.success).toBe(true);
-      expect(res.body.seatNumber).toBe(0);
+      expect(res.status).toBe(400);
       const room = await getRoom(roomId);
-      const p = room.room.players.find(x => x.openId === uid);
-      expect(p.seatNumber).toBe(0);
+      expect(room.room.players.find(x => x.openId === uid)).toBeUndefined();
     });
 
     it('02.7 观战座位 -1（允许观战时）', async () => {
@@ -237,12 +235,16 @@ describe('02 — Room Management', () => {
       expect(room.room.players.find(p => p.openId === uid)).toBeUndefined();
     });
 
-    it('02.16 房主离开 → 400 拒绝', async () => {
+    it('02.16 房主退出成员关系 → 保留房主与房间', async () => {
       const hostId = makeUserId();
       const result = await createRoom(hostId, 'Host');
-      const res = await apiPost('/api/rooms/leave', { roomId: result.roomId, openId: hostId });
-      expect(res.status).toBe(400);
-      expect(res.body.message).toMatch(/房主不能离开/);
+      const roomId = result.roomId;
+      const res = await apiPost('/api/rooms/leave', { roomId, openId: hostId });
+      expect(res.status).toBe(200);
+      const room = await getRoom(roomId);
+      expect(room.success).toBe(true);
+      expect(room.room.ownerId).toBe(hostId);
+      expect(room.room.players.find(p => p.openId === hostId)).toBeUndefined();
     });
 
     it('02.17 房主仍在，房间保留', async () => {
@@ -270,12 +272,21 @@ describe('02 — Room Management', () => {
       const { roomId } = await createRoomAndStartGame(5);
       // 游戏开始后加入 → 自动观战(seat=-1)
       const specId = makeUserId();
-      const join = await joinRoom(roomId, specId, 0, 'Spec');
+      const join = await joinRoom(roomId, specId, -1, 'Spec');
       expect(join.success).toBe(true);
       const leave = await leaveRoom(roomId, specId);
       expect(leave.success).toBe(true);
       const room = await getRoom(roomId);
       expect(room.room.players.find(p => p.openId === specId)).toBeUndefined();
+    });
+
+    it('02.17c 游戏进行中：观战者不能转为上座', async () => {
+      const { roomId } = await createRoomAndStartGame(5);
+      const specId = makeUserId();
+      await joinRoom(roomId, specId, -1, 'Spec');
+      const res = await apiPost('/api/rooms/updateSeatNumber', { roomId, openId: specId, newSeatNumber: 1 });
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/游戏已开始/);
     });
   });
 
@@ -305,47 +316,46 @@ describe('02 — Room Management', () => {
 
   // ─────────────── 6/7. 入座与换座 ───────────────
   describe('入座/换座', () => {
-    it('02.20 等待区 0 → 入座 1..n', async () => {
+    it('02.20 游客直接入座 1..n', async () => {
       const hostId = makeUserId();
       const result = await createRoom(hostId, 'Host');
       const roomId = result.roomId;
       const uid = makeUserId();
-      await joinRoom(roomId, uid, 0, 'P2');
-      const res = await updateSeatNumber(roomId, uid, 2);
+      const res = await joinRoom(roomId, uid, 2, 'P2');
       expect(res.success).toBe(true);
       expect(res.room.players.find(p => p.openId === uid).seatNumber).toBe(2);
     });
 
-    it('02.21 等待区 0 → 观战区 -1', async () => {
+    it('02.21 游客直接进入观战区 -1', async () => {
       const result = await createRoomWithConfig(makeUserId(), 'OHost', buildConfigWithSpectator(SPECTATOR_1));
       const roomId = result.roomId;
       const uid = makeUserId();
-      await joinRoom(roomId, uid, 0, 'P');
-      const res = await updateSeatNumber(roomId, uid, -1);
+      const res = await joinRoom(roomId, uid, -1, 'P');
       expect(res.success).toBe(true);
       expect(res.room.players.find(p => p.openId === uid).seatNumber).toBe(-1);
     });
 
-    it('02.22 观战区 -1 → 等待区 0', async () => {
+    it('02.22 观战区 -1 → 0 被拒绝', async () => {
       const result = await createRoomWithConfig(makeUserId(), 'OHost', buildConfigWithSpectator(SPECTATOR_1));
       const roomId = result.roomId;
       const uid = makeUserId();
       await joinRoom(roomId, uid, -1, 'P');
-      const res = await updateSeatNumber(roomId, uid, 0);
-      expect(res.success).toBe(true);
-      expect(res.room.players.find(p => p.openId === uid).seatNumber).toBe(0);
+      const res = await apiPost('/api/rooms/updateSeatNumber', { roomId, openId: uid, newSeatNumber: 0 });
+      expect(res.status).toBe(400);
+      const room = await getRoom(roomId);
+      expect(room.room.players.find(p => p.openId === uid).seatNumber).toBe(-1);
     });
 
-    it('02.23 入座 1..n → 等待区 0，且重置 ready', async () => {
+    it('02.23 入座 1..n → 观战区 -1，且重置 ready', async () => {
       const hostId = makeUserId();
       const result = await createRoom(hostId, 'Host');
       const roomId = result.roomId;
       const uid = makeUserId();
       await joinRoom(roomId, uid, 2, 'P2');
       await toggleReady(roomId, uid, true);
-      const res = await updateSeatNumber(roomId, uid, 0);
+      const res = await updateSeatNumber(roomId, uid, -1);
       const p = res.room.players.find(x => x.openId === uid);
-      expect(p.seatNumber).toBe(0);
+      expect(p.seatNumber).toBe(-1);
       expect(p.isReady).toBe(false);
     });
 
@@ -360,16 +370,14 @@ describe('02 — Room Management', () => {
       expect(res.body.message).toMatch(/占用/);
     });
 
-    it('02.25 被禁座玩家换座 → 400', async () => {
+    it('02.25 非成员更新座位 → 400（游客需先 join）', async () => {
       const hostId = makeUserId();
       const result = await createRoom(hostId, 'Host');
       const roomId = result.roomId;
       const uid = makeUserId();
-      await joinRoom(roomId, uid, 2, 'P2');
-      await banSeat(roomId, uid, true, hostId);
       const res = await apiPost('/api/rooms/updateSeatNumber', { roomId, openId: uid, newSeatNumber: 3 });
       expect(res.status).toBe(400);
-      expect(res.body.message).toMatch(/禁止上座/);
+      expect(res.body.message).toMatch(/请先加入房间/);
     });
 
     it('02.26a 观战不设人数上限 → 多人观战成功（忽略旧 max 字段）', async () => {
@@ -404,13 +412,15 @@ describe('02 — Room Management', () => {
       expect(room.room.readyPlayers).toContain(hostId);
     });
 
-    it('02.26d 房主离开座位 ready 清除，重新上座恢复', async () => {
+    it('02.26d 房主退出成员关系 clear ready，重新上座恢复', async () => {
       const hostId = makeUserId();
       const result = await createRoom(hostId, 'Host');
       const roomId = result.roomId;
-      let res = await updateSeatNumber(roomId, hostId, 0);
-      expect(res.room.readyPlayers).not.toContain(hostId);
-      res = await updateSeatNumber(roomId, hostId, 1);
+      await leaveRoom(roomId, hostId);
+      let room = await getRoom(roomId);
+      expect(room.room.readyPlayers).not.toContain(hostId);
+      const res = await joinRoom(roomId, hostId, 1, 'Host');
+      expect(res.success).toBe(true);
       expect(res.room.readyPlayers).toContain(hostId);
     });
 
@@ -426,6 +436,23 @@ describe('02 — Room Management', () => {
       const res = await startGame(roomId, hostId);
       expect(res.success).toBe(true);
       expect(res.gameId).toBeDefined();
+    });
+
+    it('02.26f 房主无成员关系仍可开始游戏', async () => {
+      const hostId = makeUserId();
+      const result = await createRoomWithConfig(hostId, 'Host', buildStandardRoomConfig(5));
+      const roomId = result.roomId;
+      await leaveRoom(roomId, hostId); // 房主下座，保留所有权
+      for (let i = 1; i <= 5; i++) {
+        const uid = makeUserId();
+        await joinRoom(roomId, uid, i, `P${i}`);
+        await toggleReady(roomId, uid, true);
+      }
+      const start = await startGame(roomId, hostId);
+      expect(start.success).toBe(true);
+      const state = await getGameState(start.gameId);
+      expect(state.players.length).toBe(5);
+      expect(state.players.find(p => p.openId === hostId)).toBeUndefined();
     });
 
     it('02.33a 转让房主后新房主自动准备', async () => {
@@ -454,17 +481,15 @@ describe('02 — Room Management', () => {
       expect(res.room.players.find(p => p.openId === uid)).toBeUndefined();
     });
 
-    it('02.28 房主踢到未入座区（unseat）', async () => {
+    it('02.28 踢出房间后成员关系移除（无等待区）', async () => {
       const hostId = makeUserId();
       const result = await createRoom(hostId, 'Host');
       const roomId = result.roomId;
       const uid = makeUserId();
       await joinRoom(roomId, uid, 2, 'P2');
       await toggleReady(roomId, uid, true);
-      const res = await kickPlayer(roomId, uid, 'unseat', hostId);
-      const p = res.room.players.find(x => x.openId === uid);
-      expect(p.seatNumber).toBe(0);
-      expect(p.isReady).toBe(false);
+      const res = await kickPlayer(roomId, uid, 'room', hostId);
+      expect(res.room.players.find(x => x.openId === uid)).toBeUndefined();
     });
 
     it('02.29 非房主踢人 → 403', async () => {
@@ -476,43 +501,6 @@ describe('02 — Room Management', () => {
       await joinRoom(roomId, a, 2, 'A');
       await joinRoom(roomId, b, 3, 'B');
       const res = await apiPost('/api/rooms/kickPlayer', { roomId, playerId: b, mode: 'room', openId: a });
-      expect(res.status).toBe(403);
-    });
-  });
-
-  // ─────────────── 9. 禁座（房主） ───────────────
-  describe('禁座', () => {
-    it('02.30 禁座后上座被拒，02.31 解禁后可上座', async () => {
-      const hostId = makeUserId();
-      const result = await createRoom(hostId, 'Host');
-      const roomId = result.roomId;
-      const uid = makeUserId();
-      await joinRoom(roomId, uid, 2, 'P2');
-
-      const ban = await banSeat(roomId, uid, true, hostId);
-      expect(ban.success).toBe(true);
-      const p = ban.room.players.find(x => x.openId === uid);
-      expect(p.bannedFromSeating).toBeTruthy();
-      expect(p.seatNumber).toBe(0);
-      expect(p.isReady).toBe(false);
-      const rejected = await apiPost('/api/rooms/updateSeatNumber', { roomId, openId: uid, newSeatNumber: 3 });
-      expect(rejected.status).toBe(400);
-
-      const unban = await banSeat(roomId, uid, false, hostId);
-      expect(unban.room.players.find(x => x.openId === uid).bannedFromSeating).toBeFalsy();
-      const ok = await updateSeatNumber(roomId, uid, 3);
-      expect(ok.success).toBe(true);
-    });
-
-    it('02.32 非房主禁座 → 403', async () => {
-      const hostId = makeUserId();
-      const result = await createRoom(hostId, 'Host');
-      const roomId = result.roomId;
-      const a = makeUserId();
-      const b = makeUserId();
-      await joinRoom(roomId, a, 2, 'A');
-      await joinRoom(roomId, b, 3, 'B');
-      const res = await apiPost(`/api/rooms/${roomId}/banSeat`, { playerId: b, banned: true, openId: a });
       expect(res.status).toBe(403);
     });
   });
@@ -591,7 +579,7 @@ describe('02 — Room Management', () => {
       expect(res.success).toBe(true);
       const room = await getRoom(roomId);
       expect(room.room.players.find(p => p.openId === p2).seatNumber).toBe(2);
-      expect(room.room.players.find(p => p.openId === p3).seatNumber).toBe(0);
+      expect(room.room.players.find(p => p.openId === p3)).toBeUndefined();
 
       const bad = validConfig();
       bad.roles.evil = ['nope'];
@@ -610,8 +598,8 @@ describe('02 — Room Management', () => {
       await joinRoom(roomId, p5, 5, 'P5');
       await toggleReady(roomId, p5, true);
 
-      // 造空洞：P2 离开入座区 → 座位 2 空；P5 仍在 5
-      await updateSeatNumber(roomId, p2, 0);
+      // 造空洞：P2 退出成员关系 → 座位 2 空；P5 仍在 5
+      await leaveRoom(roomId, p2);
 
       // 缩容 5 → 4：溢出=座位5(P5)，空位=座位2 → P5 填入 2（且取消准备），其余不变
       const shrink = JSON.parse(JSON.stringify(buildStandardRoomConfig(5)));
@@ -622,7 +610,7 @@ describe('02 — Room Management', () => {
       const room = await getRoom(roomId);
       const seatOf = (uid) => room.room.players.find(p => p.openId === uid).seatNumber;
       expect(seatOf(hostId)).toBe(1);
-      expect(seatOf(p2)).toBe(0);
+      expect(room.room.players.find(p => p.openId === p2)).toBeUndefined();
       expect(seatOf(p3)).toBe(3);
       expect(seatOf(p4)).toBe(4);
       expect(seatOf(p5)).toBe(2);

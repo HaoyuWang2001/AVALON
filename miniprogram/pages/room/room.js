@@ -17,7 +17,6 @@ Page({
     playerCount: 0,
     players: [],
     seatedPlayers: [],
-    unseatedPlayers: [],
     spectatorPlayers: [],
     readyPlayers: [],
     roomInfo: null,
@@ -120,18 +119,6 @@ Page({
         const readyPlayers = room.readyPlayers || [];
         const currentUser = players.find(p => p.openId === app.globalData.openId);
 
-        // 非成员落地自动入房：仅首次成员校验判定一次，之后不再触发
-        // （避免房主踢人 / 主动退出后被自动拉回；复用首页分享入房链路处理“已在其他房间/开局跳 game”等边界）
-        if (!this._memberChecked && app.globalData.openId) {
-          this._memberChecked = true;
-          if (!currentUser && !this.leaving && this.data.roomId && !this._autoJoining) {
-            this._autoJoining = true;
-            if (this.roomPolling) { clearInterval(this.roomPolling); this.roomPolling = null; }
-            wx.redirectTo({ url: `/pages/index/index?roomId=${this.data.roomId}` });
-            return;
-          }
-        }
-
         let playerCount = 0;
         if (room.roomConfig && room.roomConfig.roles) {
           const good = room.roomConfig.roles.good || [];
@@ -145,7 +132,6 @@ Page({
         }
 
         const seatedPlayers = players.filter(p => p.seatNumber >= 1).sort((a, b) => a.seatNumber - b.seatNumber);
-        const unseatedPlayers = players.filter(p => p.seatNumber === 0);
         const spectatorPlayers = players.filter(p => p.seatNumber === -1);
         const seatedSeats = new Set(seatedPlayers.map(p => p.seatNumber));
 
@@ -170,7 +156,6 @@ Page({
           players: players,
           playerCount: playerCount,
           seatedPlayers: seatedPlayers,
-          unseatedPlayers: unseatedPlayers,
           spectatorPlayers: spectatorPlayers,
           readyPlayers: readyPlayers,
           currentUser: currentUser,
@@ -196,7 +181,7 @@ Page({
         }
         this.setData({ canStartGame: canStart, startHint: hint });
 
-        if (room.gameStarted && !wasGameStarted) {
+        if (room.gameStarted && !wasGameStarted && currentUser && currentUser.seatNumber >= 1) {
           // 开局信号：全员播放各自所选入场动画（5s），结束后进入游戏页
           this.setData({ startGameLaunching: true, dissolving: false, startGameProgress: 0 });
           this._launchGameId = room.activeGameId;
@@ -230,28 +215,93 @@ Page({
 
   // ─── Seat actions ───
 
-  takeSeat(e) {
-    if (!this._guard()) return;
-    const seatNum = e.currentTarget.dataset.seat;
-    wx.showLoading({ title: '入座中...', mask: true });
-    api.updateSeatNumber(this.data.roomId, seatNum).then(() => {
-      this.fetchRoomInfo();
+  _enterJoinedRoom(room) {
+    const r = room || this.data.roomInfo || {};
+    if (r.gameStarted && r.activeGameId) {
+      wx.redirectTo({ url: `/pages/game/game?gameId=${r.activeGameId}&roomId=${this.data.roomId}` });
+      return;
+    }
+    this.fetchRoomInfo();
+  },
+
+  // 游客入座/观战：调用 join；已在其他房间时询问是否退出旧房间
+  _joinAsVisitor(seatNumber, keepLoading) {
+    if (!keepLoading) wx.showLoading({ title: seatNumber === -1 ? '进入观战区...' : '入座中...', mask: true });
+    api.joinRoom(this.data.roomId, seatNumber, this.data.userInfo || {}).then(res => {
+      if (!res.success) throw new Error((res && res.message) || '加入失败');
+      this._enterJoinedRoom(res.room);
+    }).catch(err => {
+      const msg = (err && err.message) || '加入失败';
+      if (msg.includes('已在其他房间') || msg.includes('已在房间中')) {
+        this._confirmSwitchRoom(seatNumber);
+        return;
+      }
+      wx.hideLoading();
+      wx.showToast({ title: msg, icon: 'none' });
     }).finally(() => wx.hideLoading());
   },
 
-  leaveSeat() {
+  _confirmSwitchRoom(seatNumber) {
+    api.getCurrentRoom(app.globalData.openId).then(res => {
+      const cur = res && res.room;
+      if (cur && cur.gameStarted && cur.seatNumber >= 1) {
+        wx.hideLoading();
+        wx.showToast({ title: '游戏进行中，无法退出当前房间', icon: 'none' });
+        return;
+      }
+      wx.showModal({
+        title: '已在其他房间',
+        content: '退出当前房间并加入？',
+        confirmText: '退出并加入',
+        success: r => {
+          if (!r.confirm) { wx.hideLoading(); return; }
+          if (!cur || !cur.roomId) {
+            this._joinAsVisitor(seatNumber);
+            return;
+          }
+          wx.showLoading({ title: '退出并加入...', mask: true });
+          api.leaveRoom(cur.roomId).then(leave => {
+            if (!leave.success) throw new Error((leave && leave.message) || '退出房间失败');
+            this._joinAsVisitor(seatNumber, true);
+          }).catch(err => {
+            wx.hideLoading();
+            wx.showToast({ title: (err && err.message) || '退出房间失败', icon: 'none' });
+          });
+        }
+      });
+    }).catch(() => {
+      wx.hideLoading();
+      wx.showToast({ title: '加入失败', icon: 'none' });
+    });
+  },
+
+  takeSeat(e) {
+    const seatNum = Number(e.currentTarget.dataset.seat);
+    if (!seatNum) return;
+    if (!this.data.currentUser) {
+      this._joinAsVisitor(seatNum);
+      return;
+    }
     if (!this._guard()) return;
-    wx.showLoading({ title: '请稍候...', mask: true });
-    api.updateSeatNumber(this.data.roomId, 0).then(() => {
+    wx.showLoading({ title: '入座中...', mask: true });
+    api.updateSeatNumber(this.data.roomId, seatNum).then(() => {
       this.fetchRoomInfo();
+    }).catch(err => {
+      wx.showToast({ title: (err && err.message) || '入座失败', icon: 'none' });
     }).finally(() => wx.hideLoading());
   },
 
   becomeSpectator() {
+    if (!this.data.currentUser) {
+      this._joinAsVisitor(-1);
+      return;
+    }
     if (!this._guard()) return;
-    wx.showLoading({ title: '请稍候...', mask: true });
+    wx.showLoading({ title: '进入观战区...', mask: true });
     api.updateSeatNumber(this.data.roomId, -1).then(() => {
-      this.fetchRoomInfo();
+      this._enterJoinedRoom(this.data.roomInfo);
+    }).catch(err => {
+      wx.showToast({ title: (err && err.message) || '操作失败', icon: 'none' });
     }).finally(() => wx.hideLoading());
   },
 
@@ -443,8 +493,10 @@ Page({
     const { id, seat } = e.currentTarget.dataset;
     // 已坐玩家：点击弹出玩家胜率弹窗
     if (id) { this.openPlayerStats(id); return; }
-    // 空座位：点击入座；已坐玩家（有 id）：点击不触发操作，长按才弹操作面板
-    if (!id && seat && this.data.currentUser && (this.data.currentUser.seatNumber < 1 || !this.data.currentUserReady)) {
+    // 空座位：游客/观战者/未准备玩家点击即可入座
+    if (!id && seat) {
+      const cu = this.data.currentUser;
+      if (cu && cu.seatNumber >= 1 && this.data.currentUserReady) return;
       this.takeSeat({ currentTarget: { dataset: { seat } } });
     }
   },
@@ -474,51 +526,44 @@ Page({
     const player = this.data.players.find(p => p.openId === playerId);
     if (!player) return;
     const myOpenId = app.globalData.openId;
-    if (player.openId === myOpenId) return;
-    const name = player.nickName || player.wxNickName || '玩家';
     const roomId = this.data.roomId;
-    const isHost = this.data.isHost;
-    const isBanned = player.bannedFromSeating;
 
-    // 长按：房主管理菜单（好友申请已移至玩家信息底部框）
-    const items = [];
-    const actions = [];
-    if (isHost) {
-      // 已入座玩家才可「踢出座位」（移回未入座区，不禁止上座）
-      if (player.seatNumber >= 1) { items.push('踢出座位'); actions.push('unseat'); }
-      items.push('踢出房间', isBanned ? '允许上座' : '禁止上座', '转让房主');
-      actions.push('kick', 'ban', 'transfer');
+    // 房主长按自己：下座 / 退出观战，保留房主身份
+    if (player.openId === myOpenId) {
+      if (!this.data.isHost || (player.seatNumber !== -1 && player.seatNumber < 1)) return;
+      const label = player.seatNumber === -1 ? '退出观战（保留房主）' : '下座（保留房主）';
+      wx.showModal({
+        title: label,
+        content: '将退出当前房间成员关系，但仍保留该房间的房主权限。',
+        success: r => {
+          if (!r.confirm) return;
+          wx.showLoading({ title: '处理中...', mask: true });
+          api.leaveRoom(roomId).then(() => {
+            this.fetchRoomInfo();
+          }).catch(err => {
+            wx.showToast({ title: (err && err.message) || '操作失败', icon: 'none' });
+          }).finally(() => wx.hideLoading());
+        }
+      });
+      return;
     }
 
-    if (items.length === 0) return;
-
+    if (!this.data.isHost) return;
+    const name = player.nickName || player.wxNickName || '玩家';
     wx.showActionSheet({
-      itemList: items,
-      success: (res) => {
-        const act = actions[res.tapIndex];
-        if (act === 'unseat') {
-          wx.showModal({
-            title: '踢出座位',
-            content: `确定将 ${name} 踢出座位吗？（不禁止其上座）`,
-            success: (r) => { if (r.confirm) api.kickPlayer(roomId, playerId, 'unseat').catch(() => {}); }
-          });
-        } else if (act === 'kick') {
+      itemList: ['踢出房间', '转让房主'],
+      success: res => {
+        if (res.tapIndex === 0) {
           wx.showModal({
             title: '踢出房间',
             content: `确定将 ${name} 踢出房间吗？`,
-            success: (r) => { if (r.confirm) api.kickPlayer(roomId, playerId, 'room').catch(() => {}); }
+            success: r => { if (r.confirm) api.kickPlayer(roomId, playerId).catch(() => {}); }
           });
-        } else if (act === 'ban') {
-          wx.showModal({
-            title: isBanned ? '允许上座' : '禁止上座',
-            content: `确定${isBanned ? '允许' : '禁止'} ${name} 上座吗？`,
-            success: (r) => { if (r.confirm) api.banFromSeating(roomId, playerId, !isBanned).catch(() => {}); }
-          });
-        } else if (act === 'transfer') {
+        } else if (res.tapIndex === 1) {
           wx.showModal({
             title: '转让房主',
-            content: `确定将房主转让给 ${name} 吗？转让后你将变为普通玩家。`,
-            success: (r) => {
+            content: `确定将房主转让给 ${name} 吗？转让后你将失去房主权限。`,
+            success: r => {
               if (r.confirm) {
                 api.transferOwner(roomId, playerId).then(() => {
                   wx.showToast({ title: '已转让', icon: 'success' });
@@ -531,20 +576,15 @@ Page({
     });
   },
 
-  // ─── Copy ───
-
-  copyRoomId() {
-    wx.setClipboardData({
-      data: this.data.roomId,
-      success: () => wx.showToast({ title: '会议ID已复制', icon: 'success' })
-    });
-  },
-
   leaveRoom() {
     api.leaveRoom(this.data.roomId).catch(() => {});
   },
 
   exitRoom() {
+    if (!this.data.currentUser) {
+      wx.navigateBack({ fail: () => wx.reLaunch({ url: '/pages/index/index' }) });
+      return;
+    }
     if (!this._guard()) return;
     wx.showModal({
       title: '退出房间',

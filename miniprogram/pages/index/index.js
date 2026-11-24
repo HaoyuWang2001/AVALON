@@ -4,8 +4,6 @@ const { getThemeClass, getThemeBg, getSwitchColor, applyTheme, THEME_OPTIONS } =
 const { DEFAULT_AVATAR } = require('../../utils/constants.js');
 const { buildRoomTags } = require('../../utils/roomTags.js');
 
-const DEFAULT_SEAT_NUMBER = 0;
-
 Page({
   data: {
     userInfo: { avatarUrl: '', nickName: '' },
@@ -101,149 +99,39 @@ Page({
     else if (roomId) this.doShareJoinFromRoom(roomId);
   },
 
-  // 来自 room 分享(index?roomId)：行为与 doJoinRoom 一致——room未游戏→room页；room游戏中→game页
+  // 分享/入口进入房间：统一按游客处理，不调用 join
+  _navigateRoomPage(roomId) {
+    if (!roomId || this._roomNavigating) return;
+    this._roomNavigating = true;
+    wx.navigateTo({
+      url: `/pages/room/room?roomId=${roomId}`,
+      fail: () => {
+        this._roomNavigating = false;
+        wx.showToast({ title: '进入房间失败', icon: 'none' });
+      }
+    });
+  },
+
+  _navigateGamePage(roomId, gameId) {
+    if (!gameId || this._roomNavigating) return;
+    this._roomNavigating = true;
+    const rid = roomId ? `&roomId=${roomId}` : '';
+    wx.navigateTo({
+      url: `/pages/game/game?gameId=${gameId}${rid}`,
+      fail: () => {
+        this._roomNavigating = false;
+        wx.showToast({ title: '进入对局失败', icon: 'none' });
+      }
+    });
+  },
+
   doShareJoinFromRoom(roomId) {
-    const app = getApp();
-    if (!app.globalData.openId) return;
-    wx.showLoading({ title: '加入房间...', mask: true });
-    api.joinRoom(roomId, DEFAULT_SEAT_NUMBER, this.data.userInfo || {}).then(res => {
-      wx.hideLoading();
-      if (res.success) {
-        app.globalData.roomId = roomId;
-        const room = res.room || {};
-        if (room.gameStarted && room.activeGameId) {
-          wx.navigateTo({ url: `/pages/game/game?gameId=${room.activeGameId}&roomId=${roomId}` });
-        } else {
-          wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}` });
-        }
-        return;
-      }
-      const msg = (res && res.message) || '';
-      if (msg.includes('已在其他房间') || msg.includes('已在房间中')) {
-        this.confirmLeaveAndJoin(roomId, null);
-      } else {
-        wx.showModal({
-          title: '加入失败', content: msg || '加入失败', showCancel: false,
-          success: () => wx.reLaunch({ url: '/pages/index/index' })
-        });
-      }
-    }).catch(err => {
-      wx.hideLoading();
-      wx.showModal({
-        title: '加入失败', content: (err && err.message) || '加入失败', showCancel: false,
-        success: () => wx.reLaunch({ url: '/pages/index/index' })
-      });
-    });
+    this._navigateRoomPage(roomId);
   },
 
-  // 来自 game 分享(index?roomId&gameId)：进行中→加入观战并进game；已结束→直接进game查看结果
+  // 直接分享的对局链接：游客只读查看；房间卡入口则先进入房间页
   doShareJoinFromGame(roomId, gameId) {
-    const app = getApp();
-    if (!app.globalData.openId) return;
-    wx.showLoading({ title: '查看对局...', mask: true });
-    api.getGameState(gameId).then(state => {
-      wx.hideLoading();
-      const status = state && state.basic && state.basic.status;
-      if (status === 'ended') {
-        wx.navigateTo({ url: `/pages/game/game?gameId=${gameId}&fromHistory=1` });
-        return;
-      }
-      if (status !== 'active') {
-        wx.showModal({
-          title: '对局不可用', content: '该对局已失效', showCancel: false,
-          success: () => wx.reLaunch({ url: '/pages/index/index' })
-        });
-        return;
-      }
-      wx.showLoading({ title: '加入观战...', mask: true });
-      api.joinRoom(roomId, DEFAULT_SEAT_NUMBER, this.data.userInfo || {}).then(res => {
-        wx.hideLoading();
-        if (res.success) {
-          app.globalData.roomId = roomId;
-          wx.navigateTo({ url: `/pages/game/game?gameId=${gameId}&roomId=${roomId}` });
-          return;
-        }
-        const msg = (res && res.message) || '';
-        if (msg.includes('已在其他房间') || msg.includes('已在房间中')) {
-          this.confirmLeaveAndJoin(roomId, gameId);
-        } else {
-          wx.showModal({
-            title: '无法观战', content: msg || '观战区已满或不可加入', showCancel: false,
-            success: () => wx.reLaunch({ url: '/pages/index/index' })
-          });
-        }
-      }).catch(err => {
-        wx.hideLoading();
-        wx.showModal({
-          title: '加入失败', content: (err && err.message) || '加入失败', showCancel: false,
-          success: () => wx.reLaunch({ url: '/pages/index/index' })
-        });
-      });
-    }).catch(err => {
-      wx.hideLoading();
-      wx.showModal({
-        title: '对局不可用', content: (err && err.message) || '获取对局失败', showCancel: false,
-        success: () => wx.reLaunch({ url: '/pages/index/index' })
-      });
-    });
-  },
-
-  // 在其他房间：若旧房间游戏中则不可退出；否则询问后退出并加入新房间（gameId 有则跳 game，无则跳 room）
-  confirmLeaveAndJoin(roomId, gameId) {
-    const app = getApp();
-    api.getCurrentRoom(app.globalData.openId).then(res => {
-      const cur = res && res.room;
-      if (cur && cur.gameStarted) {
-        wx.showToast({ title: '游戏进行中，无法退出当前房间', icon: 'none' });
-        return;
-      }
-      wx.showModal({
-        title: '已在其他房间',
-        content: '退出当前房间并加入新房间？',
-        confirmText: '退出并加入',
-        success: (r) => {
-          if (!r.confirm) return;
-
-          const joinTarget = () => {
-            api.joinRoom(roomId, DEFAULT_SEAT_NUMBER, this.data.userInfo || {}).then(res2 => {
-              if (!res2.success) throw new Error((res2 && res2.message) || '加入失败');
-              app.globalData.roomId = roomId;
-              const url = gameId
-                ? `/pages/game/game?gameId=${gameId}&roomId=${roomId}`
-                : `/pages/room/room?roomId=${roomId}`;
-              wx.navigateTo({
-                url,
-                success: () => wx.hideLoading(),
-                fail: () => {
-                  wx.hideLoading();
-                  wx.showToast({ title: '页面跳转失败', icon: 'none' });
-                }
-              });
-            }).catch(err => {
-              wx.hideLoading();
-              wx.showToast({ title: (err && err.message) || '加入失败', icon: 'none' });
-            });
-          };
-
-          // 保持 loading 遮罩覆盖「退出旧房 + 加入 + 页面切换」全过程
-          wx.showLoading({ title: '加入房间...', mask: true });
-          if (cur && cur.roomId) {
-            api.leaveRoom(cur.roomId).then(leaveRes => {
-              if (!leaveRes.success) throw new Error((leaveRes && leaveRes.message) || '退出房间失败');
-              joinTarget();
-            }).catch(err => {
-              wx.hideLoading();
-              wx.showToast({ title: (err && err.message) || '退出房间失败', icon: 'none' });
-            });
-          } else {
-            // 无旧房间信息，直接重新加入
-            joinTarget();
-          }
-        }
-      });
-    }).catch(() => {
-      wx.showToast({ title: '加入失败', icon: 'none' });
-    });
+    this._navigateGamePage(roomId, gameId);
   },
 
   onReady() {
@@ -403,10 +291,15 @@ Page({
         else if (mySeat === 0) { identityText = '等待'; identityClass = 'room-status-waiting'; }
         else if (mySeat >= 1) { identityText = '玩家'; identityClass = 'room-status-player'; }
       }
+      if (!identityText && isMineHost) {
+        identityText = '房主';
+        identityClass = 'room-status-host';
+      }
       return {
         ...r,
         isMine,
         isMineHost,
+        isPinned: isMine || isMineHost,
         statusText,
         statusClass,
         identityText,
@@ -415,8 +308,9 @@ Page({
         displayTags: showAllTags ? (r.tags || []) : (r.tags || []).slice(0, 3)
       };
     });
-    // 我的房间置顶（其余保持服务端 updated_at 倒序）
-    mapped.sort((a, b) => (b.isMine ? 1 : 0) - (a.isMine ? 1 : 0));
+    // 当前成员房间最优先，其次自己拥有的房间；其余保持服务端 updated_at 倒序
+    const pinRank = r => (r.isMine ? 2 : (r.isMineHost ? 1 : 0));
+    mapped.sort((a, b) => pinRank(b) - pinRank(a));
     const waiting = mapped.filter(r => !r.gameStarted).length;
     const playing = mapped.length - waiting;
     const wantPlaying = this.data.roomTab === 'playing';
@@ -453,7 +347,7 @@ Page({
     this._applyRoomData();
   },
 
-  // 点击公开房间卡：等待中→加入等待区进房间；游戏中→观战进对局
+  // 点击公开房间卡：先以游客进入房间页；不调用 join
   onPublicRoomTap(e) {
     if (this._roomNavigating) return;
     const id = e.currentTarget.dataset.id;
@@ -462,13 +356,7 @@ Page({
       this.backToRoom();
       return;
     }
-    const room = (this._allRooms || []).find(r => r.roomId === id);
-    if (room && room.gameStarted) {
-      if (room.activeGameId) this.doShareJoinFromGame(id, room.activeGameId);
-      else this.doShareJoinFromRoom(id);
-      return;
-    }
-    this.doShareJoinFromRoom(id);
+    this._navigateRoomPage(id);
   },
 
   onPullDownRefresh() {
@@ -823,21 +711,8 @@ Page({
     });
   },
 
-  // 主页"加入会议"入口：固定未入座(seat=0)；room未游戏→room页；room游戏中→game页
+  // 手输会议 ID：以游客进入房间页，不调用 join
   doJoinRoom(roomId) {
-    wx.showLoading({ title: '加入会议中...' });
-    api.joinRoom(roomId, DEFAULT_SEAT_NUMBER, this.data.userInfo || {}).then(res => {
-      wx.hideLoading();
-      if (res.success) {
-        const app = getApp();
-        app.globalData.roomId = roomId;
-        const room = res.room || {};
-        if (room.gameStarted && room.activeGameId) {
-          wx.navigateTo({ url: `/pages/game/game?gameId=${room.activeGameId}&roomId=${roomId}` });
-        } else {
-          wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}&isHost=false` });
-        }
-      }
-    });
+    this._navigateRoomPage(roomId);
   }
 });

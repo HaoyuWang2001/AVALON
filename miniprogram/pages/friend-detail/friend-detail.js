@@ -192,65 +192,21 @@ Page({
   spectate() {
     const f = this.data.friend;
     if (!f || !f.room || !f.room.gameStarted || !f.room.activeGameId) return;
-    this._joinRoom(f.room.roomId, f.room.activeGameId);
+    this._enterRoomAsVisitor(f.room.roomId);
   },
 
   enterRoom() {
     const f = this.data.friend;
     if (!f || !f.room || f.room.gameStarted) return;
-    this._joinRoom(f.room.roomId, null);
+    this._enterRoomAsVisitor(f.room.roomId);
   },
 
-  _joinRoom(roomId, gameId) {
-    wx.showLoading({ title: gameId ? '加入观战...' : '进入房间...', mask: true });
-    api.joinRoom(roomId, 0).then(res => {
-      wx.hideLoading();
-      if (res.success) {
-        getApp().globalData.roomId = roomId;
-        if (gameId) {
-          wx.navigateTo({ url: `/pages/game/game?gameId=${gameId}&roomId=${roomId}` });
-        } else {
-          wx.navigateTo({ url: `/pages/room/room?roomId=${roomId}` });
-        }
-        return;
-      }
-      const msg = (res && res.message) || '';
-      if (msg.includes('已在其他房间') || msg.includes('已在房间中')) {
-        this._confirmLeaveAndJoin(roomId, gameId);
-      } else {
-        wx.showToast({ title: msg || '加入失败', icon: 'none' });
-      }
-    }).catch(err => {
-      wx.hideLoading();
-      wx.showToast({ title: (err && err.message) || '加入失败', icon: 'none' });
+  _enterRoomAsVisitor(roomId) {
+    if (!roomId) return;
+    wx.navigateTo({
+      url: `/pages/room/room?roomId=${roomId}`,
+      fail: () => wx.showToast({ title: '进入房间失败', icon: 'none' })
     });
-  },
-
-  _confirmLeaveAndJoin(roomId, gameId) {
-    api.getCurrentRoom(this._openId).then(res => {
-      const cur = res && res.room;
-      if (cur && cur.gameStarted) {
-        wx.showToast({ title: '游戏进行中，无法退出当前房间', icon: 'none' });
-        return;
-      }
-      wx.showModal({
-        title: '已在其他房间',
-        content: '退出当前房间并加入？',
-        confirmText: '退出并加入',
-        success: (r) => {
-          if (r.confirm) {
-            if (cur && cur.roomId) {
-              api.leaveRoom(cur.roomId).then(leaveRes => {
-                if (leaveRes.success) this._joinRoom(roomId, gameId);
-                else wx.showToast({ title: (leaveRes && leaveRes.message) || '退出失败', icon: 'none' });
-              }).catch(() => {});
-            } else {
-              this._joinRoom(roomId, gameId);
-            }
-          }
-        }
-      });
-    }).catch(() => wx.showToast({ title: '加入失败', icon: 'none' }));
   },
 
   // ─── 删除好友 ───

@@ -181,8 +181,7 @@ class RoomModel {
       const newCount = (newRoles.good?.length || 0) + (newRoles.evil?.length || 0);
 
       if (newCount < oldCount) {
-        // 缩容：溢出玩家（座位 > 新人数）按座位号升序依次填入 1..newCount 的最小空位；
-        // 空位不足的再退回等待区（seat 0）。被移动/退回者均取消准备。
+        // 缩容：溢出玩家优先填入 1..newCount 空位；无空位则移出房间成为游客。被移动者取消准备。
         await db.transaction(async (connection) => {
           const [seatedRows] = await connection.execute(
             `SELECT open_id as openId, seat_number as seatNumber
@@ -209,9 +208,11 @@ class RoomModel {
                 [seat, roomId, p.openId]
               );
             } else {
+              // 等待区已移除：无空位的溢出玩家移出房间成为游客
+              await connection.execute('DELETE FROM room_players WHERE room_id = ? AND open_id = ?', [roomId, p.openId]);
               await connection.execute(
-                'UPDATE room_players SET seat_number = 0, is_ready = FALSE WHERE room_id = ? AND open_id = ?',
-                [roomId, p.openId]
+                'UPDATE users SET current_room_id = NULL WHERE open_id = ? AND current_room_id = ?',
+                [p.openId, roomId]
               );
             }
           }
@@ -263,7 +264,7 @@ class RoomModel {
 
       const players = await db.query(
         `SELECT rp.open_id as openId, rp.nick_name as nickName, rp.wx_nick_name as wxNickName, rp.avatar_url as avatarUrl,
-                rp.seat_number as seatNumber, rp.is_ready as isReady, rp.banned_from_seating as bannedFromSeating,
+                rp.seat_number as seatNumber, rp.is_ready as isReady,
                 u.titles
          FROM room_players rp
          LEFT JOIN users u ON u.open_id = rp.open_id
@@ -316,13 +317,16 @@ class RoomModel {
    * @param {string} userInfo.openId 用户openId
    * @param {string} userInfo.nickName 用户昵称
    * @param {string} userInfo.avatarUrl 用户头像URL
-   * @param {number} seatNumber 座位号(0=未入座, -1=观战, 1-n=入座)
+   * @param {number} seatNumber 座位号(-1=观战, 1-n=入座；0 已废弃)
    * @param {string} customNickName 自定义昵称
    * @returns {Promise<Object>} 加入结果
    */
   static async join(roomId, userInfo, seatNumber, customNickName = '') {
     const openId = userInfo.openId;
-    const seat = (seatNumber == null) ? 0 : seatNumber;
+    const seat = Number(seatNumber);
+    if (!Number.isInteger(seat) || seat === 0 || seat < -1) {
+      throw new Error('请选择座位进入或进入观战区');
+    }
     
     try {
       await db.transaction(async (connection) => {
@@ -386,7 +390,7 @@ class RoomModel {
   }
   
   /**
-   * 离开房间（仅非房主玩家可离开；房主禁止离开，房间任意时刻必须有房主）
+   * 离开房间成员关系（房主也可离开成员关系，但保留房间所有权）
    * @param {string} roomId 房间ID
    * @param {string} openId 用户openId
    * @returns {Promise<Object>} 更新后的房间信息
@@ -401,10 +405,7 @@ class RoomModel {
         if (roomRows.length === 0) {
           throw new Error('房间不存在');
         }
-        if (roomRows[0].owner_id === openId) {
-          throw new Error('房主不能离开房间，请转让房主或解散房间');
-        }
-        // 游戏进行中：仅非入座玩家（等待区0/观战-1）可退出；入座玩家参与对局不可退出
+        // 游戏进行中：观战者可退出；入座玩家参与对局不可退出（房主同样适用）
         if (roomRows[0].game_started) {
           const [seatRows] = await connection.execute(
             'SELECT seat_number FROM room_players WHERE room_id = ? AND open_id = ?',
@@ -419,7 +420,7 @@ class RoomModel {
           }
         }
         await connection.execute('DELETE FROM room_players WHERE room_id = ? AND open_id = ?', [roomId, openId]);
-        await connection.execute('UPDATE users SET current_room_id = NULL WHERE open_id = ?', [openId]);
+        await connection.execute('UPDATE users SET current_room_id = NULL WHERE open_id = ? AND current_room_id = ?', [openId, roomId]);
         await connection.execute('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
       });
       
@@ -470,34 +471,43 @@ class RoomModel {
   static async updateSeatNumber(roomId, openId, newSeatNumber) {
     try {
       await db.transaction(async (connection) => {
-        const [rooms] = await connection.execute('SELECT room_config, owner_id FROM rooms WHERE id = ? FOR UPDATE', [roomId]);
+        const [rooms] = await connection.execute('SELECT room_config, game_started, owner_id FROM rooms WHERE id = ? FOR UPDATE', [roomId]);
         if (rooms.length === 0) throw new Error('房间不存在');
         const roomConfig = rooms[0].room_config ? (typeof rooms[0].room_config === 'string' ? JSON.parse(rooms[0].room_config) : rooms[0].room_config) : null;
         const seatOwnerId = rooms[0].owner_id;
+        const gameStarted = !!rooms[0].game_started;
+        const newSeat = Number(newSeatNumber);
 
-        if (newSeatNumber === -1) {
+        if (!Number.isInteger(newSeat) || newSeat === 0 || newSeat < -1) {
+          throw new Error('座位号无效');
+        }
+
+        const [memberRows] = await connection.execute(
+          'SELECT seat_number FROM room_players WHERE room_id = ? AND open_id = ?',
+          [roomId, openId]
+        );
+        if (memberRows.length === 0) throw new Error('请先加入房间');
+        if (gameStarted && memberRows[0].seat_number >= 1) {
+          throw new Error('游戏进行中，无法离开座位');
+        }
+
+        if (newSeat === -1) {
           this._assertSpectatorAllowed(roomConfig);
         }
 
-        if (newSeatNumber >= 1) {
-          const [banCheck] = await connection.execute(
-            'SELECT banned_from_seating FROM room_players WHERE room_id = ? AND open_id = ?',
-            [roomId, openId]
-          );
-          if (banCheck.length > 0 && banCheck[0].banned_from_seating) {
-            throw new Error('你已被禁止上座');
-          }
+        if (newSeat >= 1) {
+          if (gameStarted) throw new Error('游戏已开始，无法入座');
           const [occupiedSeats] = await connection.execute(
             'SELECT COUNT(*) as count FROM room_players WHERE room_id = ? AND seat_number = ? AND open_id != ?',
-            [roomId, newSeatNumber, openId]
+            [roomId, newSeat, openId]
           );
           if (occupiedSeats[0].count > 0) throw new Error('座位已被占用');
         }
-        
-        const seatReady = (seatOwnerId === openId && newSeatNumber >= 1) ? 1 : 0;
+
+        const seatReady = (seatOwnerId === openId && newSeat >= 1) ? 1 : 0;
         await connection.execute(
           'UPDATE room_players SET seat_number = ?, is_ready = ? WHERE room_id = ? AND open_id = ?',
-          [newSeatNumber, seatReady, roomId, openId]
+          [newSeat, seatReady, roomId, openId]
         );
         
         await connection.execute(
@@ -514,48 +524,21 @@ class RoomModel {
   }
   
   /**
-   * 踢出玩家
+   * 踢出玩家（移除成员关系成为游客）
    * @param {string} roomId 房间ID
    * @param {string} playerId 被踢玩家openId
-   * @param {string} mode 'room'=踢出房间, 'unseat'=踢到未入座区
    * @returns {Promise<Object>} 更新后的房间信息
    */
-  static async kickPlayer(roomId, playerId, mode = 'room') {
+  static async kickPlayer(roomId, playerId) {
     try {
-      if (mode === 'unseat') {
-        await db.query(
-          'UPDATE room_players SET seat_number = 0, is_ready = FALSE WHERE room_id = ? AND open_id = ?',
-          [roomId, playerId]
-        );
-      } else {
-        await db.query('DELETE FROM room_players WHERE room_id = ? AND open_id = ?', [roomId, playerId]);
-        await db.query('UPDATE users SET current_room_id = NULL WHERE open_id = ?', [playerId]);
-      }
-      
-      await db.query(
-        'UPDATE rooms SET updated_at = NOW() WHERE id = ?',
-        [roomId]
-      );
-      
-      return await this.getById(roomId);
-    } catch (error) {
-      console.error('踢出玩家失败:', error);
-      throw error;
-    }
-  }
-
-  static async banFromSeating(roomId, playerId, banned) {
-    try {
-      await db.query(
-        banned
-          ? 'UPDATE room_players SET is_ready = FALSE, seat_number = IF(seat_number >= 1, 0, seat_number), banned_from_seating = ? WHERE room_id = ? AND open_id = ?'
-          : 'UPDATE room_players SET banned_from_seating = ? WHERE room_id = ? AND open_id = ?',
-        banned ? [banned, roomId, playerId] : [banned, roomId, playerId]
-      );
+      const room = await this.getById(roomId);
+      if (room && room.ownerId === playerId) throw new Error('不能踢出房主');
+      await db.query('DELETE FROM room_players WHERE room_id = ? AND open_id = ?', [roomId, playerId]);
+      await db.query('UPDATE users SET current_room_id = NULL WHERE open_id = ? AND current_room_id = ?', [playerId, roomId]);
       await db.query('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
       return await this.getById(roomId);
     } catch (error) {
-      console.error('禁止上座操作失败:', error);
+      console.error('踢出玩家失败:', error);
       throw error;
     }
   }
@@ -623,10 +606,10 @@ class RoomModel {
     const seatNumbers = seated.map(p => p.seatNumber).sort((a, b) => a - b);
 
     await db.transaction(async (connection) => {
-      for (const p of seated) {
+      for (let i = 0; i < seated.length; i++) {
         await connection.execute(
-          'UPDATE room_players SET seat_number = 0 WHERE room_id = ? AND open_id = ?',
-          [roomId, p.openId]
+          'UPDATE room_players SET seat_number = ? WHERE room_id = ? AND open_id = ?',
+          [-(1000 + i), roomId, seated[i].openId]
         );
       }
       for (let i = 0; i < shuffled.length; i++) {

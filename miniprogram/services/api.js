@@ -114,11 +114,11 @@ class ApiService {
     });
   }
 
-  async kickPlayer(roomId, playerId, mode) {
+  async kickPlayer(roomId, playerId) {
     const openId = this.openId || getApp().globalData.openId;
     return this.request('/rooms/kickPlayer', {
       method: 'POST',
-      data: { roomId, playerId, mode: mode || 'room', openId }
+      data: { roomId, playerId, openId }
     });
   }
 
@@ -135,14 +135,6 @@ class ApiService {
     return this.request(`/rooms/${roomId}/randomSeats`, {
       method: 'POST',
       data: { openId }
-    });
-  }
-
-  async banFromSeating(roomId, playerId, banned) {
-    const openId = this.openId || getApp().globalData.openId;
-    return this.request(`/rooms/${roomId}/banSeat`, {
-      method: 'POST',
-      data: { playerId, banned, openId }
     });
   }
 
