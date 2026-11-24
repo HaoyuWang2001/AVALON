@@ -253,6 +253,9 @@ Page({
   },
 
   onShow() {
+    // 返回首页时清理可能残留的滑动手势/加载/导航状态
+    this._clearRoomPan(true);
+    this._roomNavigating = false;
     this.setData({ compactGame: !!wx.getStorageSync('avalon_compact_game') });
     // 从个人页返回：同步头像/昵称修改
     const savedNick = wx.getStorageSync('customNickName') || '';
@@ -483,7 +486,8 @@ Page({
     const dy = t.clientY - s.y;
 
     if (!this._roomPanLocked) {
-      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      // 提高横滑判定阈值，避免点击时轻微抖动手势被当成滑动
+      if (Math.abs(dx) > 24 && Math.abs(dx) > Math.abs(dy) * 1.2) {
         this._roomPanLocked = true;
       } else if (Math.abs(dy) > 10) {
         this._roomPanIgnore = true; // 纵向滚动，不拦截
@@ -493,7 +497,7 @@ Page({
       }
     }
 
-    if (Math.abs(dx) > 10) this._roomSwipeMoved = true;
+    if (Math.abs(dx) > 24) this._roomSwipeMoved = true;
     const W = this._roomW || 375;
     const target = dx < 0 ? 'playing' : 'waiting';
     let x = target === this.data.roomTab ? dx * 0.35 : dx; // 已到边缘时加阻尼
@@ -523,6 +527,8 @@ Page({
       this._animateRoomSwitch(target, dx < 0 ? -1 : 1);
       return;
     }
+    // 未触发 Tab 切换：立即解除点击拦截状态，再回弹
+    this._roomSwipeMoved = false;
     this._resetRoomPan();
   },
 
@@ -580,7 +586,7 @@ Page({
 
   // 点击公开房间卡：等待中→加入等待区进房间；游戏中→观战进对局
   onPublicRoomTap(e) {
-    if (this._roomAnimating || this._roomSwipeMoved) return;
+    if (this._roomAnimating || this._roomNavigating) return;
     const id = e.currentTarget.dataset.id;
     if (!id) return;
     if (this.data.currentRoom && this.data.currentRoom.roomId === id) {
@@ -622,13 +628,18 @@ Page({
 
   backToRoom() {
     const room = this.data.currentRoom;
-    if (!room) return;
-    // 游戏进行中且存在 active gameId → 进入游戏；否则回到房间
-    if (room.gameStarted && room.gameId) {
-      wx.navigateTo({ url: `/pages/game/game?gameId=${room.gameId}&roomId=${room.roomId}` });
-    } else {
-      wx.navigateTo({ url: `/pages/room/room?roomId=${room.roomId}` });
-    }
+    if (!room || this._roomNavigating) return;
+    this._roomNavigating = true;
+    const url = (room.gameStarted && room.gameId)
+      ? `/pages/game/game?gameId=${room.gameId}&roomId=${room.roomId}`
+      : `/pages/room/room?roomId=${room.roomId}`;
+    wx.navigateTo({
+      url,
+      fail: () => {
+        this._roomNavigating = false;
+        wx.showToast({ title: '进入房间失败', icon: 'none' });
+      }
+    });
   },
 
   loadUserProfile() {
