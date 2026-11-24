@@ -6,14 +6,12 @@ button { margin: 0; padding: 0; width: auto; }
 button::after { border: none; }
 
 .container { padding: 24rpx; }
-.container.with-start-bar { padding-bottom: calc(152rpx + env(safe-area-inset-bottom)); }
+.container.with-start-bar { padding-bottom: calc(168rpx + env(safe-area-inset-bottom)); }
 
 /* ─── 开始游戏（长按读条） ─── */
 .start-game-bar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
-  padding: 20rpx 40rpx calc(20rpx + env(safe-area-inset-bottom));
-  background: var(--bg-card);
-  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+  position: fixed; left: 40rpx; right: 40rpx; bottom: calc(32rpx + env(safe-area-inset-bottom));
+  z-index: 50; padding: 0; background: transparent; box-shadow: none;
   text-align: center;
 }
 .start-game-btn {
@@ -21,6 +19,7 @@ button::after { border: none; }
   width: 100%; height: 88rpx; border-radius: 12rpx;
   display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);
 }
 .start-game-btn.start-game-disabled { background: var(--gray-200); box-shadow: none; }
 .start-game-btn.ready-active {
@@ -31,6 +30,7 @@ button::after { border: none; }
   vertical-align: middle;
   border-radius: 999rpx;
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);
 }
 .start-game-btn.charging { transform: scale(0.97); filter: brightness(1.15); }
 .start-game-btn.charged { animation: sg-breathe 0.45s ease-in-out infinite; }
