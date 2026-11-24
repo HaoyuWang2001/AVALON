@@ -30,6 +30,16 @@
     </view>
   </top-bar>
 
+  <!-- 首次进入：固定最短 0.5s 的主题加载遮罩 -->
+  <view class="game-loading-mask" wx:if="{{gameLoading}}">
+    <view class="game-loading-dots">
+      <view class="game-loading-dot d1"></view>
+      <view class="game-loading-dot d2"></view>
+      <view class="game-loading-dot d3"></view>
+    </view>
+    <text class="game-loading-text">加载对局...</text>
+  </view>
+
   <view class="container {{compactGame ? 'container-compact' : ''}}">
   <!-- 角色揭示提示蒙版（一次性） -->
   <view class="role-mask" wx:if="{{showRoleMask}}" catchtouchmove="noop">

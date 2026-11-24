@@ -14,7 +14,9 @@
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "backgroundColor": "#F5F5F5",
+    "backgroundColor": "#111114",
+    "backgroundColorTop": "#111114",
+    "backgroundColorBottom": "#111114",
     "navigationBarBackgroundColor": "#2c3e50",
     "navigationBarTitleText": "AVALON",
     "navigationBarTextStyle": "white"

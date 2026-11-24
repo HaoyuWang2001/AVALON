@@ -12,7 +12,7 @@ const {
 
 Page({
   data: {
-    themeClass: '',
+    themeClass: getThemeClass(),
     roomId: '',
     playerCount: 0,
     players: [],
@@ -52,6 +52,10 @@ Page({
     const { roomId } = options;
     const launchAnim = wx.getStorageSync('avalon_launch_anim') || 'A';
     const tc = getThemeClass();
+    this._roomLoadingStartAt = Date.now();
+    this._roomLoadingDone = false;
+    clearTimeout(this._roomLoadingTimer);
+    wx.setBackgroundColor({ backgroundColor: getThemeBg(tc) });
     this.setData({
       themeClass: tc,
       roomId: roomId || '',
@@ -84,6 +88,7 @@ Page({
     if (this._readyTimer) clearInterval(this._readyTimer);
     this._stopVibration();
     if (this._launchTimer) clearTimeout(this._launchTimer);
+    clearTimeout(this._roomLoadingTimer);
     if (this.leaving) this.leaveRoom();
   },
 
@@ -110,6 +115,17 @@ Page({
 
   initRoomPolling() {
     this.roomPolling = setInterval(() => { this.fetchRoomInfo(); }, 1000);
+  },
+
+  _finishRoomLoading() {
+    if (this._roomLoadingDone) return;
+    this._roomLoadingDone = true;
+    const wait = Math.max(0, 500 - (Date.now() - (this._roomLoadingStartAt || Date.now())));
+    if (wait > 0) {
+      this._roomLoadingTimer = setTimeout(() => this.setData({ roomLoading: false }), wait);
+    } else {
+      this.setData({ roomLoading: false });
+    }
   },
 
   fetchRoomInfo() {
@@ -165,9 +181,9 @@ Page({
           spectatorAllowed: spectatorAllowed,
           seatsFull: seats.length > 0 && seats.every(s => s.occupied),
           currentUserReady: currentUser ? readyPlayers.includes(currentUser.openId) : false,
-          showBottomBar: (room.ownerId === app.globalData.openId) || !!(currentUser && currentUser.seatNumber >= 1),
-          roomLoading: false
+          showBottomBar: (room.ownerId === app.globalData.openId) || !!(currentUser && currentUser.seatNumber >= 1)
         });
+        this._finishRoomLoading();
 
         let canStart = playerCount > 0;
         let hint = '';
@@ -191,7 +207,7 @@ Page({
           }, 5000);
         }
       } else {
-        this.setData({ roomLoading: false });
+        this._finishRoomLoading();
         const msg = (res && res.message) || '';
         if (msg.includes('房间不存在')) {
           // 房间不存在：停止轮询 + 回首页
@@ -202,7 +218,7 @@ Page({
         }
       }
     }).catch(() => {
-      this.setData({ roomLoading: false });
+      this._finishRoomLoading();
     });
   },
 

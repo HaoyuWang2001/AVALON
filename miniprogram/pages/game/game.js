@@ -166,7 +166,7 @@ function getTeamSizeByRound(playerCount, round) {
 
 Page({
   data: {
-    themeClass: '',
+    themeClass: getThemeClass(),
     roomId: '',
     gameId: '',
     isHistory: false,
@@ -297,6 +297,7 @@ Page({
     isForcedCar: false,
     voteRevealEndAt: 0,
     voteRevealRemaining: 0,
+    gameLoading: true,
     showMissionAnim: false,
     missionAnimSuccess: false,
     bottomBarRawHeight: 0,
@@ -316,8 +317,13 @@ Page({
       }, 800);
       return;
     }
+    const tc = getThemeClass();
+    this._gameLoadingStartAt = Date.now();
+    this._gameLoadingDone = false;
+    clearTimeout(this._gameLoadingTimer);
+    wx.setBackgroundColor({ backgroundColor: getThemeBg(tc) });
     this.setData({
-      themeClass: getThemeClass(),
+      themeClass: tc,
       roomId: roomId || '',
       gameId: gameId || '',
       isHistory: fromHistory === '1' || fromHistory === 'true',
@@ -389,6 +395,7 @@ Page({
 
   onUnload() {
     this._stopTimer();
+    clearTimeout(this._gameLoadingTimer);
     if (this._gamePollingTimer) { clearInterval(this._gamePollingTimer); this._gamePollingTimer = null; }
     if (this._teamVoteRevealTimer) clearInterval(this._teamVoteRevealTimer);
     if (this._assnAnimTimer) clearTimeout(this._assnAnimTimer);
@@ -417,6 +424,17 @@ Page({
       this.syncGamePolling();
     }
     // 'connecting' 不改变状态，避免初始加载与重连中途闪烁
+  },
+
+  _finishGameLoading() {
+    if (this._gameLoadingDone) return;
+    this._gameLoadingDone = true;
+    const wait = Math.max(0, 500 - (Date.now() - (this._gameLoadingStartAt || Date.now())));
+    if (wait > 0) {
+      this._gameLoadingTimer = setTimeout(() => this.setData({ gameLoading: false }), wait);
+    } else {
+      this.setData({ gameLoading: false });
+    }
   },
 
   fetchGameState() {
@@ -885,8 +903,10 @@ Page({
             wx.disableAlertBeforeUnload();
           }
         }
+        this._finishGameLoading();
       }
     }).catch(err => {
+      this._finishGameLoading();
       console.error('获取游戏状态失败:', err);
     });
   },

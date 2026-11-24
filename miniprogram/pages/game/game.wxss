@@ -1,3 +1,21 @@
+.game-loading-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 5000;
+  background: var(--bg-page);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20rpx;
+}
+.game-loading-dots { display: flex; align-items: center; gap: 12rpx; }
+.game-loading-dot {
+  width: 14rpx; height: 14rpx; border-radius: 50%; background: var(--primary);
+  opacity: 0.35; animation: game-loading-bounce 0.9s infinite ease-in-out;
+}
+.game-loading-dot.d2 { animation-delay: 0.15s; }
+.game-loading-dot.d3 { animation-delay: 0.3s; }
+.game-loading-text { font-size: 24rpx; color: var(--text-muted); }
+@keyframes game-loading-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.35; }
+  40% { transform: translateY(-10rpx); opacity: 1; }
+}
+
 /* pages/game/game.wxss */
 
 /* ─────── 任务进度卡 ─────── */
