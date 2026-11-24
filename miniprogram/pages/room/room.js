@@ -253,7 +253,7 @@ Page({
         return;
       }
       wx.hideLoading();
-      wx.showToast({ title: msg, icon: 'none' });
+      wx.showModal({ title: '无法加入', content: msg, showCancel: false, confirmText: '知道了' });
     }).finally(() => wx.hideLoading());
   },
 
@@ -262,7 +262,12 @@ Page({
       const cur = res && res.room;
       if (cur && cur.gameStarted && cur.seatNumber >= 1) {
         wx.hideLoading();
-        wx.showToast({ title: '游戏进行中，无法退出当前房间', icon: 'none' });
+        wx.showModal({
+          title: '游戏进行中',
+          content: `当前房间 ${cur.roomId} 的对局尚未结束，无法退出后加入其他房间`,
+          showCancel: false,
+          confirmText: '知道了'
+        });
         return;
       }
       wx.showModal({
@@ -287,7 +292,7 @@ Page({
       });
     }).catch(() => {
       wx.hideLoading();
-      wx.showToast({ title: '加入失败', icon: 'none' });
+      wx.showModal({ title: '无法加入', content: '获取当前房间信息失败，请稍后重试', showCancel: false, confirmText: '知道了' });
     });
   },
 
@@ -512,7 +517,7 @@ Page({
     // 空座位：游客/观战者/未准备玩家点击即可入座
     if (!id && seat) {
       const cu = this.data.currentUser;
-      if (cu && cu.seatNumber >= 1 && this.data.currentUserReady) return;
+      if (cu && cu.seatNumber >= 1 && this.data.currentUserReady && !this.data.isHost) return;
       this.takeSeat({ currentTarget: { dataset: { seat } } });
     }
   },
@@ -536,6 +541,26 @@ Page({
     });
   },
 
+  stepDownHost() {
+    const cu = this.data.currentUser;
+    if (!this.data.isHost || !cu || (cu.seatNumber !== -1 && cu.seatNumber < 1)) return;
+    const isSpectator = cu.seatNumber === -1;
+    wx.showModal({
+      title: isSpectator ? '退出观战（保留房主）' : '下座（保留房主）',
+      content: '将退出当前房间成员关系，但仍保留该房间的房主权限。',
+      success: r => {
+        if (!r.confirm) return;
+        wx.showLoading({ title: '处理中...', mask: true });
+        api.leaveRoom(this.data.roomId).then(() => {
+          this.fetchRoomInfo();
+        }).catch(err => {
+          wx.hideLoading();
+          wx.showModal({ title: '操作失败', content: (err && err.message) || '操作失败', showCancel: false });
+        }).finally(() => wx.hideLoading());
+      }
+    });
+  },
+
   onPlayerAction(e) {
     const playerId = e.currentTarget.dataset.id;
     if (!playerId) return;
@@ -546,21 +571,7 @@ Page({
 
     // 房主长按自己：下座 / 退出观战，保留房主身份
     if (player.openId === myOpenId) {
-      if (!this.data.isHost || (player.seatNumber !== -1 && player.seatNumber < 1)) return;
-      const label = player.seatNumber === -1 ? '退出观战（保留房主）' : '下座（保留房主）';
-      wx.showModal({
-        title: label,
-        content: '将退出当前房间成员关系，但仍保留该房间的房主权限。',
-        success: r => {
-          if (!r.confirm) return;
-          wx.showLoading({ title: '处理中...', mask: true });
-          api.leaveRoom(roomId).then(() => {
-            this.fetchRoomInfo();
-          }).catch(err => {
-            wx.showToast({ title: (err && err.message) || '操作失败', icon: 'none' });
-          }).finally(() => wx.hideLoading());
-        }
-      });
+      this.stepDownHost();
       return;
     }
 

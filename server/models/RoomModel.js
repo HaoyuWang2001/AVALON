@@ -547,6 +547,8 @@ class RoomModel {
     const room = await this.getById(roomId);
     if (!room) throw new Error('房间不存在');
     if (room.ownerId !== currentOwnerId) throw new Error('仅房主可转让');
+    const owned = await db.query('SELECT id FROM rooms WHERE owner_id = ? AND id <> ? LIMIT 1', [newOwnerId, roomId]);
+    if (owned.length > 0) throw new Error('对方已有一个房间');
     await db.query('UPDATE rooms SET owner_id = ?, updated_at = NOW() WHERE id = ? AND owner_id = ?', [newOwnerId, roomId, currentOwnerId]);
     await db.query(
       'UPDATE room_players SET is_ready = TRUE WHERE room_id = ? AND open_id = ? AND seat_number >= 1',

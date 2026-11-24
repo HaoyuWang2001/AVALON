@@ -76,7 +76,26 @@ describe('02 — Room Management', () => {
       await createRoom(hostId, 'H');
       const res = await apiPost('/api/rooms/create', { hostOpenId: hostId, hostNickName: 'H', roomConfig: validConfig() });
       expect(res.status).toBe(400);
-      expect(res.body.message).toMatch(/其他房间/);
+      expect(res.body.message).toMatch(/已有一个房间/);
+    });
+
+    it('02.4b 房主下座后仍不能再创建房间', async () => {
+      const hostId = makeUserId();
+      const first = await createRoom(hostId, 'H');
+      await leaveRoom(first.roomId, hostId); // 退出成员关系，仍保留房主
+      const res = await apiPost('/api/rooms/create', { hostOpenId: hostId, hostNickName: 'H', roomConfig: validConfig() });
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/已有一个房间/);
+    });
+
+    it('02.4c getCurrentRoom 返回无成员关系时的 ownedRoomId', async () => {
+      const hostId = makeUserId();
+      const first = await createRoom(hostId, 'H');
+      await leaveRoom(first.roomId, hostId);
+      const res = await apiGet(`/api/players/${hostId}/currentRoom`);
+      expect(res.status).toBe(200);
+      expect(res.body.room).toBeNull();
+      expect(res.body.ownedRoomId).toBe(first.roomId);
     });
   });
 
@@ -519,6 +538,18 @@ describe('02 — Room Management', () => {
       expect(room.room.ownerId).toBe(uid);
       expect(room.room.players.find(p => p.openId === uid).isHost).toBe(true);
       expect(room.room.players.find(p => p.openId === hostId).isHost).toBe(false);
+    });
+
+    it('02.33b 转让给已拥有房间的玩家 → 400', async () => {
+      const hostId = makeUserId();
+      const target = makeUserId();
+      const targetRoom = await createRoom(target, 'OtherOwner');
+      await leaveRoom(targetRoom.roomId, target);
+      const result = await createRoom(hostId, 'Host');
+      await joinRoom(result.roomId, target, 2, 'Target');
+      const res = await apiPost(`/api/rooms/${result.roomId}/transferOwner`, { currentOwnerId: hostId, newOwnerId: target });
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/已有一个房间/);
     });
 
     it('02.34 非房主转让 → 403', async () => {

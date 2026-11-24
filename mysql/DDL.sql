@@ -37,7 +37,7 @@ CREATE TABLE rooms (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_updated_at (updated_at),
-    INDEX idx_owner_id (owner_id)
+    UNIQUE KEY uk_owner (owner_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='房间表';
 
 ALTER TABLE users ADD FOREIGN KEY (current_room_id) REFERENCES rooms(id) ON DELETE SET NULL;

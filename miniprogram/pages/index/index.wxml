@@ -44,7 +44,7 @@
   </view>
 
   <!-- 召开会议 / 加入会议（合并按钮：(A) 对角全切；默认浅色，深色主题覆盖） -->
-  <view class="meeting-btn {{meetingFillClass}}" style="--fill-ms:{{meetingFillMs}}ms;{{meetingPressStyle}}" wx:if="{{!currentRoom}}">
+  <view class="meeting-btn {{meetingFillClass}}" style="--fill-ms:{{meetingFillMs}}ms;{{meetingPressStyle}}">
     <view class="meeting-fill"></view>
     <view class="meeting-zone lead" data-side="lead"
           bindtouchstart="onMeetingTouchStart" bindtouchmove="onMeetingTouchMove" bindtouchend="onMeetingTouchEnd" bindtouchcancel="onMeetingTouchCancel">

@@ -9,6 +9,7 @@ Page({
     userInfo: { avatarUrl: '', nickName: '' },
     customNickName: '',
     currentRoom: null,
+    ownedRoomId: '',
 
     themeClass: '',
     myRank: 0,
@@ -500,11 +501,11 @@ Page({
     const openId = getApp().globalData.openId || wx.getStorageSync('openId');
     if (!openId) return;
     api.getCurrentRoom(openId).then(res => {
-      if (res && res.success && res.room) {
-        this.setData({ currentRoom: res.room });
-        this._applyRoomData();
-      } else if (res && res.success) {
-        this.setData({ currentRoom: null });
+      if (res && res.success) {
+        this.setData({
+          currentRoom: res.room || null,
+          ownedRoomId: res.ownedRoomId || ''
+        });
         this._applyRoomData();
       }
     }).catch(() => {});
@@ -817,6 +818,65 @@ Page({
 
   // ─────────── 配置页（pages/configs/configs） ───────────
   openConfigs() {
+    if (this.data.ownedRoomId) {
+      wx.showModal({
+        title: '已有房间',
+        content: '你已有一个房间，请先解散原房间',
+        confirmText: '进入我的房间',
+        cancelText: '取消',
+        success: (r) => {
+          if (!r.confirm) return;
+          if (this.data.currentRoom && this.data.currentRoom.roomId === this.data.ownedRoomId) {
+            this.backToRoom();
+          } else {
+            this._navigateRoomPage(this.data.ownedRoomId);
+          }
+        }
+      });
+      return;
+    }
+
+    const cur = this.data.currentRoom;
+    if (cur) {
+      if (cur.gameStarted && cur.seatNumber >= 1) {
+        wx.showModal({
+          title: '游戏进行中',
+          content: '当前对局尚未结束，无法退出后召开新会议',
+          showCancel: false,
+          confirmText: '知道了'
+        });
+        return;
+      }
+      wx.showModal({
+        title: '召开会议',
+        content: `将退出当前房间 ${cur.roomId} 后召开新会议，是否继续？`,
+        confirmText: '退出并召开',
+        success: (r) => {
+          if (!r.confirm) return;
+          wx.showLoading({ title: '退出房间...', mask: true });
+          api.leaveRoom(cur.roomId).then(leave => {
+            if (!leave.success) throw new Error((leave && leave.message) || '退出房间失败');
+            this.setData({ currentRoom: null });
+            this._applyRoomData();
+            wx.hideLoading();
+            this._openConfigsPage();
+          }).catch(err => {
+            wx.hideLoading();
+            wx.showModal({
+              title: '无法召开会议',
+              content: (err && err.message) || '退出当前房间失败',
+              showCancel: false
+            });
+          });
+        }
+      });
+      return;
+    }
+
+    this._openConfigsPage();
+  },
+
+  _openConfigsPage() {
     const ui = { ...(this.data.userInfo || {}), customNickName: this.data.customNickName };
     wx.navigateTo({
       url: '/pages/configs/configs?mode=create',

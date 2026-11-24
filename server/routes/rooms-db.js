@@ -30,6 +30,17 @@ function createRouter() {
         });
       }
 
+      const owned = await db.query(
+        'SELECT id FROM rooms WHERE owner_id = ? LIMIT 1',
+        [hostOpenId]
+      );
+      if (owned.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: '你已有一个房间，请先解散原房间'
+        });
+      }
+
       const existing = await db.query(
         'SELECT current_room_id FROM users WHERE open_id = ?',
         [hostOpenId]
@@ -60,6 +71,9 @@ function createRouter() {
 
       if (error.message.includes('缺少') || error.message.includes('未知角色') || error.message.includes('必须是') || error.message.includes('必须为')) {
         return res.status(400).json({ success: false, message: error.message });
+      }
+      if (error.code === 'ER_DUP_ENTRY' || /ER_DUP_ENTRY|uk_owner/.test(error.message || '')) {
+        return res.status(400).json({ success: false, message: '你已有一个房间，请先解散原房间' });
       }
 
       res.status(500).json({ 
@@ -415,6 +429,9 @@ function createRouter() {
       res.json({ success: true, room, message: '房主已转让' });
     } catch (error) {
       if (error.message.includes('仅房主')) return res.status(403).json({ success: false, message: error.message });
+      if (error.message.includes('已有一个房间') || error.code === 'ER_DUP_ENTRY' || /ER_DUP_ENTRY|uk_owner/.test(error.message || '')) {
+        return res.status(400).json({ success: false, message: error.message || '对方已有一个房间' });
+      }
       res.status(500).json({ success: false, message: error.message });
     }
   });

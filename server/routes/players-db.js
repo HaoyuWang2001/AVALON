@@ -9,7 +9,8 @@ function createRouter() {
       const { openId } = req.params;
       const rows = await db.query(
         `SELECT u.current_room_id as room_id, r.game_started, r.owner_id, g.id as game_id,
-                rp.seat_number as seat_number
+                rp.seat_number as seat_number,
+                (SELECT id FROM rooms WHERE owner_id = u.open_id ORDER BY created_at LIMIT 1) AS owned_room_id
          FROM users u
          LEFT JOIN rooms r ON u.current_room_id = r.id
          LEFT JOIN games g ON r.id = g.room_id AND g.status = 'active'
@@ -27,10 +28,11 @@ function createRouter() {
             gameId: rows[0].game_id || null,
             ownerId: rows[0].owner_id || null,
             seatNumber: rows[0].seat_number === null || rows[0].seat_number === undefined ? null : rows[0].seat_number
-          }
+          },
+          ownedRoomId: rows[0].owned_room_id || null
         });
       } else {
-        res.json({ success: true, room: null });
+        res.json({ success: true, room: null, ownedRoomId: (rows[0] && rows[0].owned_room_id) || null });
       }
     } catch (error) {
       console.error('查询当前房间错误:', error);
