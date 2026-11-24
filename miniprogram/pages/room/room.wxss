@@ -16,7 +16,8 @@ button::after { border: none; }
 }
 .start-game-btn {
   position: relative; overflow: hidden;
-  width: 100%; height: 88rpx; border-radius: 12rpx;
+  width: 66.67vw; max-width: 100%; height: 88rpx; border-radius: 12rpx;
+  margin: 0 auto;
   display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
   box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);
