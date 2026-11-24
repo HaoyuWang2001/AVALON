@@ -15,6 +15,7 @@
   <top-bar>
     <view slot="left" class="top-icons">
       <text wx:if="{{isHost && currentPhase !== 'gameEnd'}}" class="top-text-danger" bindtap="abandonGame">炸车</text>
+      <view wx:if="{{currentPhase === 'gameEnd' && myAwards}}" class="award-top-btn" bindtap="openAwardModal">MVP/SVP</view>
     </view>
     <view slot="center" class="top-mini-actions">
       <view wx:if="{{spectators.length > 0 && currentPhase !== 'gameEnd'}}" class="spec-top-btn" bindtap="toggleSpectatorPopup">
@@ -318,10 +319,6 @@
     <view class="bar-row" wx:if="{{!isHistory}}">
       <button size="mini" class="btn btn-primary" bindtap="goRoom">回到房间</button>
     </view>
-    <!-- MVP/SVP：有未处理奖项（未选/曾跳过）时提供手动入口 -->
-    <view class="bar-row" wx:if="{{myAwards && (myAwards.mvp.state === 'none' || myAwards.svp.state === 'none')}}">
-      <button size="mini" class="btn btn-primary award-entry-btn" bindtap="openAwardModal">MVP / SVP</button>
-    </view>
   </block>
     </block>
   </view>
@@ -595,9 +592,27 @@
     <view class="award-mask" bindtap="closeAwardModal"></view>
     <view class="award-panel">
       <view class="award-head">
-        <text class="award-title">{{awardModal.step === 'mvp' ? 'MVP' : 'SVP'}}</text>
+        <text class="award-title">{{awardModal.viewMode ? '我的 MVP / SVP' : (awardModal.step === 'mvp' ? 'MVP' : 'SVP')}}</text>
         <text class="award-close" bindtap="closeAwardModal">✕</text>
       </view>
+      <block wx:if="{{awardModal.viewMode}}">
+        <view class="award-view">
+          <view class="award-view-row">
+            <text class="award-view-label">MVP</text>
+            <image wx:if="{{awardView.mvp.avatarUrl}}" class="award-view-avatar" src="{{awardView.mvp.avatarUrl}}"/>
+            <text class="award-view-value {{awardView.mvp.state === 'declined' ? 'award-view-muted' : ''}}">{{awardView.mvp.text}}</text>
+          </view>
+          <view class="award-view-row">
+            <text class="award-view-label">SVP</text>
+            <image wx:if="{{awardView.svp.avatarUrl}}" class="award-view-avatar" src="{{awardView.svp.avatarUrl}}"/>
+            <text class="award-view-value {{awardView.svp.state === 'declined' ? 'award-view-muted' : ''}}">{{awardView.svp.text}}</text>
+          </view>
+        </view>
+        <view class="award-ops">
+          <button class="award-btn award-btn-primary" size="mini" bindtap="closeAwardModal">完成</button>
+        </view>
+      </block>
+      <block wx:else>
       <view class="award-status">
         <view class="award-chip {{awardChips.mvp.state === 'voted' ? 'chip-voted' : awardChips.mvp.state === 'declined' ? 'chip-declined' : ''}}">
           <image wx:if="{{awardChips.mvp.state === 'voted' && awardChips.mvp.avatarUrl}}" class="award-chip-avatar" src="{{awardChips.mvp.avatarUrl}}"/>
@@ -627,6 +642,7 @@
       <view class="award-ops">
         <button class="award-btn {{awardModal.sel ? 'award-btn-primary' : 'award-btn-danger'}}" size="mini" bindtap="onAwardAction">{{awardModal.sel ? '就他了' : '都不配'}}</button>
       </view>
+      </block>
     </view>
   </view>
 

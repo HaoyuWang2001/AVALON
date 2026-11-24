@@ -68,6 +68,15 @@
 }
 .top-icon-home { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); }
 .top-icon-danger { background: var(--danger); }
+/* 游戏结束页顶栏 MVP/SVP 回看入口（宽度随文字） */
+.award-top-btn {
+  height: 56rpx; padding: 0 20rpx; border-radius: 999rpx;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24rpx; font-weight: 800; white-space: nowrap;
+  color: var(--primary); background: var(--primary-bg);
+  border: 1rpx solid var(--primary);
+}
+.award-top-btn:active { opacity: 0.8; transform: scale(0.96); }
 /* 顶栏文字按钮（如「炸车」）：宽度自适应 */
 .top-text-danger {
   height: 60rpx; padding: 0 22rpx; border-radius: 12rpx;

@@ -273,7 +273,8 @@ Page({
     myAwards: null,
     awardCandidates: [],
     awardChips: { mvp: { state: 'none', avatarUrl: '' }, svp: { state: 'none', avatarUrl: '' } },
-    awardModal: { show: false, step: 'mvp', sel: '' },
+    awardView: null,
+    awardModal: { show: false, step: 'mvp', sel: '', viewMode: false },
     flipProgress: 0,
     crownHolderOpenId: '',
     identityMarks: {},
@@ -915,6 +916,26 @@ Page({
     };
     return { mvp: mk('mvp'), svp: mk('svp') };
   },
+  // 已完成选择时用于回看自己投出的 MVP/SVP
+  _buildAwardSummary(aw, players) {
+    const byId = {};
+    (players || []).forEach(p => { byId[p.openId] = p; });
+    const mk = (kind, label) => {
+      const a = (aw && aw[kind]) || { state: 'none', target: null };
+      if (a.state === 'voted') {
+        const tp = a.target ? byId[a.target] : null;
+        return {
+          label,
+          state: 'voted',
+          text: tp ? `${tp.seatNumber}号 ${tp.nickName}` : '已选择',
+          avatarUrl: tp ? (tp.avatarUrl || '/images/default-avatar.png') : ''
+        };
+      }
+      if (a.state === 'declined') return { label, state: 'declined', text: '已放弃', avatarUrl: '' };
+      return { label, state: 'none', text: '待选择', avatarUrl: '' };
+    };
+    return { mvp: mk('mvp', 'MVP'), svp: mk('svp', 'SVP') };
+  },
   _openAwardModal() {
     const aw = this.data.myAwards;
     if (!aw) return;
@@ -923,10 +944,23 @@ Page({
     if (!step) return;
     this.setData({
       awardCandidates: this._computeAwardCandidates(step),
-      awardModal: { show: true, step, sel: '' }
+      awardModal: { show: true, step, sel: '', viewMode: false }
     });
   },
-  openAwardModal() { this._openAwardModal(); },
+  openAwardModal() {
+    const aw = this.data.myAwards;
+    if (!aw) return;
+    if (aw.mvp.state === 'none' || aw.svp.state === 'none') {
+      this._openAwardModal();
+      return;
+    }
+    // 两项都已处理：以只读方式回看自己的选择
+    this.setData({
+      awardView: this._buildAwardSummary(aw, this.data.tablePlayers),
+      awardCandidates: [],
+      awardModal: { show: true, step: 'mvp', sel: '', viewMode: true }
+    });
+  },
   onAwardPick(e) {
     const id = e.currentTarget.dataset.id;
     this.setData({ 'awardModal.sel': this.data.awardModal.sel === id ? '' : id });
@@ -941,11 +975,11 @@ Page({
     if (!aw) { this.closeAwardModal(); return; }
     const awardChips = this._buildAwardChips(aw, this.data.tablePlayers);
     if (aw.mvp.state === 'none') {
-      this.setData({ myAwards: aw, awardChips, awardCandidates: this._computeAwardCandidates('mvp'), awardModal: { show: true, step: 'mvp', sel: '' } });
+      this.setData({ myAwards: aw, awardChips, awardCandidates: this._computeAwardCandidates('mvp'), awardModal: { show: true, step: 'mvp', sel: '', viewMode: false } });
     } else if (aw.svp.state === 'none') {
-      this.setData({ myAwards: aw, awardChips, awardCandidates: this._computeAwardCandidates('svp'), awardModal: { show: true, step: 'svp', sel: '' } });
+      this.setData({ myAwards: aw, awardChips, awardCandidates: this._computeAwardCandidates('svp'), awardModal: { show: true, step: 'svp', sel: '', viewMode: false } });
     } else {
-      this.setData({ myAwards: aw, awardChips, awardCandidates: [], awardModal: { show: false, step: 'mvp', sel: '' } });
+      this.setData({ myAwards: aw, awardChips, awardCandidates: [], awardModal: { show: false, step: 'mvp', sel: '', viewMode: false } });
     }
   },
   confirmAwardVote() {
@@ -979,7 +1013,7 @@ Page({
   },
   closeAwardModal() {
     // 点框外/关闭 = 暂时跳过：不落库，下次进入结束页或手动入口重新弹出
-    this.setData({ awardModal: { show: false, step: 'mvp', sel: '' }, awardCandidates: [] });
+    this.setData({ awardModal: { show: false, step: 'mvp', sel: '', viewMode: false }, awardCandidates: [], awardView: null });
   },
 
   noop() {},
