@@ -19,8 +19,14 @@ const THEME_BG = {
 // 各主题下原生 switch 的选中色（switch color 不支持 CSS 变量）
 const SWITCH_COLOR = { '': '#8B5CF6', torch: '#D4A052', aurora: '#A78BFA', steel: '#89A7CC' };
 
-const THEME_ORDER = ['', 'torch', 'aurora', 'steel'];
-const THEME_LABELS = ['🌅 黎明初现', '🔥 烛光殿堂', '🌌 暗夜圆桌', '⚔️ 锻造钢铁'];
+const THEME_OPTIONS = [
+  { key: '', emoji: '🌅', name: '黎明初现' },
+  { key: 'torch', emoji: '🔥', name: '烛光殿堂' },
+  { key: 'aurora', emoji: '🌌', name: '暗夜圆桌' },
+  { key: 'steel', emoji: '⚔️', name: '锻造钢铁' }
+];
+const THEME_ORDER = THEME_OPTIONS.map(o => o.key);
+const THEME_LABELS = THEME_OPTIONS.map(o => `${o.emoji} ${o.name}`);
 
 // 读取当前主题 key（'' = 亮色）
 function getThemeClass() {
@@ -56,4 +62,4 @@ function pickTheme() {
   });
 }
 
-module.exports = { getThemeClass, getThemeBg, getSwitchColor, applyTheme, pickTheme, THEME_BG };
+module.exports = { getThemeClass, getThemeBg, getSwitchColor, applyTheme, pickTheme, THEME_BG, THEME_OPTIONS };

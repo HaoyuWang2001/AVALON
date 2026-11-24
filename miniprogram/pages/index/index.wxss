@@ -227,6 +227,17 @@
 .weird-row { display: flex; align-items: center; gap: 16rpx; padding: 18rpx 4rpx; }
 .weird-row + .weird-row { border-top: 1rpx solid var(--divider); }
 .weird-row .func-label { color: var(--text-body); }
+.theme-option { display: flex; align-items: center; gap: 16rpx; padding: 20rpx 12rpx; border-radius: 16rpx; }
+.theme-option + .theme-option { border-top: 1rpx solid var(--divider); }
+.theme-option-active { background: var(--primary-bg); }
+.theme-option-emoji { width: 44rpx; text-align: center; font-size: 32rpx; flex-shrink: 0; }
+.theme-option-name { flex: 1; font-size: 28rpx; font-weight: 600; color: var(--text-title); }
+.theme-option-active .theme-option-name { color: var(--primary); font-weight: 800; }
+.theme-option-current {
+  flex-shrink: 0; font-size: 22rpx; font-weight: 700; padding: 4rpx 16rpx;
+  border-radius: 999rpx; color: var(--on-primary);
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+}
 
 /* ─────── 公开房间列表（等待中 / 游戏中） ─────── */
 .room-list-section { margin-bottom: 20rpx; flex-shrink: 0; }

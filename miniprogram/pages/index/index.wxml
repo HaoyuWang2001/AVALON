@@ -114,6 +114,20 @@
   <view class="footer"><view class="footer-version">AVALON v2.0.0</view></view>
 
 
+  <!-- 更改主题：与奇奇怪怪设置同款中部弹窗（选择后保持打开） -->
+  <view class="weird-mask" wx:if="{{showThemePicker}}" bindtap="closeThemePicker" catchtouchmove="noop">
+    <view class="weird-modal" catchtap="noop">
+      <view class="weird-title">更改主题</view>
+      <view wx:for="{{themeOptions}}" wx:key="name"
+        class="theme-option {{item.key === themeClass ? 'theme-option-active' : ''}}"
+        bindtap="selectTheme" data-index="{{index}}">
+        <text class="theme-option-emoji">{{item.emoji}}</text>
+        <text class="theme-option-name">{{item.name}}</text>
+        <text wx:if="{{item.key === themeClass}}" class="theme-option-current">当前</text>
+      </view>
+    </view>
+  </view>
+
   <!-- 奇奇怪怪的设置们：中部弹窗（点遮罩关闭） -->
   <view class="weird-mask" wx:if="{{showWeirdSettings}}" bindtap="closeWeirdSettings" catchtouchmove="noop">
     <view class="weird-modal" catchtap="noop">

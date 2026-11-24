@@ -1,6 +1,6 @@
 // pages/index/index.js
 const api = require('../../services/api.js');
-const { getThemeClass, getThemeBg, getSwitchColor, pickTheme, applyTheme } = require('../../utils/theme.js');
+const { getThemeClass, getThemeBg, getSwitchColor, applyTheme, THEME_OPTIONS } = require('../../utils/theme.js');
 const { DEFAULT_AVATAR } = require('../../utils/constants.js');
 const { buildRoomTags } = require('../../utils/roomTags.js');
 
@@ -20,6 +20,8 @@ Page({
     publicWinrate: true,
     compactGame: false,
     showWeirdSettings: false,
+    showThemePicker: false,
+    themeOptions: THEME_OPTIONS,
     showBrandMenu: false,
     switchColor: '#8B5CF6',
 
@@ -781,15 +783,22 @@ Page({
 
   // ─── 功能入口 / 设置 ───
   onChangeTheme() {
-    pickTheme().then(picked => {
-      if (picked === null) return;
-      applyTheme(picked);
-      this.setData({ themeClass: picked, switchColor: getSwitchColor(picked) });
-    });
+    this.setData({ showThemePicker: true, showWeirdSettings: false });
+  },
+  closeThemePicker() {
+    this.setData({ showThemePicker: false });
+  },
+  selectTheme(e) {
+    const index = Number(e.currentTarget.dataset.index);
+    const opt = THEME_OPTIONS[index];
+    if (!opt) return;
+    applyTheme(opt.key);
+    // 保持弹窗打开，方便连续切换预览；当前标记随 themeClass 更新
+    this.setData({ themeClass: opt.key, switchColor: getSwitchColor(opt.key) });
   },
 
   showWeirdSettings() {
-    this.setData({ showWeirdSettings: true });
+    this.setData({ showWeirdSettings: true, showThemePicker: false });
   },
   closeWeirdSettings() {
     this.setData({ showWeirdSettings: false });
