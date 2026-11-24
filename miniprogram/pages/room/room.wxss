@@ -284,8 +284,8 @@ button::after { border: none; }
 .seat-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
 .seat-name { font-size: 28rpx; font-weight: 600; color: var(--text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .seat-name-empty { font-size: 26rpx; color: var(--text-muted); }
-.seat-tags { display: flex; flex-wrap: wrap; gap: 6rpx; }
-.tag { font-size: 20rpx; padding: 2rpx 8rpx; border-radius: 4rpx; }
+.seat-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6rpx; }
+.tag { font-size: 20rpx; height: 36rpx; box-sizing: border-box; display: inline-block; text-align: center; padding: 0 10rpx; border-radius: 4rpx; line-height: 36rpx; }
 .tag-host { background: var(--label-blue-bg); color: var(--label-blue); }
 
 .seat-status { display: flex; align-items: center; gap: 6rpx; flex-shrink: 0; font-size: 28rpx; }

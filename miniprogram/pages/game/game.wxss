@@ -202,15 +202,17 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .tplayer-tags {
-  display: flex; flex-wrap: wrap; align-items: flex-start;
+  display: flex; flex-wrap: wrap; align-items: center;
   gap: 8rpx; margin-top: 12rpx;
 }
 
 /* 标准标签体系：浅底深字 */
 .ptag {
   font-size: 22rpx; font-weight: 700;
-  padding: 4rpx 16rpx; border-radius: 20rpx;
-  line-height: 1.5;
+  height: 32rpx; box-sizing: border-box;
+  display: inline-block; text-align: center;
+  padding: 0 14rpx; border-radius: 20rpx;
+  line-height: 32rpx;
 }
 .ptag-purple { background: var(--label-violet-bg); color: var(--label-violet); }
 .ptag-blue { background: var(--label-good-bg); color: var(--label-good); }
@@ -1151,7 +1153,7 @@ progress { border-radius: 12rpx; }
 .c-col-right .c-player { flex-direction: row-reverse; }
 .c-seat { flex-shrink: 0; width: 44rpx; height: 44rpx; line-height: 44rpx; text-align: center; border-radius: 10rpx; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); font-size: 28rpx; font-weight: 800; color: var(--on-primary); }
 .c-crown-mini { font-size: 26rpx; line-height: 1; }
-.c-tag { font-size: 22rpx; line-height: 1.5; padding: 2rpx 10rpx; border-radius: 8rpx; white-space: nowrap; }
+.c-tag { font-size: 22rpx; height: 32rpx; line-height: 32rpx; padding: 0 10rpx; border-radius: 8rpx; white-space: nowrap; }
 .c-role { font-size: 22rpx; font-weight: 800; color: var(--c-violet); }
 
 /* 观战区底部弹窗 */

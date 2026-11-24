@@ -3,7 +3,8 @@
 .tb-badge {
   position: relative; overflow: hidden;
   display: inline-flex; align-items: center;
-  padding: 4rpx 18rpx; border-radius: 999rpx;
+  height: 36rpx; box-sizing: border-box;
+  padding: 0 18rpx; border-radius: 999rpx;
   box-shadow: 0 0 12rpx rgba(168, 85, 247, 0.45);
 }
 /* 流动层：宽 200%，铺「两轮完整光谱」，translateX(-50%) 位移一轮 → 无接缝循环 */
@@ -17,7 +18,7 @@
 }
 .tb-text {
   position: relative; z-index: 1;
-  font-size: 22rpx; font-weight: 800; line-height: 1.35;
+  font-size: 22rpx; font-weight: 800; line-height: 1;
   color: #FFFFFF; letter-spacing: 0.5rpx;
   text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.45);
   white-space: nowrap;
@@ -28,5 +29,5 @@
 }
 /* 紧凑版（受限位置） */
 .tb-mini { gap: 6rpx; }
-.tb-mini .tb-badge { padding: 2rpx 14rpx; box-shadow: 0 0 8rpx rgba(168, 85, 247, 0.4); }
-.tb-mini .tb-text { font-size: 18rpx; }
+.tb-mini .tb-badge { height: 32rpx; padding: 0 14rpx; box-shadow: 0 0 8rpx rgba(168, 85, 247, 0.4); }
+.tb-mini .tb-text { font-size: 18rpx; line-height: 1; }

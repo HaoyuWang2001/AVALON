@@ -32,12 +32,12 @@
 .lb-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6rpx; }
 .lb-name-row { display: flex; align-items: center; gap: 10rpx; min-width: 0; flex-wrap: wrap; }
 .lb-name { font-size: 30rpx; font-weight: 600; color: var(--text-title); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lb-tag { flex-shrink: 0; font-size: 20rpx; padding: 2rpx 12rpx; border-radius: 8rpx; }
+.lb-tag { flex-shrink: 0; font-size: 20rpx; height: 36rpx; box-sizing: border-box; display: inline-block; text-align: center; padding: 0 12rpx; border-radius: 8rpx; line-height: 36rpx; white-space: nowrap; }
 .lb-friend { background: var(--label-blue-bg); color: var(--label-blue); }
 .lb-me {
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
   color: var(--on-primary); font-size: 22rpx; font-weight: 800;
-  padding: 3rpx 16rpx; border-radius: 999rpx;
+  height: 36rpx; padding: 0 16rpx; border-radius: 999rpx;
   letter-spacing: 1rpx; box-shadow: 0 2rpx 8rpx var(--primary-veil);
 }
 .lb-sub { font-size: 24rpx; color: var(--text-muted); }
