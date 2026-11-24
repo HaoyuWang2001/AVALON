@@ -822,7 +822,7 @@ Page({
       wx.showModal({
         title: '已有房间',
         content: '你已有一个房间，请先解散原房间',
-        confirmText: '进入我的房间',
+        confirmText: '进入房间',
         cancelText: '取消',
         success: (r) => {
           if (!r.confirm) return;
@@ -850,7 +850,7 @@ Page({
       wx.showModal({
         title: '召开会议',
         content: `将退出当前房间 ${cur.roomId} 后召开新会议，是否继续？`,
-        confirmText: '退出并召开',
+        confirmText: '继续',
         success: (r) => {
           if (!r.confirm) return;
           wx.showLoading({ title: '退出房间...', mask: true });

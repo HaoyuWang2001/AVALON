@@ -273,7 +273,7 @@ Page({
       wx.showModal({
         title: '已在其他房间',
         content: '退出当前房间并加入？',
-        confirmText: '退出并加入',
+        confirmText: '继续',
         success: r => {
           if (!r.confirm) { wx.hideLoading(); return; }
           if (!cur || !cur.roomId) {
