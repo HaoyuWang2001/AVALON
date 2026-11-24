@@ -55,7 +55,7 @@ CREATE TABLE room_players (
     is_ready BOOLEAN DEFAULT FALSE COMMENT '是否已准备',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '加入时间',
     seat_unique_for_game INT GENERATED ALWAYS AS (IF(seat_number >= 1, seat_number, NULL)) STORED COMMENT '游戏座位唯一约束(仅>=1)',
-    UNIQUE KEY uk_room_seat (room_id, seat_unique_for_game) COMMENT '同房间游戏座位号唯一(排除未入座/观战)',
+    UNIQUE KEY uk_room_seat (room_id, seat_unique_for_game) COMMENT '同房间游戏座位号唯一(排除观战)',
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
     INDEX idx_room_id (room_id),
     INDEX idx_is_ready (is_ready)

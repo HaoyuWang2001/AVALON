@@ -501,7 +501,7 @@ Page({
     }
   },
 
-  // 等待区/观战区/座位：点击玩家 → 玩家胜率弹窗
+  // 观战区/座位：点击玩家 → 玩家胜率弹窗
   onPlayerTap(e) {
     const { id } = e.currentTarget.dataset;
     if (id) this.openPlayerStats(id);
