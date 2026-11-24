@@ -541,6 +541,27 @@ Page({
     });
   },
 
+  exitSpectator() {
+    const cu = this.data.currentUser;
+    if (!cu || cu.seatNumber !== -1) return;
+    wx.showModal({
+      title: '退出观战',
+      content: this.data.isHost ? '退出观战后仍保留房主权限。' : '退出观战后将变为该房间游客。',
+      confirmText: '退出',
+      cancelText: '取消',
+      success: r => {
+        if (!r.confirm) return;
+        wx.showLoading({ title: '处理中...', mask: true });
+        api.leaveRoom(this.data.roomId).then(() => {
+          this.fetchRoomInfo();
+        }).catch(err => {
+          wx.hideLoading();
+          wx.showModal({ title: '操作失败', content: (err && err.message) || '操作失败', showCancel: false, confirmText: '知道了' });
+        }).finally(() => wx.hideLoading());
+      }
+    });
+  },
+
   stepDownHost() {
     const cu = this.data.currentUser;
     if (!this.data.isHost || !cu || (cu.seatNumber !== -1 && cu.seatNumber < 1)) return;
