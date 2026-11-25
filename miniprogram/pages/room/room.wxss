@@ -17,7 +17,6 @@ button::after { border: none; }
 }
 .room-loading-dot.d2 { animation-delay: 0.15s; }
 .room-loading-dot.d3 { animation-delay: 0.3s; }
-.room-loading-text { font-size: 24rpx; color: var(--text-muted); }
 @keyframes room-loading-bounce {
   0%, 100% { transform: translateY(0); opacity: 0.35; }
   40% { transform: translateY(-10rpx); opacity: 1; }

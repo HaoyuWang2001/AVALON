@@ -26,7 +26,6 @@
       <view class="room-loading-dot d2"></view>
       <view class="room-loading-dot d3"></view>
     </view>
-    <text class="room-loading-text">加载房间...</text>
   </view>
 
   <view class="container {{showBottomBar ? 'with-start-bar' : ''}}">
