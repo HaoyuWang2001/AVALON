@@ -5,6 +5,9 @@
 
 /* app.wxss 全局样式 */
 
+/* 原生 page 底色调暗，避免页面切换/首帧露出默认白色 */
+page { background-color: #111114; }
+
 button {
   margin: 0;
   background: transparent;
