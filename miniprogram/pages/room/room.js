@@ -89,7 +89,6 @@ Page({
     this._stopVibration();
     if (this._launchTimer) clearTimeout(this._launchTimer);
     clearTimeout(this._roomLoadingTimer);
-    if (this.leaving) this.leaveRoom();
   },
 
   onShareAppMessage() {
@@ -197,14 +196,19 @@ Page({
         }
         this.setData({ canStartGame: canStart, startHint: hint });
 
-        if (room.gameStarted && !wasGameStarted && currentUser && currentUser.seatNumber >= 1) {
-          // 开局信号：全员播放各自所选入场动画（5s），结束后进入游戏页
-          this.setData({ startGameLaunching: true, dissolving: false, startGameProgress: 0 });
-          this._launchGameId = room.activeGameId;
-          if (this._launchTimer) clearTimeout(this._launchTimer);
-          this._launchTimer = setTimeout(() => {
-            wx.redirectTo({ url: `/pages/game/game?gameId=${this._launchGameId}&roomId=${this.data.roomId}` });
-          }, 5000);
+        if (room.gameStarted && !wasGameStarted) {
+          if (currentUser && currentUser.seatNumber >= 1) {
+            // 开局信号：上座玩家播放各自所选入场动画（5s），结束后进入游戏页
+            this.setData({ startGameLaunching: true, dissolving: false, startGameProgress: 0 });
+            this._launchGameId = room.activeGameId;
+            if (this._launchTimer) clearTimeout(this._launchTimer);
+            this._launchTimer = setTimeout(() => {
+              wx.redirectTo({ url: `/pages/game/game?gameId=${this._launchGameId}&roomId=${this.data.roomId}` });
+            }, 5000);
+          } else if (currentUser && currentUser.seatNumber === -1 && room.activeGameId) {
+            // 观战者不播放入场动画，直接进入对局
+            wx.redirectTo({ url: `/pages/game/game?gameId=${room.activeGameId}&roomId=${this.data.roomId}` });
+          }
         }
       } else {
         this._finishRoomLoading();
@@ -308,7 +312,8 @@ Page({
     api.updateSeatNumber(this.data.roomId, seatNum).then(() => {
       this.fetchRoomInfo();
     }).catch(err => {
-      wx.showToast({ title: (err && err.message) || '入座失败', icon: 'none' });
+      wx.hideLoading();
+      wx.showModal({ title: '无法入座', content: (err && err.message) || '入座失败', showCancel: false, confirmText: '知道了' });
     }).finally(() => wx.hideLoading());
   },
 
@@ -322,7 +327,8 @@ Page({
     api.updateSeatNumber(this.data.roomId, -1).then(() => {
       this._enterJoinedRoom(this.data.roomInfo);
     }).catch(err => {
-      wx.showToast({ title: (err && err.message) || '操作失败', icon: 'none' });
+      wx.hideLoading();
+      wx.showModal({ title: '无法进入观战区', content: (err && err.message) || '操作失败', showCancel: false, confirmText: '知道了' });
     }).finally(() => wx.hideLoading());
   },
 
@@ -489,7 +495,6 @@ Page({
       content: '确定解散房间吗？所有玩家将被移出。',
       success: (res) => {
         if (res.confirm) {
-          this.leaving = true;
           api.disbandRoom(this.data.roomId).then(() => {
             wx.showToast({ title: '已解散', icon: 'success' });
             wx.reLaunch({ url: '/pages/index/index' });
@@ -505,7 +510,9 @@ Page({
       wx.showToast({ title: '上座区未坐满', icon: 'none' });
       return;
     }
-    api.randomSeats(this.data.roomId).catch(() => {});
+    api.randomSeats(this.data.roomId).catch(err => {
+      wx.showModal({ title: '无法打乱座位', content: (err && err.message) || '操作失败', showCancel: false, confirmText: '知道了' });
+    });
   },
 
   // ─── Player Actions ───
@@ -605,7 +612,12 @@ Page({
           wx.showModal({
             title: '踢出房间',
             content: `确定将 ${name} 踢出房间吗？`,
-            success: r => { if (r.confirm) api.kickPlayer(roomId, playerId).catch(() => {}); }
+            success: r => {
+              if (!r.confirm) return;
+              api.kickPlayer(roomId, playerId).catch(err => {
+                wx.showModal({ title: '无法踢出', content: (err && err.message) || '操作失败', showCancel: false, confirmText: '知道了' });
+              });
+            }
           });
         } else if (res.tapIndex === 1) {
           wx.showModal({
@@ -615,17 +627,15 @@ Page({
               if (r.confirm) {
                 api.transferOwner(roomId, playerId).then(() => {
                   wx.showToast({ title: '已转让', icon: 'success' });
-                }).catch(() => {});
+                }).catch(err => {
+                  wx.showModal({ title: '无法转让', content: (err && err.message) || '操作失败', showCancel: false, confirmText: '知道了' });
+                });
               }
             }
           });
         }
       }
     });
-  },
-
-  leaveRoom() {
-    api.leaveRoom(this.data.roomId).catch(() => {});
   },
 
   exitRoom() {
@@ -637,12 +647,23 @@ Page({
     wx.showModal({
       title: '退出房间',
       content: '确定退出当前房间吗？',
+      confirmText: '退出',
+      cancelText: '取消',
       success: (res) => {
-        if (res.confirm) {
-          this.leaving = true;
-          api.leaveRoom(this.data.roomId).catch(() => {});
+        if (!res.confirm) return;
+        wx.showLoading({ title: '退出中...', mask: true });
+        api.leaveRoom(this.data.roomId).then(() => {
+          wx.hideLoading();
           wx.reLaunch({ url: '/pages/index/index' });
-        }
+        }).catch(err => {
+          wx.hideLoading();
+          wx.showModal({
+            title: '无法退出',
+            content: (err && err.message) || '退出房间失败',
+            showCancel: false,
+            confirmText: '知道了'
+          });
+        });
       }
     });
   },

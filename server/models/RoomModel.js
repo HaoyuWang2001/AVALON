@@ -533,6 +533,12 @@ class RoomModel {
     try {
       const room = await this.getById(roomId);
       if (room && room.ownerId === playerId) throw new Error('不能踢出房主');
+      if (room && room.gameStarted) {
+        const target = await db.query('SELECT seat_number FROM room_players WHERE room_id = ? AND open_id = ?', [roomId, playerId]);
+        if (target.length > 0 && target[0].seat_number >= 1) {
+          throw new Error('游戏进行中，无法踢出上座玩家');
+        }
+      }
       await db.query('DELETE FROM room_players WHERE room_id = ? AND open_id = ?', [roomId, playerId]);
       await db.query('UPDATE users SET current_room_id = NULL WHERE open_id = ? AND current_room_id = ?', [playerId, roomId]);
       await db.query('UPDATE rooms SET updated_at = NOW() WHERE id = ?', [roomId]);
@@ -547,6 +553,7 @@ class RoomModel {
     const room = await this.getById(roomId);
     if (!room) throw new Error('房间不存在');
     if (room.ownerId !== currentOwnerId) throw new Error('仅房主可转让');
+    if (room.gameStarted) throw new Error('游戏进行中，无法转让房主');
     const owned = await db.query('SELECT id FROM rooms WHERE owner_id = ? AND id <> ? LIMIT 1', [newOwnerId, roomId]);
     if (owned.length > 0) throw new Error('对方已有一个房间');
     await db.query('UPDATE rooms SET owner_id = ?, updated_at = NOW() WHERE id = ? AND owner_id = ?', [newOwnerId, roomId, currentOwnerId]);
@@ -591,6 +598,7 @@ class RoomModel {
   static async randomSeats(roomId) {
     const room = await this.getById(roomId);
     if (!room) throw new Error('房间不存在');
+    if (room.gameStarted) throw new Error('游戏已开始，无法打乱座位');
     const seated = room.players.filter(p => p.seatNumber >= 1);
     if (seated.length === 0) throw new Error('没有入座玩家');
 

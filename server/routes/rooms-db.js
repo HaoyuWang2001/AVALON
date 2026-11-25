@@ -335,7 +335,7 @@ function createRouter() {
       });
     } catch (error) {
       console.error('踢出玩家API错误:', error);
-      if (error.message.includes('不能踢出房主')) {
+      if (error.message.includes('不能踢出房主') || error.message.includes('游戏进行中')) {
         return res.status(400).json({ success: false, message: error.message });
       }
       res.status(500).json({ 
@@ -429,7 +429,7 @@ function createRouter() {
       res.json({ success: true, room, message: '房主已转让' });
     } catch (error) {
       if (error.message.includes('仅房主')) return res.status(403).json({ success: false, message: error.message });
-      if (error.message.includes('已有一个房间') || error.code === 'ER_DUP_ENTRY' || /ER_DUP_ENTRY|uk_owner/.test(error.message || '')) {
+      if (error.message.includes('游戏进行中') || error.message.includes('已有一个房间') || error.code === 'ER_DUP_ENTRY' || /ER_DUP_ENTRY|uk_owner/.test(error.message || '')) {
         return res.status(400).json({ success: false, message: error.message || '对方已有一个房间' });
       }
       res.status(500).json({ success: false, message: error.message });
@@ -467,7 +467,8 @@ function createRouter() {
       emitRoom(roomId);
       res.json({ success: true, room: result, message: '座位已随机打乱' });
     } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      const code = error.message.includes('游戏已开始') || error.message.includes('未坐满') ? 400 : 500;
+      res.status(code).json({ success: false, message: error.message });
     }
   });
 

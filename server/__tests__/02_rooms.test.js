@@ -714,6 +714,27 @@ describe('02 — Room Management', () => {
       expect(res.gameId).toBeDefined();
     });
 
+    it('02.42a 游戏中禁止随机座位/踢上座玩家/转让房主；允许踢观战者', async () => {
+      const { roomId, hostId, players } = await startedRoom();
+      const random = await randomSeats(roomId, hostId);
+      expect(random.success).toBe(false);
+      expect(random.message).toMatch(/游戏已开始/);
+
+      const kickSeated = await apiPost('/api/rooms/kickPlayer', { roomId, playerId: players[1].openId, openId: hostId });
+      expect(kickSeated.status).toBe(400);
+      expect(kickSeated.body.message).toMatch(/游戏进行中/);
+
+      const transfer = await apiPost(`/api/rooms/${roomId}/transferOwner`, { currentOwnerId: hostId, newOwnerId: players[1].openId });
+      expect(transfer.status).toBe(400);
+      expect(transfer.body.message).toMatch(/游戏进行中/);
+
+      const specId = makeUserId();
+      await joinRoom(roomId, specId, -1, 'Spec');
+      const kickSpec = await kickPlayer(roomId, specId, 'room', hostId);
+      expect(kickSpec.success).toBe(true);
+      expect(kickSpec.room.players.find(p => p.openId === specId)).toBeUndefined();
+    });
+
     it('02.43 非房主开局 → 403', async () => {
       const hostId = makeUserId();
       const result = await createRoom(hostId, 'Host');

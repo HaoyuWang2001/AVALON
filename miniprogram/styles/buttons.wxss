@@ -77,6 +77,14 @@
   border: 1rpx solid var(--primary);
 }
 .award-top-btn:active { opacity: 0.8; transform: scale(0.96); }
+.spectator-top-btn {
+  height: 56rpx; padding: 0 18rpx; border-radius: 999rpx;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22rpx; font-weight: 700; white-space: nowrap;
+  color: var(--text-title); background: var(--bg-page);
+  border: 1rpx solid var(--card-border);
+}
+.spectator-top-btn:active { opacity: 0.8; transform: scale(0.96); }
 /* 顶栏文字按钮（如「炸车」）：宽度自适应 */
 .top-text-danger {
   height: 60rpx; padding: 0 22rpx; border-radius: 12rpx;

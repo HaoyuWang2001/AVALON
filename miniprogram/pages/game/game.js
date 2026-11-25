@@ -298,6 +298,7 @@ Page({
     voteRevealEndAt: 0,
     voteRevealRemaining: 0,
     gameLoading: true,
+    isRoomSpectator: false,
     showMissionAnim: false,
     missionAnimSuccess: false,
     bottomBarRawHeight: 0,
@@ -737,6 +738,7 @@ Page({
           playerLancelotConfirmed,
           playerRole: myRole,
           isSpectator: !myRole,
+          isRoomSpectator: !!((res.spectators || []).some(s => s.openId === myOpenId)),
           playerSide: res.player ? res.player.side : null,
           roleName: this.getRoleName(myRole),
           roleEmoji: this.getRoleEmoji(myRole),
@@ -908,6 +910,27 @@ Page({
     }).catch(err => {
       this._finishGameLoading();
       console.error('获取游戏状态失败:', err);
+    });
+  },
+
+  exitGameSpectator() {
+    if (!this.data.isRoomSpectator || !this.data.roomId) return;
+    wx.showModal({
+      title: '退出观战',
+      content: '退出观战后将离开该房间。',
+      confirmText: '退出',
+      cancelText: '取消',
+      success: r => {
+        if (!r.confirm) return;
+        wx.showLoading({ title: '处理中...', mask: true });
+        api.leaveRoom(this.data.roomId).then(() => {
+          this.setData({ isRoomSpectator: false });
+          wx.reLaunch({ url: '/pages/index/index' });
+        }).catch(err => {
+          wx.hideLoading();
+          wx.showModal({ title: '操作失败', content: (err && err.message) || '操作失败', showCancel: false, confirmText: '知道了' });
+        }).finally(() => wx.hideLoading());
+      }
     });
   },
 

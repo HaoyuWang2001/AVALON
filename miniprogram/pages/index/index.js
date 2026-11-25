@@ -818,7 +818,32 @@ Page({
 
   // ─────────── 配置页（pages/configs/configs） ───────────
   openConfigs() {
-    if (this.data.ownedRoomId) {
+    if (this._configOpening) return;
+    const openId = getApp().globalData.openId || wx.getStorageSync('openId');
+    if (!openId) {
+      wx.showModal({ title: '无法召开会议', content: '登录状态未就绪，请稍后重试', showCancel: false, confirmText: '知道了' });
+      return;
+    }
+    this._configOpening = true;
+    api.getCurrentRoom(openId).then(res => {
+      this._configOpening = false;
+      if (!res || !res.success) {
+        wx.showModal({ title: '无法召开会议', content: '获取当前房间状态失败，请重试', showCancel: false, confirmText: '知道了' });
+        return;
+      }
+      const cur = res.room || null;
+      const owned = res.ownedRoomId || '';
+      this.setData({ currentRoom: cur, ownedRoomId: owned });
+      this._applyRoomData();
+      this._handleOpenConfigs(cur, owned);
+    }).catch(err => {
+      this._configOpening = false;
+      wx.showModal({ title: '无法召开会议', content: (err && err.message) || '获取当前房间状态失败，请重试', showCancel: false, confirmText: '知道了' });
+    });
+  },
+
+  _handleOpenConfigs(cur, owned) {
+    if (owned) {
       wx.showModal({
         title: '已有房间',
         content: '你已有一个房间，请先解散原房间',
@@ -826,17 +851,16 @@ Page({
         cancelText: '取消',
         success: (r) => {
           if (!r.confirm) return;
-          if (this.data.currentRoom && this.data.currentRoom.roomId === this.data.ownedRoomId) {
+          if (cur && cur.roomId === owned) {
             this.backToRoom();
           } else {
-            this._navigateRoomPage(this.data.ownedRoomId);
+            this._navigateRoomPage(owned);
           }
         }
       });
       return;
     }
 
-    const cur = this.data.currentRoom;
     if (cur) {
       if (cur.gameStarted && cur.seatNumber >= 1) {
         wx.showModal({
@@ -865,7 +889,8 @@ Page({
             wx.showModal({
               title: '无法召开会议',
               content: (err && err.message) || '退出当前房间失败',
-              showCancel: false
+              showCancel: false,
+              confirmText: '知道了'
             });
           });
         }

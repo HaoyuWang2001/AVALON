@@ -16,6 +16,7 @@
     <view slot="left" class="top-icons">
       <text wx:if="{{isHost && currentPhase !== 'gameEnd'}}" class="top-text-danger" bindtap="abandonGame">炸车</text>
       <view wx:if="{{currentPhase === 'gameEnd' && myAwards}}" class="award-top-btn" bindtap="openAwardModal">MVP/SVP</view>
+      <view wx:if="{{isRoomSpectator}}" class="spectator-top-btn" bindtap="exitGameSpectator">退出观战</view>
     </view>
     <view slot="center" class="top-mini-actions">
       <view wx:if="{{spectators.length > 0 && currentPhase !== 'gameEnd'}}" class="spec-top-btn" bindtap="toggleSpectatorPopup">
